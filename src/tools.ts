@@ -256,9 +256,21 @@ export function registerReadOnlyTools(
       if (err) return { content: [{ type: "text", text: err }] };
 
       try {
+        const MAX_SIZE = 950_000; // ~950KB to stay under 1MB base64 limit
         const { buffer, mimeType } = await getTelegram().downloadMediaAsBuffer(chatId, messageId);
 
         if (mimeType.startsWith("image/")) {
+          // If image is too large, inform the user about size
+          if (buffer.length > MAX_SIZE) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Image too large for inline display (${(buffer.length / 1024).toFixed(0)} KB, limit ~950 KB). The image is a ${mimeType} file. Try asking for a specific smaller photo or use telegram-read-messages to see the text content.`,
+                },
+              ],
+            };
+          }
           return {
             content: [
               {
@@ -270,12 +282,12 @@ export function registerReadOnlyTools(
           };
         }
 
-        // Non-image: return as base64 text with metadata
+        // Non-image: return metadata
         return {
           content: [
             {
               type: "text",
-              text: `Media downloaded (${mimeType}, ${buffer.length} bytes).\nBase64: ${buffer.toString("base64").slice(0, 200)}...`,
+              text: `Media downloaded: ${mimeType}, ${(buffer.length / 1024).toFixed(0)} KB. Non-image media cannot be displayed inline.`,
             },
           ],
         };
