@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider, renderAuthorizePage } from "./oauth.js";
+import { handleQrLogin, renderLoginPage } from "./qr-login.js";
 import { SessionManager } from "./session-manager.js";
 
 const app = new Hono();
@@ -216,10 +217,29 @@ app.all("/mcp", async (c) => {
   return handleMcpRequest(sessions, userId, c.req.raw);
 });
 
-// ─── QR Login Page ───────────────────────────────────────────────────
+// ─── QR Login ────────────────────────────────────────────────────────
 app.get("/login", (c) => {
-  // TODO: Web QR login UI
-  return c.html("<h1>Telegram QR Login</h1><p>Coming soon</p>");
+  return c.html(renderLoginPage());
+});
+
+app.get("/login/qr", async (c) => {
+  const userId = c.req.query("userId");
+  if (!userId) {
+    return c.text("userId required", 400);
+  }
+
+  const controller = new AbortController();
+  c.req.raw.signal.addEventListener("abort", () => controller.abort());
+
+  const stream = await handleQrLogin(sessions, userId, controller.signal);
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 });
 
 // ─── Start ───────────────────────────────────────────────────────────
