@@ -1,0 +1,60 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }},${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    needs: build
+    runs-on: mcp-telegram
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull image
+        run: docker pull ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Create network
+        run: docker network create --driver=overlay --attachable ${{ vars.SHARE_NETWORK_NAME }} 2>/dev/null || true
+
+      - name: Deploy Traefik
+        env:
+          SHARE_NETWORK_NAME: ${{ vars.SHARE_NETWORK_NAME }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        run: docker stack deploy -c stacks/traefik.yml traefik
+
+      - name: Deploy MCP Telegram
+        env:
+          DOCKER_IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          SHARE_NETWORK_NAME: ${{ vars.SHARE_NETWORK_NAME }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: docker stack deploy -c stacks/mcp-telegram.yml mcp-telegram

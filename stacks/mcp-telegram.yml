@@ -1,0 +1,31 @@
+services:
+  cloud:
+    image: $DOCKER_IMAGE
+    networks:
+      - share
+    volumes:
+      - data:/app/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+    environment:
+      TELEGRAM_API_ID: $TELEGRAM_API_ID
+      TELEGRAM_API_HASH: $TELEGRAM_API_HASH
+      PORT: "3000"
+      NODE_ENV: production
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.mcp-telegram.rule: 'Host("mcp-telegram.com")'
+      traefik.http.routers.mcp-telegram.entrypoints: websecure
+      traefik.http.routers.mcp-telegram.tls.certresolver: letsencrypt
+      traefik.http.services.mcp-telegram.loadbalancer.server.port: 3000
+
+volumes:
+  data:
+
+networks:
+  share:
+    external: true
+    name: $SHARE_NETWORK_NAME
