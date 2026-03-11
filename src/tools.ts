@@ -82,7 +82,7 @@ export function registerReadOnlyTools(
         const text = messages
           .map(
             (m) =>
-              `[${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
           )
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages" }] };
@@ -137,7 +137,7 @@ export function registerReadOnlyTools(
         const text = messages
           .map(
             (m) =>
-              `[${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
           )
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages found" }] };
