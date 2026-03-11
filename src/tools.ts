@@ -243,4 +243,45 @@ export function registerReadOnlyTools(
       }
     },
   );
+
+  server.tool(
+    "telegram-download-media",
+    "Download media (photo, video, document) from a Telegram message and return it inline",
+    {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().describe("Message ID containing media"),
+    },
+    async ({ chatId, messageId }) => {
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+
+      try {
+        const { buffer, mimeType } = await getTelegram().downloadMediaAsBuffer(chatId, messageId);
+
+        if (mimeType.startsWith("image/")) {
+          return {
+            content: [
+              {
+                type: "image",
+                data: buffer.toString("base64"),
+                mimeType,
+              },
+            ],
+          };
+        }
+
+        // Non-image: return as base64 text with metadata
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Media downloaded (${mimeType}, ${buffer.length} bytes).\nBase64: ${buffer.toString("base64").slice(0, 200)}...`,
+            },
+          ],
+        };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Download error: ${(e as Error).message}` }] };
+      }
+    },
+  );
 }
