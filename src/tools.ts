@@ -5,7 +5,7 @@ import { z } from "zod";
 type RequireConnection = () => Promise<string | null>;
 
 /**
- * Register 7 read-only Telegram tools on the given MCP server.
+ * Register 9 read-only Telegram tools on the given MCP server.
  * Write operations (send, edit, delete, forward, pin, etc.) are intentionally excluded.
  */
 export function registerReadOnlyTools(
@@ -166,6 +166,51 @@ export function registerReadOnlyTools(
           )
           .join("\n");
         return { content: [{ type: "text", text: text || "No unread chats" }] };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-get-chat-members",
+    "Get members/participants of a Telegram group or channel",
+    {
+      chatId: z.string().describe("Chat ID or username"),
+      limit: z.number().default(50).describe("Max number of members to return"),
+    },
+    async ({ chatId, limit }) => {
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+
+      try {
+        const members = await getTelegram().getChatMembers(chatId, limit);
+        const text = members
+          .map((m) => `${m.name}${m.username ? ` (@${m.username})` : ""} [${m.id}]`)
+          .join("\n");
+        return { content: [{ type: "text", text: text || "No members found (may require joining the group)" }] };
+      } catch (e) {
+        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-get-contacts",
+    "Get your Telegram contacts list",
+    {
+      limit: z.number().default(50).describe("Max number of contacts to return"),
+    },
+    async ({ limit }) => {
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+
+      try {
+        const contacts = await getTelegram().getContacts(limit);
+        const text = contacts
+          .map((c) => `${c.name}${c.username ? ` (@${c.username})` : ""}${c.phone ? ` [+${c.phone}]` : ""} (${c.id})`)
+          .join("\n");
+        return { content: [{ type: "text", text: text || "No contacts" }] };
       } catch (e) {
         return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
       }
