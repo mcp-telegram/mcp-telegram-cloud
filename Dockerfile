@@ -1,9 +1,9 @@
 # Stage 1: Build mcp-telegram from source (with declarations)
 FROM node:22-slim AS telegram-lib
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN git clone --depth 1 https://github.com/overpod/mcp-telegram.git /lib
 WORKDIR /lib
-RUN git clone --depth 1 https://github.com/overpod/mcp-telegram.git . && \
-    npm ci && npm run build
+RUN npm ci && npm run build
 
 # Stage 2: Build cloud app
 FROM node:22-slim AS builder
