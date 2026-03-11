@@ -87,6 +87,11 @@ export class SessionManager {
     return this.sessions.size;
   }
 
+  /** Expose the database for shared use (e.g. OAuth tables) */
+  getDb(): Database.Database {
+    return this.db;
+  }
+
   close(): void {
     this.db.close();
   }

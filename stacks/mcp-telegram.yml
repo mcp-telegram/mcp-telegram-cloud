@@ -13,6 +13,8 @@ services:
     environment:
       TELEGRAM_API_ID: $TELEGRAM_API_ID
       TELEGRAM_API_HASH: $TELEGRAM_API_HASH
+      ADMIN_TOKEN: $ADMIN_TOKEN
+      ISSUER: "https://mcp-telegram.com"
       PORT: "3000"
       NODE_ENV: production
     labels:

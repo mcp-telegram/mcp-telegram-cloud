@@ -57,4 +57,5 @@ jobs:
           SHARE_NETWORK_NAME: ${{ vars.SHARE_NETWORK_NAME }}
           TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: docker stack deploy -c stacks/mcp-telegram.yml mcp-telegram
