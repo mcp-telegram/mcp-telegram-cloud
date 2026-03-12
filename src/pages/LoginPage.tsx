@@ -3,10 +3,10 @@ import { button, card, hidden, input, label, qrContainer, spinner, status, step,
 import { Layout } from "./Layout.js";
 
 const clientScript = `
-  var eventSource = null;
+  let eventSource = null;
 
   function startLogin() {
-    var userId = document.getElementById('userId').value.trim();
+    const userId = document.getElementById('userId').value.trim();
     if (!userId) return;
 
     document.getElementById('login-form').style.display = 'none';
@@ -15,47 +15,47 @@ const clientScript = `
 
     eventSource = new EventSource('/login/qr?userId=' + encodeURIComponent(userId));
 
-    eventSource.addEventListener('qr', function(e) {
-      var data = JSON.parse(e.data);
+    eventSource.addEventListener('qr', (e) => {
+      const data = JSON.parse(e.data);
       document.getElementById('qr-container').innerHTML =
         '<img src="' + data.dataUrl + '" alt="QR Code">';
     });
 
-    eventSource.addEventListener('status', function(e) {
-      var data = JSON.parse(e.data);
+    eventSource.addEventListener('status', (e) => {
+      const data = JSON.parse(e.data);
       document.getElementById('status').textContent = data.message;
     });
 
-    eventSource.addEventListener('connected', function(e) {
-      var data = JSON.parse(e.data);
+    eventSource.addEventListener('connected', (e) => {
+      const data = JSON.parse(e.data);
       eventSource.close();
       document.getElementById('qr-section').style.display = 'none';
-      var result = document.getElementById('result');
+      const result = document.getElementById('result');
       result.style.display = 'block';
       result.innerHTML =
-        '<div style="background:#065f46;border-radius:12px;padding:20px;margin:20px 0">' +
-        '<h2 style="color:#34d399;font-size:20px;margin-bottom:8px">Connected!</h2>' +
+        '<div style="background:#F4F4F7;border:1px solid #31D158;border-radius:12px;padding:20px;margin:20px 0">' +
+        '<h2 style="color:#31D158;font-size:20px;margin-bottom:8px">Connected!</h2>' +
         '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')</p>' +
-        '<p style="margin-top:12px;font-size:13px;color:#94a3b8">Session saved. You can close this page.</p>' +
+        '<p style="margin-top:12px;font-size:13px;color:#707579">Session saved. You can close this page.</p>' +
         '</div>';
     });
 
-    eventSource.addEventListener('error_msg', function(e) {
-      var data = JSON.parse(e.data);
+    eventSource.addEventListener('error_msg', (e) => {
+      const data = JSON.parse(e.data);
       eventSource.close();
       document.getElementById('qr-section').style.display = 'none';
-      var result = document.getElementById('result');
+      const result = document.getElementById('result');
       result.style.display = 'block';
       result.innerHTML =
-        '<div style="background:#7f1d1d;border-radius:12px;padding:20px;margin:20px 0"><p>' + data.message + '</p></div>';
+        '<div style="background:#F4F4F7;border:1px solid #E53935;border-radius:12px;padding:20px;margin:20px 0"><p>' + data.message + '</p></div>';
     });
 
-    eventSource.onerror = function() {
+    eventSource.onerror = () => {
       document.getElementById('status').textContent = 'Connection lost. Refresh to retry.';
     };
   }
 
-  document.getElementById('userId').addEventListener('keydown', function(e) {
+  document.getElementById('userId').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') startLogin();
   });
 `;

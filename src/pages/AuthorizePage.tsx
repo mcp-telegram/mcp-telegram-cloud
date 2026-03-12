@@ -26,8 +26,8 @@ interface AuthorizePageProps {
 
 export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
   const clientScript = `
-    (function() {
-      var qs = new URLSearchParams({
+    (() => {
+      const qs = new URLSearchParams({
         client_id: ${JSON.stringify(props.clientId)},
         redirect_uri: ${JSON.stringify(props.redirectUri)},
         state: ${JSON.stringify(props.state)},
@@ -35,45 +35,45 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
         code_challenge_method: ${JSON.stringify(props.codeChallengeMethod)}
       });
 
-      var es = new EventSource('/oauth/authorize/qr?' + qs.toString());
+      const es = new EventSource('/oauth/authorize/qr?' + qs.toString());
 
-      es.addEventListener('qr', function(e) {
-        var data = JSON.parse(e.data);
+      es.addEventListener('qr', (e) => {
+        const data = JSON.parse(e.data);
         document.getElementById('qr-container').innerHTML =
           '<img src="' + data.dataUrl + '" alt="QR Code">';
       });
 
-      es.addEventListener('status', function(e) {
-        var data = JSON.parse(e.data);
+      es.addEventListener('status', (e) => {
+        const data = JSON.parse(e.data);
         document.getElementById('status').textContent = data.message;
       });
 
-      es.addEventListener('redirect', function(e) {
-        var data = JSON.parse(e.data);
+      es.addEventListener('redirect', (e) => {
+        const data = JSON.parse(e.data);
         es.close();
         document.getElementById('qr-section').style.display = 'none';
-        var result = document.getElementById('result');
+        const result = document.getElementById('result');
         result.style.display = 'block';
         result.innerHTML =
-          '<div style="background:#065f46;border-radius:12px;padding:20px;margin:20px 0">' +
-          '<h2 style="color:#34d399;font-size:20px;margin-bottom:8px">Connected!</h2>' +
+          '<div style="background:#F4F4F7;border:1px solid #31D158;border-radius:12px;padding:20px;margin:20px 0">' +
+          '<h2 style="color:#31D158;font-size:20px;margin-bottom:8px">Connected!</h2>' +
           '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')</p>' +
-          '<p style="margin-top:12px;font-size:13px;color:#94a3b8">Redirecting...</p>' +
+          '<p style="margin-top:12px;font-size:13px;color:#707579">Redirecting...</p>' +
           '</div>';
         window.location.href = data.url;
       });
 
-      es.addEventListener('error_msg', function(e) {
-        var data = JSON.parse(e.data);
+      es.addEventListener('error_msg', (e) => {
+        const data = JSON.parse(e.data);
         es.close();
         document.getElementById('qr-section').style.display = 'none';
-        var result = document.getElementById('result');
+        const result = document.getElementById('result');
         result.style.display = 'block';
         result.innerHTML =
-          '<div style="background:#7f1d1d;border-radius:8px;padding:12px"><p>' + data.message + '</p></div>';
+          '<div style="background:#F4F4F7;border:1px solid #E53935;border-radius:12px;padding:12px"><p>' + data.message + '</p></div>';
       });
 
-      es.onerror = function() {
+      es.onerror = () => {
         document.getElementById('status').textContent = 'Connection lost. Refresh to retry.';
       };
     })();
