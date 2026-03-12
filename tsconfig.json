@@ -5,6 +5,8 @@
     "moduleResolution": "bundler",
     "outDir": "dist",
     "rootDir": "src",
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

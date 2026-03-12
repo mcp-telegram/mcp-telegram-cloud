@@ -4,8 +4,10 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { TELEGRAM_ICON_SVG } from "./icon.js";
 import { handleMcpRequest } from "./mcp-handler.js";
-import { OAuthProvider, renderAuthorizePage } from "./oauth.js";
-import { handleOAuthQrLogin, handleQrLogin, renderLoginPage } from "./qr-login.js";
+import { OAuthProvider } from "./oauth.js";
+import { AuthorizePage } from "./pages/AuthorizePage.js";
+import { LoginPage } from "./pages/LoginPage.js";
+import { handleOAuthQrLogin, handleQrLogin } from "./qr-login.js";
 import { SessionManager } from "./session-manager.js";
 
 const app = new Hono();
@@ -83,14 +85,14 @@ app.get("/oauth/authorize", (c) => {
   }
 
   return c.html(
-    renderAuthorizePage({
-      clientId,
-      clientName: client.client_name,
-      redirectUri,
-      state,
-      codeChallenge,
-      codeChallengeMethod,
-    }),
+    <AuthorizePage
+      clientId={clientId}
+      clientName={client.client_name}
+      redirectUri={redirectUri}
+      state={state}
+      codeChallenge={codeChallenge}
+      codeChallengeMethod={codeChallengeMethod}
+    />,
   );
 });
 
@@ -267,7 +269,7 @@ app.all("/mcp", async (c) => {
 
 // ─── QR Login ────────────────────────────────────────────────────────
 app.get("/login", (c) => {
-  return c.html(renderLoginPage());
+  return c.html(<LoginPage />);
 });
 
 app.get("/login/qr", async (c) => {
