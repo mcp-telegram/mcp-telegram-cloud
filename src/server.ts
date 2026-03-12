@@ -152,6 +152,52 @@ app.post("/oauth/token", async (c) => {
   return c.json(result);
 });
 
+// ─── OAuth 2.0 Token Revocation (RFC 7009) ──────────────────────────
+app.post("/oauth/revoke", async (c) => {
+  const contentType = c.req.header("content-type") ?? "";
+  let params: Record<string, string>;
+
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const form = await c.req.formData();
+    params = Object.fromEntries(form.entries()) as Record<string, string>;
+  } else {
+    params = await c.req.json();
+  }
+
+  const token = params.token;
+  console.log(`[revoke] Received revocation request`, {
+    hasToken: !!token,
+    tokenHint: params.token_type_hint,
+    headers: Object.fromEntries(
+      [...c.req.raw.headers.entries()].filter(
+        ([k]) => !k.toLowerCase().includes("authorization"),
+      ),
+    ),
+  });
+
+  if (!token) {
+    console.log("[revoke] No token provided, returning 200 per RFC 7009");
+    return c.json({});
+  }
+
+  // Revoke the OAuth token and get user_id
+  const userId = oauth.revokeToken(token);
+
+  if (userId) {
+    console.log(`[revoke] Token revoked for user ${userId}, destroying Telegram session...`);
+    // Full cleanup: logout from Telegram + delete session from SQLite
+    const { loggedOut } = await sessions.destroyUserSession(userId);
+    // Also revoke any other tokens for this user
+    oauth.revokeAllUserTokens(userId);
+    console.log(`[revoke] Full cleanup done for ${userId} (telegramLogOut=${loggedOut})`);
+  } else {
+    console.log("[revoke] Token not found or already expired");
+  }
+
+  // RFC 7009: always return 200, even if token was invalid
+  return c.json({});
+});
+
 // ─── Session Import API ──────────────────────────────────────────────
 app.post("/api/import-session", async (c) => {
   const auth = c.req.header("Authorization");

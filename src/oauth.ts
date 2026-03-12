@@ -76,6 +76,7 @@ export class OAuthProvider {
       authorization_endpoint: `${this.issuer}/oauth/authorize`,
       token_endpoint: `${this.issuer}/oauth/token`,
       registration_endpoint: `${this.issuer}/oauth/register`,
+      revocation_endpoint: `${this.issuer}/oauth/revoke`,
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code"],
       token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
@@ -193,6 +194,31 @@ export class OAuthProvider {
     }
 
     return row.user_id;
+  }
+
+  /**
+   * Revoke a specific token and return the associated user_id (for session cleanup).
+   * RFC 7009 — Token Revocation.
+   */
+  revokeToken(token: string): string | null {
+    const row = this.db.prepare("SELECT user_id FROM oauth_tokens WHERE access_token = ?").get(token) as
+      | { user_id: string }
+      | undefined;
+
+    if (!row) return null;
+
+    this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(token);
+    console.log(`[oauth] Revoked token for user ${row.user_id}`);
+    return row.user_id;
+  }
+
+  /**
+   * Revoke ALL tokens for a given user_id.
+   */
+  revokeAllUserTokens(userId: string): number {
+    const result = this.db.prepare("DELETE FROM oauth_tokens WHERE user_id = ?").run(userId);
+    console.log(`[oauth] Revoked all tokens for user ${userId}: ${result.changes} removed`);
+    return result.changes;
   }
 
   /** PKCE S256 verification */

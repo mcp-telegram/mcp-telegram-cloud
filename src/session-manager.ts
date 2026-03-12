@@ -83,6 +83,34 @@ export class SessionManager {
     }
   }
 
+  /**
+   * Full session destruction: logout from Telegram, remove from memory and SQLite.
+   * Used when user disconnects the connector (OAuth revoke).
+   */
+  async destroyUserSession(userId: string): Promise<{ loggedOut: boolean }> {
+    let loggedOut = false;
+    const session = this.sessions.get(userId);
+
+    if (session) {
+      try {
+        loggedOut = await session.telegram.logOut();
+        console.log(`[sessions] Telegram logOut for ${userId}: ${loggedOut}`);
+      } catch (error) {
+        console.error(`[sessions] Telegram logOut failed for ${userId}:`, error);
+        try {
+          await session.telegram.disconnect();
+        } catch {}
+      }
+      this.sessions.delete(userId);
+    }
+
+    // Remove session string from SQLite
+    this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
+    console.log(`[sessions] Destroyed session for ${userId} (loggedOut=${loggedOut})`);
+
+    return { loggedOut };
+  }
+
   getActiveCount(): number {
     return this.sessions.size;
   }
