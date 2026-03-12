@@ -116,6 +116,21 @@ export class SessionManager {
     return new TelegramService(this.apiId, this.apiHash);
   }
 
+  /** Adopt an already-connected TelegramService into the session pool (avoids duplicate Telegram sessions) */
+  adoptSession(userId: string, telegram: TelegramService): void {
+    // Destroy any existing session for this user first
+    const existing = this.sessions.get(userId);
+    if (existing) {
+      existing.telegram.disconnect().catch(() => {});
+    }
+    this.sessions.set(userId, {
+      telegram,
+      connectedAt: new Date(),
+      lastActivity: new Date(),
+    });
+    console.log(`[sessions] Adopted session for ${userId}`);
+  }
+
   getActiveCount(): number {
     return this.sessions.size;
   }

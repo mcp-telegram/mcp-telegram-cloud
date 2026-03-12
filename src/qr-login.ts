@@ -134,8 +134,8 @@ export async function handleOAuthQrLogin(
             id: me.id,
           });
 
-          // Disconnect temp client — session will be loaded by MCP handler later
-          await telegram.disconnect();
+          // Adopt the temp client into the session pool — avoids creating a duplicate Telegram session
+          sessions.adoptSession(userId, telegram);
         } else {
           send("error_msg", { message: result.message ?? "QR login failed" });
         }
