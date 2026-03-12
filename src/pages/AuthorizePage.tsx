@@ -55,8 +55,8 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
         const result = document.getElementById('result');
         result.style.display = 'block';
         result.innerHTML =
-          '<div style="background:#F4F4F7;border:1px solid #31D158;border-radius:12px;padding:20px;margin:20px 0">' +
-          '<h2 style="color:#31D158;font-size:20px;margin-bottom:8px">Connected!</h2>' +
+          '<div style="background:#F4F4F7;border:1px solid #007AFF;border-radius:12px;padding:20px;margin:20px 0">' +
+          '<h2 style="color:#007AFF;font-size:20px;margin-bottom:8px">Connected!</h2>' +
           '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')</p>' +
           '<p style="margin-top:12px;font-size:13px;color:#707579">Redirecting...</p>' +
           '</div>';
