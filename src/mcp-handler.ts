@@ -7,6 +7,12 @@ import { registerReadOnlyTools } from "./tools.js";
 /** Map of MCP session ID → transport (for multi-request sessions) */
 const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
 
+/** Pending cleanup timers per userId — cancelled if user reconnects */
+const cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+/** How long to wait after last MCP session closes before destroying Telegram session */
+const CLEANUP_DELAY_MS = 30 * 60 * 1000; // 30 minutes
+
 /**
  * Create or retrieve an MCP transport for the given request.
  * Each MCP session gets its own McpServer + Transport pair wired to the user's TelegramService.
@@ -20,6 +26,14 @@ export async function handleMcpRequest(sessions: SessionManager, userId: string,
     if (transport) return transport.handleRequest(req);
   }
 
+  // User reconnected — cancel any pending cleanup
+  const pendingCleanup = cleanupTimers.get(userId);
+  if (pendingCleanup) {
+    clearTimeout(pendingCleanup);
+    cleanupTimers.delete(userId);
+    console.log(`[cloud] Cleanup timer cancelled for ${userId} (reconnected)`);
+  }
+
   // New session — create MCP server + transport
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
@@ -30,6 +44,18 @@ export async function handleMcpRequest(sessions: SessionManager, userId: string,
     onsessionclosed: (sid) => {
       transports.delete(sid);
       console.log(`[cloud] MCP session closed: ${sid}`);
+
+      // Schedule cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
+      const timer = setTimeout(async () => {
+        cleanupTimers.delete(userId);
+        console.log(
+          `[cloud] Cleanup timer fired for ${userId} (no reconnect in ${CLEANUP_DELAY_MS / 60000}m), destroying session...`,
+        );
+        await sessions.destroyUserSession(userId);
+      }, CLEANUP_DELAY_MS);
+
+      cleanupTimers.set(userId, timer);
+      console.log(`[cloud] Cleanup timer set for ${userId} (${CLEANUP_DELAY_MS / 60000}m)`);
     },
   });
 
