@@ -346,7 +346,7 @@ export function renderAuthorizePage(params: {
           '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')</p>' +
           '<p style="margin-top:12px;font-size:13px;color:#94a3b8">Redirecting...</p>' +
           '</div>';
-        setTimeout(function() { window.location.href = data.url; }, 1000);
+        window.location.href = data.url;
       });
 
       es.addEventListener('error_msg', function(e) {
