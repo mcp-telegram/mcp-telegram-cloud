@@ -111,6 +111,11 @@ export class SessionManager {
     return { loggedOut };
   }
 
+  /** Create a standalone TelegramService (not tracked in the pool) for temporary use like QR login */
+  createTempTelegram(): TelegramService {
+    return new TelegramService(this.apiId, this.apiHash);
+  }
+
   getActiveCount(): number {
     return this.sessions.size;
   }

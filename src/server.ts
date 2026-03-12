@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import { TELEGRAM_ICON_SVG } from "./icon.js";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider, renderAuthorizePage } from "./oauth.js";
-import { handleQrLogin, renderLoginPage } from "./qr-login.js";
+import { handleOAuthQrLogin, handleQrLogin, renderLoginPage } from "./qr-login.js";
 import { SessionManager } from "./session-manager.js";
 
 const app = new Hono();
@@ -94,43 +94,36 @@ app.get("/oauth/authorize", (c) => {
   );
 });
 
-app.post("/oauth/authorize", async (c) => {
-  const form = await c.req.formData();
-  const clientId = form.get("client_id") as string;
-  const redirectUri = form.get("redirect_uri") as string;
-  const state = form.get("state") as string;
-  const codeChallenge = form.get("code_challenge") as string;
-  const codeChallengeMethod = (form.get("code_challenge_method") as string) || "S256";
-  const username = form.get("username") as string;
+// ─── OAuth QR Login SSE (used by authorize page) ─────────────────────
+app.get("/oauth/authorize/qr", async (c) => {
+  const clientId = c.req.query("client_id") ?? "";
+  const redirectUri = c.req.query("redirect_uri") ?? "";
+  const state = c.req.query("state") ?? "";
+  const codeChallenge = c.req.query("code_challenge") ?? "";
+  const codeChallengeMethod = c.req.query("code_challenge_method") ?? "S256";
 
-  if (!username) {
-    const client = oauth.getClient(clientId);
-    return c.html(
-      renderAuthorizePage({
-        clientId,
-        clientName: client?.client_name ?? "",
-        redirectUri,
-        state,
-        codeChallenge,
-        codeChallengeMethod,
-        error: "Username is required",
-      }),
-    );
+  const client = oauth.getClient(clientId);
+  if (!client) {
+    return c.text("Unknown client", 400);
   }
 
-  const code = oauth.createAuthCode({
-    clientId,
-    userId: username,
-    redirectUri,
-    codeChallenge,
-    codeChallengeMethod,
+  const controller = new AbortController();
+  c.req.raw.signal.addEventListener("abort", () => controller.abort());
+
+  const stream = await handleOAuthQrLogin(
+    sessions,
+    oauth,
+    { clientId, redirectUri, state, codeChallenge, codeChallengeMethod },
+    controller.signal,
+  );
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
   });
-
-  const url = new URL(redirectUri);
-  url.searchParams.set("code", code);
-  if (state) url.searchParams.set("state", state);
-
-  return c.redirect(url.toString());
 });
 
 // ─── OAuth 2.0 Token Endpoint ────────────────────────────────────────

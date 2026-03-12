@@ -239,7 +239,7 @@ export class OAuthProvider {
   }
 }
 
-/** HTML page for /oauth/authorize — simple user approval form */
+/** HTML page for /oauth/authorize — QR-based Telegram login + OAuth authorization */
 export function renderAuthorizePage(params: {
   clientId: string;
   clientName: string;
@@ -261,45 +261,108 @@ export function renderAuthorizePage(params: {
       background: #0f172a; color: #e2e8f0; display: flex; align-items: center;
       justify-content: center; min-height: 100vh; }
     .card { background: #1e293b; border-radius: 16px; padding: 40px;
-      max-width: 420px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,.3); }
+      max-width: 420px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,.3);
+      text-align: center; }
     h1 { font-size: 24px; margin-bottom: 8px; }
     .subtitle { color: #94a3b8; margin-bottom: 24px; }
     .client { background: #334155; border-radius: 8px; padding: 12px 16px;
       margin-bottom: 24px; font-size: 14px; }
-    label { display: block; font-size: 14px; margin-bottom: 6px; color: #cbd5e1; }
-    input { width: 100%; padding: 10px 14px; border: 1px solid #475569;
-      border-radius: 8px; background: #0f172a; color: #e2e8f0; font-size: 16px;
-      margin-bottom: 16px; outline: none; }
-    input:focus { border-color: #3b82f6; }
-    button { width: 100%; padding: 12px; border: none; border-radius: 8px;
-      background: #3b82f6; color: white; font-size: 16px; font-weight: 600;
-      cursor: pointer; transition: background .2s; }
-    button:hover { background: #2563eb; }
+    .qr-container { background: white; border-radius: 12px; padding: 16px;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin: 20px 0; min-height: 288px; min-width: 288px; }
+    .qr-container img { width: 256px; height: 256px; }
+    .status { color: #94a3b8; font-size: 14px; margin: 16px 0; min-height: 20px; }
+    .success { background: #065f46; border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success h2 { color: #34d399; font-size: 20px; margin-bottom: 8px; }
     .error { background: #7f1d1d; border-radius: 8px; padding: 12px; margin-bottom: 16px;
       font-size: 14px; }
+    .step { background: #334155; border-radius: 8px; padding: 12px; margin: 8px 0;
+      font-size: 13px; text-align: left; }
+    .step strong { color: #60a5fa; }
     .scope { color: #94a3b8; font-size: 13px; margin-top: 16px; }
+    .spinner { display: inline-block; width: 24px; height: 24px;
+      border: 3px solid #475569; border-top-color: #3b82f6;
+      border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #qr-section, #result { display: none; }
+    #qr-section.active, #result.active { display: block; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>🔐 Authorize</h1>
-    <p class="subtitle">MCP Telegram Cloud</p>
+    <h1>MCP Telegram</h1>
+    <p class="subtitle">Connect your Telegram account</p>
     ${params.error ? `<div class="error">${params.error}</div>` : ""}
     <div class="client">
-      <strong>${params.clientName || "MCP Client"}</strong> wants to access your Telegram (read-only).
+      <strong>${params.clientName || "MCP Client"}</strong> wants read-only access to your Telegram.
     </div>
-    <form method="POST" action="/oauth/authorize">
-      <input type="hidden" name="client_id" value="${params.clientId}">
-      <input type="hidden" name="redirect_uri" value="${params.redirectUri}">
-      <input type="hidden" name="state" value="${params.state}">
-      <input type="hidden" name="code_challenge" value="${params.codeChallenge}">
-      <input type="hidden" name="code_challenge_method" value="${params.codeChallengeMethod}">
-      <label for="username">Your username</label>
-      <input type="text" id="username" name="username" placeholder="e.g. overpod" required autofocus>
-      <button type="submit">Authorize</button>
-    </form>
+
+    <div id="qr-section" class="active">
+      <div class="qr-container" id="qr-container">
+        <div class="spinner"></div>
+      </div>
+      <div class="status" id="status">Connecting...</div>
+      <div class="step"><strong>Step 1:</strong> Open Telegram on your phone</div>
+      <div class="step"><strong>Step 2:</strong> Go to Settings → Devices → Link Desktop Device</div>
+      <div class="step"><strong>Step 3:</strong> Scan the QR code above</div>
+    </div>
+
+    <div id="result"></div>
+
     <p class="scope">Scope: read-only access to chats, messages, contacts</p>
   </div>
+
+  <script>
+    (function() {
+      var qs = new URLSearchParams({
+        client_id: ${JSON.stringify(params.clientId)},
+        redirect_uri: ${JSON.stringify(params.redirectUri)},
+        state: ${JSON.stringify(params.state)},
+        code_challenge: ${JSON.stringify(params.codeChallenge)},
+        code_challenge_method: ${JSON.stringify(params.codeChallengeMethod)}
+      });
+
+      var es = new EventSource('/oauth/authorize/qr?' + qs.toString());
+
+      es.addEventListener('qr', function(e) {
+        var data = JSON.parse(e.data);
+        document.getElementById('qr-container').innerHTML =
+          '<img src="' + data.dataUrl + '" alt="QR Code">';
+      });
+
+      es.addEventListener('status', function(e) {
+        var data = JSON.parse(e.data);
+        document.getElementById('status').textContent = data.message;
+      });
+
+      es.addEventListener('redirect', function(e) {
+        var data = JSON.parse(e.data);
+        es.close();
+        document.getElementById('qr-section').classList.remove('active');
+        document.getElementById('result').classList.add('active');
+        document.getElementById('result').innerHTML =
+          '<div class="success">' +
+          '<h2>Connected!</h2>' +
+          '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')</p>' +
+          '<p style="margin-top:12px;font-size:13px;color:#94a3b8">Redirecting...</p>' +
+          '</div>';
+        setTimeout(function() { window.location.href = data.url; }, 1000);
+      });
+
+      es.addEventListener('error_msg', function(e) {
+        var data = JSON.parse(e.data);
+        es.close();
+        document.getElementById('qr-section').classList.remove('active');
+        document.getElementById('result').classList.add('active');
+        document.getElementById('result').innerHTML =
+          '<div class="error"><p>' + data.message + '</p></div>';
+      });
+
+      es.onerror = function() {
+        document.getElementById('status').textContent = 'Connection lost. Refresh to retry.';
+      };
+    })();
+  </script>
 </body>
 </html>`;
 }
