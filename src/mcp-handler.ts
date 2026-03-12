@@ -46,7 +46,12 @@ export async function handleMcpRequest(sessions: SessionManager, userId: string,
     return `Not connected to Telegram.${reason}`;
   };
 
-  registerReadOnlyTools(server, () => telegram, requireConnection);
+  const onSessionRevoked = async () => {
+    console.log(`[cloud] Session revoked detected for user ${userId}, cleaning up...`);
+    await sessions.destroyUserSession(userId);
+  };
+
+  registerReadOnlyTools(server, () => telegram, requireConnection, onSessionRevoked);
 
   await server.connect(transport);
   return transport.handleRequest(req);

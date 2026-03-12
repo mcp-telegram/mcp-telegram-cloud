@@ -169,9 +169,7 @@ app.post("/oauth/revoke", async (c) => {
     hasToken: !!token,
     tokenHint: params.token_type_hint,
     headers: Object.fromEntries(
-      [...c.req.raw.headers.entries()].filter(
-        ([k]) => !k.toLowerCase().includes("authorization"),
-      ),
+      [...c.req.raw.headers.entries()].filter(([k]) => !k.toLowerCase().includes("authorization")),
     ),
   });
 

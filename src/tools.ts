@@ -3,6 +3,32 @@ import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
 
 type RequireConnection = () => Promise<string | null>;
+type OnSessionRevoked = () => Promise<void>;
+
+const AUTH_ERROR_PATTERNS = [
+  "AUTH_KEY_UNREGISTERED",
+  "AUTH_KEY_INVALID",
+  "SESSION_REVOKED",
+  "SESSION_EXPIRED",
+  "USER_DEACTIVATED",
+  "USER_DEACTIVATED_BAN",
+];
+
+function isAuthError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return AUTH_ERROR_PATTERNS.some((p) => msg.includes(p));
+}
+
+const SESSION_REVOKED_MSG =
+  "Telegram session was revoked or expired. Please reconnect the connector in Claude.ai (Disconnect → Connect again).";
+
+function handleToolError(e: unknown, onRevoked: OnSessionRevoked): { content: { type: "text"; text: string }[] } {
+  if (isAuthError(e)) {
+    onRevoked().catch(() => {});
+    return { content: [{ type: "text", text: SESSION_REVOKED_MSG }] };
+  }
+  return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+}
 
 /**
  * Register 9 read-only Telegram tools on the given MCP server.
@@ -12,7 +38,9 @@ export function registerReadOnlyTools(
   server: McpServer,
   getTelegram: () => TelegramService,
   requireConnection: RequireConnection,
+  onSessionRevoked?: OnSessionRevoked,
 ) {
+  const onRevoked = onSessionRevoked ?? (async () => {});
   server.tool("telegram-status", "Check Telegram connection status", {}, async () => {
     const telegram = getTelegram();
     if (await telegram.ensureConnected()) {
@@ -26,8 +54,8 @@ export function registerReadOnlyTools(
             },
           ],
         };
-      } catch {
-        return { content: [{ type: "text", text: "Connected, but failed to get user info" }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked);
       }
     }
     const reason = telegram.lastError ? ` Reason: ${telegram.lastError}` : "";
@@ -58,7 +86,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No chats" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -87,7 +115,7 @@ export function registerReadOnlyTools(
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -113,7 +141,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No results" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -142,7 +170,7 @@ export function registerReadOnlyTools(
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages found" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -167,7 +195,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No unread chats" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -185,12 +213,10 @@ export function registerReadOnlyTools(
 
       try {
         const members = await getTelegram().getChatMembers(chatId, limit);
-        const text = members
-          .map((m) => `${m.name}${m.username ? ` (@${m.username})` : ""} [${m.id}]`)
-          .join("\n");
+        const text = members.map((m) => `${m.name}${m.username ? ` (@${m.username})` : ""} [${m.id}]`).join("\n");
         return { content: [{ type: "text", text: text || "No members found (may require joining the group)" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -212,7 +238,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No contacts" }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -239,7 +265,7 @@ export function registerReadOnlyTools(
         ];
         return { content: [{ type: "text", text: lines.join("\n") }] };
       } catch (e) {
-        return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
@@ -292,7 +318,7 @@ export function registerReadOnlyTools(
           ],
         };
       } catch (e) {
-        return { content: [{ type: "text", text: `Download error: ${(e as Error).message}` }] };
+        return handleToolError(e, onRevoked);
       }
     },
   );
