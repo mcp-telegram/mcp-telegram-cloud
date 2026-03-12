@@ -45,7 +45,11 @@ export async function handleMcpRequest(sessions: SessionManager, userId: string,
       transports.delete(sid);
       console.log(`[cloud] MCP session closed: ${sid}`);
 
-      // Schedule cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
+      // Immediately disconnect Telegram client to stop GramJS update loop (no more TIMEOUT spam)
+      // Session string is already saved in SQLite — reconnect will restore from it
+      sessions.disconnectUser(userId);
+
+      // Schedule full cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
       const timer = setTimeout(async () => {
         cleanupTimers.delete(userId);
         console.log(

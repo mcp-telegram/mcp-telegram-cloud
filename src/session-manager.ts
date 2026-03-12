@@ -75,11 +75,23 @@ export class SessionManager {
     return session?.telegram;
   }
 
-  async disconnectUser(userId: string): Promise<void> {
+  /**
+   * Disconnect Telegram client (stop update loop) but keep session string in SQLite.
+   * Used on MCP session close — no TIMEOUT spam, reconnect will restore from SQLite.
+   */
+  disconnectUser(userId: string): void {
     const session = this.sessions.get(userId);
     if (session) {
-      await session.telegram.disconnect();
+      // Save session string before disconnecting (in case it wasn't saved yet)
+      const ss = session.telegram.getSessionString();
+      if (ss) {
+        this.saveSessionString(userId, ss);
+      }
+      session.telegram.disconnect().catch((err: unknown) => {
+        console.error(`[sessions] disconnect failed for ${userId}:`, err);
+      });
       this.sessions.delete(userId);
+      console.log(`[sessions] Disconnected ${userId} (session string preserved in SQLite)`);
     }
   }
 
