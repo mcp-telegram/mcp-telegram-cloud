@@ -76,8 +76,8 @@ export class SessionManager {
   }
 
   /**
-   * Disconnect Telegram client (stop update loop) but keep session string in SQLite.
-   * Used on MCP session close — no TIMEOUT spam, reconnect will restore from SQLite.
+   * Disconnect Telegram client (stop update loop) but keep session in pool + SQLite.
+   * Used on MCP session close — no TIMEOUT spam, reconnect will reuse same auth key.
    */
   disconnectUser(userId: string): void {
     const session = this.sessions.get(userId);
@@ -90,8 +90,8 @@ export class SessionManager {
       session.telegram.disconnect().catch((err: unknown) => {
         console.error(`[sessions] disconnect failed for ${userId}:`, err);
       });
-      this.sessions.delete(userId);
-      console.log(`[sessions] Disconnected ${userId} (session string preserved in SQLite)`);
+      // Keep in pool! So adoptSession can logOut, and getOrCreateSession can reuse same auth key
+      console.log(`[sessions] Disconnected ${userId} (kept in pool, session string preserved in SQLite)`);
     }
   }
 
@@ -105,6 +105,8 @@ export class SessionManager {
 
     if (session) {
       try {
+        // Reconnect if disconnected, so we can logOut properly
+        await session.telegram.ensureConnected();
         loggedOut = await session.telegram.logOut();
         console.log(`[sessions] Telegram logOut for ${userId}: ${loggedOut}`);
       } catch (error) {
@@ -132,9 +134,11 @@ export class SessionManager {
   adoptSession(userId: string, telegram: TelegramService): void {
     // Destroy any existing session for this user first — logOut kills it in Telegram's Active Devices
     const existing = this.sessions.get(userId);
-    if (existing) {
+    if (existing && existing.telegram !== telegram) {
+      // Reconnect if disconnected, then logOut to kill old Telegram session
       existing.telegram
-        .logOut()
+        .ensureConnected()
+        .then(() => existing.telegram.logOut())
         .then((ok: boolean) => console.log(`[sessions] Old session logOut for ${userId}: ${ok}`))
         .catch((err: unknown) => {
           console.error(`[sessions] Old session logOut failed for ${userId}:`, err);
