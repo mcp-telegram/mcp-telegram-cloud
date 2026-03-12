@@ -4,8 +4,8 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-// ─── Base ────────────────────────────────────────────────────────────
-export const globalStyles = css`
+// ─── Global reset (raw CSS string for <style> tag) ──────────────────
+export const globalReset = `
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -15,6 +15,7 @@ export const globalStyles = css`
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    padding: 20px;
   }
 `;
 

@@ -1,19 +1,6 @@
-import { Style } from "hono/css";
 import type { FC } from "hono/jsx";
-import {
-  button,
-  card,
-  globalStyles,
-  hidden,
-  input,
-  label,
-  qrContainer,
-  spinner,
-  status,
-  step,
-  subtitle,
-  title,
-} from "../styles.js";
+import { button, card, hidden, input, label, qrContainer, spinner, status, step, subtitle, title } from "../styles.js";
+import { Layout } from "./Layout.js";
 
 const clientScript = `
   var eventSource = null;
@@ -75,51 +62,43 @@ const clientScript = `
 
 export const LoginPage: FC = () => {
   return (
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>MCP Telegram — Login</title>
-        <Style />
-      </head>
-      <body class={globalStyles}>
-        <div class={card}>
-          <h1 class={title}>MCP Telegram Cloud</h1>
-          <p class={subtitle}>Connect your Telegram account</p>
+    <Layout title="MCP Telegram — Login">
+      <div class={card}>
+        <h1 class={title}>MCP Telegram Cloud</h1>
+        <p class={subtitle}>Connect your Telegram account</p>
 
-          <div id="login-form">
-            <label class={label} for="userId">
-              Your username
-            </label>
-            <input class={input} type="text" id="userId" placeholder="e.g. overpod" required autofocus />
-            <button type="button" class={button} id="startBtn" onclick="startLogin()">
-              Start QR Login
-            </button>
-            <div class={step}>
-              <strong>Step 1:</strong> Enter your username
-            </div>
-            <div class={step}>
-              <strong>Step 2:</strong> Scan the QR code with Telegram
-            </div>
-            <div class={step}>
-              <strong>Step 3:</strong> Open Telegram &gt; Settings &gt; Devices &gt; Link Desktop Device
-            </div>
+        <div id="login-form">
+          <label class={label} for="userId">
+            Your username
+          </label>
+          <input class={input} type="text" id="userId" placeholder="e.g. overpod" required autofocus />
+          <button type="button" class={button} id="startBtn" onclick="startLogin()">
+            Start QR Login
+          </button>
+          <div class={step}>
+            <strong>Step 1:</strong> Enter your username
           </div>
-
-          <div id="qr-section" class={hidden}>
-            <div class={qrContainer} id="qr-container">
-              <div class={spinner} />
-            </div>
-            <div class={status} id="status">
-              Connecting...
-            </div>
+          <div class={step}>
+            <strong>Step 2:</strong> Scan the QR code with Telegram
           </div>
-
-          <div id="result" class={hidden} />
+          <div class={step}>
+            <strong>Step 3:</strong> Open Telegram &gt; Settings &gt; Devices &gt; Link Desktop Device
+          </div>
         </div>
 
-        <script dangerouslySetInnerHTML={{ __html: clientScript }} />
-      </body>
-    </html>
+        <div id="qr-section" class={hidden}>
+          <div class={qrContainer} id="qr-container">
+            <div class={spinner} />
+          </div>
+          <div class={status} id="status">
+            Connecting...
+          </div>
+        </div>
+
+        <div id="result" class={hidden} />
+      </div>
+
+      <script dangerouslySetInnerHTML={{ __html: clientScript }} />
+    </Layout>
   );
 };

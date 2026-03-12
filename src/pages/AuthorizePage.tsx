@@ -1,10 +1,8 @@
-import { Style } from "hono/css";
 import type { FC } from "hono/jsx";
 import {
   card,
   clientBlock,
   errorInline,
-  globalStyles,
   hidden,
   qrContainer,
   scope,
@@ -14,6 +12,7 @@ import {
   subtitle,
   title,
 } from "../styles.js";
+import { Layout } from "./Layout.js";
 
 interface AuthorizePageProps {
   clientId: string;
@@ -81,49 +80,41 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
   `;
 
   return (
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>MCP Telegram — Authorize</title>
-        <Style />
-      </head>
-      <body class={globalStyles}>
-        <div class={card}>
-          <h1 class={title}>MCP Telegram</h1>
-          <p class={subtitle}>Connect your Telegram account</p>
+    <Layout title="MCP Telegram — Authorize">
+      <div class={card}>
+        <h1 class={title}>MCP Telegram</h1>
+        <p class={subtitle}>Connect your Telegram account</p>
 
-          {props.error && <div class={errorInline}>{props.error}</div>}
+        {props.error && <div class={errorInline}>{props.error}</div>}
 
-          <div class={clientBlock}>
-            <strong>{props.clientName || "MCP Client"}</strong> wants read-only access to your Telegram.
-          </div>
-
-          <div id="qr-section">
-            <div class={qrContainer} id="qr-container">
-              <div class={spinner} />
-            </div>
-            <div class={status} id="status">
-              Connecting...
-            </div>
-            <div class={step}>
-              <strong>Step 1:</strong> Open Telegram on your phone
-            </div>
-            <div class={step}>
-              <strong>Step 2:</strong> Go to Settings → Devices → Link Desktop Device
-            </div>
-            <div class={step}>
-              <strong>Step 3:</strong> Scan the QR code above
-            </div>
-          </div>
-
-          <div id="result" class={hidden} />
-
-          <p class={scope}>Scope: read-only access to chats, messages, contacts</p>
+        <div class={clientBlock}>
+          <strong>{props.clientName || "MCP Client"}</strong> wants read-only access to your Telegram.
         </div>
 
-        <script dangerouslySetInnerHTML={{ __html: clientScript }} />
-      </body>
-    </html>
+        <div id="qr-section">
+          <div class={qrContainer} id="qr-container">
+            <div class={spinner} />
+          </div>
+          <div class={status} id="status">
+            Connecting...
+          </div>
+          <div class={step}>
+            <strong>Step 1:</strong> Open Telegram on your phone
+          </div>
+          <div class={step}>
+            <strong>Step 2:</strong> Go to Settings → Devices → Link Desktop Device
+          </div>
+          <div class={step}>
+            <strong>Step 3:</strong> Scan the QR code above
+          </div>
+        </div>
+
+        <div id="result" class={hidden} />
+
+        <p class={scope}>Scope: read-only access to chats, messages, contacts</p>
+      </div>
+
+      <script dangerouslySetInnerHTML={{ __html: clientScript }} />
+    </Layout>
   );
 };
