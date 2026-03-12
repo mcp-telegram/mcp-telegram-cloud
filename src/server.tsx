@@ -6,9 +6,11 @@ import { TELEGRAM_ICON_SVG } from "./icon.js";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider } from "./oauth.js";
 import { AuthorizePage } from "./pages/AuthorizePage.js";
+import { LandingPage } from "./pages/LandingPage.js";
 import { LoginPage } from "./pages/LoginPage.js";
 import { handleOAuthQrLogin, handleQrLogin } from "./qr-login.js";
 import { SessionManager } from "./session-manager.js";
+import { UsageTracker } from "./usage.js";
 
 const app = new Hono();
 const sessions = new SessionManager();
@@ -17,6 +19,7 @@ const ISSUER = process.env.ISSUER || "https://mcp-telegram.com";
 const PORT = Number(process.env.PORT) || 3000;
 
 const oauth = new OAuthProvider({ issuer: ISSUER, db: sessions.getDb() });
+const usage = new UsageTracker(sessions.getDb());
 
 // Periodic cleanup of expired OAuth codes/tokens
 setInterval(() => oauth.cleanup(), 3600_000);
@@ -31,6 +34,9 @@ app.use(
     exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
   }),
 );
+
+// ─── Landing ─────────────────────────────────────────────────────────
+app.get("/", (c) => c.html(<LandingPage />));
 
 // ─── Health ──────────────────────────────────────────────────────────
 app.get("/health", (c) =>
@@ -202,6 +208,22 @@ app.post("/oauth/revoke", async (c) => {
   return c.json({});
 });
 
+// ─── Usage Stats API (admin) ─────────────────────────────────────────
+app.get("/api/stats", (c) => {
+  const auth = c.req.header("Authorization");
+  const adminToken = process.env.ADMIN_TOKEN;
+  if (!adminToken || auth !== `Bearer ${adminToken}`) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+  const days = Number(c.req.query("days") ?? 30);
+  const userId = c.req.query("user_id");
+  return c.json({
+    daily: usage.getDailyStats(days),
+    users: usage.getUserStats(days),
+    ...(userId ? { tools: usage.getToolBreakdown(userId, days) } : {}),
+  });
+});
+
 // ─── Session Import API ──────────────────────────────────────────────
 app.post("/api/import-session", async (c) => {
   const auth = c.req.header("Authorization");
@@ -264,7 +286,7 @@ app.all("/mcp", async (c) => {
     );
   }
 
-  return handleMcpRequest(sessions, userId, c.req.raw);
+  return handleMcpRequest(sessions, usage, userId, c.req.raw);
 });
 
 // ─── QR Login ────────────────────────────────────────────────────────

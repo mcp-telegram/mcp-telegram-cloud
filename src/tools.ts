@@ -31,7 +31,7 @@ function handleToolError(e: unknown, onRevoked: OnSessionRevoked): { content: { 
 }
 
 /**
- * Register 9 read-only Telegram tools on the given MCP server.
+ * Register 10 read-only Telegram tools on the given MCP server.
  * Write operations (send, edit, delete, forward, pin, etc.) are intentionally excluded.
  */
 export function registerReadOnlyTools(
@@ -39,9 +39,11 @@ export function registerReadOnlyTools(
   getTelegram: () => TelegramService,
   requireConnection: RequireConnection,
   onSessionRevoked?: OnSessionRevoked,
+  onToolCall?: (toolName: string) => void,
 ) {
   const onRevoked = onSessionRevoked ?? (async () => {});
   server.tool("telegram-status", "Check Telegram connection status", {}, async () => {
+    onToolCall?.("telegram-status");
     const telegram = getTelegram();
     if (await telegram.ensureConnected()) {
       try {
@@ -73,6 +75,7 @@ export function registerReadOnlyTools(
       filterType: z.enum(["private", "group", "channel"]).optional().describe("Filter by chat type"),
     },
     async ({ limit, offsetDate, filterType }) => {
+      onToolCall?.("telegram-list-chats");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -102,6 +105,7 @@ export function registerReadOnlyTools(
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
     async ({ chatId, limit, offsetId, minDate, maxDate }) => {
+      onToolCall?.("telegram-read-messages");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -128,6 +132,7 @@ export function registerReadOnlyTools(
       limit: z.number().default(10).describe("Max results"),
     },
     async ({ query, limit }) => {
+      onToolCall?.("telegram-search-chats");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -157,6 +162,7 @@ export function registerReadOnlyTools(
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
     async ({ chatId, query, limit, minDate, maxDate }) => {
+      onToolCall?.("telegram-search-messages");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -182,6 +188,7 @@ export function registerReadOnlyTools(
       limit: z.number().default(20).describe("Number of unread chats to return"),
     },
     async ({ limit }) => {
+      onToolCall?.("telegram-get-unread");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -208,6 +215,7 @@ export function registerReadOnlyTools(
       limit: z.number().default(50).describe("Max number of members to return"),
     },
     async ({ chatId, limit }) => {
+      onToolCall?.("telegram-get-chat-members");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -228,6 +236,7 @@ export function registerReadOnlyTools(
       limit: z.number().default(50).describe("Max number of contacts to return"),
     },
     async ({ limit }) => {
+      onToolCall?.("telegram-get-contacts");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -250,6 +259,7 @@ export function registerReadOnlyTools(
       chatId: z.string().describe("Chat ID or username"),
     },
     async ({ chatId }) => {
+      onToolCall?.("telegram-get-chat-info");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 
@@ -278,6 +288,7 @@ export function registerReadOnlyTools(
       messageId: z.number().describe("Message ID containing media"),
     },
     async ({ chatId, messageId }) => {
+      onToolCall?.("telegram-download-media");
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
 

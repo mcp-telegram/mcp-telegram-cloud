@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { SessionManager } from "./session-manager.js";
 import { registerReadOnlyTools } from "./tools.js";
+import type { UsageTracker } from "./usage.js";
 
 /** Map of MCP session ID → transport (for multi-request sessions) */
 const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
@@ -23,7 +24,12 @@ const CLEANUP_DELAY_MS = 5 * 60 * 1000; // 5 minutes
  * Create or retrieve an MCP transport for the given request.
  * Each MCP session gets its own McpServer + Transport pair wired to the user's TelegramService.
  */
-export async function handleMcpRequest(sessions: SessionManager, userId: string, req: Request): Promise<Response> {
+export async function handleMcpRequest(
+  sessions: SessionManager,
+  usage: UsageTracker,
+  userId: string,
+  req: Request,
+): Promise<Response> {
   // Check for existing session via header
   const sessionId = req.headers.get("mcp-session-id");
 
@@ -112,7 +118,11 @@ export async function handleMcpRequest(sessions: SessionManager, userId: string,
     await sessions.destroyUserSession(userId);
   };
 
-  registerReadOnlyTools(server, getTelegram, requireConnection, onSessionRevoked);
+  const onToolCall = (toolName: string) => {
+    usage.logToolCall(userId, toolName);
+  };
+
+  registerReadOnlyTools(server, getTelegram, requireConnection, onSessionRevoked, onToolCall);
 
   await server.connect(transport);
   return transport.handleRequest(req);
