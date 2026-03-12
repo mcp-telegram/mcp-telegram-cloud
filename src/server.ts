@@ -2,6 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { TELEGRAM_ICON_SVG } from "./icon.js";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider, renderAuthorizePage } from "./oauth.js";
 import { handleQrLogin, renderLoginPage } from "./qr-login.js";
@@ -36,6 +37,16 @@ app.get("/health", (c) =>
     activeSessions: sessions.getActiveCount(),
   }),
 );
+
+// ─── Icon ────────────────────────────────────────────────────────────
+app.get("/icon.svg", (c) => {
+  return c.body(TELEGRAM_ICON_SVG, {
+    headers: {
+      "Content-Type": "image/svg+xml",
+      "Cache-Control": "public, max-age=86400",
+    },
+  });
+});
 
 // ─── OAuth 2.0 Discovery (RFC 8414) ─────────────────────────────────
 app.get("/.well-known/oauth-authorization-server", (c) => {

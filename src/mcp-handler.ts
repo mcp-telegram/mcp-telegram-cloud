@@ -62,6 +62,7 @@ export async function handleMcpRequest(sessions: SessionManager, userId: string,
   const server = new McpServer({
     name: "mcp-telegram-cloud",
     version: "0.1.0",
+    icons: [{ src: "https://mcp-telegram.com/icon.svg", mimeType: "image/svg+xml" }],
   });
 
   const telegram = await sessions.getOrCreateSession(userId);
