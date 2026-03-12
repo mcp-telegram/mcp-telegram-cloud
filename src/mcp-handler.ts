@@ -11,7 +11,7 @@ const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
 const cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /** How long to wait after last MCP session closes before destroying Telegram session */
-const CLEANUP_DELAY_MS = 30 * 60 * 1000; // 30 minutes
+const CLEANUP_DELAY_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Create or retrieve an MCP transport for the given request.
