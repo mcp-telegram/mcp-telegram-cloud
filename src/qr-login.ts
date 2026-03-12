@@ -135,7 +135,7 @@ export async function handleOAuthQrLogin(
           });
 
           // Adopt the temp client into the session pool — avoids creating a duplicate Telegram session
-          sessions.adoptSession(userId, telegram);
+          await sessions.adoptSession(userId, telegram);
         } else {
           send("error_msg", { message: result.message ?? "QR login failed" });
         }

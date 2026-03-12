@@ -131,19 +131,22 @@ export class SessionManager {
   }
 
   /** Adopt an already-connected TelegramService into the session pool (avoids duplicate Telegram sessions) */
-  adoptSession(userId: string, telegram: TelegramService): void {
+  async adoptSession(userId: string, telegram: TelegramService): Promise<void> {
     // Destroy any existing session for this user first — logOut kills it in Telegram's Active Devices
     const existing = this.sessions.get(userId);
     if (existing && existing.telegram !== telegram) {
-      // Reconnect if disconnected, then logOut to kill old Telegram session
-      existing.telegram
-        .ensureConnected()
-        .then(() => existing.telegram.logOut())
-        .then((ok: boolean) => console.log(`[sessions] Old session logOut for ${userId}: ${ok}`))
-        .catch((err: unknown) => {
-          console.error(`[sessions] Old session logOut failed for ${userId}:`, err);
-          existing.telegram.disconnect().catch(() => {});
-        });
+      try {
+        // Reconnect if disconnected, then logOut to kill old Telegram session
+        // Must await — fire-and-forget logOut was leaving orphaned sessions
+        await existing.telegram.ensureConnected();
+        const ok = await existing.telegram.logOut();
+        console.log(`[sessions] Old session logOut for ${userId}: ${ok}`);
+      } catch (err: unknown) {
+        console.error(`[sessions] Old session logOut failed for ${userId}:`, err);
+        try {
+          await existing.telegram.disconnect();
+        } catch {}
+      }
     }
     this.sessions.set(userId, {
       telegram,
