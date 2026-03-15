@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { logger } from "./logger.js";
 import type { SessionManager } from "./session-manager.js";
 import { registerReadOnlyTools } from "./tools.js";
 import type { UsageTracker } from "./usage.js";
@@ -43,7 +44,7 @@ export async function handleMcpRequest(
   if (pendingCleanup) {
     clearTimeout(pendingCleanup);
     cleanupTimers.delete(userId);
-    console.log(`[cloud] Cleanup timer cancelled for ${userId} (reconnected)`);
+    logger.info(`Cleanup timer cancelled (reconnected)`, { component: "cloud", userId, event: "cleanup.cancelled" });
   }
 
   // New session — create MCP server + transport
@@ -53,7 +54,7 @@ export async function handleMcpRequest(
       transports.set(sid, transport);
       sessionOwners.set(sid, userId);
       activeSessionCount.set(userId, (activeSessionCount.get(userId) ?? 0) + 1);
-      console.log(`[cloud] MCP session started: ${sid} for user ${userId} (active: ${activeSessionCount.get(userId)})`);
+      logger.info(`MCP session started: ${sid}`, { component: "cloud", userId, event: "session.start", sessionId: sid, active: activeSessionCount.get(userId) });
     },
     onsessionclosed: (sid) => {
       transports.delete(sid);
@@ -61,7 +62,7 @@ export async function handleMcpRequest(
 
       const remaining = (activeSessionCount.get(userId) ?? 1) - 1;
       activeSessionCount.set(userId, remaining);
-      console.log(`[cloud] MCP session closed: ${sid} (remaining: ${remaining})`);
+      logger.info(`MCP session closed: ${sid}`, { component: "cloud", userId, event: "session.close", sessionId: sid, remaining });
 
       // Only disconnect Telegram when the LAST MCP session for this user closes
       if (remaining > 0) return;
@@ -75,14 +76,12 @@ export async function handleMcpRequest(
       // Schedule full cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
       const timer = setTimeout(async () => {
         cleanupTimers.delete(userId);
-        console.log(
-          `[cloud] Cleanup timer fired for ${userId} (no reconnect in ${CLEANUP_DELAY_MS / 60000}m), destroying session...`,
-        );
+        logger.info(`Cleanup timer fired, destroying session`, { component: "cloud", userId, event: "cleanup.fired" });
         await sessions.destroyUserSession(userId);
       }, CLEANUP_DELAY_MS);
 
       cleanupTimers.set(userId, timer);
-      console.log(`[cloud] Cleanup timer set for ${userId} (${CLEANUP_DELAY_MS / 60000}m)`);
+      logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, { component: "cloud", userId, event: "cleanup.scheduled" });
     },
   });
 
@@ -114,7 +113,7 @@ export async function handleMcpRequest(
   };
 
   const onSessionRevoked = async () => {
-    console.log(`[cloud] Session revoked detected for user ${userId}, cleaning up...`);
+    logger.warn(`Session revoked, cleaning up`, { component: "cloud", userId, event: "session.revoked" });
     await sessions.destroyUserSession(userId);
   };
 
@@ -122,11 +121,13 @@ export async function handleMcpRequest(
 
   const onToolCall = (toolName: string) => {
     usage.logToolCall(userId, toolName);
+    logger.info(`Tool call: ${toolName}`, { component: "tools", userId, event: "tool.call", tool: toolName });
   };
 
-  const checkRateLimit = (_toolName: string): string | null => {
+  const checkRateLimit = (toolName: string): string | null => {
     const todayCount = usage.getTodayCount(userId);
     if (todayCount >= FREE_TIER_LIMIT) {
+      logger.warn(`Rate limit hit: ${todayCount}/${FREE_TIER_LIMIT}`, { component: "tools", userId, event: "rate_limit.hit", tool: toolName, count: todayCount });
       return `Daily limit reached (${todayCount}/${FREE_TIER_LIMIT} calls today). Upgrade to Pro for 5,000 calls/day at mcp-telegram.com`;
     }
     return null;

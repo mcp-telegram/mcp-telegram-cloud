@@ -1,3 +1,4 @@
+import { logger } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 
@@ -125,7 +126,7 @@ export async function handleOAuthQrLogin(
           url.searchParams.set("code", code);
           if (oauthParams.state) url.searchParams.set("state", oauthParams.state);
 
-          console.log(`[oauth-qr] QR login success for ${userId} (${me.firstName}), redirecting...`);
+          logger.info(`QR login success: ${me.firstName} (@${me.username ?? "unknown"})`, { component: "oauth-qr", userId, event: "user.login", name: me.firstName ?? "", username: me.username ?? "", telegramId: me.id });
 
           send("redirect", {
             url: url.toString(),
@@ -140,7 +141,7 @@ export async function handleOAuthQrLogin(
           send("error_msg", { message: result.message ?? "QR login failed" });
         }
       } catch (err) {
-        console.error("[oauth-qr] Error:", err);
+        logger.error(`QR login error: ${(err as Error).message}`, { component: "oauth-qr", event: "user.login.error" });
         send("error_msg", { message: (err as Error).message });
       }
 
