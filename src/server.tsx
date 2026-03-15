@@ -2,6 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { logger } from "./logger.js";
 import { TELEGRAM_ICON_SVG } from "./icon.js";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider } from "./oauth.js";
@@ -177,16 +178,10 @@ app.post("/oauth/revoke", async (c) => {
   }
 
   const token = params.token;
-  console.log(`[revoke] Received revocation request`, {
-    hasToken: !!token,
-    tokenHint: params.token_type_hint,
-    headers: Object.fromEntries(
-      [...c.req.raw.headers.entries()].filter(([k]) => !k.toLowerCase().includes("authorization")),
-    ),
-  });
+  logger.info(`Revocation request received`, { component: "oauth", event: "oauth.revoke.start" });
 
   if (!token) {
-    console.log("[revoke] No token provided, returning 200 per RFC 7009");
+    logger.info(`No token provided, returning 200 per RFC 7009`, { component: "oauth", event: "oauth.revoke.empty" });
     return c.json({});
   }
 
@@ -194,14 +189,14 @@ app.post("/oauth/revoke", async (c) => {
   const userId = oauth.revokeToken(token);
 
   if (userId) {
-    console.log(`[revoke] Token revoked for user ${userId}, destroying Telegram session...`);
+    logger.info(`Destroying Telegram session for ${userId}`, { component: "oauth", userId, event: "oauth.revoke.cleanup" });
     // Full cleanup: logout from Telegram + delete session from SQLite
     const { loggedOut } = await sessions.destroyUserSession(userId);
     // Also revoke any other tokens for this user
     oauth.revokeAllUserTokens(userId);
-    console.log(`[revoke] Full cleanup done for ${userId} (telegramLogOut=${loggedOut})`);
+    logger.info(`Full cleanup done for ${userId} (loggedOut=${loggedOut})`, { component: "oauth", userId, event: "oauth.revoke.done" });
   } else {
-    console.log("[revoke] Token not found or already expired");
+    logger.info(`Token not found or already expired`, { component: "oauth", event: "oauth.revoke.notfound" });
   }
 
   // RFC 7009: always return 200, even if token was invalid
@@ -315,6 +310,14 @@ app.get("/login/qr", async (c) => {
 });
 
 // ─── Start ───────────────────────────────────────────────────────────
-console.log(`[cloud] MCP Telegram Cloud starting on port ${PORT}`);
-console.log(`[cloud] Issuer: ${ISSUER}`);
+logger.info(`MCP Telegram Cloud starting on port ${PORT}`, { component: "cloud", event: "server.start", issuer: ISSUER });
 serve({ fetch: app.fetch, port: PORT });
+
+// ─── Graceful shutdown ──────────────────────────────────────────────
+for (const sig of ["SIGTERM", "SIGINT"] as const) {
+  process.on(sig, async () => {
+    logger.info(`Received ${sig}, shutting down`, { component: "cloud", event: "server.stop" });
+    await logger.flush();
+    process.exit(0);
+  });
+}

@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
+import { logger } from "./logger.js";
 
 type RequireConnection = () => Promise<string | null>;
 type OnSessionRevoked = () => Promise<void>;
@@ -26,12 +27,15 @@ function isAuthError(error: unknown): boolean {
 const SESSION_REVOKED_MSG =
   "Telegram session was revoked or expired. Please reconnect the connector in Claude.ai (Disconnect → Connect again).";
 
-function handleToolError(e: unknown, onRevoked: OnSessionRevoked): { content: { type: "text"; text: string }[] } {
+function handleToolError(e: unknown, onRevoked: OnSessionRevoked, toolName?: string): { content: { type: "text"; text: string }[] } {
+  const msg = (e as Error).message ?? String(e);
   if (isAuthError(e)) {
+    logger.warn(`Auth error in ${toolName ?? "unknown"}: ${msg}`, { component: "tools", event: "tool.auth_error", tool: toolName ?? "" });
     onRevoked().catch(() => {});
     return { content: [{ type: "text", text: SESSION_REVOKED_MSG }] };
   }
-  return { content: [{ type: "text", text: `Error: ${(e as Error).message}` }] };
+  logger.error(`Tool error in ${toolName ?? "unknown"}: ${msg}`, { component: "tools", event: "tool.error", tool: toolName ?? "", error: msg });
+  return { content: [{ type: "text", text: `Error: ${msg}` }] };
 }
 
 /**
@@ -56,13 +60,21 @@ export function registerReadOnlyTools(
     return null;
   };
 
+  /** Log tool call duration after execution */
+  const logDuration = (toolName: string, startMs: number) => {
+    const duration = Date.now() - startMs;
+    logger.info(`Tool ${toolName} completed in ${duration}ms`, { component: "tools", event: "tool.duration", tool: toolName, durationMs: duration });
+  };
+
   server.tool("telegram-status", "Check Telegram connection status", {}, async () => {
     const limited = trackCall("telegram-status");
     if (limited) return limited;
+    const start = Date.now();
     const telegram = getTelegram();
     if (await telegram.ensureConnected()) {
       try {
         const me = await telegram.getMe();
+        logDuration("telegram-status", start);
         return {
           content: [
             {
@@ -72,9 +84,10 @@ export function registerReadOnlyTools(
           ],
         };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-status");
       }
     }
+    logDuration("telegram-status", start);
     const reason = telegram.lastError ? ` Reason: ${telegram.lastError}` : "";
     return {
       content: [{ type: "text", text: `Not connected.${reason}` }],
@@ -94,9 +107,10 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const dialogs = await getTelegram().getDialogs(limit, offsetDate, filterType);
+        logDuration("telegram-list-chats", start);
         const text = dialogs
           .map(
             (d) =>
@@ -105,7 +119,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No chats" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-list-chats");
       }
     },
   );
@@ -125,9 +139,10 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const messages = await getTelegram().getMessages(chatId, limit, offsetId, minDate, maxDate);
+        logDuration("telegram-read-messages", start);
         const text = messages
           .map(
             (m) =>
@@ -136,7 +151,7 @@ export function registerReadOnlyTools(
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-read-messages");
       }
     },
   );
@@ -153,9 +168,10 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const results = await getTelegram().searchChats(query, limit);
+        logDuration("telegram-search-chats", start);
         const text = results
           .map(
             (c) =>
@@ -164,7 +180,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No results" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-search-chats");
       }
     },
   );
@@ -184,9 +200,10 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const messages = await getTelegram().searchMessages(chatId, query, limit, minDate, maxDate);
+        logDuration("telegram-search-messages", start);
         const text = messages
           .map(
             (m) =>
@@ -195,7 +212,7 @@ export function registerReadOnlyTools(
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages found" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-search-messages");
       }
     },
   );
@@ -211,9 +228,10 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const dialogs = await getTelegram().getUnreadDialogs(limit);
+        logDuration("telegram-get-unread", start);
         const text = dialogs
           .map(
             (d) =>
@@ -222,7 +240,7 @@ export function registerReadOnlyTools(
           .join("\n");
         return { content: [{ type: "text", text: text || "No unread chats" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-get-unread");
       }
     },
   );
@@ -239,13 +257,14 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const members = await getTelegram().getChatMembers(chatId, limit);
+        logDuration("telegram-get-chat-members", start);
         const text = members.map((m) => `${m.name}${m.username ? ` (@${m.username})` : ""} [${m.id}]`).join("\n");
         return { content: [{ type: "text", text: text || "No members found (may require joining the group)" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-get-chat-members");
       }
     },
   );
@@ -261,15 +280,16 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const contacts = await getTelegram().getContacts(limit);
+        logDuration("telegram-get-contacts", start);
         const text = contacts
           .map((c) => `${c.name}${c.username ? ` (@${c.username})` : ""}${c.phone ? ` [+${c.phone}]` : ""} (${c.id})`)
           .join("\n");
         return { content: [{ type: "text", text: text || "No contacts" }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-get-contacts");
       }
     },
   );
@@ -285,9 +305,10 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const info = await getTelegram().getChatInfo(chatId);
+        logDuration("telegram-get-chat-info", start);
         const lines = [
           `Name: ${info.name}`,
           `ID: ${info.id}`,
@@ -298,7 +319,7 @@ export function registerReadOnlyTools(
         ];
         return { content: [{ type: "text", text: lines.join("\n") }] };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-get-chat-info");
       }
     },
   );
@@ -315,10 +336,11 @@ export function registerReadOnlyTools(
       if (limited) return limited;
       const err = await requireConnection();
       if (err) return { content: [{ type: "text", text: err }] };
-
+      const start = Date.now();
       try {
         const MAX_SIZE = 950_000; // ~950KB to stay under 1MB base64 limit
         const { buffer, mimeType } = await getTelegram().downloadMediaAsBuffer(chatId, messageId);
+        logDuration("telegram-download-media", start);
 
         if (mimeType.startsWith("image/")) {
           // If image is too large, inform the user about size
@@ -353,7 +375,7 @@ export function registerReadOnlyTools(
           ],
         };
       } catch (e) {
-        return handleToolError(e, onRevoked);
+        return handleToolError(e, onRevoked, "telegram-download-media");
       }
     },
   );
