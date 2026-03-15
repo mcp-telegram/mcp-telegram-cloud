@@ -171,7 +171,7 @@ export const LandingPage: FC = () => {
           </div>
 
           <div class={landing.pricingHighlight}>
-            <div class={landing.badge}>Popular</div>
+            <div class={landing.badge}>Coming soon</div>
             <h3>Pro</h3>
             <div class={landing.pricingPrice}>
               $9<span>/mo</span>
@@ -183,8 +183,8 @@ export const LandingPage: FC = () => {
               <li>All 10 tools</li>
               <li>Priority support</li>
             </ul>
-            <a class={landing.pricingCta} href="/login">
-              Start free trial
+            <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
+              Join waitlist
             </a>
           </div>
 
@@ -193,15 +193,15 @@ export const LandingPage: FC = () => {
             <div class={landing.pricingPrice}>
               $29<span>/mo</span>
             </div>
-            <p class={landing.pricingDesc}>For teams</p>
+            <p class={landing.pricingDesc}>For teams — coming soon</p>
             <ul class={landing.pricingFeatures}>
               <li>5 Telegram accounts</li>
               <li>20,000 tool calls / day</li>
               <li>All 10 tools</li>
               <li>Priority support</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href="/login">
-              Contact us
+            <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
+              Join waitlist
             </a>
           </div>
         </div>
@@ -215,7 +215,7 @@ export const LandingPage: FC = () => {
           MCP Telegram Cloud &mdash; <a href="https://github.com/overpod/mcp-telegram">Open-source core</a> &middot;{" "}
           <a href="/login">Login</a> &middot; <a href="/health">Status</a>
         </p>
-        <p style="margin-top: 8px">&copy; 2025 overpod. Read-only Telegram access for Claude AI.</p>
+        <p style="margin-top: 8px">&copy; 2026 overpod. Read-only Telegram access for Claude AI.</p>
       </footer>
     </Layout>
   );

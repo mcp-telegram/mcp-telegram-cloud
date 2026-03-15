@@ -118,11 +118,21 @@ export async function handleMcpRequest(
     await sessions.destroyUserSession(userId);
   };
 
+  const FREE_TIER_LIMIT = 100;
+
   const onToolCall = (toolName: string) => {
     usage.logToolCall(userId, toolName);
   };
 
-  registerReadOnlyTools(server, getTelegram, requireConnection, onSessionRevoked, onToolCall);
+  const checkRateLimit = (_toolName: string): string | null => {
+    const todayCount = usage.getTodayCount(userId);
+    if (todayCount >= FREE_TIER_LIMIT) {
+      return `Daily limit reached (${todayCount}/${FREE_TIER_LIMIT} calls today). Upgrade to Pro for 5,000 calls/day at mcp-telegram.com`;
+    }
+    return null;
+  };
+
+  registerReadOnlyTools(server, getTelegram, requireConnection, onSessionRevoked, onToolCall, checkRateLimit);
 
   await server.connect(transport);
   return transport.handleRequest(req);
