@@ -4,7 +4,7 @@
  * Also logs to console for local/docker visibility.
  */
 
-const OTLP_ENDPOINT = process.env.SIGNOZ_ENDPOINT || "https://signoz.api-app.org";
+const OTLP_ENDPOINT = process.env.SIGNOZ_ENDPOINT || "http://193.169.52.83:4318";
 const SERVICE_NAME = "mcp-telegram-cloud";
 const BATCH_INTERVAL_MS = 5_000;
 const MAX_BATCH_SIZE = 50;
