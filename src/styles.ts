@@ -491,4 +491,26 @@ export const landing = {
       font-weight: 600;
     }
   `,
+  faqList: css`
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  `,
+  faqItem: css`
+    background: ${tg.secondaryBg};
+    border-radius: 16px;
+    padding: 24px;
+    & h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    & p {
+      font-size: 15px;
+      line-height: 24px;
+      color: ${tg.hint};
+    }
+  `,
 };

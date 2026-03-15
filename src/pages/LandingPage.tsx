@@ -19,6 +19,7 @@ export const LandingPage: FC = () => {
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
           <a href="https://github.com/overpod/mcp-telegram">GitHub</a>
         </nav>
       </header>
@@ -203,6 +204,56 @@ export const LandingPage: FC = () => {
             <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
               Join waitlist
             </a>
+          </div>
+        </div>
+      </section>
+
+      <hr class={landing.divider} />
+
+      {/* ── FAQ ───────────────────────────────────────────────────── */}
+      <section class={landing.section} id="faq">
+        <h2 class={landing.sectionTitle}>FAQ</h2>
+        <p class={landing.sectionSubtitle}>Common questions about security and privacy</p>
+
+        <div class={landing.faqList}>
+          <div class={landing.faqItem}>
+            <h3>Is it safe to connect my Telegram?</h3>
+            <p>
+              Yes. The hosted version is strictly read-only — it cannot send, edit, or delete any messages. Your account
+              is used the same way as logging into Telegram Web or Desktop. You can disconnect at any time from
+              Telegram's "Devices" settings.
+            </p>
+          </div>
+          <div class={landing.faqItem}>
+            <h3>Can you read my messages on the server?</h3>
+            <p>
+              We don't store your messages. Each tool call fetches data directly from Telegram's API and returns it to
+              Claude. Your session key is encrypted in our database and deleted when you disconnect.
+            </p>
+          </div>
+          <div class={landing.faqItem}>
+            <h3>How does it connect without the Bot API?</h3>
+            <p>
+              It uses MTProto — the same protocol Telegram's official apps use. You authenticate via QR code, just like
+              linking a new device. From Telegram's perspective, it's another logged-in client.
+            </p>
+          </div>
+          <div class={landing.faqItem}>
+            <h3>What happens when I disconnect?</h3>
+            <p>
+              Your Telegram session is immediately terminated (logged out) and the session key is deleted from our
+              server. No residual access remains.
+            </p>
+          </div>
+          <div class={landing.faqItem}>
+            <h3>Is the source code open?</h3>
+            <p>
+              The core MCP server is fully open-source (MIT license) at{" "}
+              <a href="https://github.com/overpod/mcp-telegram" style="color: #007AFF">
+                github.com/overpod/mcp-telegram
+              </a>
+              . You can self-host it for free with full read+write access (20 tools).
+            </p>
           </div>
         </div>
       </section>
