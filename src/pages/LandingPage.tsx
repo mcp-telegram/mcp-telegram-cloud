@@ -5,8 +5,8 @@ import { Layout } from "./Layout.js";
 export const LandingPage: FC = () => {
   return (
     <Layout
-      title="MCP Telegram — Your Telegram in Claude AI"
-      description="Connect your Telegram to Claude AI. Read messages, search chats, get contacts — all from Claude.ai with one click."
+      title="MCP Telegram — Your Telegram in Claude AI & ChatGPT"
+      description="Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI with one click."
       globalCss={landingReset}
     >
       {/* ── Header ──────────────────────────────────────────────── */}
@@ -27,11 +27,11 @@ export const LandingPage: FC = () => {
       {/* ── Hero ────────────────────────────────────────────────── */}
       <section class={landing.hero}>
         <h1 class={landing.heroTitle}>
-          Your Telegram in <span>Claude AI</span>
+          Your Telegram in <span>Claude AI</span> &amp; <span>ChatGPT</span>
         </h1>
         <p class={landing.heroSubtitle}>
-          Read messages, search chats, track contacts and download media — all from Claude.ai. Connect in 30 seconds
-          with a QR code.
+          Read messages, search chats, track contacts and download media — all from Claude.ai or ChatGPT. Connect in 30
+          seconds with a QR code.
         </p>
         <div>
           <a class={landing.cta} href="/login">
@@ -89,7 +89,7 @@ export const LandingPage: FC = () => {
       {/* ── Tools ───────────────────────────────────────────────── */}
       <section class={landing.section}>
         <h2 class={landing.sectionTitle}>10 MCP Tools</h2>
-        <p class={landing.sectionSubtitle}>Each tool is available as an MCP action in Claude.ai</p>
+        <p class={landing.sectionSubtitle}>Each tool is available as an MCP action in Claude.ai and ChatGPT</p>
 
         <div class={landing.toolsGrid}>
           <div class={landing.toolItem}>
@@ -135,7 +135,7 @@ export const LandingPage: FC = () => {
         <div class={landing.stepsRow}>
           <div class={landing.stepCard}>
             <h3>Add connector</h3>
-            <p>Click "Connect" in Claude.ai integrations or use the link below</p>
+            <p>Click "Connect" in Claude.ai or add as app in ChatGPT</p>
           </div>
           <div class={landing.stepCard}>
             <h3>Scan QR code</h3>
@@ -143,7 +143,7 @@ export const LandingPage: FC = () => {
           </div>
           <div class={landing.stepCard}>
             <h3>Start asking</h3>
-            <p>Ask Claude to read your chats, search messages, or summarize conversations</p>
+            <p>Ask AI to read your chats, search messages, or summarize conversations</p>
           </div>
         </div>
       </section>
@@ -266,7 +266,7 @@ export const LandingPage: FC = () => {
           MCP Telegram Cloud &mdash; <a href="https://github.com/overpod/mcp-telegram">Open-source core</a> &middot;{" "}
           <a href="/login">Login</a> &middot; <a href="/health">Status</a>
         </p>
-        <p style="margin-top: 8px">&copy; 2026 overpod. Read-only Telegram access for Claude AI.</p>
+        <p style="margin-top: 8px">&copy; 2026 overpod. Read-only Telegram access for Claude AI &amp; ChatGPT.</p>
       </footer>
     </Layout>
   );
