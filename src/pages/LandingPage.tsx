@@ -34,7 +34,7 @@ export const LandingPage: FC = () => {
           seconds with a QR code.
         </p>
         <div>
-          <a class={landing.cta} href="/login">
+          <a class={landing.cta} href="#how-it-works">
             Connect Telegram
           </a>
           <a class={landing.ctaSecondary} href="https://github.com/overpod/mcp-telegram">
@@ -207,7 +207,7 @@ export const LandingPage: FC = () => {
               <li>All tools included</li>
               <li>QR code login</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href="/login">
+            <a class={landing.pricingCtaOutline} href="#how-it-works">
               Get started
             </a>
           </div>
