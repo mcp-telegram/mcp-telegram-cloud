@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths-ignore:
+      - "*.md"
+      - LICENSE
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
