@@ -48,7 +48,7 @@ export const LandingPage: FC = () => {
       {/* ── Features ────────────────────────────────────────────── */}
       <section class={landing.section} id="features">
         <h2 class={landing.sectionTitle}>What you can do</h2>
-        <p class={landing.sectionSubtitle}>10 read-only tools — safe, private, no messages sent on your behalf</p>
+        <p class={landing.sectionSubtitle}>Read-only tools — safe, private, no messages sent on your behalf</p>
 
         <div class={landing.featureGrid}>
           <div class={landing.featureCard}>
@@ -88,7 +88,7 @@ export const LandingPage: FC = () => {
 
       {/* ── Tools ───────────────────────────────────────────────── */}
       <section class={landing.section}>
-        <h2 class={landing.sectionTitle}>10 MCP Tools</h2>
+        <h2 class={landing.sectionTitle}>MCP Tools</h2>
         <p class={landing.sectionSubtitle}>Each tool is available as an MCP action in Claude.ai and ChatGPT</p>
 
         <div class={landing.toolsGrid}>
@@ -163,7 +163,7 @@ export const LandingPage: FC = () => {
             <ul class={landing.pricingFeatures}>
               <li>1 Telegram account</li>
               <li>100 tool calls / day</li>
-              <li>All 10 tools</li>
+              <li>All tools included</li>
               <li>QR code login</li>
             </ul>
             <a class={landing.pricingCtaOutline} href="/login">
@@ -181,7 +181,7 @@ export const LandingPage: FC = () => {
             <ul class={landing.pricingFeatures}>
               <li>1 Telegram account</li>
               <li>5,000 tool calls / day</li>
-              <li>All 10 tools</li>
+              <li>All tools included</li>
               <li>Priority support</li>
             </ul>
             <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
@@ -198,7 +198,7 @@ export const LandingPage: FC = () => {
             <ul class={landing.pricingFeatures}>
               <li>5 Telegram accounts</li>
               <li>20,000 tool calls / day</li>
-              <li>All 10 tools</li>
+              <li>All tools included</li>
               <li>Priority support</li>
             </ul>
             <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
