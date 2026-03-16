@@ -14,9 +14,6 @@ const READ_ONLY_ANNOTATIONS = {
   openWorldHint: false,
 } as const;
 
-const RATE_LIMIT_MSG =
-  "Daily tool call limit reached (100 calls/day on free tier). Upgrade to Pro for 5,000 calls/day at mcp-telegram.com";
-
 const AUTH_ERROR_PATTERNS = [
   "AUTH_KEY_UNREGISTERED",
   "AUTH_KEY_INVALID",
