@@ -95,7 +95,12 @@ export class OAuthProvider {
       .prepare("INSERT INTO oauth_clients (client_id, client_secret, redirect_uris, client_name) VALUES (?, ?, ?, ?)")
       .run(clientId, clientSecret, JSON.stringify(body.redirect_uris), body.client_name ?? "");
 
-    logger.info(`OAuth client registered: ${body.client_name || clientId}`, { component: "oauth", event: "oauth.register", clientId, clientName: body.client_name ?? "" });
+    logger.info(`OAuth client registered: ${body.client_name || clientId}`, {
+      component: "oauth",
+      event: "oauth.register",
+      clientId,
+      clientName: body.client_name ?? "",
+    });
 
     return {
       client_id: clientId,
@@ -177,7 +182,12 @@ export class OAuthProvider {
       .prepare("INSERT INTO oauth_tokens (access_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)")
       .run(accessToken, row.client_id, row.user_id, Math.floor(Date.now() / 1000) + expiresIn);
 
-    logger.info(`OAuth token issued for ${row.user_id}`, { component: "oauth", event: "oauth.token.issued", userId: row.user_id, clientId: row.client_id });
+    logger.info(`OAuth token issued for ${row.user_id}`, {
+      component: "oauth",
+      event: "oauth.token.issued",
+      userId: row.user_id,
+      clientId: row.client_id,
+    });
 
     return {
       access_token: accessToken,
@@ -213,7 +223,11 @@ export class OAuthProvider {
     if (!row) return null;
 
     this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(token);
-    logger.info(`OAuth token revoked for ${row.user_id}`, { component: "oauth", event: "oauth.token.revoke", userId: row.user_id });
+    logger.info(`OAuth token revoked for ${row.user_id}`, {
+      component: "oauth",
+      event: "oauth.token.revoke",
+      userId: row.user_id,
+    });
     return row.user_id;
   }
 
@@ -222,7 +236,12 @@ export class OAuthProvider {
    */
   revokeAllUserTokens(userId: string): number {
     const result = this.db.prepare("DELETE FROM oauth_tokens WHERE user_id = ?").run(userId);
-    logger.info(`All tokens revoked for ${userId}: ${result.changes} removed`, { component: "oauth", event: "oauth.token.revoke_all", userId, count: result.changes });
+    logger.info(`All tokens revoked for ${userId}: ${result.changes} removed`, {
+      component: "oauth",
+      event: "oauth.token.revoke_all",
+      userId,
+      count: result.changes,
+    });
     return result.changes;
   }
 

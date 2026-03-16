@@ -27,14 +27,27 @@ function isAuthError(error: unknown): boolean {
 const SESSION_REVOKED_MSG =
   "Telegram session was revoked or expired. Please reconnect the connector in Claude.ai (Disconnect → Connect again).";
 
-function handleToolError(e: unknown, onRevoked: OnSessionRevoked, toolName?: string): { content: { type: "text"; text: string }[] } {
+function handleToolError(
+  e: unknown,
+  onRevoked: OnSessionRevoked,
+  toolName?: string,
+): { content: { type: "text"; text: string }[] } {
   const msg = (e as Error).message ?? String(e);
   if (isAuthError(e)) {
-    logger.warn(`Auth error in ${toolName ?? "unknown"}: ${msg}`, { component: "tools", event: "tool.auth_error", tool: toolName ?? "" });
+    logger.warn(`Auth error in ${toolName ?? "unknown"}: ${msg}`, {
+      component: "tools",
+      event: "tool.auth_error",
+      tool: toolName ?? "",
+    });
     onRevoked().catch(() => {});
     return { content: [{ type: "text", text: SESSION_REVOKED_MSG }] };
   }
-  logger.error(`Tool error in ${toolName ?? "unknown"}: ${msg}`, { component: "tools", event: "tool.error", tool: toolName ?? "", error: msg });
+  logger.error(`Tool error in ${toolName ?? "unknown"}: ${msg}`, {
+    component: "tools",
+    event: "tool.error",
+    tool: toolName ?? "",
+    error: msg,
+  });
   return { content: [{ type: "text", text: `Error: ${msg}` }] };
 }
 
@@ -63,7 +76,12 @@ export function registerReadOnlyTools(
   /** Log tool call duration after execution */
   const logDuration = (toolName: string, startMs: number) => {
     const duration = Date.now() - startMs;
-    logger.info(`Tool ${toolName} completed in ${duration}ms`, { component: "tools", event: "tool.duration", tool: toolName, durationMs: duration });
+    logger.info(`Tool ${toolName} completed in ${duration}ms`, {
+      component: "tools",
+      event: "tool.duration",
+      tool: toolName,
+      durationMs: duration,
+    });
   };
 
   server.tool("telegram-status", "Check Telegram connection status", {}, async () => {

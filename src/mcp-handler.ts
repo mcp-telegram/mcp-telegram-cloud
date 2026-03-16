@@ -54,7 +54,13 @@ export async function handleMcpRequest(
       transports.set(sid, transport);
       sessionOwners.set(sid, userId);
       activeSessionCount.set(userId, (activeSessionCount.get(userId) ?? 0) + 1);
-      logger.info(`MCP session started: ${sid}`, { component: "cloud", userId, event: "session.start", sessionId: sid, active: activeSessionCount.get(userId) });
+      logger.info(`MCP session started: ${sid}`, {
+        component: "cloud",
+        userId,
+        event: "session.start",
+        sessionId: sid,
+        active: activeSessionCount.get(userId),
+      });
     },
     onsessionclosed: (sid) => {
       transports.delete(sid);
@@ -62,7 +68,13 @@ export async function handleMcpRequest(
 
       const remaining = (activeSessionCount.get(userId) ?? 1) - 1;
       activeSessionCount.set(userId, remaining);
-      logger.info(`MCP session closed: ${sid}`, { component: "cloud", userId, event: "session.close", sessionId: sid, remaining });
+      logger.info(`MCP session closed: ${sid}`, {
+        component: "cloud",
+        userId,
+        event: "session.close",
+        sessionId: sid,
+        remaining,
+      });
 
       // Only disconnect Telegram when the LAST MCP session for this user closes
       if (remaining > 0) return;
@@ -81,7 +93,11 @@ export async function handleMcpRequest(
       }, CLEANUP_DELAY_MS);
 
       cleanupTimers.set(userId, timer);
-      logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, { component: "cloud", userId, event: "cleanup.scheduled" });
+      logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, {
+        component: "cloud",
+        userId,
+        event: "cleanup.scheduled",
+      });
     },
   });
 
@@ -127,7 +143,13 @@ export async function handleMcpRequest(
   const checkRateLimit = (toolName: string): string | null => {
     const todayCount = usage.getTodayCount(userId);
     if (todayCount >= FREE_TIER_LIMIT) {
-      logger.warn(`Rate limit hit: ${todayCount}/${FREE_TIER_LIMIT}`, { component: "tools", userId, event: "rate_limit.hit", tool: toolName, count: todayCount });
+      logger.warn(`Rate limit hit: ${todayCount}/${FREE_TIER_LIMIT}`, {
+        component: "tools",
+        userId,
+        event: "rate_limit.hit",
+        tool: toolName,
+        count: todayCount,
+      });
       return `Daily limit reached (${todayCount}/${FREE_TIER_LIMIT} calls today). Upgrade to Pro for 5,000 calls/day at mcp-telegram.com`;
     }
     return null;

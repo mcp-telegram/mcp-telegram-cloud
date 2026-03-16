@@ -2,8 +2,8 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "./logger.js";
 import { TELEGRAM_ICON_SVG } from "./icon.js";
+import { logger } from "./logger.js";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider } from "./oauth.js";
 import { AuthorizePage } from "./pages/AuthorizePage.js";
@@ -60,6 +60,16 @@ app.get("/icon.svg", (c) => {
 // ─── OAuth 2.0 Discovery (RFC 8414) ─────────────────────────────────
 app.get("/.well-known/oauth-authorization-server", (c) => {
   return c.json(oauth.getMetadata());
+});
+
+// ─── OAuth 2.0 Protected Resource Metadata (RFC 9728) ───────────────
+app.get("/.well-known/oauth-protected-resource", (c) => {
+  return c.json({
+    resource: ISSUER,
+    authorization_servers: [`${ISSUER}`],
+    scopes_supported: ["mcp:read"],
+    bearer_methods_supported: ["header"],
+  });
 });
 
 // ─── OAuth 2.0 Dynamic Client Registration (RFC 7591) ────────────────
@@ -189,12 +199,20 @@ app.post("/oauth/revoke", async (c) => {
   const userId = oauth.revokeToken(token);
 
   if (userId) {
-    logger.info(`Destroying Telegram session for ${userId}`, { component: "oauth", userId, event: "oauth.revoke.cleanup" });
+    logger.info(`Destroying Telegram session for ${userId}`, {
+      component: "oauth",
+      userId,
+      event: "oauth.revoke.cleanup",
+    });
     // Full cleanup: logout from Telegram + delete session from SQLite
     const { loggedOut } = await sessions.destroyUserSession(userId);
     // Also revoke any other tokens for this user
     oauth.revokeAllUserTokens(userId);
-    logger.info(`Full cleanup done for ${userId} (loggedOut=${loggedOut})`, { component: "oauth", userId, event: "oauth.revoke.done" });
+    logger.info(`Full cleanup done for ${userId} (loggedOut=${loggedOut})`, {
+      component: "oauth",
+      userId,
+      event: "oauth.revoke.done",
+    });
   } else {
     logger.info(`Token not found or already expired`, { component: "oauth", event: "oauth.revoke.notfound" });
   }
@@ -310,7 +328,11 @@ app.get("/login/qr", async (c) => {
 });
 
 // ─── Start ───────────────────────────────────────────────────────────
-logger.info(`MCP Telegram Cloud starting on port ${PORT}`, { component: "cloud", event: "server.start", issuer: ISSUER });
+logger.info(`MCP Telegram Cloud starting on port ${PORT}`, {
+  component: "cloud",
+  event: "server.start",
+  issuer: ISSUER,
+});
 serve({ fetch: app.fetch, port: PORT });
 
 // ─── Graceful shutdown ──────────────────────────────────────────────

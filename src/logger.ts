@@ -25,7 +25,7 @@ interface LogRecord {
   attributes: { key: string; value: { stringValue: string } }[];
 }
 
-let batch: LogRecord[] = [];
+const batch: LogRecord[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 function toAttributes(attrs: Record<string, string | number | undefined>) {

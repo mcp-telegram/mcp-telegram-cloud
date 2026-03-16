@@ -126,7 +126,14 @@ export async function handleOAuthQrLogin(
           url.searchParams.set("code", code);
           if (oauthParams.state) url.searchParams.set("state", oauthParams.state);
 
-          logger.info(`QR login success: ${me.firstName} (@${me.username ?? "unknown"})`, { component: "oauth-qr", userId, event: "user.login", name: me.firstName ?? "", username: me.username ?? "", telegramId: me.id });
+          logger.info(`QR login success: ${me.firstName} (@${me.username ?? "unknown"})`, {
+            component: "oauth-qr",
+            userId,
+            event: "user.login",
+            name: me.firstName ?? "",
+            username: me.username ?? "",
+            telegramId: me.id,
+          });
 
           send("redirect", {
             url: url.toString(),
