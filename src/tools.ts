@@ -7,6 +7,13 @@ type RequireConnection = () => Promise<string | null>;
 type OnSessionRevoked = () => Promise<void>;
 type RateLimitCheck = (toolName: string) => string | null;
 
+/** All cloud tools are read-only — annotate accordingly for ChatGPT/Claude */
+const READ_ONLY_ANNOTATIONS = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  openWorldHint: false,
+} as const;
+
 const RATE_LIMIT_MSG =
   "Daily tool call limit reached (100 calls/day on free tier). Upgrade to Pro for 5,000 calls/day at mcp-telegram.com";
 
@@ -84,7 +91,7 @@ export function registerReadOnlyTools(
     });
   };
 
-  server.tool("telegram-status", "Check Telegram connection status", {}, async () => {
+  server.tool("telegram-status", "Check Telegram connection status", {}, READ_ONLY_ANNOTATIONS, async () => {
     const limited = trackCall("telegram-status");
     if (limited) return limited;
     const start = Date.now();
@@ -120,6 +127,7 @@ export function registerReadOnlyTools(
       offsetDate: z.number().optional().describe("Unix timestamp offset for pagination"),
       filterType: z.enum(["private", "group", "channel"]).optional().describe("Filter by chat type"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ limit, offsetDate, filterType }) => {
       const limited = trackCall("telegram-list-chats");
       if (limited) return limited;
@@ -152,6 +160,7 @@ export function registerReadOnlyTools(
       minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ chatId, limit, offsetId, minDate, maxDate }) => {
       const limited = trackCall("telegram-read-messages");
       if (limited) return limited;
@@ -181,6 +190,7 @@ export function registerReadOnlyTools(
       query: z.string().describe("Search query (name or username)"),
       limit: z.number().default(10).describe("Max results"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ query, limit }) => {
       const limited = trackCall("telegram-search-chats");
       if (limited) return limited;
@@ -213,6 +223,7 @@ export function registerReadOnlyTools(
       minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ chatId, query, limit, minDate, maxDate }) => {
       const limited = trackCall("telegram-search-messages");
       if (limited) return limited;
@@ -241,6 +252,7 @@ export function registerReadOnlyTools(
     {
       limit: z.number().default(20).describe("Number of unread chats to return"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ limit }) => {
       const limited = trackCall("telegram-get-unread");
       if (limited) return limited;
@@ -270,6 +282,7 @@ export function registerReadOnlyTools(
       chatId: z.string().describe("Chat ID or username"),
       limit: z.number().default(50).describe("Max number of members to return"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ chatId, limit }) => {
       const limited = trackCall("telegram-get-chat-members");
       if (limited) return limited;
@@ -293,6 +306,7 @@ export function registerReadOnlyTools(
     {
       limit: z.number().default(50).describe("Max number of contacts to return"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ limit }) => {
       const limited = trackCall("telegram-get-contacts");
       if (limited) return limited;
@@ -318,6 +332,7 @@ export function registerReadOnlyTools(
     {
       chatId: z.string().describe("Chat ID or username"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ chatId }) => {
       const limited = trackCall("telegram-get-chat-info");
       if (limited) return limited;
@@ -349,6 +364,7 @@ export function registerReadOnlyTools(
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().describe("Message ID containing media"),
     },
+    READ_ONLY_ANNOTATIONS,
     async ({ chatId, messageId }) => {
       const limited = trackCall("telegram-download-media");
       if (limited) return limited;
