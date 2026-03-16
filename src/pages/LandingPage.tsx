@@ -69,7 +69,7 @@ export const LandingPage: FC = () => {
           <div class={landing.featureCard}>
             <div class={landing.featureIcon}>📷</div>
             <h3>View media</h3>
-            <p>Download and view photos inline directly in Claude conversations</p>
+            <p>Download and view photos inline directly in AI conversations</p>
           </div>
           <div class={landing.featureCard}>
             <div class={landing.featureIcon}>👥</div>
@@ -80,6 +80,47 @@ export const LandingPage: FC = () => {
             <div class={landing.featureIcon}>🔒</div>
             <h3>Read-only &amp; secure</h3>
             <p>Cannot send, edit or delete messages. Your account is safe</p>
+          </div>
+        </div>
+      </section>
+
+      <hr class={landing.divider} />
+
+      {/* ── Use cases ─────────────────────────────────────────────── */}
+      <section class={landing.section}>
+        <h2 class={landing.sectionTitle}>What people ask</h2>
+        <p class={landing.sectionSubtitle}>Real prompts you can use right after connecting</p>
+
+        <div class={landing.featureGrid}>
+          <div class={landing.featureCard}>
+            <div class={landing.featureIcon}>☀️</div>
+            <h3>Morning briefing</h3>
+            <p>"Summarize my unread messages and highlight anything urgent"</p>
+          </div>
+          <div class={landing.featureCard}>
+            <div class={landing.featureIcon}>🔎</div>
+            <h3>Find anything</h3>
+            <p>"Find messages about the project deadline in our work chat"</p>
+          </div>
+          <div class={landing.featureCard}>
+            <div class={landing.featureIcon}>📋</div>
+            <h3>Extract data</h3>
+            <p>"List all links shared in the design channel this week"</p>
+          </div>
+          <div class={landing.featureCard}>
+            <div class={landing.featureIcon}>👤</div>
+            <h3>People lookup</h3>
+            <p>"Who are the most active members in our community group?"</p>
+          </div>
+          <div class={landing.featureCard}>
+            <div class={landing.featureIcon}>📊</div>
+            <h3>Chat overview</h3>
+            <p>"Give me a summary of what happened in the team chat today"</p>
+          </div>
+          <div class={landing.featureCard}>
+            <div class={landing.featureIcon}>🖼️</div>
+            <h3>Media review</h3>
+            <p>"Show me the photos sent in the family chat yesterday"</p>
           </div>
         </div>
       </section>
@@ -228,7 +269,7 @@ export const LandingPage: FC = () => {
             <h3>Can you read my messages on the server?</h3>
             <p>
               We don't store your messages. Each tool call fetches data directly from Telegram's API and returns it to
-              Claude. Your session key is encrypted in our database and deleted when you disconnect.
+              the AI assistant. Your session key is encrypted in our database and deleted when you disconnect.
             </p>
           </div>
           <div class={landing.faqItem}>
@@ -246,13 +287,23 @@ export const LandingPage: FC = () => {
             </p>
           </div>
           <div class={landing.faqItem}>
+            <h3>Does it work with ChatGPT?</h3>
+            <p>
+              Yes. Add it as an app in ChatGPT Settings → Apps (Developer Mode). Use the URL{" "}
+              <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px">
+                https://mcp-telegram.com/mcp
+              </code>{" "}
+              with OAuth authentication. Works on Plus, Pro, Team, and Enterprise plans.
+            </p>
+          </div>
+          <div class={landing.faqItem}>
             <h3>Is the source code open?</h3>
             <p>
               The core MCP server is fully open-source (MIT license) at{" "}
               <a href="https://github.com/overpod/mcp-telegram" style="color: #007AFF">
                 github.com/overpod/mcp-telegram
               </a>
-              . You can self-host it for free with full read+write access (20 tools).
+              . You can self-host it for free with full read+write access.
             </p>
           </div>
         </div>
