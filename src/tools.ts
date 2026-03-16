@@ -122,7 +122,10 @@ export function registerReadOnlyTools(
     {
       limit: z.number().default(20).describe("Number of chats to return"),
       offsetDate: z.number().optional().describe("Unix timestamp offset for pagination"),
-      filterType: z.enum(["private", "group", "channel"]).optional().describe("Filter by chat type"),
+      filterType: z
+        .enum(["private", "group", "channel", "contact_requests"])
+        .optional()
+        .describe("Filter by chat type. 'contact_requests' shows only private chats from non-contacts"),
     },
     READ_ONLY_ANNOTATIONS,
     async ({ limit, offsetDate, filterType }) => {
@@ -135,10 +138,13 @@ export function registerReadOnlyTools(
         const dialogs = await getTelegram().getDialogs(limit, offsetDate, filterType);
         logDuration("telegram-list-chats", start);
         const text = dialogs
-          .map(
-            (d) =>
-              `${d.type === "group" ? "G" : d.type === "channel" ? "C" : "P"} ${d.name} (${d.id}) ${d.unreadCount > 0 ? `[${d.unreadCount} unread]` : ""}`,
-          )
+          .map((d) => {
+            const prefix = d.type === "group" ? "G" : d.type === "channel" ? "C" : "P";
+            const botTag = d.isBot ? " [bot]" : "";
+            const contactTag = d.type === "private" && d.isContact === false ? " [not in contacts]" : "";
+            const unread = d.unreadCount > 0 ? ` [${d.unreadCount} unread]` : "";
+            return `${prefix} ${d.name} (${d.id})${botTag}${contactTag}${unread}`;
+          })
           .join("\n");
         return { content: [{ type: "text", text: text || "No chats" }] };
       } catch (e) {
@@ -260,10 +266,12 @@ export function registerReadOnlyTools(
         const dialogs = await getTelegram().getUnreadDialogs(limit);
         logDuration("telegram-get-unread", start);
         const text = dialogs
-          .map(
-            (d) =>
-              `${d.type === "group" ? "G" : d.type === "channel" ? "C" : "P"} ${d.name} (${d.id}) [${d.unreadCount} unread]`,
-          )
+          .map((d) => {
+            const prefix = d.type === "group" ? "G" : d.type === "channel" ? "C" : "P";
+            const botTag = d.isBot ? " [bot]" : "";
+            const contactTag = d.type === "private" && d.isContact === false ? " [not in contacts]" : "";
+            return `${prefix} ${d.name} (${d.id})${botTag}${contactTag} [${d.unreadCount} unread]`;
+          })
           .join("\n");
         return { content: [{ type: "text", text: text || "No unread chats" }] };
       } catch (e) {
@@ -346,10 +354,47 @@ export function registerReadOnlyTools(
           ...(info.username ? [`Username: @${info.username}`] : []),
           ...(info.description ? [`Description: ${info.description}`] : []),
           ...(info.membersCount != null ? [`Members: ${info.membersCount}`] : []),
+          ...(info.isBot != null ? [`Bot: ${info.isBot ? "yes" : "no"}`] : []),
+          ...(info.isContact != null ? [`In contacts: ${info.isContact ? "yes" : "no"}`] : []),
         ];
         return { content: [{ type: "text", text: lines.join("\n") }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-get-chat-info");
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-get-contact-requests",
+    "Get incoming messages from non-contacts (contact requests). Shows who messaged you without being in your contacts, with message preview",
+    {
+      limit: z.number().default(20).describe("Number of contact requests to return"),
+    },
+    READ_ONLY_ANNOTATIONS,
+    async ({ limit }) => {
+      const limited = trackCall("telegram-get-contact-requests");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const requests = await getTelegram().getContactRequests(limit);
+        logDuration("telegram-get-contact-requests", start);
+        if (requests.length === 0) {
+          return { content: [{ type: "text", text: "No contact requests" }] };
+        }
+        const text = requests
+          .map((r) => {
+            const tag = r.isBot ? "[bot]" : "[user]";
+            const username = r.username ? ` @${r.username}` : "";
+            const unread = r.unreadCount > 0 ? ` [${r.unreadCount} unread]` : "";
+            const preview = r.lastMessage ? `\n  > ${r.lastMessage.slice(0, 100)}` : "";
+            return `${tag} ${r.name}${username} (${r.id})${unread}${preview}`;
+          })
+          .join("\n");
+        return { content: [{ type: "text", text }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-contact-requests");
       }
     },
   );
