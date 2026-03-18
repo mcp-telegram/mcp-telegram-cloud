@@ -277,7 +277,14 @@ export function registerReadOnlyTools(
             const prefix = d.type === "group" ? "G" : d.type === "channel" ? "C" : "P";
             const botTag = d.isBot ? " [bot]" : "";
             const contactTag = d.type === "private" && d.isContact === false ? " [not in contacts]" : "";
-            return `${prefix} ${d.name} (${d.id})${botTag}${contactTag} [${d.unreadCount} unread]`;
+            const forumTag = d.forum ? " [forum]" : "";
+            let line = `${prefix} ${d.name} (${d.id})${botTag}${contactTag}${forumTag} [${d.unreadCount} unread]`;
+            if (d.topics) {
+              for (const t of d.topics) {
+                line += `\n  # ${t.title} [${t.unreadCount} unread]`;
+              }
+            }
+            return line;
           })
           .join("\n");
         return { content: [{ type: "text", text: text || "No unread chats" }] };
@@ -361,6 +368,7 @@ export function registerReadOnlyTools(
           ...(info.username ? [`Username: @${info.username}`] : []),
           ...(info.description ? [`Description: ${info.description}`] : []),
           ...(info.membersCount != null ? [`Members: ${info.membersCount}`] : []),
+          ...(info.forum ? ["Forum: yes"] : []),
           ...(info.isBot != null ? [`Bot: ${info.isBot ? "yes" : "no"}`] : []),
           ...(info.isContact != null ? [`In contacts: ${info.isContact ? "yes" : "no"}`] : []),
         ];
@@ -459,6 +467,74 @@ export function registerReadOnlyTools(
         };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-download-media");
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-list-topics",
+    "List forum topics in a Telegram group with Topics enabled. Shows topic names, unread counts, and status",
+    {
+      chatId: z.string().describe("Chat ID or username of a group with Topics enabled"),
+      limit: z.number().default(100).describe("Max topics to return"),
+    },
+    READ_ONLY_ANNOTATIONS,
+    async ({ chatId, limit }) => {
+      const limited = trackCall("telegram-list-topics");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const topics = await getTelegram().getForumTopics(chatId, limit);
+        logDuration("telegram-list-topics", start);
+        const text = topics
+          .map((t) => {
+            const flags = [
+              t.pinned ? "pinned" : "",
+              t.closed ? "closed" : "",
+              t.unreadCount > 0 ? `${t.unreadCount} unread` : "",
+            ]
+              .filter(Boolean)
+              .join(", ");
+            return `# ${t.title} (id: ${t.id})${flags ? ` [${flags}]` : ""}`;
+          })
+          .join("\n");
+        return { content: [{ type: "text", text: text || "No topics found" }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-list-topics");
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-read-topic-messages",
+    "Read messages from a specific forum topic in a Telegram group",
+    {
+      chatId: z.string().describe("Chat ID or username"),
+      topicId: z.number().describe("Topic ID (get from telegram-list-topics)"),
+      limit: z.number().default(20).describe("Number of messages to return"),
+      offsetId: z.number().optional().describe("Message ID to start from (for pagination)"),
+    },
+    READ_ONLY_ANNOTATIONS,
+    async ({ chatId, topicId, limit, offsetId }) => {
+      const limited = trackCall("telegram-read-topic-messages");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const messages = await getTelegram().getTopicMessages(chatId, topicId, limit, offsetId);
+        logDuration("telegram-read-topic-messages", start);
+        const text = messages
+          .map(
+            (m) =>
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+          )
+          .join("\n\n");
+        return { content: [{ type: "text", text: text || "No messages in topic" }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-read-topic-messages");
       }
     },
   );
