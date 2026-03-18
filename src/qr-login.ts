@@ -126,14 +126,22 @@ export async function handleOAuthQrLogin(
           url.searchParams.set("code", code);
           if (oauthParams.state) url.searchParams.set("state", oauthParams.state);
 
-          logger.info(`QR login success: ${me.firstName} (@${me.username ?? "unknown"})`, {
-            component: "oauth-qr",
-            userId,
-            event: "user.login",
-            name: me.firstName ?? "",
-            username: me.username ?? "",
-            telegramId: me.id,
-          });
+          const oauthClient = oauth.getClient(oauthParams.clientId);
+          const clientName = oauthClient?.client_name ?? "";
+
+          logger.info(
+            `QR login success: ${me.firstName} (@${me.username ?? "unknown"}) via ${clientName || "unknown"}`,
+            {
+              component: "oauth-qr",
+              userId,
+              event: "user.login",
+              name: me.firstName ?? "",
+              username: me.username ?? "",
+              telegramId: me.id,
+              client: clientName,
+              clientId: oauthParams.clientId,
+            },
+          );
 
           send("redirect", {
             url: url.toString(),
