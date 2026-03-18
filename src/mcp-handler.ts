@@ -29,6 +29,7 @@ export async function handleMcpRequest(
   sessions: SessionManager,
   usage: UsageTracker,
   userId: string,
+  clientName: string,
   req: Request,
 ): Promise<Response> {
   // Check for existing session via header
@@ -136,8 +137,14 @@ export async function handleMcpRequest(
   const FREE_TIER_LIMIT = 100;
 
   const onToolCall = (toolName: string) => {
-    usage.logToolCall(userId, toolName);
-    logger.info(`Tool call: ${toolName}`, { component: "tools", userId, event: "tool.call", tool: toolName });
+    usage.logToolCall(userId, toolName, clientName);
+    logger.info(`Tool call: ${toolName}`, {
+      component: "tools",
+      userId,
+      client: clientName,
+      event: "tool.call",
+      tool: toolName,
+    });
   };
 
   const checkRateLimit = (toolName: string): string | null => {

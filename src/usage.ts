@@ -12,17 +12,24 @@ export class UsageTracker {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL,
         tool_name TEXT NOT NULL,
+        client TEXT NOT NULL DEFAULT '',
         created_at TEXT DEFAULT (datetime('now'))
       );
       CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_log(user_id);
       CREATE INDEX IF NOT EXISTS idx_usage_created ON usage_log(created_at);
     `);
-    this.insertStmt = this.db.prepare("INSERT INTO usage_log (user_id, tool_name) VALUES (?, ?)");
+    // Add client column if missing (migration from older schema)
+    try {
+      this.db.exec("ALTER TABLE usage_log ADD COLUMN client TEXT NOT NULL DEFAULT ''");
+    } catch {
+      // Column already exists — expected
+    }
+    this.insertStmt = this.db.prepare("INSERT INTO usage_log (user_id, tool_name, client) VALUES (?, ?, ?)");
   }
 
   /** Log a single tool call (synchronous, fast) */
-  logToolCall(userId: string, toolName: string): void {
-    this.insertStmt.run(userId, toolName);
+  logToolCall(userId: string, toolName: string, client = ""): void {
+    this.insertStmt.run(userId, toolName, client);
   }
 
   /** Get total calls per user (optionally filtered by days) */
@@ -70,5 +77,43 @@ export class UsageTracker {
       )
       .get(userId) as { count: number };
     return row.count;
+  }
+
+  /** Get breakdown by client (Claude, ChatGPT, etc.) */
+  getClientStats(days?: number): { client: string; totalCalls: number; uniqueUsers: number }[] {
+    const where = days ? `WHERE created_at >= datetime('now', '-${days} days')` : "";
+    return this.db
+      .prepare(
+        `SELECT CASE WHEN client = '' THEN 'unknown' ELSE client END AS client,
+                COUNT(*) AS totalCalls,
+                COUNT(DISTINCT user_id) AS uniqueUsers
+         FROM usage_log ${where}
+         GROUP BY client ORDER BY totalCalls DESC`,
+      )
+      .all() as { client: string; totalCalls: number; uniqueUsers: number }[];
+  }
+
+  /** Get daily active users count */
+  getDailyActiveUsers(days = 30): { date: string; activeUsers: number }[] {
+    return this.db
+      .prepare(
+        `SELECT date(created_at) AS date, COUNT(DISTINCT user_id) AS activeUsers
+         FROM usage_log
+         WHERE created_at >= datetime('now', '-${days} days')
+         GROUP BY date(created_at) ORDER BY date DESC`,
+      )
+      .all() as { date: string; activeUsers: number }[];
+  }
+
+  /** Get peak usage hours (UTC) */
+  getHourlyStats(days = 7): { hour: number; count: number }[] {
+    return this.db
+      .prepare(
+        `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS hour, COUNT(*) AS count
+         FROM usage_log
+         WHERE created_at >= datetime('now', '-${days} days')
+         GROUP BY hour ORDER BY hour`,
+      )
+      .all() as { hour: number; count: number }[];
   }
 }

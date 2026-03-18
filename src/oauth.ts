@@ -196,8 +196,8 @@ export class OAuthProvider {
     };
   }
 
-  /** Validate Bearer token, return userId or null */
-  validateToken(token: string): string | null {
+  /** Validate Bearer token, return userId and clientName or null */
+  validateToken(token: string): { userId: string; clientName: string } | null {
     const row = this.db.prepare("SELECT * FROM oauth_tokens WHERE access_token = ?").get(token) as
       | AccessToken
       | undefined;
@@ -208,7 +208,8 @@ export class OAuthProvider {
       return null;
     }
 
-    return row.user_id;
+    const client = this.getClient(row.client_id);
+    return { userId: row.user_id, clientName: client?.client_name ?? "" };
   }
 
   /**

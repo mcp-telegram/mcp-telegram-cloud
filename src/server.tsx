@@ -233,6 +233,9 @@ app.get("/api/stats", (c) => {
   return c.json({
     daily: usage.getDailyStats(days),
     users: usage.getUserStats(days),
+    clients: usage.getClientStats(days),
+    dau: usage.getDailyActiveUsers(days),
+    peakHours: usage.getHourlyStats(days),
     ...(userId ? { tools: usage.getToolBreakdown(userId, days) } : {}),
   });
 });
@@ -259,7 +262,8 @@ app.post("/api/import-session", async (c) => {
   }
 
   if (auth?.startsWith("Bearer ")) {
-    userId = oauth.validateToken(auth.slice(7));
+    const tokenInfo = oauth.validateToken(auth.slice(7));
+    if (tokenInfo) userId = tokenInfo.userId;
   }
 
   if (!userId) {
@@ -276,12 +280,17 @@ app.post("/api/import-session", async (c) => {
 
 // ─── MCP Endpoint ────────────────────────────────────────────────────
 app.all("/mcp", async (c) => {
-  // Extract userId from Bearer token (OAuth 2.0) or fallback to X-User-Id (dev)
+  // Extract userId + clientName from Bearer token (OAuth 2.0) or fallback to X-User-Id (dev)
   let userId: string | null = null;
+  let clientName = "";
 
   const auth = c.req.header("Authorization");
   if (auth?.startsWith("Bearer ")) {
-    userId = oauth.validateToken(auth.slice(7));
+    const tokenInfo = oauth.validateToken(auth.slice(7));
+    if (tokenInfo) {
+      userId = tokenInfo.userId;
+      clientName = tokenInfo.clientName;
+    }
   }
 
   // Fallback for dev/testing
@@ -299,7 +308,7 @@ app.all("/mcp", async (c) => {
     );
   }
 
-  return handleMcpRequest(sessions, usage, userId, c.req.raw);
+  return handleMcpRequest(sessions, usage, userId, clientName, c.req.raw);
 });
 
 // ─── QR Login ────────────────────────────────────────────────────────
