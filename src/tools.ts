@@ -7,9 +7,16 @@ type RequireConnection = () => Promise<string | null>;
 type OnSessionRevoked = () => Promise<void>;
 type RateLimitCheck = (toolName: string) => string | null;
 
-/** All cloud tools are read-only — annotate accordingly for ChatGPT/Claude */
+/** Most cloud tools are read-only — annotate accordingly for ChatGPT/Claude */
 const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
+  destructiveHint: false,
+  openWorldHint: false,
+} as const;
+
+/** Mark-as-read is a safe state-change operation (not destructive, not read-only) */
+const MARK_READ_ANNOTATIONS = {
+  readOnlyHint: false,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
@@ -56,7 +63,7 @@ function handleToolError(
 }
 
 /**
- * Register 10 read-only Telegram tools on the given MCP server.
+ * Register read-only Telegram tools + safe state-change tools on the given MCP server.
  * Write operations (send, edit, delete, forward, pin, etc.) are intentionally excluded.
  */
 export function registerReadOnlyTools(
@@ -452,6 +459,29 @@ export function registerReadOnlyTools(
         };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-download-media");
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-mark-as-read",
+    "Mark a Telegram chat as read. Marks all messages in the specified chat as read/seen",
+    {
+      chatId: z.string().describe("Chat ID or username"),
+    },
+    MARK_READ_ANNOTATIONS,
+    async ({ chatId }) => {
+      const limited = trackCall("telegram-mark-as-read");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        await getTelegram().markAsRead(chatId);
+        logDuration("telegram-mark-as-read", start);
+        return { content: [{ type: "text", text: `Marked ${chatId} as read` }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-mark-as-read");
       }
     },
   );
