@@ -43,6 +43,11 @@ app.get("/", (c) => c.html(<LandingPage />));
 app.get("/privacy", (c) => c.html(<PrivacyPage />));
 app.get("/terms", (c) => c.html(<TermsPage />));
 
+// ─── OpenAI Apps Domain Verification ─────────────────────────────────
+app.get("/.well-known/openai-apps-challenge", (c) =>
+  c.text("61bdrNuldnPbl2T1A8ocaadVMX45p2ggxoIcUrVzbHI"),
+);
+
 // ─── Health ──────────────────────────────────────────────────────────
 app.get("/health", (c) =>
   c.json({
