@@ -338,7 +338,8 @@ export const LandingPage: FC = () => {
       <footer class={landing.footer}>
         <p>
           MCP Telegram Cloud &mdash; <a href="https://github.com/overpod/mcp-telegram">Open-source core</a> &middot;{" "}
-          <a href="https://stats.uptimerobot.com/xIjvlg3764">Status</a> &middot; <a href="/privacy">Privacy</a>
+          <a href="https://stats.uptimerobot.com/xIjvlg3764">Status</a> &middot; <a href="/privacy">Privacy</a> &middot;{" "}
+          <a href="/terms">Terms</a>
         </p>
         <p style="margin-top: 8px">&copy; 2026 overpod. Read-only Telegram access for Claude AI &amp; ChatGPT.</p>
       </footer>
