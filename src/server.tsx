@@ -9,6 +9,7 @@ import { OAuthProvider } from "./oauth.js";
 import { AuthorizePage } from "./pages/AuthorizePage.js";
 import { LandingPage } from "./pages/LandingPage.js";
 import { LoginPage } from "./pages/LoginPage.js";
+import { PrivacyPage } from "./pages/PrivacyPage.js";
 import { handleOAuthQrLogin, handleQrLogin } from "./qr-login.js";
 import { SessionManager } from "./session-manager.js";
 import { UsageTracker } from "./usage.js";
@@ -38,6 +39,7 @@ app.use(
 
 // ─── Landing ─────────────────────────────────────────────────────────
 app.get("/", (c) => c.html(<LandingPage />));
+app.get("/privacy", (c) => c.html(<PrivacyPage />));
 
 // ─── Health ──────────────────────────────────────────────────────────
 app.get("/health", (c) =>
