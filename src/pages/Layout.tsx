@@ -5,6 +5,7 @@ import { globalReset } from "../styles.js";
 interface LayoutProps {
   title: string;
   description?: string;
+  canonicalUrl?: string;
   children: Child;
   globalCss?: string;
 }
@@ -17,6 +18,22 @@ export const Layout: FC<LayoutProps> = (props) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{props.title}</title>
         {props.description && <meta name="description" content={props.description} />}
+        {props.canonicalUrl && <link rel="canonical" href={props.canonicalUrl} />}
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={props.title} />
+        {props.description && <meta property="og:description" content={props.description} />}
+        <meta property="og:site_name" content="MCP Telegram" />
+        {props.canonicalUrl && <meta property="og:url" content={props.canonicalUrl} />}
+        <meta property="og:image" content="https://mcp-telegram.com/icon.svg" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={props.title} />
+        {props.description && <meta name="twitter:description" content={props.description} />}
+        <meta name="twitter:image" content="https://mcp-telegram.com/icon.svg" />
+
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <Style />
         <style dangerouslySetInnerHTML={{ __html: props.globalCss ?? globalReset }} />

@@ -7,8 +7,31 @@ export const LandingPage: FC = () => {
     <Layout
       title="MCP Telegram — Your Telegram in Claude AI & ChatGPT"
       description="Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI with one click."
+      canonicalUrl="https://mcp-telegram.com"
       globalCss={landingReset}
     >
+      {/* ── Structured Data ──────────────────────────────────────── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "MCP Telegram",
+            description:
+              "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI.",
+            url: "https://mcp-telegram.com",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "Any",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }),
+        }}
+      />
+
       {/* ── Header ──────────────────────────────────────────────── */}
       <header class={landing.header}>
         <div class={landing.logo}>

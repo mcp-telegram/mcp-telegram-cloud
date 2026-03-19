@@ -62,6 +62,7 @@ export const PrivacyPage: FC = () => {
     <Layout
       title="Privacy Policy — MCP Telegram"
       description="Privacy policy for mcp-telegram.com hosted Telegram MCP connector."
+      canonicalUrl="https://mcp-telegram.com/privacy"
       globalCss={landingReset}
     >
       <div class={s.container}>
