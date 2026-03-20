@@ -572,6 +572,91 @@ export function registerReadOnlyTools(
   );
 
   server.tool(
+    "telegram-get-profile",
+    "Get detailed profile info of a Telegram user including bio, birthday, business info and more",
+    {
+      userId: z.string().describe("User ID or username"),
+    },
+    READ_ONLY_ANNOTATIONS,
+    async ({ userId }) => {
+      const limited = trackCall("telegram-get-profile");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const profile = await getTelegram().getProfile(userId);
+        logDuration("telegram-get-profile", start);
+        const lines = [
+          `Name: ${profile.name}`,
+          `ID: ${profile.id}`,
+          ...(profile.username ? [`Username: @${profile.username}`] : []),
+          ...(profile.bio ? [`Bio: ${profile.bio}`] : []),
+          `Photo: ${profile.photo ? "yes" : "no"}`,
+          ...(profile.premium ? ["Premium: yes"] : []),
+          ...(profile.lastSeen ? [`Last seen: ${profile.lastSeen}`] : []),
+          ...(profile.birthday ? [`Birthday: ${profile.birthday}`] : []),
+          ...(profile.commonChatsCount ? [`Common chats: ${profile.commonChatsCount}`] : []),
+          ...(profile.personalChannelId ? [`Personal channel ID: ${profile.personalChannelId}`] : []),
+          ...(profile.businessLocation ? [`Business location: ${profile.businessLocation}`] : []),
+          ...(profile.businessWorkHours ? [`Business hours timezone: ${profile.businessWorkHours}`] : []),
+        ];
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-profile");
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-get-profile-photo",
+    "Download profile photo of a Telegram user, group, or channel and return it inline",
+    {
+      entityId: z.string().describe("User/Chat/Channel ID or username"),
+    },
+    READ_ONLY_ANNOTATIONS,
+    async ({ entityId }) => {
+      const limited = trackCall("telegram-get-profile-photo");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const MAX_SIZE = 950_000;
+        const result = await getTelegram().downloadProfilePhoto(entityId);
+        logDuration("telegram-get-profile-photo", start);
+
+        if (!result || !("buffer" in result)) {
+          return { content: [{ type: "text", text: "No profile photo found" }] };
+        }
+
+        if (result.buffer.length > MAX_SIZE) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Profile photo too large for inline display (${(result.buffer.length / 1024).toFixed(0)} KB, limit ~950 KB).`,
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            { type: "image", data: result.buffer.toString("base64"), mimeType: result.mimeType },
+            {
+              type: "text",
+              text: `Profile photo (${(result.buffer.length / 1024).toFixed(0)} KB, ${result.mimeType})`,
+            },
+          ],
+        };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-profile-photo");
+      }
+    },
+  );
+
+  server.tool(
     "telegram-mark-as-read",
     "Mark a Telegram chat as read. Marks all messages in the specified chat as read/seen",
     {
