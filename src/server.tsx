@@ -27,6 +27,30 @@ const usage = new UsageTracker(sessions.getDb());
 // Periodic cleanup of expired OAuth codes/tokens
 setInterval(() => oauth.cleanup(), 3600_000);
 
+// ─── Access Log ──────────────────────────────────────────────────────
+app.use("*", async (c, next) => {
+  const start = Date.now();
+  await next();
+  const duration = Date.now() - start;
+  const status = c.res.status;
+  const method = c.req.method;
+  const path = c.req.path;
+
+  // Skip noisy health checks and static assets
+  if (path === "/health" || path === "/icon.svg") return;
+
+  const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+  // No user-identifying data: no user-agent, no query params, no IPs, no tokens
+  logger[level](`${method} ${path} ${status} ${duration}ms`, {
+    component: "http",
+    event: "http.request",
+    method,
+    path,
+    status: String(status),
+    durationMs: duration,
+  });
+});
+
 // ─── CORS ────────────────────────────────────────────────────────────
 app.use(
   "/mcp",
