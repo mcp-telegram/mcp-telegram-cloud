@@ -127,7 +127,7 @@ app.post("/oauth/register", async (c) => {
 });
 
 // ─── OAuth 2.0 Authorization Endpoint ────────────────────────────────
-app.get("/oauth/authorize", (c) => {
+app.get("/oauth/authorize", async (c) => {
   const clientId = c.req.query("client_id") ?? "";
   const redirectUri = c.req.query("redirect_uri") ?? "";
   const state = c.req.query("state") ?? "";
@@ -143,6 +143,35 @@ app.get("/oauth/authorize", (c) => {
   const allowedUris: string[] = JSON.parse(client.redirect_uris);
   if (!allowedUris.includes(redirectUri)) {
     return c.text("Invalid redirect_uri", 400);
+  }
+
+  // Fast path: if we have a cookie hint and session is valid, skip QR entirely (HTTP 302)
+  const cookies = c.req.header("cookie") ?? "";
+  const tgUserMatch = cookies.match(/tg_user=([^;]+)/);
+  const userIdHint = tgUserMatch ? decodeURIComponent(tgUserMatch[1]) : undefined;
+
+  if (userIdHint) {
+    const telegram = await sessions.tryReconnectSession(userIdHint);
+    if (telegram) {
+      const code = oauth.createAuthCode({
+        clientId,
+        userId: userIdHint,
+        redirectUri,
+        codeChallenge,
+        codeChallengeMethod,
+      });
+      const url = new URL(redirectUri);
+      url.searchParams.set("code", code);
+      if (state) url.searchParams.set("state", state);
+
+      logger.info(`Fast OAuth redirect for ${userIdHint} (302)`, {
+        component: "oauth",
+        event: "oauth.fast_redirect",
+        userId: userIdHint,
+      });
+
+      return c.redirect(url.toString(), 302);
+    }
   }
 
   return c.html(
@@ -207,22 +236,35 @@ app.post("/oauth/token", async (c) => {
     params = await c.req.json();
   }
 
-  if (params.grant_type !== "authorization_code") {
-    return c.json({ error: "unsupported_grant_type" }, 400);
+  if (params.grant_type === "authorization_code") {
+    const result = oauth.exchangeCode({
+      code: params.code ?? "",
+      clientId: params.client_id ?? "",
+      codeVerifier: params.code_verifier ?? "",
+      redirectUri: params.redirect_uri ?? "",
+    });
+
+    if (!result) {
+      return c.json({ error: "invalid_grant" }, 400);
+    }
+
+    return c.json(result);
   }
 
-  const result = oauth.exchangeCode({
-    code: params.code ?? "",
-    clientId: params.client_id ?? "",
-    codeVerifier: params.code_verifier ?? "",
-    redirectUri: params.redirect_uri ?? "",
-  });
+  if (params.grant_type === "refresh_token") {
+    const result = oauth.refreshAccessToken({
+      refreshToken: params.refresh_token ?? "",
+      clientId: params.client_id ?? "",
+    });
 
-  if (!result) {
-    return c.json({ error: "invalid_grant" }, 400);
+    if (!result) {
+      return c.json({ error: "invalid_grant" }, 400);
+    }
+
+    return c.json(result);
   }
 
-  return c.json(result);
+  return c.json({ error: "unsupported_grant_type" }, 400);
 });
 
 // ─── OAuth 2.0 Token Revocation (RFC 7009) ──────────────────────────

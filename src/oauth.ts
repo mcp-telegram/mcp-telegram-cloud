@@ -67,6 +67,12 @@ export class OAuthProvider {
         user_id TEXT NOT NULL,
         expires_at INTEGER NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS oauth_refresh_tokens (
+        refresh_token TEXT PRIMARY KEY,
+        client_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        expires_at INTEGER NOT NULL
+      );
     `);
   }
 
@@ -79,7 +85,7 @@ export class OAuthProvider {
       registration_endpoint: `${this.issuer}/oauth/register`,
       revocation_endpoint: `${this.issuer}/oauth/revoke`,
       response_types_supported: ["code"],
-      grant_types_supported: ["authorization_code"],
+      grant_types_supported: ["authorization_code", "refresh_token"],
       token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
       code_challenge_methods_supported: ["S256"],
       scopes_supported: ["mcp:read"],
@@ -146,13 +152,13 @@ export class OAuthProvider {
     return code;
   }
 
-  /** Exchange authorization code for access token */
+  /** Exchange authorization code for access token + refresh token */
   exchangeCode(params: {
     code: string;
     clientId: string;
     codeVerifier: string;
     redirectUri: string;
-  }): { access_token: string; token_type: string; expires_in: number } | null {
+  }): { access_token: string; token_type: string; expires_in: number; refresh_token: string } | null {
     const row = this.db.prepare("SELECT * FROM oauth_codes WHERE code = ?").get(params.code) as AuthCode | undefined;
 
     if (!row) return null;
@@ -174,25 +180,68 @@ export class OAuthProvider {
       return null;
     }
 
-    // Issue access token
+    return this.issueTokenPair(row.client_id, row.user_id);
+  }
+
+  /** Refresh an access token using a refresh token */
+  refreshAccessToken(params: {
+    refreshToken: string;
+    clientId: string;
+  }): { access_token: string; token_type: string; expires_in: number; refresh_token: string } | null {
+    const row = this.db
+      .prepare("SELECT * FROM oauth_refresh_tokens WHERE refresh_token = ?")
+      .get(params.refreshToken) as
+      | { refresh_token: string; client_id: string; user_id: string; expires_at: number }
+      | undefined;
+
+    if (!row) return null;
+
+    // Delete used refresh token (rotation)
+    this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE refresh_token = ?").run(params.refreshToken);
+
+    if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
+    if (row.client_id !== params.clientId) return null;
+
+    logger.info(`OAuth token refreshed for ${row.user_id}`, {
+      component: "oauth",
+      event: "oauth.token.refresh",
+      userId: row.user_id,
+      clientId: row.client_id,
+    });
+
+    return this.issueTokenPair(row.client_id, row.user_id);
+  }
+
+  /** Issue a new access_token + refresh_token pair */
+  private issueTokenPair(
+    clientId: string,
+    userId: string,
+  ): { access_token: string; token_type: string; expires_in: number; refresh_token: string } {
     const accessToken = randomBytes(32).toString("hex");
-    const expiresIn = 86400 * 30; // 30 days
+    const refreshToken = randomBytes(32).toString("hex");
+    const expiresIn = 3600; // 1 hour (short-lived, refreshable)
+    const refreshExpiresIn = 86400 * 30; // 30 days
 
     this.db
       .prepare("INSERT INTO oauth_tokens (access_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)")
-      .run(accessToken, row.client_id, row.user_id, Math.floor(Date.now() / 1000) + expiresIn);
+      .run(accessToken, clientId, userId, Math.floor(Date.now() / 1000) + expiresIn);
 
-    logger.info(`OAuth token issued for ${row.user_id}`, {
+    this.db
+      .prepare("INSERT INTO oauth_refresh_tokens (refresh_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)")
+      .run(refreshToken, clientId, userId, Math.floor(Date.now() / 1000) + refreshExpiresIn);
+
+    logger.info(`OAuth token issued for ${userId}`, {
       component: "oauth",
       event: "oauth.token.issued",
-      userId: row.user_id,
-      clientId: row.client_id,
+      userId,
+      clientId,
     });
 
     return {
       access_token: accessToken,
       token_type: "Bearer",
       expires_in: expiresIn,
+      refresh_token: refreshToken,
     };
   }
 
@@ -256,10 +305,11 @@ export class OAuthProvider {
     return codeVerifier === codeChallenge;
   }
 
-  /** Cleanup expired codes and tokens */
+  /** Cleanup expired codes, tokens, and refresh tokens */
   cleanup(): void {
     const now = Math.floor(Date.now() / 1000);
     this.db.prepare("DELETE FROM oauth_codes WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_tokens WHERE expires_at < ?").run(now);
+    this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE expires_at < ?").run(now);
   }
 }
