@@ -28,6 +28,18 @@ const usage = new UsageTracker(sessions.getDb());
 setInterval(() => oauth.cleanup(), 3600_000);
 
 // ─── Access Log ──────────────────────────────────────────────────────
+/** Classify user-agent into safe category — no raw UA string in logs */
+function classifyClient(ua: string): string {
+  const l = ua.toLowerCase();
+  if (l.includes("chatgpt") || l.includes("openai")) return "chatgpt";
+  if (l.includes("claude") || l.includes("anthropic")) return "claude";
+  if (l.includes("bot") || l.includes("spider") || l.includes("crawler") || l.includes("scan")) return "bot";
+  if (l.includes("mozilla") || l.includes("chrome") || l.includes("safari") || l.includes("firefox")) return "browser";
+  if (l.includes("node") || l.includes("python") || l.includes("curl") || l.includes("fetch")) return "script";
+  if (!l) return "empty";
+  return "other";
+}
+
 app.use("*", async (c, next) => {
   const start = Date.now();
   await next();
@@ -39,15 +51,16 @@ app.use("*", async (c, next) => {
   // Skip noisy health checks and static assets
   if (path === "/health" || path === "/icon.svg") return;
 
+  const client = classifyClient(c.req.header("user-agent") ?? "");
   const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
-  // No user-identifying data: no user-agent, no query params, no IPs, no tokens
-  logger[level](`${method} ${path} ${status} ${duration}ms`, {
+  logger[level](`${method} ${path} ${status} ${duration}ms [${client}]`, {
     component: "http",
     event: "http.request",
     method,
     path,
     status: String(status),
     durationMs: duration,
+    client,
   });
 });
 
