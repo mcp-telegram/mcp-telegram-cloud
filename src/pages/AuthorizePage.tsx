@@ -51,6 +51,11 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
       es.addEventListener('redirect', (e) => {
         const data = JSON.parse(e.data);
         es.close();
+        // Save userId in cookie so subsequent OAuth flows skip QR
+        if (data.username && data.username !== 'unknown') {
+          document.cookie = 'tg_user=' + encodeURIComponent(data.username) +
+            '; path=/; max-age=2592000; SameSite=Lax; Secure';
+        }
         document.getElementById('qr-section').style.display = 'none';
         const result = document.getElementById('result');
         result.style.display = 'block';

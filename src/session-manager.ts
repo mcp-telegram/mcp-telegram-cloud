@@ -174,62 +174,57 @@ export class SessionManager {
   }
 
   /**
-   * Try to find and reconnect any existing session (pool or SQLite).
-   * Returns { userId, telegram } if successful, null if no valid session found.
-   *
-   * Phase 1: Try connected sessions in the memory pool.
-   * Phase 2: For ALL users in SQLite (including those that failed in Phase 1),
-   *          create a FRESH TelegramService from the saved session_string.
+   * Try to reconnect a SPECIFIC user's session (pool or SQLite).
+   * Used when we know the userId from a cookie hint.
+   * Returns the TelegramService if successful, null if session is invalid/missing.
    */
-  async tryReconnectAnySession(): Promise<{ userId: string; telegram: TelegramService } | null> {
-    // Phase 1: Check active sessions in pool (fast path — already connected)
-    for (const [userId, session] of this.sessions) {
+  async tryReconnectSession(userId: string): Promise<TelegramService | null> {
+    // Fast path: already connected in pool
+    const pooled = this.sessions.get(userId);
+    if (pooled) {
       try {
-        if (session.telegram.isConnected() && (await session.telegram.ensureConnected())) {
-          console.log(`[sessions] tryReconnect: Phase 1 hit — ${userId} already connected`);
-          return { userId, telegram: session.telegram };
+        if (pooled.telegram.isConnected() && (await pooled.telegram.ensureConnected())) {
+          console.log(`[sessions] tryReconnect: ${userId} — pool hit (already connected)`);
+          return pooled.telegram;
         }
       } catch {}
     }
 
-    // Phase 2: Try ALL saved sessions from SQLite with a fresh TelegramService
-    // This handles the case where pool has a disconnected instance — we replace it
-    const savedIds = this.getSavedUserIds();
-    for (const userId of savedIds) {
-      try {
-        const row = this.db.prepare("SELECT session_string FROM user_sessions WHERE user_id = ?").get(userId) as
-          | { session_string: string }
-          | undefined;
+    // Try to reconnect from SQLite session_string with a fresh TelegramService
+    const row = this.db.prepare("SELECT session_string FROM user_sessions WHERE user_id = ?").get(userId) as
+      | { session_string: string }
+      | undefined;
 
-        if (!row?.session_string) continue;
+    if (!row?.session_string) {
+      console.log(`[sessions] tryReconnect: ${userId} — no session_string in SQLite`);
+      return null;
+    }
 
-        // Create a fresh TelegramService and try to connect with saved session
-        const telegram = new TelegramService(this.apiId, this.apiHash);
-        telegram.setSessionString(row.session_string);
-        await telegram.connect();
+    try {
+      const telegram = new TelegramService(this.apiId, this.apiHash);
+      telegram.setSessionString(row.session_string);
+      await telegram.connect();
 
-        if (telegram.isConnected()) {
-          // Success — replace stale pool entry with the fresh instance
-          const old = this.sessions.get(userId);
-          if (old) {
-            old.telegram.disconnect().catch(() => {});
-          }
-          this.sessions.set(userId, {
-            telegram,
-            connectedAt: new Date(),
-            lastActivity: new Date(),
-          });
-          console.log(`[sessions] tryReconnect: Phase 2 hit — ${userId} reconnected from SQLite`);
-          return { userId, telegram };
+      if (telegram.isConnected()) {
+        // Success — replace stale pool entry
+        if (pooled) {
+          pooled.telegram.disconnect().catch(() => {});
         }
-
-        // connect() returned false — session_string is invalid, clean it up
-        console.log(`[sessions] tryReconnect: Phase 2 — ${userId} session_string invalid, removing`);
-        this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
-        this.sessions.delete(userId);
-      } catch (err) {
-        console.error(`[sessions] tryReconnect: Phase 2 error for ${userId}:`, err);
+        this.sessions.set(userId, {
+          telegram,
+          connectedAt: new Date(),
+          lastActivity: new Date(),
+        });
+        console.log(`[sessions] tryReconnect: ${userId} — reconnected from SQLite`);
+        return telegram;
       }
+
+      // Session invalid — clean up
+      console.log(`[sessions] tryReconnect: ${userId} — session_string invalid, removing`);
+      this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
+      this.sessions.delete(userId);
+    } catch (err) {
+      console.error(`[sessions] tryReconnect: ${userId} — error:`, err);
     }
 
     return null;

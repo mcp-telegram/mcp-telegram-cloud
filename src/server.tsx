@@ -170,6 +170,11 @@ app.get("/oauth/authorize/qr", async (c) => {
     return c.text("Unknown client", 400);
   }
 
+  // Read userId hint from cookie (set after first successful QR login)
+  const cookies = c.req.header("cookie") ?? "";
+  const tgUserMatch = cookies.match(/tg_user=([^;]+)/);
+  const userIdHint = tgUserMatch ? decodeURIComponent(tgUserMatch[1]) : undefined;
+
   const controller = new AbortController();
   c.req.raw.signal.addEventListener("abort", () => controller.abort());
 
@@ -177,6 +182,7 @@ app.get("/oauth/authorize/qr", async (c) => {
     sessions,
     oauth,
     { clientId, redirectUri, state, codeChallenge, codeChallengeMethod },
+    userIdHint,
     controller.signal,
   );
 

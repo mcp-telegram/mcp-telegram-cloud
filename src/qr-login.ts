@@ -76,6 +76,7 @@ export async function handleOAuthQrLogin(
     codeChallenge: string;
     codeChallengeMethod: string;
   },
+  userIdHint: string | undefined,
   signal: AbortSignal,
 ): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder();
@@ -88,50 +89,58 @@ export async function handleOAuthQrLogin(
       };
 
       try {
-        // Try to reuse an existing Telegram session (skip QR if already connected)
-        logger.info("Attempting session reuse via tryReconnectAnySession", {
-          component: "oauth-qr",
-          event: "session.reuse.attempt",
-        });
-        const existing = await sessions.tryReconnectAnySession();
-
-        if (existing) {
-          const me = await existing.telegram.getMe();
-          const userId = existing.userId;
-
-          logger.info(`Reusing existing session for ${me.firstName} (@${me.username ?? "unknown"})`, {
+        // If we have a userId hint (from cookie), try to reconnect THAT specific user
+        if (userIdHint) {
+          logger.info(`Attempting session reuse for hinted user: ${userIdHint}`, {
             component: "oauth-qr",
-            userId,
-            event: "user.reuse",
+            event: "session.reuse.attempt",
+            userId: userIdHint,
           });
 
-          // Create OAuth auth code directly — no QR needed
-          const code = oauth.createAuthCode({
-            clientId: oauthParams.clientId,
-            userId,
-            redirectUri: oauthParams.redirectUri,
-            codeChallenge: oauthParams.codeChallenge,
-            codeChallengeMethod: oauthParams.codeChallengeMethod,
-          });
+          const telegram = await sessions.tryReconnectSession(userIdHint);
 
-          const url = new URL(oauthParams.redirectUri);
-          url.searchParams.set("code", code);
-          if (oauthParams.state) url.searchParams.set("state", oauthParams.state);
+          if (telegram) {
+            const me = await telegram.getMe();
 
-          send("redirect", {
-            url: url.toString(),
-            name: me.firstName ?? "",
-            username: me.username ?? "unknown",
-            id: me.id,
+            logger.info(`Reusing existing session for ${me.firstName} (@${me.username ?? "unknown"})`, {
+              component: "oauth-qr",
+              userId: userIdHint,
+              event: "user.reuse",
+            });
+
+            const code = oauth.createAuthCode({
+              clientId: oauthParams.clientId,
+              userId: userIdHint,
+              redirectUri: oauthParams.redirectUri,
+              codeChallenge: oauthParams.codeChallenge,
+              codeChallengeMethod: oauthParams.codeChallengeMethod,
+            });
+
+            const url = new URL(oauthParams.redirectUri);
+            url.searchParams.set("code", code);
+            if (oauthParams.state) url.searchParams.set("state", oauthParams.state);
+
+            send("redirect", {
+              url: url.toString(),
+              name: me.firstName ?? "",
+              username: me.username ?? "unknown",
+              id: me.id,
+            });
+            controller.close();
+            return;
+          }
+
+          logger.info(`Hinted session invalid for ${userIdHint}, falling through to QR`, {
+            component: "oauth-qr",
+            event: "session.reuse.miss",
+            userId: userIdHint,
           });
-          controller.close();
-          return;
         }
 
-        // No existing session — proceed with QR login
-        logger.info("No reusable session found, starting QR login", {
+        // No hint or hint failed — proceed with QR login
+        logger.info("Starting QR login (no valid session hint)", {
           component: "oauth-qr",
-          event: "session.reuse.miss",
+          event: "qr.start",
         });
         const telegram = sessions.createTempTelegram();
         await telegram.connect();
