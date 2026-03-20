@@ -400,7 +400,7 @@ app.all("/mcp", async (c) => {
     );
   }
 
-  return handleMcpRequest(sessions, usage, userId, clientName, c.req.raw);
+  return handleMcpRequest(sessions, usage, oauth, userId, clientName, c.req.raw);
 });
 
 // ─── QR Login ────────────────────────────────────────────────────────

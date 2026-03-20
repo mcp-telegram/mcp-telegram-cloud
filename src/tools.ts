@@ -36,7 +36,7 @@ function isAuthError(error: unknown): boolean {
 }
 
 const SESSION_REVOKED_MSG =
-  "Telegram session was revoked or expired. Please reconnect the connector in Claude.ai (Disconnect → Connect again).";
+  "Telegram session was revoked or expired. Please reconnect: Disconnect → Connect again in your app settings.";
 
 function handleToolError(
   e: unknown,

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { logger } from "./logger.js";
+import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 import { registerReadOnlyTools } from "./tools.js";
 import type { UsageTracker } from "./usage.js";
@@ -28,6 +29,7 @@ const CLEANUP_DELAY_MS = 5 * 60 * 1000; // 5 minutes
 export async function handleMcpRequest(
   sessions: SessionManager,
   usage: UsageTracker,
+  oauth: OAuthProvider,
   userId: string,
   clientName: string,
   req: Request,
@@ -132,6 +134,13 @@ export async function handleMcpRequest(
   const onSessionRevoked = async () => {
     logger.warn(`Session revoked, cleaning up`, { component: "cloud", userId, event: "session.revoked" });
     await sessions.destroyUserSession(userId);
+    // Invalidate all OAuth tokens → ChatGPT gets 401 → refresh fails → triggers re-auth → QR
+    const revoked = oauth.revokeAllUserTokens(userId);
+    logger.info(`OAuth tokens invalidated after session revoke: ${revoked}`, {
+      component: "oauth",
+      userId,
+      event: "oauth.token.revoke_on_session_death",
+    });
   };
 
   const FREE_TIER_LIMIT = 100;

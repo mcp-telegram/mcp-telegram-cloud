@@ -286,13 +286,14 @@ export class OAuthProvider {
    */
   revokeAllUserTokens(userId: string): number {
     const result = this.db.prepare("DELETE FROM oauth_tokens WHERE user_id = ?").run(userId);
-    logger.info(`All tokens revoked for ${userId}: ${result.changes} removed`, {
+    const refreshResult = this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE user_id = ?").run(userId);
+    logger.info(`All tokens revoked for ${userId}: ${result.changes} access + ${refreshResult.changes} refresh`, {
       component: "oauth",
       event: "oauth.token.revoke_all",
       userId,
-      count: result.changes,
+      count: result.changes + refreshResult.changes,
     });
-    return result.changes;
+    return result.changes + refreshResult.changes;
   }
 
   /** PKCE S256 verification */
