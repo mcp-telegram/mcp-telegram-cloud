@@ -31,6 +31,10 @@ export class SessionManager {
     const existing = this.sessions.get(userId);
     if (existing) {
       existing.lastActivity = new Date();
+      // Try to reconnect if disconnected
+      if (!existing.telegram.isConnected()) {
+        await existing.telegram.ensureConnected();
+      }
       return existing.telegram;
     }
 
@@ -45,13 +49,18 @@ export class SessionManager {
       telegram.setSessionString(row.session_string);
     }
 
-    await telegram.connect();
+    const connected = await telegram.connect();
 
-    this.sessions.set(userId, {
-      telegram,
-      connectedAt: new Date(),
-      lastActivity: new Date(),
-    });
+    // Only add to pool if connection succeeded — don't cache broken sessions
+    if (connected) {
+      this.sessions.set(userId, {
+        telegram,
+        connectedAt: new Date(),
+        lastActivity: new Date(),
+      });
+    } else {
+      console.log(`[sessions] getOrCreateSession: connect failed for ${userId}, not adding to pool`);
+    }
 
     return telegram;
   }
@@ -130,22 +139,20 @@ export class SessionManager {
     return new TelegramService(this.apiId, this.apiHash);
   }
 
-  /** Adopt an already-connected TelegramService into the session pool (avoids duplicate Telegram sessions) */
+  /**
+   * Adopt an already-connected TelegramService into the session pool.
+   * Only disconnect() the old instance (stops GramJS) — does NOT logOut().
+   * This preserves the auth key so session_string in SQLite stays valid for reconnect.
+   * logOut() is only called on explicit revoke (OAuth disconnect).
+   */
   async adoptSession(userId: string, telegram: TelegramService): Promise<void> {
-    // Destroy any existing session for this user first — logOut kills it in Telegram's Active Devices
     const existing = this.sessions.get(userId);
     if (existing && existing.telegram !== telegram) {
       try {
-        // Reconnect if disconnected, then logOut to kill old Telegram session
-        // Must await — fire-and-forget logOut was leaving orphaned sessions
-        await existing.telegram.ensureConnected();
-        const ok = await existing.telegram.logOut();
-        console.log(`[sessions] Old session logOut for ${userId}: ${ok}`);
+        await existing.telegram.disconnect();
+        console.log(`[sessions] Old session disconnected for ${userId} (auth key preserved)`);
       } catch (err: unknown) {
-        console.error(`[sessions] Old session logOut failed for ${userId}:`, err);
-        try {
-          await existing.telegram.disconnect();
-        } catch {}
+        console.error(`[sessions] Old session disconnect failed for ${userId}:`, err);
       }
     }
     this.sessions.set(userId, {
@@ -169,27 +176,60 @@ export class SessionManager {
   /**
    * Try to find and reconnect any existing session (pool or SQLite).
    * Returns { userId, telegram } if successful, null if no valid session found.
+   *
+   * Phase 1: Try connected sessions in the memory pool.
+   * Phase 2: For ALL users in SQLite (including those that failed in Phase 1),
+   *          create a FRESH TelegramService from the saved session_string.
    */
   async tryReconnectAnySession(): Promise<{ userId: string; telegram: TelegramService } | null> {
-    // 1. Check active sessions in pool
+    // Phase 1: Check active sessions in pool (fast path — already connected)
     for (const [userId, session] of this.sessions) {
       try {
-        if (await session.telegram.ensureConnected()) {
+        if (session.telegram.isConnected() && (await session.telegram.ensureConnected())) {
+          console.log(`[sessions] tryReconnect: Phase 1 hit — ${userId} already connected`);
           return { userId, telegram: session.telegram };
         }
       } catch {}
     }
 
-    // 2. Try saved sessions from SQLite
+    // Phase 2: Try ALL saved sessions from SQLite with a fresh TelegramService
+    // This handles the case where pool has a disconnected instance — we replace it
     const savedIds = this.getSavedUserIds();
     for (const userId of savedIds) {
-      if (this.sessions.has(userId)) continue; // already tried above
       try {
-        const telegram = await this.getOrCreateSession(userId);
-        if (await telegram.ensureConnected()) {
+        const row = this.db.prepare("SELECT session_string FROM user_sessions WHERE user_id = ?").get(userId) as
+          | { session_string: string }
+          | undefined;
+
+        if (!row?.session_string) continue;
+
+        // Create a fresh TelegramService and try to connect with saved session
+        const telegram = new TelegramService(this.apiId, this.apiHash);
+        telegram.setSessionString(row.session_string);
+        await telegram.connect();
+
+        if (telegram.isConnected()) {
+          // Success — replace stale pool entry with the fresh instance
+          const old = this.sessions.get(userId);
+          if (old) {
+            old.telegram.disconnect().catch(() => {});
+          }
+          this.sessions.set(userId, {
+            telegram,
+            connectedAt: new Date(),
+            lastActivity: new Date(),
+          });
+          console.log(`[sessions] tryReconnect: Phase 2 hit — ${userId} reconnected from SQLite`);
           return { userId, telegram };
         }
-      } catch {}
+
+        // connect() returned false — session_string is invalid, clean it up
+        console.log(`[sessions] tryReconnect: Phase 2 — ${userId} session_string invalid, removing`);
+        this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
+        this.sessions.delete(userId);
+      } catch (err) {
+        console.error(`[sessions] tryReconnect: Phase 2 error for ${userId}:`, err);
+      }
     }
 
     return null;

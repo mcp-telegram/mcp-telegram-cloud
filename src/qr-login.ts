@@ -89,6 +89,10 @@ export async function handleOAuthQrLogin(
 
       try {
         // Try to reuse an existing Telegram session (skip QR if already connected)
+        logger.info("Attempting session reuse via tryReconnectAnySession", {
+          component: "oauth-qr",
+          event: "session.reuse.attempt",
+        });
         const existing = await sessions.tryReconnectAnySession();
 
         if (existing) {
@@ -125,6 +129,10 @@ export async function handleOAuthQrLogin(
         }
 
         // No existing session — proceed with QR login
+        logger.info("No reusable session found, starting QR login", {
+          component: "oauth-qr",
+          event: "session.reuse.miss",
+        });
         const telegram = sessions.createTempTelegram();
         await telegram.connect();
 
