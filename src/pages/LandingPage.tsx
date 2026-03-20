@@ -150,47 +150,6 @@ export const LandingPage: FC = () => {
 
       <hr class={landing.divider} />
 
-      {/* ── Tools ───────────────────────────────────────────────── */}
-      <section class={landing.section}>
-        <h2 class={landing.sectionTitle}>MCP Tools</h2>
-        <p class={landing.sectionSubtitle}>Each tool is available as an MCP action in Claude.ai and ChatGPT</p>
-
-        <div class={landing.toolsGrid}>
-          <div class={landing.toolItem}>
-            <code>telegram-status</code> Check connection
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-list-chats</code> List dialogs
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-read-messages</code> Read messages
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-search-chats</code> Search chats
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-search-messages</code> Search messages
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-get-unread</code> Unread chats
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-get-chat-info</code> Chat details
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-get-chat-members</code> Members list
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-get-contacts</code> Contacts
-          </div>
-          <div class={landing.toolItem}>
-            <code>telegram-download-media</code> Download media
-          </div>
-        </div>
-      </section>
-
-      <hr class={landing.divider} />
-
       {/* ── How it works ────────────────────────────────────────── */}
       <section class={landing.section} id="how-it-works">
         <h2 class={landing.sectionTitle}>How it works</h2>

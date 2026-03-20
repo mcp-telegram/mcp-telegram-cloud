@@ -471,26 +471,6 @@ export const landing = {
     & a { color: ${tg.hint}; transition: color .15s; }
     & a:hover { color: ${tg.link}; }
   `,
-  toolsGrid: css`
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    @media (max-width: 700px) { grid-template-columns: 1fr; }
-  `,
-  toolItem: css`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    padding: 10px 14px;
-    background: ${tg.secondaryBg};
-    border-radius: 12px;
-    & code {
-      font-size: 13px;
-      color: ${tg.link};
-      font-weight: 600;
-    }
-  `,
   faqList: css`
     max-width: 720px;
     margin: 0 auto;
