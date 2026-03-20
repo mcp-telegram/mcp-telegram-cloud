@@ -88,7 +88,43 @@ export async function handleOAuthQrLogin(
       };
 
       try {
-        // Create a temporary Telegram client for QR login (no userId yet — we'll get it from Telegram)
+        // Try to reuse an existing Telegram session (skip QR if already connected)
+        const existing = await sessions.tryReconnectAnySession();
+
+        if (existing) {
+          const me = await existing.telegram.getMe();
+          const userId = existing.userId;
+
+          logger.info(`Reusing existing session for ${me.firstName} (@${me.username ?? "unknown"})`, {
+            component: "oauth-qr",
+            userId,
+            event: "user.reuse",
+          });
+
+          // Create OAuth auth code directly — no QR needed
+          const code = oauth.createAuthCode({
+            clientId: oauthParams.clientId,
+            userId,
+            redirectUri: oauthParams.redirectUri,
+            codeChallenge: oauthParams.codeChallenge,
+            codeChallengeMethod: oauthParams.codeChallengeMethod,
+          });
+
+          const url = new URL(oauthParams.redirectUri);
+          url.searchParams.set("code", code);
+          if (oauthParams.state) url.searchParams.set("state", oauthParams.state);
+
+          send("redirect", {
+            url: url.toString(),
+            name: me.firstName ?? "",
+            username: me.username ?? "unknown",
+            id: me.id,
+          });
+          controller.close();
+          return;
+        }
+
+        // No existing session — proceed with QR login
         const telegram = sessions.createTempTelegram();
         await telegram.connect();
 

@@ -160,6 +160,41 @@ export class SessionManager {
     return this.sessions.size;
   }
 
+  /** Get all saved user IDs from SQLite (for session reuse during OAuth) */
+  getSavedUserIds(): string[] {
+    const rows = this.db.prepare("SELECT user_id FROM user_sessions").all() as { user_id: string }[];
+    return rows.map((r) => r.user_id);
+  }
+
+  /**
+   * Try to find and reconnect any existing session (pool or SQLite).
+   * Returns { userId, telegram } if successful, null if no valid session found.
+   */
+  async tryReconnectAnySession(): Promise<{ userId: string; telegram: TelegramService } | null> {
+    // 1. Check active sessions in pool
+    for (const [userId, session] of this.sessions) {
+      try {
+        if (await session.telegram.ensureConnected()) {
+          return { userId, telegram: session.telegram };
+        }
+      } catch {}
+    }
+
+    // 2. Try saved sessions from SQLite
+    const savedIds = this.getSavedUserIds();
+    for (const userId of savedIds) {
+      if (this.sessions.has(userId)) continue; // already tried above
+      try {
+        const telegram = await this.getOrCreateSession(userId);
+        if (await telegram.ensureConnected()) {
+          return { userId, telegram };
+        }
+      } catch {}
+    }
+
+    return null;
+  }
+
   /** Expose the database for shared use (e.g. OAuth tables) */
   getDb(): Database.Database {
     return this.db;
