@@ -149,10 +149,15 @@ export class SessionManager {
     const existing = this.sessions.get(userId);
     if (existing && existing.telegram !== telegram) {
       try {
-        await existing.telegram.disconnect();
-        console.log(`[sessions] Old session disconnected for ${userId} (auth key preserved)`);
+        // QR login creates a NEW auth key → logOut the old one on Telegram servers
+        await existing.telegram.ensureConnected();
+        const loggedOut = await existing.telegram.logOut();
+        console.log(`[sessions] Old session logOut for ${userId}: ${loggedOut}`);
       } catch (err: unknown) {
-        console.error(`[sessions] Old session disconnect failed for ${userId}:`, err);
+        console.error(`[sessions] Old session logOut failed for ${userId}:`, err);
+        try {
+          await existing.telegram.disconnect();
+        } catch {}
       }
     }
     this.sessions.set(userId, {
