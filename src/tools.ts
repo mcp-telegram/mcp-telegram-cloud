@@ -21,6 +21,13 @@ const MARK_READ_ANNOTATIONS = {
   openWorldHint: false,
 } as const;
 
+/** Format reactions array into compact text like: [👍×5 ❤️×3(me) 🔥×1] */
+function formatReactions(reactions?: { emoji: string; count: number; me: boolean }[]): string {
+  if (!reactions?.length) return "";
+  const parts = reactions.map((r) => `${r.emoji}×${r.count}${r.me ? "(me)" : ""}`);
+  return ` [${parts.join(" ")}]`;
+}
+
 const AUTH_ERROR_PATTERNS = [
   "AUTH_KEY_UNREGISTERED",
   "AUTH_KEY_INVALID",
@@ -183,7 +190,7 @@ export function registerReadOnlyTools(
         const text = messages
           .map(
             (m) =>
-              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages" }] };
@@ -245,7 +252,7 @@ export function registerReadOnlyTools(
         const text = messages
           .map(
             (m) =>
-              `[#${m.id}] [${m.date}] [${m.chat.type === "channel" ? "C" : m.chat.type === "group" ? "G" : "P"} ${m.chat.name}${m.chat.username ? ` @${m.chat.username}` : ""}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+              `[#${m.id}] [${m.date}] [${m.chat.type === "channel" ? "C" : m.chat.type === "group" ? "G" : "P"} ${m.chat.name}${m.chat.username ? ` @${m.chat.username}` : ""}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages found" }] };
@@ -278,7 +285,7 @@ export function registerReadOnlyTools(
         const text = messages
           .map(
             (m) =>
-              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages found" }] };
@@ -561,12 +568,44 @@ export function registerReadOnlyTools(
         const text = messages
           .map(
             (m) =>
-              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
         return { content: [{ type: "text", text: text || "No messages in topic" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-read-topic-messages");
+      }
+    },
+  );
+
+  server.tool(
+    "telegram-get-reactions",
+    "Get detailed reaction info for a message: which reactions, counts, and who reacted (when visible)",
+    {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().describe("Message ID to get reactions for"),
+    },
+    READ_ONLY_ANNOTATIONS,
+    async ({ chatId, messageId }) => {
+      const limited = trackCall("telegram-get-reactions");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const result = await getTelegram().getMessageReactions(chatId, messageId);
+        logDuration("telegram-get-reactions", start);
+        if (result.reactions.length === 0) {
+          return { content: [{ type: "text", text: `No reactions on message ${messageId}` }] };
+        }
+        const lines = result.reactions.map((r) => {
+          const usersStr = r.users.length > 0 ? `: ${r.users.map((u) => u.name).join(", ")}` : "";
+          return `${r.emoji} × ${r.count}${usersStr}`;
+        });
+        lines.push(`\nTotal: ${result.total} reactions`);
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-reactions");
       }
     },
   );
