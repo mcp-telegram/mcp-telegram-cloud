@@ -29,12 +29,20 @@ Read-only access: read messages, search chats, get contacts, download media. Can
 | `telegram-status` | Check connection status |
 | `telegram-list-chats` | List dialogs with filtering |
 | `telegram-read-messages` | Read messages with pagination |
-| `telegram-search-chats` | Search chats by name |
+| `telegram-search-chats` | Search chats by name, description, member count |
+| `telegram-search-global` | Search messages across all public chats and channels |
 | `telegram-search-messages` | Full-text search in messages |
-| `telegram-get-unread` | Get unread chats |
+| `telegram-get-unread` | Get unread chats with per-topic breakdown for forums |
+| `telegram-mark-as-read` | Mark a chat as read |
 | `telegram-get-chat-info` | Chat details and metadata |
 | `telegram-get-chat-members` | Group/channel members |
 | `telegram-get-contacts` | Contacts list |
+| `telegram-get-contact-requests` | Incoming messages from non-contacts |
+| `telegram-get-profile` | Detailed user profile (bio, photo, last seen, premium) |
+| `telegram-get-profile-photo` | Download profile photo inline or to file |
+| `telegram-get-reactions` | Get reactions on a message with user details |
+| `telegram-list-topics` | List forum topics with unread counts |
+| `telegram-read-topic-messages` | Read messages from a specific forum topic |
 | `telegram-download-media` | Download photos inline |
 
 All tools are annotated as read-only (`readOnlyHint: true`).
