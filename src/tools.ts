@@ -7,6 +7,11 @@ type RequireConnection = () => Promise<string | null>;
 type OnSessionRevoked = () => Promise<void>;
 type RateLimitCheck = (toolName: string) => string | null;
 
+/** Remove unpaired UTF-16 surrogates that break JSON serialization */
+function sanitize(text: string): string {
+  return text.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "\uFFFD");
+}
+
 /** Most cloud tools are read-only — annotate accordingly for ChatGPT/Claude */
 const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
@@ -160,7 +165,7 @@ export function registerReadOnlyTools(
             return `${prefix} ${d.name} (${d.id})${botTag}${contactTag}${unread}`;
           })
           .join("\n");
-        return { content: [{ type: "text", text: text || "No chats" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No chats" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-list-chats");
       }
@@ -193,7 +198,7 @@ export function registerReadOnlyTools(
               `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
-        return { content: [{ type: "text", text: text || "No messages" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No messages" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-read-messages");
       }
@@ -223,7 +228,7 @@ export function registerReadOnlyTools(
               `${c.type === "group" ? "G" : c.type === "channel" ? "C" : "P"} ${c.name}${c.username ? ` (@${c.username})` : ""} (${c.id})${c.membersCount ? ` [${c.membersCount} members]` : ""}${c.description ? ` — ${c.description.split("\n")[0].slice(0, 100)}` : ""}`,
           )
           .join("\n");
-        return { content: [{ type: "text", text: text || "No results" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No results" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-search-chats");
       }
@@ -255,7 +260,7 @@ export function registerReadOnlyTools(
               `[#${m.id}] [${m.date}] [${m.chat.type === "channel" ? "C" : m.chat.type === "group" ? "G" : "P"} ${m.chat.name}${m.chat.username ? ` @${m.chat.username}` : ""}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
-        return { content: [{ type: "text", text: text || "No messages found" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No messages found" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-search-global");
       }
@@ -288,7 +293,7 @@ export function registerReadOnlyTools(
               `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
-        return { content: [{ type: "text", text: text || "No messages found" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No messages found" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-search-messages");
       }
@@ -326,7 +331,7 @@ export function registerReadOnlyTools(
             return line;
           })
           .join("\n");
-        return { content: [{ type: "text", text: text || "No unread chats" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No unread chats" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-get-unread");
       }
@@ -351,7 +356,9 @@ export function registerReadOnlyTools(
         const members = await getTelegram().getChatMembers(chatId, limit);
         logDuration("telegram-get-chat-members", start);
         const text = members.map((m) => `${m.name}${m.username ? ` (@${m.username})` : ""} [${m.id}]`).join("\n");
-        return { content: [{ type: "text", text: text || "No members found (may require joining the group)" }] };
+        return {
+          content: [{ type: "text", text: sanitize(text) || "No members found (may require joining the group)" }],
+        };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-get-chat-members");
       }
@@ -377,7 +384,7 @@ export function registerReadOnlyTools(
         const text = contacts
           .map((c) => `${c.name}${c.username ? ` (@${c.username})` : ""}${c.phone ? ` [+${c.phone}]` : ""} (${c.id})`)
           .join("\n");
-        return { content: [{ type: "text", text: text || "No contacts" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No contacts" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-get-contacts");
       }
@@ -539,7 +546,7 @@ export function registerReadOnlyTools(
             return `# ${t.title} (id: ${t.id})${flags ? ` [${flags}]` : ""}`;
           })
           .join("\n");
-        return { content: [{ type: "text", text: text || "No topics found" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No topics found" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-list-topics");
       }
@@ -571,7 +578,7 @@ export function registerReadOnlyTools(
               `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
           )
           .join("\n\n");
-        return { content: [{ type: "text", text: text || "No messages in topic" }] };
+        return { content: [{ type: "text", text: sanitize(text) || "No messages in topic" }] };
       } catch (e) {
         return handleToolError(e, onRevoked, "telegram-read-topic-messages");
       }
