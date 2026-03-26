@@ -54,7 +54,7 @@ function handleToolError(
   e: unknown,
   onRevoked: OnSessionRevoked,
   toolName?: string,
-): { content: { type: "text"; text: string }[] } {
+): { content: { type: "text"; text: string }[]; isError: true } {
   const msg = (e as Error).message ?? String(e);
   if (isAuthError(e)) {
     logger.warn(`Auth error in ${toolName ?? "unknown"}: ${msg}`, {
@@ -63,7 +63,7 @@ function handleToolError(
       tool: toolName ?? "",
     });
     onRevoked().catch(() => {});
-    return { content: [{ type: "text", text: SESSION_REVOKED_MSG }] };
+    return { content: [{ type: "text", text: SESSION_REVOKED_MSG }], isError: true as const };
   }
   logger.error(`Tool error in ${toolName ?? "unknown"}: ${msg}`, {
     component: "tools",
@@ -71,7 +71,7 @@ function handleToolError(
     tool: toolName ?? "",
     error: msg,
   });
-  return { content: [{ type: "text", text: `Error: ${msg}` }] };
+  return { content: [{ type: "text", text: `Error: ${msg}` }], isError: true as const };
 }
 
 /**
@@ -107,46 +107,52 @@ export function registerReadOnlyTools(
     });
   };
 
-  server.tool("telegram-status", "Check Telegram connection status", {}, READ_ONLY_ANNOTATIONS, async () => {
-    const limited = trackCall("telegram-status");
-    if (limited) return limited;
-    const start = Date.now();
-    const telegram = getTelegram();
-    if (await telegram.ensureConnected()) {
-      try {
-        const me = await telegram.getMe();
-        logDuration("telegram-status", start);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Connected as ${me.firstName ?? ""} (@${me.username ?? "unknown"}, id: ${me.id})`,
-            },
-          ],
-        };
-      } catch (e) {
-        return handleToolError(e, onRevoked, "telegram-status");
+  server.registerTool(
+    "telegram-status",
+    { description: "Check Telegram connection status", annotations: READ_ONLY_ANNOTATIONS },
+    async () => {
+      const limited = trackCall("telegram-status");
+      if (limited) return limited;
+      const start = Date.now();
+      const telegram = getTelegram();
+      if (await telegram.ensureConnected()) {
+        try {
+          const me = await telegram.getMe();
+          logDuration("telegram-status", start);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Connected as ${me.firstName ?? ""} (@${me.username ?? "unknown"}, id: ${me.id})`,
+              },
+            ],
+          };
+        } catch (e) {
+          return handleToolError(e, onRevoked, "telegram-status");
+        }
       }
-    }
-    logDuration("telegram-status", start);
-    const reason = telegram.lastError ? ` Reason: ${telegram.lastError}` : "";
-    return {
-      content: [{ type: "text", text: `Not connected.${reason}` }],
-    };
-  });
-
-  server.tool(
-    "telegram-list-chats",
-    "List Telegram chats",
-    {
-      limit: z.number().default(20).describe("Number of chats to return"),
-      offsetDate: z.number().optional().describe("Unix timestamp offset for pagination"),
-      filterType: z
-        .enum(["private", "group", "channel", "contact_requests"])
-        .optional()
-        .describe("Filter by chat type. 'contact_requests' shows only private chats from non-contacts"),
+      logDuration("telegram-status", start);
+      const reason = telegram.lastError ? ` Reason: ${telegram.lastError}` : "";
+      return {
+        content: [{ type: "text", text: `Not connected.${reason}` }],
+      };
     },
-    READ_ONLY_ANNOTATIONS,
+  );
+
+  server.registerTool(
+    "telegram-list-chats",
+    {
+      description: "List Telegram chats",
+      inputSchema: {
+        limit: z.number().default(20).describe("Number of chats to return"),
+        offsetDate: z.number().optional().describe("Unix timestamp offset for pagination"),
+        filterType: z
+          .enum(["private", "group", "channel", "contact_requests"])
+          .optional()
+          .describe("Filter by chat type. 'contact_requests' shows only private chats from non-contacts"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
     async ({ limit, offsetDate, filterType }) => {
       const limited = trackCall("telegram-list-chats");
       if (limited) return limited;
@@ -172,17 +178,19 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-read-messages",
-    "Read recent messages from a Telegram chat",
     {
-      chatId: z.string().describe("Chat ID or username"),
-      limit: z.number().default(10).describe("Number of messages to return"),
-      offsetId: z.number().optional().describe("Message ID to start from (for pagination)"),
-      minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
-      maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
+      description: "Read recent messages from a Telegram chat",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        limit: z.number().default(10).describe("Number of messages to return"),
+        offsetId: z.number().optional().describe("Message ID to start from (for pagination)"),
+        minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
+        maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, limit, offsetId, minDate, maxDate }) => {
       const limited = trackCall("telegram-read-messages");
       if (limited) return limited;
@@ -205,14 +213,16 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-search-chats",
-    "Search for Telegram chats/users/channels by name or username",
     {
-      query: z.string().describe("Search query (name or username)"),
-      limit: z.number().default(10).describe("Max results"),
+      description: "Search for Telegram chats/users/channels by name or username",
+      inputSchema: {
+        query: z.string().describe("Search query (name or username)"),
+        limit: z.number().default(10).describe("Max results"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ query, limit }) => {
       const limited = trackCall("telegram-search-chats");
       if (limited) return limited;
@@ -235,16 +245,18 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-search-global",
-    "Search messages globally across all public Telegram chats and channels",
     {
-      query: z.string().describe("Search text"),
-      limit: z.number().default(20).describe("Max results"),
-      minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
-      maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
+      description: "Search messages globally across all public Telegram chats and channels",
+      inputSchema: {
+        query: z.string().describe("Search text"),
+        limit: z.number().default(20).describe("Max results"),
+        minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
+        maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ query, limit, minDate, maxDate }) => {
       const limited = trackCall("telegram-search-global");
       if (limited) return limited;
@@ -267,17 +279,19 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-search-messages",
-    "Search messages in a Telegram chat by text",
     {
-      chatId: z.string().describe("Chat ID or username"),
-      query: z.string().describe("Search text"),
-      limit: z.number().default(20).describe("Max results"),
-      minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
-      maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
+      description: "Search messages in a Telegram chat by text",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        query: z.string().describe("Search text"),
+        limit: z.number().default(20).describe("Max results"),
+        minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
+        maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, query, limit, minDate, maxDate }) => {
       const limited = trackCall("telegram-search-messages");
       if (limited) return limited;
@@ -300,13 +314,15 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-unread",
-    "Get unread Telegram chats",
     {
-      limit: z.number().default(20).describe("Number of unread chats to return"),
+      description: "Get unread Telegram chats",
+      inputSchema: {
+        limit: z.number().default(20).describe("Number of unread chats to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ limit }) => {
       const limited = trackCall("telegram-get-unread");
       if (limited) return limited;
@@ -338,14 +354,16 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-chat-members",
-    "Get members/participants of a Telegram group or channel",
     {
-      chatId: z.string().describe("Chat ID or username"),
-      limit: z.number().default(50).describe("Max number of members to return"),
+      description: "Get members/participants of a Telegram group or channel",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        limit: z.number().default(50).describe("Max number of members to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, limit }) => {
       const limited = trackCall("telegram-get-chat-members");
       if (limited) return limited;
@@ -365,13 +383,15 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-contacts",
-    "Get your Telegram contacts list",
     {
-      limit: z.number().default(50).describe("Max number of contacts to return"),
+      description: "Get your Telegram contacts list",
+      inputSchema: {
+        limit: z.number().default(50).describe("Max number of contacts to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ limit }) => {
       const limited = trackCall("telegram-get-contacts");
       if (limited) return limited;
@@ -391,13 +411,15 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-chat-info",
-    "Get detailed info about a Telegram chat",
     {
-      chatId: z.string().describe("Chat ID or username"),
+      description: "Get detailed info about a Telegram chat",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId }) => {
       const limited = trackCall("telegram-get-chat-info");
       if (limited) return limited;
@@ -425,13 +447,16 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-contact-requests",
-    "Get incoming messages from non-contacts (contact requests). Shows who messaged you without being in your contacts, with message preview",
     {
-      limit: z.number().default(20).describe("Number of contact requests to return"),
+      description:
+        "Get incoming messages from non-contacts (contact requests). Shows who messaged you without being in your contacts, with message preview",
+      inputSchema: {
+        limit: z.number().default(20).describe("Number of contact requests to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ limit }) => {
       const limited = trackCall("telegram-get-contact-requests");
       if (limited) return limited;
@@ -460,14 +485,16 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-download-media",
-    "Download media (photo, video, document) from a Telegram message and return it inline",
     {
-      chatId: z.string().describe("Chat ID or username"),
-      messageId: z.number().describe("Message ID containing media"),
+      description: "Download media (photo, video, document) from a Telegram message and return it inline",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        messageId: z.number().describe("Message ID containing media"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, messageId }) => {
       const limited = trackCall("telegram-download-media");
       if (limited) return limited;
@@ -517,14 +544,17 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-list-topics",
-    "List forum topics in a Telegram group with Topics enabled. Shows topic names, unread counts, and status",
     {
-      chatId: z.string().describe("Chat ID or username of a group with Topics enabled"),
-      limit: z.number().default(100).describe("Max topics to return"),
+      description:
+        "List forum topics in a Telegram group with Topics enabled. Shows topic names, unread counts, and status",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username of a group with Topics enabled"),
+        limit: z.number().default(100).describe("Max topics to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, limit }) => {
       const limited = trackCall("telegram-list-topics");
       if (limited) return limited;
@@ -553,16 +583,18 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-read-topic-messages",
-    "Read messages from a specific forum topic in a Telegram group",
     {
-      chatId: z.string().describe("Chat ID or username"),
-      topicId: z.number().describe("Topic ID (get from telegram-list-topics)"),
-      limit: z.number().default(20).describe("Number of messages to return"),
-      offsetId: z.number().optional().describe("Message ID to start from (for pagination)"),
+      description: "Read messages from a specific forum topic in a Telegram group",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        topicId: z.number().describe("Topic ID (get from telegram-list-topics)"),
+        limit: z.number().default(20).describe("Number of messages to return"),
+        offsetId: z.number().optional().describe("Message ID to start from (for pagination)"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, topicId, limit, offsetId }) => {
       const limited = trackCall("telegram-read-topic-messages");
       if (limited) return limited;
@@ -585,14 +617,16 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-reactions",
-    "Get detailed reaction info for a message: which reactions, counts, and who reacted (when visible)",
     {
-      chatId: z.string().describe("Chat ID or username"),
-      messageId: z.number().describe("Message ID to get reactions for"),
+      description: "Get detailed reaction info for a message: which reactions, counts, and who reacted (when visible)",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        messageId: z.number().describe("Message ID to get reactions for"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ chatId, messageId }) => {
       const limited = trackCall("telegram-get-reactions");
       if (limited) return limited;
@@ -617,13 +651,15 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-profile",
-    "Get detailed profile info of a Telegram user including bio, birthday, business info and more",
     {
-      userId: z.string().describe("User ID or username"),
+      description: "Get detailed profile info of a Telegram user including bio, birthday, business info and more",
+      inputSchema: {
+        userId: z.string().describe("User ID or username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ userId }) => {
       const limited = trackCall("telegram-get-profile");
       if (limited) return limited;
@@ -654,13 +690,15 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-get-profile-photo",
-    "Download profile photo of a Telegram user, group, or channel and return it inline",
     {
-      entityId: z.string().describe("User/Chat/Channel ID or username"),
+      description: "Download profile photo of a Telegram user, group, or channel and return it inline",
+      inputSchema: {
+        entityId: z.string().describe("User/Chat/Channel ID or username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
     },
-    READ_ONLY_ANNOTATIONS,
     async ({ entityId }) => {
       const limited = trackCall("telegram-get-profile-photo");
       if (limited) return limited;
@@ -702,13 +740,15 @@ export function registerReadOnlyTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     "telegram-mark-as-read",
-    "Mark a Telegram chat as read. Marks all messages in the specified chat as read/seen",
     {
-      chatId: z.string().describe("Chat ID or username"),
+      description: "Mark a Telegram chat as read. Marks all messages in the specified chat as read/seen",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+      },
+      annotations: MARK_READ_ANNOTATIONS,
     },
-    MARK_READ_ANNOTATIONS,
     async ({ chatId }) => {
       const limited = trackCall("telegram-mark-as-read");
       if (limited) return limited;

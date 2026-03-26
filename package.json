@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "@overpod/mcp-telegram": "^1.11.1",
     "better-sqlite3": "^12.8.0",
     "dotenv": "^17.3.1",
