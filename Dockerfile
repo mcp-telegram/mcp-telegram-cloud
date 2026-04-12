@@ -8,13 +8,14 @@ RUN npm ci && npm run build
 # Stage 2: Build cloud app
 FROM node:22-alpine AS builder
 RUN apk add --no-cache python3 make g++
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 # Replace npm registry version with source-built version (includes .d.ts)
 COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # Stage 3: Production
 FROM node:22-alpine
