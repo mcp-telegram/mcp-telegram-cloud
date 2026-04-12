@@ -764,4 +764,282 @@ export function registerReadOnlyTools(
       }
     },
   );
+
+  // ── v1.23.0 account tools ────────────────────────────────────────────────
+
+  server.registerTool(
+    "telegram-mute-chat",
+    {
+      description:
+        "Mute or unmute notifications for a Telegram chat. Set muted=true to mute (optionally with duration in seconds), muted=false to unmute",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        muted: z.boolean().describe("true to mute, false to unmute"),
+        duration: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Mute duration in seconds (only when muted=true). Omit to mute forever"),
+      },
+      annotations: MARK_READ_ANNOTATIONS,
+    },
+    async ({ chatId, muted, duration }) => {
+      const limited = trackCall("telegram-mute-chat");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const MUTE_FOREVER = 2147483647;
+        let muteUntil: number;
+        if (!muted) {
+          muteUntil = 0;
+        } else if (duration !== undefined && duration > 0) {
+          muteUntil = Math.min(Math.floor(Date.now() / 1000) + duration, MUTE_FOREVER);
+        } else {
+          muteUntil = MUTE_FOREVER;
+        }
+        await getTelegram().muteChat(chatId, muteUntil);
+        logDuration("telegram-mute-chat", start);
+        const status = !muted
+          ? "unmuted"
+          : duration !== undefined && duration > 0
+            ? `muted for ${duration}s`
+            : "muted forever";
+        return { content: [{ type: "text", text: `Chat ${chatId} ${status}` }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-mute-chat");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-chat-folders",
+    {
+      description: "Get list of your Telegram chat folders (filters) with their names and chat counts",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-chat-folders");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const folders = await getTelegram().getChatFolders();
+        logDuration("telegram-get-chat-folders", start);
+        if (folders.length === 0) return { content: [{ type: "text", text: "No chat folders" }] };
+        const text = folders
+          .map(
+            (f) =>
+              `[${f.id}] ${f.emoticon ? `${f.emoticon} ` : ""}${f.title} (${f.includeCount} chats, ${f.pinnedCount} pinned)`,
+          )
+          .join("\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-chat-folders");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-sessions",
+    {
+      description:
+        "Get list of all active Telegram sessions (logged-in devices) with device info, IP, and last active time",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-sessions");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const sessions = await getTelegram().getActiveSessions();
+        logDuration("telegram-get-sessions", start);
+        if (sessions.length === 0) return { content: [{ type: "text", text: "No active sessions" }] };
+        const text = sessions
+          .map(
+            (s) =>
+              `${s.current ? "→ " : "  "}${s.device} (${s.platform}) — ${s.appName} ${s.appVersion}\n    IP: ${s.ip} (${s.country}) | Last active: ${s.dateActive}${s.current ? " [CURRENT]" : ""}\n    Hash: ${s.hash}`,
+          )
+          .join("\n\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-sessions");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-invite-links",
+    {
+      description:
+        "Get list of invite links for a group or channel. By default returns links created by the current account",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        limit: z.number().default(20).describe("Max links to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, limit }) => {
+      const limited = trackCall("telegram-get-invite-links");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const links = await getTelegram().getInviteLinks(chatId, limit);
+        logDuration("telegram-get-invite-links", start);
+        if (links.length === 0) return { content: [{ type: "text", text: "No invite links" }] };
+        const text = links
+          .map(
+            (l) =>
+              `${l.link}${l.title ? ` (${l.title})` : ""} — ${l.usageCount} uses${l.expired ? " [EXPIRED]" : ""}${l.revoked ? " [REVOKED]" : ""}`,
+          )
+          .join("\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-invite-links");
+      }
+    },
+  );
+
+  // ── v1.24.0 sticker tools ────────────────────────────────────────────────
+
+  server.registerTool(
+    "telegram-get-sticker-set",
+    {
+      description:
+        "Get all stickers from a sticker set by its short name. Returns each sticker with index and emoji. Use the index with telegram-send-sticker to send a specific sticker",
+      inputSchema: {
+        shortName: z
+          .string()
+          .describe(
+            "Short name of the sticker set (e.g. 'AnimatedEmojis', 'HotCherry'). Find names via telegram-search-sticker-sets or from t.me/addstickers/<shortName> links",
+          ),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ shortName }) => {
+      const limited = trackCall("telegram-get-sticker-set");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const set = await getTelegram().getStickerSet(shortName);
+        logDuration("telegram-get-sticker-set", start);
+        const lines: string[] = [];
+        lines.push(`📦 ${set.title} (${set.shortName})`);
+        lines.push(`${set.count} stickers`);
+        lines.push("");
+        for (let i = 0; i < set.stickers.length; i++) {
+          lines.push(`[${i}] ${set.stickers[i].emoji}`);
+        }
+        lines.push("");
+        lines.push(`Send a sticker: telegram-send-sticker(chatId, stickerSet="${set.shortName}", index=N)`);
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-sticker-set");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-search-sticker-sets",
+    {
+      description:
+        "Search for sticker sets by name or keyword. Returns matching sticker pack names that can be used with telegram-get-sticker-set",
+      inputSchema: {
+        query: z.string().describe("Search query (e.g. 'cat', 'love', 'pepe', 'anime')"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ query }) => {
+      const limited = trackCall("telegram-search-sticker-sets");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const sets = await getTelegram().searchStickerSets(query);
+        logDuration("telegram-search-sticker-sets", start);
+        if (sets.length === 0)
+          return { content: [{ type: "text", text: `No sticker sets found for "${query}". Try different keywords.` }] };
+        const lines: string[] = [`Found ${sets.length} sticker set(s) for "${query}":\n`];
+        for (const set of sets) {
+          lines.push(`• ${set.title} — ${set.count} stickers`);
+          lines.push(`  Short name: ${set.shortName}`);
+        }
+        lines.push("");
+        lines.push("Use telegram-get-sticker-set(shortName) to see individual stickers.");
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-search-sticker-sets");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-installed-stickers",
+    {
+      description:
+        "List all sticker sets installed by the user. Returns pack names and short names for use with other sticker tools",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-installed-stickers");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const sets = await getTelegram().getInstalledStickerSets();
+        logDuration("telegram-get-installed-stickers", start);
+        if (sets.length === 0) return { content: [{ type: "text", text: "No sticker sets installed." }] };
+        const lines: string[] = [`${sets.length} installed sticker set(s):\n`];
+        for (const set of sets) {
+          lines.push(`• ${set.title} — ${set.count} stickers`);
+          lines.push(`  Short name: ${set.shortName}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-installed-stickers");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-recent-stickers",
+    {
+      description: "Get recently used stickers. Returns each sticker with its list index and associated emoji",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-recent-stickers");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const stickers = await getTelegram().getRecentStickers();
+        logDuration("telegram-get-recent-stickers", start);
+        if (stickers.length === 0) return { content: [{ type: "text", text: "No recent stickers." }] };
+        const lines: string[] = [`${stickers.length} recent sticker(s):\n`];
+        for (let i = 0; i < stickers.length; i++) {
+          lines.push(`[${i}] ${stickers[i].emoji}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-recent-stickers");
+      }
+    },
+  );
 }
