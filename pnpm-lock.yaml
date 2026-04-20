@@ -15,8 +15,8 @@ importers:
         specifier: ^1.29.0
         version: 1.29.0(zod@4.3.6)
       '@overpod/mcp-telegram':
-        specifier: ^1.24.1
-        version: 1.24.1
+        specifier: ^1.25.0
+        version: 1.25.0
       better-sqlite3:
         specifier: ^12.9.0
         version: 12.9.0
@@ -280,8 +280,8 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@overpod/mcp-telegram@1.24.1':
-    resolution: {integrity: sha512-1YzTXdtS577cm2JL0P5VvO+BWmSN/p8NCpZZIuRgy9ltBZzmDJ6W4MQkPoyfmCpHqUk4ZNSdhvYoZ8tgri5nGg==}
+  '@overpod/mcp-telegram@1.25.0':
+    resolution: {integrity: sha512-lwrAzvFsj00IgynQZVturNZ160UV/J2JkVxOjJc5sAEDjPRXicuW9fLrEe3Lr/T1cCwqjAI+EGa9U9wcnATq+w==}
     hasBin: true
 
   '@types/better-sqlite3@7.6.13':
@@ -1196,7 +1196,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@overpod/mcp-telegram@1.24.1':
+  '@overpod/mcp-telegram@1.25.0':
     dependencies:
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.3.6)
       dotenv: 17.4.2
