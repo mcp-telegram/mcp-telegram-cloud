@@ -18,7 +18,7 @@ Read-only access: read messages, search chats, get contacts, download media. Can
 
 - [Hono](https://hono.dev) — HTTP framework + JSX pages
 - [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk) — MCP server
-- [@overpod/mcp-telegram](https://github.com/overpod/mcp-telegram) — Telegram MTProto client
+- [@overpod/mcp-telegram](https://github.com/mcp-telegram/mcp-telegram) — Telegram MTProto client
 - [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — embedded database
 - [Biome](https://biomejs.dev) — linter + formatter
 
@@ -102,4 +102,4 @@ CI/CD via GitHub Actions: push to `main` or tag `v*` triggers build, deploy, and
 
 ## Related
 
-- [mcp-telegram](https://github.com/overpod/mcp-telegram) — open-source self-hosted version (read + write, all tools)
+- [mcp-telegram](https://github.com/mcp-telegram/mcp-telegram) — open-source self-hosted version (read + write, all tools)

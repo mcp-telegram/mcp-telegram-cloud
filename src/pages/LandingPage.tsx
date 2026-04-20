@@ -43,7 +43,7 @@ export const LandingPage: FC = () => {
           <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
-          <a href="https://github.com/overpod/mcp-telegram">GitHub</a>
+          <a href="https://github.com/mcp-telegram/mcp-telegram">GitHub</a>
         </nav>
       </header>
 
@@ -60,7 +60,7 @@ export const LandingPage: FC = () => {
           <a class={landing.cta} href="#how-it-works">
             Connect Telegram
           </a>
-          <a class={landing.ctaSecondary} href="https://github.com/overpod/mcp-telegram">
+          <a class={landing.ctaSecondary} href="https://github.com/mcp-telegram/mcp-telegram">
             Self-host (free)
           </a>
         </div>
@@ -282,8 +282,8 @@ export const LandingPage: FC = () => {
             <h3>Is the source code open?</h3>
             <p>
               The core MCP server is fully open-source (MIT license) at{" "}
-              <a href="https://github.com/overpod/mcp-telegram" style="color: #007AFF">
-                github.com/overpod/mcp-telegram
+              <a href="https://github.com/mcp-telegram/mcp-telegram" style="color: #007AFF">
+                github.com/mcp-telegram/mcp-telegram
               </a>
               . You can self-host it for free with full read+write access.
             </p>
@@ -296,7 +296,7 @@ export const LandingPage: FC = () => {
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer class={landing.footer}>
         <p>
-          MCP Telegram Cloud &mdash; <a href="https://github.com/overpod/mcp-telegram">Open-source core</a> &middot;{" "}
+          MCP Telegram Cloud &mdash; <a href="https://github.com/mcp-telegram/mcp-telegram">Open-source core</a> &middot;{" "}
           <a href="https://stats.uptimerobot.com/xIjvlg3764">Status</a> &middot; <a href="/privacy">Privacy</a> &middot;{" "}
           <a href="/terms">Terms</a>
         </p>

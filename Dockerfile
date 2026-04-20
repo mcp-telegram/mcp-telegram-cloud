@@ -1,7 +1,7 @@
 # Stage 1: Build mcp-telegram from source (with declarations)
 FROM node:22-alpine AS telegram-lib
 RUN apk add --no-cache git
-RUN git clone --depth 1 https://github.com/overpod/mcp-telegram.git /telegram
+RUN git clone --depth 1 https://github.com/mcp-telegram/mcp-telegram.git /telegram
 WORKDIR /telegram
 RUN npm ci && npm run build
 

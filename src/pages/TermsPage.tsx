@@ -123,8 +123,8 @@ export const TermsPage: FC = () => {
         <h2 class={s.h2}>8. Open source</h2>
         <p class={s.p}>
           The core MCP server is open source under the MIT license at{" "}
-          <a class={s.link} href="https://github.com/overpod/mcp-telegram">
-            github.com/overpod/mcp-telegram
+          <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram">
+            github.com/mcp-telegram/mcp-telegram
           </a>
           . You may self-host the server for full control over your data.
         </p>
@@ -138,7 +138,7 @@ export const TermsPage: FC = () => {
         <h2 class={s.h2}>10. Contact</h2>
         <p class={s.p}>
           Questions about these terms? Reach out via{" "}
-          <a class={s.link} href="https://github.com/overpod/mcp-telegram/issues">
+          <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram/issues">
             GitHub Issues
           </a>{" "}
           or Telegram{" "}
