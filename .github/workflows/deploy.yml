@@ -51,6 +51,9 @@ jobs:
   deploy:
     needs: build
     runs-on: mcp-telegram
+    permissions:
+      packages: read
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
