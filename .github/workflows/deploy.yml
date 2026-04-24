@@ -86,6 +86,32 @@ jobs:
           LOG_HASH_SALT: ${{ secrets.LOG_HASH_SALT }}
         run: docker stack deploy -c stacks/mcp-telegram.yml mcp-telegram
 
+      - name: Post-deploy smoke test
+        run: |
+          # Wait for rolling update to converge
+          for i in $(seq 1 30); do
+            RUNNING_IMAGE=$(docker service inspect mcp-telegram_cloud --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' | cut -d@ -f1)
+            EXPECTED="${{ env.IMAGE_NAME }}:${{ github.sha }}"
+            if [ "$RUNNING_IMAGE" = "$EXPECTED" ]; then
+              echo "Service updated to $EXPECTED"
+              break
+            fi
+            echo "Waiting for service... ($i/30) running=$RUNNING_IMAGE"
+            sleep 2
+          done
+          # Get container ID of new task and curl inside
+          CID=$(docker ps --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" --format '{{.ID}}' | head -1)
+          if [ -z "$CID" ]; then
+            echo "No running container found"
+            exit 1
+          fi
+          echo "=== Smoke test against container $CID ==="
+          docker exec "$CID" sh -c 'wget -qO- --post-data="" --server-response http://localhost:3000/mcp/ 2>&1 | head -10 || true'
+          echo "--- /mcp ---"
+          docker exec "$CID" sh -c 'wget -qO- --post-data="" --server-response http://localhost:3000/mcp 2>&1 | head -10 || true'
+          echo "--- /health ---"
+          docker exec "$CID" sh -c 'wget -qO- --server-response http://localhost:3000/health 2>&1 | head -10 || true'
+
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
