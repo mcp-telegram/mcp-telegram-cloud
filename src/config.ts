@@ -21,7 +21,8 @@ export const config = {
   port: intOr(process.env.PORT, 3000),
   brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
   contactEmail: optional(process.env.CONTACT_EMAIL, ""),
-  contactTelegram: optional(process.env.CONTACT_TELEGRAM, ""),
+  /** Telegram handle without leading @ (stripped once at load). */
+  contactTelegram: optional(process.env.CONTACT_TELEGRAM, "").replace(/^@/, ""),
 
   openaiAppsChallenge: optional(process.env.OPENAI_APPS_CHALLENGE, ""),
   adminToken: process.env.ADMIN_TOKEN ?? "",

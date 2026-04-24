@@ -6,7 +6,7 @@ import { Layout } from "./Layout.js";
 const contactHref = config.contactEmail
   ? `mailto:${config.contactEmail}`
   : config.contactTelegram
-    ? `https://t.me/${config.contactTelegram.replace(/^@/, "")}`
+    ? `https://t.me/${config.contactTelegram}`
     : "#";
 
 export const LandingPage: FC = () => {
@@ -18,6 +18,8 @@ export const LandingPage: FC = () => {
       globalCss={landingReset}
     >
       {/* ── Structured Data ──────────────────────────────────────── */}
+      {/* Escape `<` in the JSON payload so a malicious BRAND_NAME/ISSUER
+          cannot break out of the <script> via `</script>`. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -35,7 +37,7 @@ export const LandingPage: FC = () => {
               price: "0",
               priceCurrency: "USD",
             },
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
 

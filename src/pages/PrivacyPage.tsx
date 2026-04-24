@@ -182,8 +182,8 @@ export const PrivacyPage: FC = () => {
             <>
               {" "}
               or Telegram{" "}
-              <a class={s.link} href={`https://t.me/${config.contactTelegram.replace(/^@/, "")}`}>
-                @{config.contactTelegram.replace(/^@/, "")}
+              <a class={s.link} href={`https://t.me/${config.contactTelegram}`}>
+                @{config.contactTelegram}
               </a>
             </>
           )}

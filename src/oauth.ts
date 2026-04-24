@@ -5,7 +5,7 @@ import { logger, logUser } from "./logger.js";
 /** OAuth 2.0 Authorization Server for MCP (RFC 8414, RFC 7591, RFC 7636) */
 
 export interface OAuthConfig {
-  issuer: string; // e.g. "https://mcp-telegram.com"
+  issuer: string; // public base URL (e.g. "https://your-host.example")
   db: Database.Database;
 }
 
