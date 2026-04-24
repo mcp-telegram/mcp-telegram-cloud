@@ -43,6 +43,11 @@ export const config = {
   /** 0 = unlimited (rate-limit check effectively disabled). */
   freeTierLimit: intOr(process.env.FREE_TIER_LIMIT, 100),
   sessionCleanupDelayMinutes: intOr(process.env.SESSION_CLEANUP_DELAY_MINUTES, 5),
+
+  /** OAuth IP rate-limit: max requests per window per IP. 0 disables. */
+  oauthRateLimit: intOr(process.env.OAUTH_RATE_LIMIT, 30),
+  /** OAuth IP rate-limit window in milliseconds. */
+  oauthRateWindowMs: intOr(process.env.OAUTH_RATE_WINDOW_MS, 60_000),
 };
 
 export const iconUrl = `${config.issuer}/icon.svg`;

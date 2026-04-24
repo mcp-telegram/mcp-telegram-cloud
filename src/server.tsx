@@ -14,6 +14,7 @@ import { LoginPage } from "./pages/LoginPage.js";
 import { PrivacyPage } from "./pages/PrivacyPage.js";
 import { TermsPage } from "./pages/TermsPage.js";
 import { handleOAuthQrLogin, handleQrLogin } from "./qr-login.js";
+import { oauthRateLimit } from "./rate-limit.js";
 import { SessionManager } from "./session-manager.js";
 import { UsageTracker } from "./usage.js";
 
@@ -142,6 +143,11 @@ app.get("/.well-known/oauth-protected-resource", (c) => {
     bearer_methods_supported: ["header"],
   });
 });
+
+// ─── OAuth IP rate limit ─────────────────────────────────────────────
+// Applied before all /oauth/* routes. Protects against abuse bots and
+// brute-force on token/revoke/register. Disabled when OAUTH_RATE_LIMIT=0.
+app.use("/oauth/*", oauthRateLimit);
 
 // ─── OAuth 2.0 Dynamic Client Registration (RFC 7591) ────────────────
 app.post("/oauth/register", async (c) => {
