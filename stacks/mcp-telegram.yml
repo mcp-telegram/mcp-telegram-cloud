@@ -25,8 +25,13 @@ services:
       TELEGRAM_API_HASH: $TELEGRAM_API_HASH
       ADMIN_TOKEN: $ADMIN_TOKEN
       ISSUER: "https://mcp-telegram.com"
+      BRAND_NAME: "MCP Telegram"
       PORT: "3000"
       NODE_ENV: production
+      SIGNOZ_ENDPOINT: $SIGNOZ_ENDPOINT
+      OPENAI_APPS_CHALLENGE: $OPENAI_APPS_CHALLENGE
+      CONTACT_EMAIL: $CONTACT_EMAIL
+      CONTACT_TELEGRAM: $CONTACT_TELEGRAM
     labels:
       traefik.enable: "true"
       traefik.http.routers.mcp-telegram.rule: 'Host("mcp-telegram.com")'
