@@ -86,42 +86,18 @@ jobs:
           LOG_HASH_SALT: ${{ secrets.LOG_HASH_SALT }}
         run: docker stack deploy -c stacks/mcp-telegram.yml mcp-telegram
 
-      - name: Post-deploy smoke test
+      - name: Post-deploy diagnostics
         run: |
           EXPECTED="${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          # Wait for a Running task with the new image (not just Spec).
-          for i in $(seq 1 60); do
-            RUNNING_TASK=$(docker service ps mcp-telegram_cloud \
-              --filter "desired-state=running" \
-              --format '{{.CurrentState}}|{{.Image}}' | head -1)
-            STATE=$(echo "$RUNNING_TASK" | cut -d'|' -f1)
-            IMAGE=$(echo "$RUNNING_TASK" | cut -d'|' -f2)
-            if echo "$STATE" | grep -q "^Running" && [ "$IMAGE" = "$EXPECTED" ]; then
-              echo "New task running: $RUNNING_TASK"
-              break
-            fi
-            echo "Waiting for new task... ($i/60) state=$STATE image=$IMAGE"
-            sleep 2
-          done
-          # Give healthcheck a moment to mark it healthy
-          sleep 3
-          # Get container ID of the NEW task (filter by image, not just service)
-          CID=$(docker ps \
-            --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" \
-            --filter "ancestor=$EXPECTED" \
-            --format '{{.ID}}' | head -1)
-          if [ -z "$CID" ]; then
-            echo "No new-image container running yet — falling back to any"
-            CID=$(docker ps --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" --format '{{.ID}}' | head -1)
-          fi
-          # Confirm image
-          docker inspect "$CID" --format 'Container {{.Id}} image={{.Config.Image}}'
-          echo "=== /mcp/ ==="
-          docker exec "$CID" sh -c 'wget -qO- --post-data="" --server-response http://localhost:3000/mcp/ 2>&1 | head -10 || true'
-          echo "=== /mcp ==="
-          docker exec "$CID" sh -c 'wget -qO- --post-data="" --server-response http://localhost:3000/mcp 2>&1 | head -10 || true'
-          echo "=== /health ==="
-          docker exec "$CID" sh -c 'wget -qO- --server-response http://localhost:3000/health 2>&1 | head -10 || true'
+          echo "=== Service state ==="
+          docker service ps mcp-telegram_cloud --no-trunc | head -10
+          echo ""
+          echo "=== Last 200 log lines from service ==="
+          docker service logs mcp-telegram_cloud --tail 200 2>&1 | tail -200 || true
+          echo ""
+          echo "=== Running containers for service ==="
+          docker ps --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" \
+            --format 'CID={{.ID}} image={{.Image}} status={{.Status}}'
 
   release:
     needs: build
