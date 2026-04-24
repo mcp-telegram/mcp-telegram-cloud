@@ -33,6 +33,8 @@ export const config = {
   signozEndpoint: optional(process.env.SIGNOZ_ENDPOINT, ""),
   logServiceName: optional(process.env.LOG_SERVICE_NAME, "mcp-telegram-cloud"),
   logUserIds: process.env.LOG_USER_IDS !== "false",
+  /** HMAC key for hashing user IDs in logs (prevents rainbow-table lookup). */
+  logHashSalt: optional(process.env.LOG_HASH_SALT, "mcp-telegram-default-salt-rotate-me"),
 
   databasePath: optional(process.env.DATABASE_PATH, "./data/cloud.db"),
   /** 0 = keep forever (no retention purge). */

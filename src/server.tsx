@@ -346,7 +346,8 @@ app.get("/api/stats", (c) => {
   if (!isAdminAuthorized(c.req.header("Authorization"))) {
     return c.json({ error: "unauthorized" }, 401);
   }
-  const days = Number(c.req.query("days") ?? 30);
+  const daysRaw = Number(c.req.query("days") ?? 30);
+  const days = Number.isFinite(daysRaw) && daysRaw > 0 ? daysRaw : 30;
   const userId = c.req.query("user_id");
   return c.json({
     daily: usage.getDailyStats(days),

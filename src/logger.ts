@@ -4,7 +4,7 @@
  * Also logs to console for local/docker visibility.
  */
 
-import { createHash } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { config } from "./config.js";
 
 const OTLP_ENDPOINT = config.signozEndpoint;
@@ -14,13 +14,15 @@ const MAX_BATCH_SIZE = 50;
 
 /**
  * Return a user identifier safe for logs. When LOG_USER_IDS=false, returns
- * a short stable SHA-256 hash prefix instead of the raw Telegram user id.
+ * a short stable HMAC-SHA256 prefix instead of the raw Telegram user id.
+ * Uses LOG_HASH_SALT as HMAC key to prevent rainbow-table lookup of hashes
+ * from a log dump back to Telegram user IDs (numeric ID space is small).
  */
 export function logUser(userId: string | number | undefined): string {
   if (userId === undefined || userId === null) return "";
   const raw = String(userId);
   if (config.logUserIds) return raw;
-  return `u:${createHash("sha256").update(raw).digest("hex").slice(0, 10)}`;
+  return `u:${createHmac("sha256", config.logHashSalt).update(raw).digest("hex").slice(0, 10)}`;
 }
 
 type Severity = "DEBUG" | "INFO" | "WARN" | "ERROR";

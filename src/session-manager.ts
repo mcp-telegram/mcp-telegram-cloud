@@ -1,6 +1,7 @@
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import Database from "better-sqlite3";
 import { config } from "./config.js";
+import { logUser } from "./logger.js";
 
 interface UserSession {
   telegram: TelegramService;
@@ -60,7 +61,7 @@ export class SessionManager {
         lastActivity: new Date(),
       });
     } else {
-      console.log(`[sessions] getOrCreateSession: connect failed for ${userId}, not adding to pool`);
+      console.log(`[sessions] getOrCreateSession: connect failed for ${logUser(userId)}, not adding to pool`);
     }
 
     return telegram;
@@ -98,10 +99,10 @@ export class SessionManager {
         this.saveSessionString(userId, ss);
       }
       session.telegram.disconnect().catch((err: unknown) => {
-        console.error(`[sessions] disconnect failed for ${userId}:`, err);
+        console.error(`[sessions] disconnect failed for ${logUser(userId)}:`, err);
       });
       // Keep in pool! So adoptSession can logOut, and getOrCreateSession can reuse same auth key
-      console.log(`[sessions] Disconnected ${userId} (kept in pool, session string preserved in SQLite)`);
+      console.log(`[sessions] Disconnected ${logUser(userId)} (kept in pool, session string preserved in SQLite)`);
     }
   }
 
@@ -118,9 +119,9 @@ export class SessionManager {
         // Reconnect if disconnected, so we can logOut properly
         await session.telegram.ensureConnected();
         loggedOut = await session.telegram.logOut();
-        console.log(`[sessions] Telegram logOut for ${userId}: ${loggedOut}`);
+        console.log(`[sessions] Telegram logOut for ${logUser(userId)}: ${loggedOut}`);
       } catch (error) {
-        console.error(`[sessions] Telegram logOut failed for ${userId}:`, error);
+        console.error(`[sessions] Telegram logOut failed for ${logUser(userId)}:`, error);
         try {
           await session.telegram.disconnect();
         } catch {}
@@ -130,7 +131,7 @@ export class SessionManager {
 
     // Remove session string from SQLite
     this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
-    console.log(`[sessions] Destroyed session for ${userId} (loggedOut=${loggedOut})`);
+    console.log(`[sessions] Destroyed session for ${logUser(userId)} (loggedOut=${loggedOut})`);
 
     return { loggedOut };
   }
@@ -153,9 +154,9 @@ export class SessionManager {
         // QR login creates a NEW auth key → logOut the old one on Telegram servers
         await existing.telegram.ensureConnected();
         const loggedOut = await existing.telegram.logOut();
-        console.log(`[sessions] Old session logOut for ${userId}: ${loggedOut}`);
+        console.log(`[sessions] Old session logOut for ${logUser(userId)}: ${loggedOut}`);
       } catch (err: unknown) {
-        console.error(`[sessions] Old session logOut failed for ${userId}:`, err);
+        console.error(`[sessions] Old session logOut failed for ${logUser(userId)}:`, err);
         try {
           await existing.telegram.disconnect();
         } catch {}
@@ -166,7 +167,7 @@ export class SessionManager {
       connectedAt: new Date(),
       lastActivity: new Date(),
     });
-    console.log(`[sessions] Adopted session for ${userId}`);
+    console.log(`[sessions] Adopted session for ${logUser(userId)}`);
   }
 
   getActiveCount(): number {
@@ -190,7 +191,7 @@ export class SessionManager {
     if (pooled) {
       try {
         if (pooled.telegram.isConnected() && (await pooled.telegram.ensureConnected())) {
-          console.log(`[sessions] tryReconnect: ${userId} — pool hit (already connected)`);
+          console.log(`[sessions] tryReconnect: ${logUser(userId)} — pool hit (already connected)`);
           return pooled.telegram;
         }
       } catch {}
@@ -202,7 +203,7 @@ export class SessionManager {
       | undefined;
 
     if (!row?.session_string) {
-      console.log(`[sessions] tryReconnect: ${userId} — no session_string in SQLite`);
+      console.log(`[sessions] tryReconnect: ${logUser(userId)} — no session_string in SQLite`);
       return null;
     }
 
@@ -221,16 +222,16 @@ export class SessionManager {
           connectedAt: new Date(),
           lastActivity: new Date(),
         });
-        console.log(`[sessions] tryReconnect: ${userId} — reconnected from SQLite`);
+        console.log(`[sessions] tryReconnect: ${logUser(userId)} — reconnected from SQLite`);
         return telegram;
       }
 
       // Session invalid — clean up
-      console.log(`[sessions] tryReconnect: ${userId} — session_string invalid, removing`);
+      console.log(`[sessions] tryReconnect: ${logUser(userId)} — session_string invalid, removing`);
       this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
       this.sessions.delete(userId);
     } catch (err) {
-      console.error(`[sessions] tryReconnect: ${userId} — error:`, err);
+      console.error(`[sessions] tryReconnect: ${logUser(userId)} — error:`, err);
     }
 
     return null;
