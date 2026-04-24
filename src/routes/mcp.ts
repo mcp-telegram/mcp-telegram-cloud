@@ -12,11 +12,14 @@ export interface McpRoutesDeps {
 }
 
 /**
- * Registers MCP endpoint on both `/mcp` and `/mcp/` of the passed app.
- * We register directly (not via sub-app + app.route) because Hono's
- * `app.route("/mcp", sub)` with `sub.all("*")` doesn't reliably match
- * bare `/mcp/` (trailing slash) on all runtimes. ChatGPT and some
- * clients send trailing slash, so we must accept both forms.
+ * Registers MCP endpoint matching both `/mcp` and `/mcp/`.
+ *
+ * Hono's path matching on `/mcp/` (trailing slash) is inconsistent
+ * between Node runtimes — `app.all("/mcp/", h)` matches locally on
+ * darwin/node but misses on alpine/musl in production. To avoid
+ * relying on that behavior, we install a global middleware that
+ * inspects `c.req.path` and routes manually, falling through to
+ * the rest of the app for non-MCP paths.
  */
 export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRoutesDeps): void {
   const corsMiddleware = cors({
@@ -25,9 +28,6 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRout
     allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
     exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
   });
-
-  app.use("/mcp", corsMiddleware);
-  app.use("/mcp/", corsMiddleware);
 
   const handler = async (c: Context) => {
     let userId: string | null = null;
@@ -59,6 +59,15 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRout
     return handleMcpRequest(sessions, usage, oauth, userId, clientName, c.req.raw);
   };
 
-  app.all("/mcp", handler);
-  app.all("/mcp/", handler);
+  app.use("*", async (c, next) => {
+    const path = c.req.path;
+    if (path !== "/mcp" && path !== "/mcp/") {
+      return next();
+    }
+    let response: Response | undefined;
+    await corsMiddleware(c, async () => {
+      response = await handler(c);
+    });
+    return response ?? c.res;
+  });
 }
