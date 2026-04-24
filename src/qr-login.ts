@@ -1,4 +1,4 @@
-import { logger } from "./logger.js";
+import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 
@@ -91,10 +91,10 @@ export async function handleOAuthQrLogin(
       try {
         // If we have a userId hint (from cookie), try to reconnect THAT specific user
         if (userIdHint) {
-          logger.info(`Attempting session reuse for hinted user: ${userIdHint}`, {
+          logger.info(`Attempting session reuse for hinted user: ${logUser(userIdHint)}`, {
             component: "oauth-qr",
             event: "session.reuse.attempt",
-            userId: userIdHint,
+            userId: logUser(userIdHint),
           });
 
           const telegram = await sessions.tryReconnectSession(userIdHint);
@@ -102,9 +102,9 @@ export async function handleOAuthQrLogin(
           if (telegram) {
             const me = await telegram.getMe();
 
-            logger.info(`Reusing existing session for ${me.firstName} (@${me.username ?? "unknown"})`, {
+            logger.info(`Reusing existing session (user reconnected)`, {
               component: "oauth-qr",
-              userId: userIdHint,
+              userId: logUser(userIdHint),
               event: "user.reuse",
             });
 
@@ -130,10 +130,10 @@ export async function handleOAuthQrLogin(
             return;
           }
 
-          logger.info(`Hinted session invalid for ${userIdHint}, falling through to QR`, {
+          logger.info(`Hinted session invalid, falling through to QR`, {
             component: "oauth-qr",
             event: "session.reuse.miss",
-            userId: userIdHint,
+            userId: logUser(userIdHint),
           });
         }
 
@@ -182,19 +182,13 @@ export async function handleOAuthQrLogin(
           const oauthClient = oauth.getClient(oauthParams.clientId);
           const clientName = oauthClient?.client_name ?? "";
 
-          logger.info(
-            `QR login success: ${me.firstName} (@${me.username ?? "unknown"}) via ${clientName || "unknown"}`,
-            {
-              component: "oauth-qr",
-              userId,
-              event: "user.login",
-              name: me.firstName ?? "",
-              username: me.username ?? "",
-              telegramId: me.id,
-              client: clientName,
-              clientId: oauthParams.clientId,
-            },
-          );
+          logger.info(`QR login success via ${clientName || "unknown"}`, {
+            component: "oauth-qr",
+            userId: logUser(userId),
+            event: "user.login",
+            client: clientName,
+            clientId: oauthParams.clientId,
+          });
 
           send("redirect", {
             url: url.toString(),

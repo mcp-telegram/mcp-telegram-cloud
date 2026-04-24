@@ -1,5 +1,6 @@
 import { Style } from "hono/css";
 import type { Child, FC } from "hono/jsx";
+import { config, iconUrl } from "../config.js";
 import { globalReset } from "../styles.js";
 
 interface LayoutProps {
@@ -24,15 +25,15 @@ export const Layout: FC<LayoutProps> = (props) => {
         <meta property="og:type" content="website" />
         <meta property="og:title" content={props.title} />
         {props.description && <meta property="og:description" content={props.description} />}
-        <meta property="og:site_name" content="MCP Telegram" />
+        <meta property="og:site_name" content={config.brandName} />
         {props.canonicalUrl && <meta property="og:url" content={props.canonicalUrl} />}
-        <meta property="og:image" content="https://mcp-telegram.com/icon.svg" />
+        <meta property="og:image" content={iconUrl} />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={props.title} />
         {props.description && <meta name="twitter:description" content={props.description} />}
-        <meta name="twitter:image" content="https://mcp-telegram.com/icon.svg" />
+        <meta name="twitter:image" content={iconUrl} />
 
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <Style />

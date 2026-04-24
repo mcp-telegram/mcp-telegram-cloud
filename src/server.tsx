@@ -3,8 +3,9 @@ import { timingSafeEqual } from "node:crypto";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { config } from "./config.js";
 import { TELEGRAM_ICON_SVG } from "./icon.js";
-import { logger } from "./logger.js";
+import { logger, logUser } from "./logger.js";
 import { handleMcpRequest } from "./mcp-handler.js";
 import { OAuthProvider } from "./oauth.js";
 import { AuthorizePage } from "./pages/AuthorizePage.js";
@@ -19,17 +20,13 @@ import { UsageTracker } from "./usage.js";
 const app = new Hono();
 const sessions = new SessionManager();
 
-const ISSUER = process.env.ISSUER || "https://mcp-telegram.com";
-const PORT = Number(process.env.PORT) || 3000;
-
-const oauth = new OAuthProvider({ issuer: ISSUER, db: sessions.getDb() });
+const oauth = new OAuthProvider({ issuer: config.issuer, db: sessions.getDb() });
 const usage = new UsageTracker(sessions.getDb());
 
 /** Constant-time comparison of admin Bearer token to prevent timing attacks. */
 function isAdminAuthorized(authHeader: string | undefined): boolean {
-  const adminToken = process.env.ADMIN_TOKEN;
-  if (!adminToken || !authHeader) return false;
-  const expected = `Bearer ${adminToken}`;
+  if (!config.adminToken || !authHeader) return false;
+  const expected = `Bearer ${config.adminToken}`;
   const a = Buffer.from(authHeader);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
@@ -38,6 +35,21 @@ function isAdminAuthorized(authHeader: string | undefined): boolean {
 
 // Periodic cleanup of expired OAuth codes/tokens
 setInterval(() => oauth.cleanup(), 3600_000);
+
+// Periodic purge of old usage_log rows (retention policy)
+if (config.usageLogRetentionDays > 0) {
+  setInterval(() => {
+    const removed = usage.purgeOldLogs(config.usageLogRetentionDays);
+    if (removed > 0) {
+      logger.info(`Purged ${removed} old usage_log rows`, {
+        component: "usage",
+        event: "retention.purge",
+        removed,
+        retentionDays: config.usageLogRetentionDays,
+      });
+    }
+  }, 24 * 3600_000);
+}
 
 // ─── Access Log ──────────────────────────────────────────────────────
 /** Classify user-agent into safe category — no raw UA string in logs */
@@ -93,7 +105,10 @@ app.get("/privacy", (c) => c.html(<PrivacyPage />));
 app.get("/terms", (c) => c.html(<TermsPage />));
 
 // ─── OpenAI Apps Domain Verification ─────────────────────────────────
-app.get("/.well-known/openai-apps-challenge", (c) => c.text("61bdrNuldnPbl2T1A8ocaadVMX45p2ggxoIcUrVzbHI"));
+// Served only if OPENAI_APPS_CHALLENGE is configured — silent 404 otherwise.
+app.get("/.well-known/openai-apps-challenge", (c) =>
+  config.openaiAppsChallenge ? c.text(config.openaiAppsChallenge) : c.notFound(),
+);
 
 // ─── Health ──────────────────────────────────────────────────────────
 app.get("/health", (c) =>
@@ -121,8 +136,8 @@ app.get("/.well-known/oauth-authorization-server", (c) => {
 // ─── OAuth 2.0 Protected Resource Metadata (RFC 9728) ───────────────
 app.get("/.well-known/oauth-protected-resource", (c) => {
   return c.json({
-    resource: ISSUER,
-    authorization_servers: [`${ISSUER}`],
+    resource: config.issuer,
+    authorization_servers: [config.issuer],
     scopes_supported: ["mcp:read"],
     bearer_methods_supported: ["header"],
   });
@@ -176,10 +191,10 @@ app.get("/oauth/authorize", async (c) => {
       url.searchParams.set("code", code);
       if (state) url.searchParams.set("state", state);
 
-      logger.info(`Fast OAuth redirect for ${userIdHint} (302)`, {
+      logger.info(`Fast OAuth redirect for ${logUser(userIdHint)} (302)`, {
         component: "oauth",
         event: "oauth.fast_redirect",
-        userId: userIdHint,
+        userId: logUser(userIdHint),
       });
 
       return c.redirect(url.toString(), 302);
@@ -303,18 +318,19 @@ app.post("/oauth/revoke", async (c) => {
   const userId = oauth.revokeToken(token);
 
   if (userId) {
-    logger.info(`Destroying Telegram session for ${userId}`, {
+    const uid = logUser(userId);
+    logger.info(`Destroying Telegram session for ${uid}`, {
       component: "oauth",
-      userId,
+      userId: uid,
       event: "oauth.revoke.cleanup",
     });
     // Full cleanup: logout from Telegram + delete session from SQLite
     const { loggedOut } = await sessions.destroyUserSession(userId);
     // Also revoke any other tokens for this user
     oauth.revokeAllUserTokens(userId);
-    logger.info(`Full cleanup done for ${userId} (loggedOut=${loggedOut})`, {
+    logger.info(`Full cleanup done for ${uid} (loggedOut=${loggedOut})`, {
       component: "oauth",
-      userId,
+      userId: uid,
       event: "oauth.revoke.done",
     });
   } else {
@@ -438,12 +454,12 @@ app.get("/login/qr", async (c) => {
 });
 
 // ─── Start ───────────────────────────────────────────────────────────
-logger.info(`MCP Telegram Cloud starting on port ${PORT}`, {
+logger.info(`${config.brandName} starting on port ${config.port}`, {
   component: "cloud",
   event: "server.start",
-  issuer: ISSUER,
+  issuer: config.issuer,
 });
-serve({ fetch: app.fetch, port: PORT });
+serve({ fetch: app.fetch, port: config.port });
 
 // ─── Graceful shutdown ──────────────────────────────────────────────
 for (const sig of ["SIGTERM", "SIGINT"] as const) {

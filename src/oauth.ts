@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import type Database from "better-sqlite3";
-import { logger } from "./logger.js";
+import { logger, logUser } from "./logger.js";
 
 /** OAuth 2.0 Authorization Server for MCP (RFC 8414, RFC 7591, RFC 7636) */
 
@@ -202,10 +202,10 @@ export class OAuthProvider {
     if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
     if (row.client_id !== params.clientId) return null;
 
-    logger.info(`OAuth token refreshed for ${row.user_id}`, {
+    logger.info(`OAuth token refreshed for ${logUser(row.user_id)}`, {
       component: "oauth",
       event: "oauth.token.refresh",
-      userId: row.user_id,
+      userId: logUser(row.user_id),
       clientId: row.client_id,
     });
 
@@ -230,10 +230,10 @@ export class OAuthProvider {
       .prepare("INSERT INTO oauth_refresh_tokens (refresh_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)")
       .run(refreshToken, clientId, userId, Math.floor(Date.now() / 1000) + refreshExpiresIn);
 
-    logger.info(`OAuth token issued for ${userId}`, {
+    logger.info(`OAuth token issued for ${logUser(userId)}`, {
       component: "oauth",
       event: "oauth.token.issued",
-      userId,
+      userId: logUser(userId),
       clientId,
     });
 
@@ -273,10 +273,10 @@ export class OAuthProvider {
     if (!row) return null;
 
     this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(token);
-    logger.info(`OAuth token revoked for ${row.user_id}`, {
+    logger.info(`OAuth token revoked for ${logUser(row.user_id)}`, {
       component: "oauth",
       event: "oauth.token.revoke",
-      userId: row.user_id,
+      userId: logUser(row.user_id),
     });
     return row.user_id;
   }
@@ -287,12 +287,15 @@ export class OAuthProvider {
   revokeAllUserTokens(userId: string): number {
     const result = this.db.prepare("DELETE FROM oauth_tokens WHERE user_id = ?").run(userId);
     const refreshResult = this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE user_id = ?").run(userId);
-    logger.info(`All tokens revoked for ${userId}: ${result.changes} access + ${refreshResult.changes} refresh`, {
-      component: "oauth",
-      event: "oauth.token.revoke_all",
-      userId,
-      count: result.changes + refreshResult.changes,
-    });
+    logger.info(
+      `All tokens revoked for ${logUser(userId)}: ${result.changes} access + ${refreshResult.changes} refresh`,
+      {
+        component: "oauth",
+        event: "oauth.token.revoke_all",
+        userId: logUser(userId),
+        count: result.changes + refreshResult.changes,
+      },
+    );
     return result.changes + refreshResult.changes;
   }
 

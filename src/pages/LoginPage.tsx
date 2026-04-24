@@ -71,7 +71,7 @@ export const LoginPage: FC = () => {
           <label class={label} for="userId">
             Your username
           </label>
-          <input class={input} type="text" id="userId" placeholder="e.g. overpod" required autofocus />
+          <input class={input} type="text" id="userId" placeholder="your_username" required autofocus />
           <button type="button" class={button} id="startBtn" onclick="startLogin()">
             Start QR Login
           </button>

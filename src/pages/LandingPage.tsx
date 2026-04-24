@@ -1,13 +1,20 @@
 import type { FC } from "hono/jsx";
+import { config } from "../config.js";
 import { landing, landingReset } from "../styles.js";
 import { Layout } from "./Layout.js";
+
+const contactHref = config.contactEmail
+  ? `mailto:${config.contactEmail}`
+  : config.contactTelegram
+    ? `https://t.me/${config.contactTelegram.replace(/^@/, "")}`
+    : "#";
 
 export const LandingPage: FC = () => {
   return (
     <Layout
-      title="MCP Telegram — Your Telegram in Claude AI & ChatGPT"
+      title={`${config.brandName} — Your Telegram in Claude AI & ChatGPT`}
       description="Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI with one click."
-      canonicalUrl="https://mcp-telegram.com"
+      canonicalUrl={config.issuer}
       globalCss={landingReset}
     >
       {/* ── Structured Data ──────────────────────────────────────── */}
@@ -17,10 +24,10 @@ export const LandingPage: FC = () => {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            name: "MCP Telegram",
+            name: config.brandName,
             description:
               "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI.",
-            url: "https://mcp-telegram.com",
+            url: config.issuer,
             applicationCategory: "DeveloperApplication",
             operatingSystem: "Any",
             offers: {
@@ -36,7 +43,7 @@ export const LandingPage: FC = () => {
       <header class={landing.header}>
         <div class={landing.logo}>
           <img src="/icon.svg" alt="Telegram" width="28" height="28" />
-          MCP Telegram
+          {config.brandName}
         </div>
         <nav class={landing.nav}>
           <a href="#features">Features</a>
@@ -207,7 +214,7 @@ export const LandingPage: FC = () => {
               <li>All tools included</li>
               <li>Priority support</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
+            <a class={landing.pricingCtaOutline} href={contactHref}>
               Join waitlist
             </a>
           </div>
@@ -224,7 +231,7 @@ export const LandingPage: FC = () => {
               <li>All tools included</li>
               <li>Priority support</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href="mailto:overpod@yandex.ru">
+            <a class={landing.pricingCtaOutline} href={contactHref}>
               Join waitlist
             </a>
           </div>
@@ -272,10 +279,8 @@ export const LandingPage: FC = () => {
             <h3>Does it work with ChatGPT?</h3>
             <p>
               Yes. Add it as an app in ChatGPT Settings → Apps (Developer Mode). Use the URL{" "}
-              <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px">
-                https://mcp-telegram.com/mcp
-              </code>{" "}
-              with OAuth authentication. Works on Plus, Pro, Team, and Enterprise plans.
+              <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px">{config.issuer}/mcp</code> with
+              OAuth authentication. Works on Plus, Pro, Team, and Enterprise plans.
             </p>
           </div>
           <div class={landing.faqItem}>
@@ -296,11 +301,12 @@ export const LandingPage: FC = () => {
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer class={landing.footer}>
         <p>
-          MCP Telegram Cloud &mdash; <a href="https://github.com/mcp-telegram/mcp-telegram">Open-source core</a>{" "}
-          &middot; <a href="https://stats.uptimerobot.com/xIjvlg3764">Status</a> &middot; <a href="/privacy">Privacy</a>{" "}
-          &middot; <a href="/terms">Terms</a>
+          {config.brandName} &mdash; <a href="https://github.com/mcp-telegram/mcp-telegram">Open-source core</a>{" "}
+          &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a>
         </p>
-        <p style="margin-top: 8px">&copy; 2026 overpod. Read-only Telegram access for Claude AI &amp; ChatGPT.</p>
+        <p style="margin-top: 8px">
+          &copy; {new Date().getFullYear()} {config.brandName}. Read-only Telegram access for Claude AI &amp; ChatGPT.
+        </p>
       </footer>
     </Layout>
   );

@@ -1,5 +1,6 @@
 import { css } from "hono/css";
 import type { FC } from "hono/jsx";
+import { config } from "../config.js";
 import { landingReset, tg } from "../styles.js";
 import { Layout } from "./Layout.js";
 
@@ -60,15 +61,15 @@ const s = {
 export const PrivacyPage: FC = () => {
   return (
     <Layout
-      title="Privacy Policy — MCP Telegram"
-      description="Privacy policy for mcp-telegram.com hosted Telegram MCP connector."
-      canonicalUrl="https://mcp-telegram.com/privacy"
+      title={`Privacy Policy — ${config.brandName}`}
+      description={`Privacy policy for ${config.brandName} hosted Telegram MCP connector.`}
+      canonicalUrl={`${config.issuer}/privacy`}
       globalCss={landingReset}
     >
       <div class={s.container}>
         <a href="/" class={s.logo}>
           <img src="/icon.svg" alt="Telegram" width="24" height="24" />
-          MCP Telegram
+          {config.brandName}
         </a>
 
         <h1 class={s.h1}>Privacy Policy</h1>
@@ -76,9 +77,9 @@ export const PrivacyPage: FC = () => {
 
         <h2 class={s.h2}>Overview</h2>
         <p class={s.p}>
-          MCP Telegram (
-          <a class={s.link} href="https://mcp-telegram.com">
-            mcp-telegram.com
+          {config.brandName} (
+          <a class={s.link} href={config.issuer}>
+            {config.issuer.replace(/^https?:\/\//, "")}
           </a>
           ) is a hosted connector that lets AI assistants (Claude, ChatGPT) access your Telegram account via the MCP
           protocol. Your privacy is important to us. This policy explains what data we collect, how we use it, and your
@@ -176,11 +177,25 @@ export const PrivacyPage: FC = () => {
           Questions about this policy? Reach out via{" "}
           <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram/issues">
             GitHub Issues
-          </a>{" "}
-          or Telegram{" "}
-          <a class={s.link} href="https://t.me/overpod">
-            @overpod
           </a>
+          {config.contactTelegram && (
+            <>
+              {" "}
+              or Telegram{" "}
+              <a class={s.link} href={`https://t.me/${config.contactTelegram.replace(/^@/, "")}`}>
+                @{config.contactTelegram.replace(/^@/, "")}
+              </a>
+            </>
+          )}
+          {config.contactEmail && (
+            <>
+              {" "}
+              or email{" "}
+              <a class={s.link} href={`mailto:${config.contactEmail}`}>
+                {config.contactEmail}
+              </a>
+            </>
+          )}
           .
         </p>
       </div>

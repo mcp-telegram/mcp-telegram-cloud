@@ -32,6 +32,13 @@ export class UsageTracker {
     this.insertStmt.run(userId, toolName, client);
   }
 
+  /** Delete rows older than `days`. Returns number of rows removed. No-op if days <= 0. */
+  purgeOldLogs(days: number): number {
+    if (days <= 0) return 0;
+    const result = this.db.prepare(`DELETE FROM usage_log WHERE created_at < datetime('now', '-${days} days')`).run();
+    return result.changes;
+  }
+
   /** Get total calls per user (optionally filtered by days) */
   getUserStats(days?: number): { userId: string; totalCalls: number }[] {
     const where = days ? `WHERE created_at >= datetime('now', '-${days} days')` : "";

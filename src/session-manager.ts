@@ -1,5 +1,6 @@
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import Database from "better-sqlite3";
+import { config } from "./config.js";
 
 interface UserSession {
   telegram: TelegramService;
@@ -11,10 +12,10 @@ export class SessionManager {
   private sessions = new Map<string, UserSession>();
   private db: Database.Database;
 
-  private readonly apiId = Number(process.env.TELEGRAM_API_ID);
-  private readonly apiHash = process.env.TELEGRAM_API_HASH ?? "";
+  private readonly apiId = config.telegramApiId;
+  private readonly apiHash = config.telegramApiHash;
 
-  constructor(dbPath = "data/sessions.db") {
+  constructor(dbPath = config.databasePath) {
     this.db = new Database(dbPath);
     this.db.pragma("journal_mode = WAL");
     this.db.exec(`

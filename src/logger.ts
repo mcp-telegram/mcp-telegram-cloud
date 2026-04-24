@@ -4,10 +4,24 @@
  * Also logs to console for local/docker visibility.
  */
 
-const OTLP_ENDPOINT = process.env.SIGNOZ_ENDPOINT || "http://193.169.52.83:4318";
-const SERVICE_NAME = "mcp-telegram-cloud";
+import { createHash } from "node:crypto";
+import { config } from "./config.js";
+
+const OTLP_ENDPOINT = config.signozEndpoint;
+const SERVICE_NAME = config.logServiceName;
 const BATCH_INTERVAL_MS = 5_000;
 const MAX_BATCH_SIZE = 50;
+
+/**
+ * Return a user identifier safe for logs. When LOG_USER_IDS=false, returns
+ * a short stable SHA-256 hash prefix instead of the raw Telegram user id.
+ */
+export function logUser(userId: string | number | undefined): string {
+  if (userId === undefined || userId === null) return "";
+  const raw = String(userId);
+  if (config.logUserIds) return raw;
+  return `u:${createHash("sha256").update(raw).digest("hex").slice(0, 10)}`;
+}
 
 type Severity = "DEBUG" | "INFO" | "WARN" | "ERROR";
 const SEVERITY_NUMBER: Record<Severity, number> = {
@@ -39,6 +53,10 @@ function toAttributes(attrs: Record<string, string | number | undefined>) {
 
 async function flush() {
   if (batch.length === 0) return;
+  if (!OTLP_ENDPOINT) {
+    batch.length = 0; // drain — no endpoint configured, keep console logs only
+    return;
+  }
   const records = batch.splice(0);
 
   const payload = {
@@ -85,6 +103,9 @@ function log(severity: Severity, message: string, attrs: Record<string, string |
   } else {
     console.log(`${prefix} ${message}`);
   }
+
+  // Skip batching entirely when no remote endpoint is configured
+  if (!OTLP_ENDPOINT) return;
 
   // OTLP batch
   batch.push({
