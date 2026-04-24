@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import type { Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { handleMcpRequest } from "../mcp-handler.js";
 import type { OAuthProvider } from "../oauth.js";
@@ -11,21 +11,25 @@ export interface McpRoutesDeps {
   usage: UsageTracker;
 }
 
-export function createMcpRoutes({ oauth, sessions, usage }: McpRoutesDeps): Hono {
-  const app = new Hono();
+/**
+ * Registers MCP endpoint on both `/mcp` and `/mcp/` of the passed app.
+ * We register directly (not via sub-app + app.route) because Hono's
+ * `app.route("/mcp", sub)` with `sub.all("*")` doesn't reliably match
+ * bare `/mcp/` (trailing slash) on all runtimes. ChatGPT and some
+ * clients send trailing slash, so we must accept both forms.
+ */
+export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRoutesDeps): void {
+  const corsMiddleware = cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
+    exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
+  });
 
-  app.use(
-    "*",
-    cors({
-      origin: "*",
-      allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
-      allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
-      exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
-    }),
-  );
+  app.use("/mcp", corsMiddleware);
+  app.use("/mcp/", corsMiddleware);
 
-  app.all("*", async (c) => {
-    // Extract userId + clientName from Bearer token (OAuth 2.0) or fallback to X-User-Id (dev)
+  const handler = async (c: Context) => {
     let userId: string | null = null;
     let clientName = "";
 
@@ -53,7 +57,8 @@ export function createMcpRoutes({ oauth, sessions, usage }: McpRoutesDeps): Hono
     }
 
     return handleMcpRequest(sessions, usage, oauth, userId, clientName, c.req.raw);
-  });
+  };
 
-  return app;
+  app.all("/mcp", handler);
+  app.all("/mcp/", handler);
 }

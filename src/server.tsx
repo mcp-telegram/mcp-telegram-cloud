@@ -7,7 +7,7 @@ import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
 import { createAdminRoutes } from "./routes/admin.js";
 import { createLoginRoutes } from "./routes/login.js";
-import { createMcpRoutes } from "./routes/mcp.js";
+import { registerMcpRoutes } from "./routes/mcp.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
@@ -42,7 +42,7 @@ app.route("/", createStaticRoutes({ sessions }));
 app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
-app.route("/mcp", createMcpRoutes({ oauth, sessions, usage }));
+registerMcpRoutes(app, { oauth, sessions, usage });
 app.route("/login", createLoginRoutes({ sessions }));
 
 logger.info(`${config.brandName} starting on port ${config.port}`, {
