@@ -1,4 +1,4 @@
-import type { Context, Hono } from "hono";
+import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { handleMcpRequest } from "../mcp-handler.js";
 import type { OAuthProvider } from "../oauth.js";
@@ -11,25 +11,20 @@ export interface McpRoutesDeps {
   usage: UsageTracker;
 }
 
-/**
- * Registers MCP endpoint matching both `/mcp` and `/mcp/`.
- *
- * Hono's path matching on `/mcp/` (trailing slash) is inconsistent
- * between Node runtimes — `app.all("/mcp/", h)` matches locally on
- * darwin/node but misses on alpine/musl in production. To avoid
- * relying on that behavior, we install a global middleware that
- * inspects `c.req.path` and routes manually, falling through to
- * the rest of the app for non-MCP paths.
- */
-export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRoutesDeps): void {
-  const corsMiddleware = cors({
-    origin: "*",
-    allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
-    exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
-  });
+export function createMcpRoutes({ oauth, sessions, usage }: McpRoutesDeps): Hono {
+  const app = new Hono({ strict: false });
 
-  const handler = async (c: Context) => {
+  app.use(
+    "*",
+    cors({
+      origin: "*",
+      allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
+      allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
+      exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
+    }),
+  );
+
+  app.all("/", async (c) => {
     let userId: string | null = null;
     let clientName = "";
 
@@ -57,17 +52,7 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRout
     }
 
     return handleMcpRequest(sessions, usage, oauth, userId, clientName, c.req.raw);
-  };
-
-  app.use("*", async (c, next) => {
-    const path = c.req.path;
-    if (path !== "/mcp" && path !== "/mcp/") {
-      return next();
-    }
-    let response: Response | undefined;
-    await corsMiddleware(c, async () => {
-      response = await handler(c);
-    });
-    return response ?? c.res;
   });
+
+  return app;
 }

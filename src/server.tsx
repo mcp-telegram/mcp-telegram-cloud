@@ -7,7 +7,7 @@ import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
 import { createAdminRoutes } from "./routes/admin.js";
 import { createLoginRoutes } from "./routes/login.js";
-import { registerMcpRoutes } from "./routes/mcp.js";
+import { createMcpRoutes } from "./routes/mcp.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
@@ -35,14 +35,17 @@ if (config.usageLogRetentionDays > 0) {
   }, 24 * 3600_000);
 }
 
-const app = new Hono();
+// strict: false makes Hono treat `/mcp` and `/mcp/` as the same route
+// (and same for all other paths) — ChatGPT and some proxies send trailing
+// slash to the MCP endpoint, and default strict mode 404s those.
+const app = new Hono({ strict: false });
 
 app.use("*", accessLog);
 app.route("/", createStaticRoutes({ sessions }));
 app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
-registerMcpRoutes(app, { oauth, sessions, usage });
+app.route("/mcp", createMcpRoutes({ oauth, sessions, usage }));
 app.route("/login", createLoginRoutes({ sessions }));
 
 logger.info(`${config.brandName} starting on port ${config.port}`, {
