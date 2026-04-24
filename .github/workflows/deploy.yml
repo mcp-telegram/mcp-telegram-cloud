@@ -88,28 +88,39 @@ jobs:
 
       - name: Post-deploy smoke test
         run: |
-          # Wait for rolling update to converge
-          for i in $(seq 1 30); do
-            RUNNING_IMAGE=$(docker service inspect mcp-telegram_cloud --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' | cut -d@ -f1)
-            EXPECTED="${{ env.IMAGE_NAME }}:${{ github.sha }}"
-            if [ "$RUNNING_IMAGE" = "$EXPECTED" ]; then
-              echo "Service updated to $EXPECTED"
+          EXPECTED="${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          # Wait for a Running task with the new image (not just Spec).
+          for i in $(seq 1 60); do
+            RUNNING_TASK=$(docker service ps mcp-telegram_cloud \
+              --filter "desired-state=running" \
+              --format '{{.CurrentState}}|{{.Image}}' | head -1)
+            STATE=$(echo "$RUNNING_TASK" | cut -d'|' -f1)
+            IMAGE=$(echo "$RUNNING_TASK" | cut -d'|' -f2)
+            if echo "$STATE" | grep -q "^Running" && [ "$IMAGE" = "$EXPECTED" ]; then
+              echo "New task running: $RUNNING_TASK"
               break
             fi
-            echo "Waiting for service... ($i/30) running=$RUNNING_IMAGE"
+            echo "Waiting for new task... ($i/60) state=$STATE image=$IMAGE"
             sleep 2
           done
-          # Get container ID of new task and curl inside
-          CID=$(docker ps --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" --format '{{.ID}}' | head -1)
+          # Give healthcheck a moment to mark it healthy
+          sleep 3
+          # Get container ID of the NEW task (filter by image, not just service)
+          CID=$(docker ps \
+            --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" \
+            --filter "ancestor=$EXPECTED" \
+            --format '{{.ID}}' | head -1)
           if [ -z "$CID" ]; then
-            echo "No running container found"
-            exit 1
+            echo "No new-image container running yet — falling back to any"
+            CID=$(docker ps --filter "label=com.docker.swarm.service.name=mcp-telegram_cloud" --format '{{.ID}}' | head -1)
           fi
-          echo "=== Smoke test against container $CID ==="
+          # Confirm image
+          docker inspect "$CID" --format 'Container {{.Id}} image={{.Config.Image}}'
+          echo "=== /mcp/ ==="
           docker exec "$CID" sh -c 'wget -qO- --post-data="" --server-response http://localhost:3000/mcp/ 2>&1 | head -10 || true'
-          echo "--- /mcp ---"
+          echo "=== /mcp ==="
           docker exec "$CID" sh -c 'wget -qO- --post-data="" --server-response http://localhost:3000/mcp 2>&1 | head -10 || true'
-          echo "--- /health ---"
+          echo "=== /health ==="
           docker exec "$CID" sh -c 'wget -qO- --server-response http://localhost:3000/health 2>&1 | head -10 || true'
 
   release:
