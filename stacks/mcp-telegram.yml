@@ -32,6 +32,7 @@ services:
       OPENAI_APPS_CHALLENGE: $OPENAI_APPS_CHALLENGE
       CONTACT_EMAIL: $CONTACT_EMAIL
       CONTACT_TELEGRAM: $CONTACT_TELEGRAM
+      LOG_HASH_SALT: $LOG_HASH_SALT
     labels:
       traefik.enable: "true"
       traefik.http.routers.mcp-telegram.rule: 'Host("mcp-telegram.com")'

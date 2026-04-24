@@ -83,6 +83,7 @@ jobs:
           OPENAI_APPS_CHALLENGE: ${{ secrets.OPENAI_APPS_CHALLENGE }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
           CONTACT_TELEGRAM: ${{ secrets.CONTACT_TELEGRAM }}
+          LOG_HASH_SALT: ${{ secrets.LOG_HASH_SALT }}
         run: docker stack deploy -c stacks/mcp-telegram.yml mcp-telegram
 
   release:
