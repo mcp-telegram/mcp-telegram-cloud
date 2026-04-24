@@ -11,11 +11,10 @@ RUN apk add --no-cache python3 make g++
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
+# pnpm v10+ blocks postinstall scripts by default; better-sqlite3 is
+# allow-listed in package.json#pnpm.onlyBuiltDependencies so its
+# native binding gets compiled here.
 RUN pnpm install --frozen-lockfile
-# pnpm v10+ blocks postinstall scripts by default (onlyBuiltDependencies
-# gate). Explicitly rebuild native modules now — otherwise better-sqlite3
-# ships without its binding and the container crashes on startup.
-RUN pnpm rebuild better-sqlite3
 # Replace npm registry version with source-built version (includes .d.ts)
 COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 COPY . .
