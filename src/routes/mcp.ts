@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import type { Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { handleMcpRequest } from "../mcp-handler.js";
 import type { OAuthProvider } from "../oauth.js";
@@ -11,20 +11,27 @@ export interface McpRoutesDeps {
   usage: UsageTracker;
 }
 
-export function createMcpRoutes({ oauth, sessions, usage }: McpRoutesDeps): Hono {
-  const app = new Hono({ strict: false });
+/**
+ * Registers MCP routes directly on the root app (not as a sub-app).
+ *
+ * Hono's sub-app mounted via `app.route("/mcp", sub)` + `sub.all("/")`
+ * does not reliably match `/mcp/` (trailing slash) even with
+ * `strict: false` on both apps — the double-match across app
+ * boundaries loses the trailing slash. Registering on the root app
+ * with explicit paths is the portable approach.
+ */
+export function registerMcpRoutes(app: Hono, { oauth, sessions, usage }: McpRoutesDeps): void {
+  const corsMiddleware = cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
+    exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
+  });
 
-  app.use(
-    "*",
-    cors({
-      origin: "*",
-      allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
-      allowHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
-      exposeHeaders: ["mcp-session-id", "mcp-protocol-version"],
-    }),
-  );
+  app.use("/mcp", corsMiddleware);
+  app.use("/mcp/", corsMiddleware);
 
-  app.all("/", async (c) => {
+  const handler = async (c: Context) => {
     let userId: string | null = null;
     let clientName = "";
 
@@ -52,7 +59,8 @@ export function createMcpRoutes({ oauth, sessions, usage }: McpRoutesDeps): Hono
     }
 
     return handleMcpRequest(sessions, usage, oauth, userId, clientName, c.req.raw);
-  });
+  };
 
-  return app;
+  app.all("/mcp", handler);
+  app.all("/mcp/", handler);
 }
