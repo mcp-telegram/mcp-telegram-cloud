@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# 1. Secret scan — block commit if any secret found in staged changes
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml --verbose || {
+    echo ""
+    echo "❌ gitleaks blocked commit: secret(s) detected in staged changes."
+    echo "   Review output above. If false positive, extend .gitleaks.toml allowlist."
+    exit 1
+  }
+else
+  echo "⚠️  gitleaks not installed — skipping secret scan."
+  echo "   Install: brew install gitleaks"
+  echo "   CI will still scan, but local protection is disabled."
+fi
+
+# 2. Lint + format staged files via biome
+pnpm exec lint-staged
