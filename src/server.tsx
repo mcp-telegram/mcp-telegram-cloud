@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { timingSafeEqual } from "node:crypto";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -23,6 +24,17 @@ const PORT = Number(process.env.PORT) || 3000;
 
 const oauth = new OAuthProvider({ issuer: ISSUER, db: sessions.getDb() });
 const usage = new UsageTracker(sessions.getDb());
+
+/** Constant-time comparison of admin Bearer token to prevent timing attacks. */
+function isAdminAuthorized(authHeader: string | undefined): boolean {
+  const adminToken = process.env.ADMIN_TOKEN;
+  if (!adminToken || !authHeader) return false;
+  const expected = `Bearer ${adminToken}`;
+  const a = Buffer.from(authHeader);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
 
 // Periodic cleanup of expired OAuth codes/tokens
 setInterval(() => oauth.cleanup(), 3600_000);
@@ -315,9 +327,7 @@ app.post("/oauth/revoke", async (c) => {
 
 // ─── Usage Stats API (admin) ─────────────────────────────────────────
 app.get("/api/stats", (c) => {
-  const auth = c.req.header("Authorization");
-  const adminToken = process.env.ADMIN_TOKEN;
-  if (!adminToken || auth !== `Bearer ${adminToken}`) {
+  if (!isAdminAuthorized(c.req.header("Authorization"))) {
     return c.json({ error: "unauthorized" }, 401);
   }
   const days = Number(c.req.query("days") ?? 30);
@@ -335,12 +345,11 @@ app.get("/api/stats", (c) => {
 // ─── Session Import API ──────────────────────────────────────────────
 app.post("/api/import-session", async (c) => {
   const auth = c.req.header("Authorization");
-  const adminToken = process.env.ADMIN_TOKEN;
 
   // Require admin token or Bearer token
   let userId: string | null = null;
 
-  if (adminToken && auth === `Bearer ${adminToken}`) {
+  if (isAdminAuthorized(auth)) {
     // Admin can import for any user
     const body = await c.req.json();
     userId = body.userId;
