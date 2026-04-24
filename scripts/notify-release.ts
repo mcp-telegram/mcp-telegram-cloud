@@ -22,11 +22,6 @@ function req(name: string): string {
   return v;
 }
 
-/** Escape for Telegram MarkdownV2. https://core.telegram.org/bots/api#markdownv2-style */
-function escapeMd(text: string): string {
-  return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
-}
-
 function truncate(text: string, limit: number): string {
   if (text.length <= limit) return text;
   return `${text.slice(0, limit - 1)}…`;
@@ -38,12 +33,12 @@ function buildMessage(): string {
   const url = req("RELEASE_URL");
   const rawBody = (process.env.RELEASE_BODY ?? "").trim();
 
-  const header = `🚀 *${escapeMd(name)}*`;
-  const link = `[View on GitHub](${url})`;
+  const header = `🚀 ${name}`;
+  const link = url;
 
   const fixedChars = header.length + link.length + 4;
   const bodyBudget = TELEGRAM_LIMIT - fixedChars;
-  const body = rawBody ? escapeMd(truncate(rawBody, bodyBudget)) : "";
+  const body = rawBody ? truncate(rawBody, bodyBudget) : "";
 
   return body ? `${header}\n\n${body}\n\n${link}` : `${header}\n\n${link}`;
 }
@@ -59,7 +54,6 @@ async function main(): Promise<void> {
     body: JSON.stringify({
       chat_id: chatId,
       text,
-      parse_mode: "MarkdownV2",
       disable_web_page_preview: false,
     }),
   });
