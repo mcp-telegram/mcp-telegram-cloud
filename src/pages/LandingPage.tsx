@@ -295,6 +295,19 @@ export const LandingPage: FC = () => {
               . You can self-host it for free with full read+write access.
             </p>
           </div>
+          {config.botUsername ? (
+            <div class={landing.faqItem}>
+              <h3>How will I know about service updates?</h3>
+              <p>
+                Subscribe to{" "}
+                <a href={`https://t.me/${config.botUsername}?start=subscribe`} style="color: #007AFF">
+                  @{config.botUsername}
+                </a>{" "}
+                to get notified about service status, breaking changes and new releases. Send /stop any time to
+                unsubscribe.
+              </p>
+            </div>
+          ) : null}
         </div>
       </section>
 
