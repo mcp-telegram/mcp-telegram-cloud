@@ -1,11 +1,14 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { BotClient } from "./bot/api.js";
+import { Subscribers } from "./bot/subscribers.js";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
 import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
 import { createAdminRoutes } from "./routes/admin.js";
+import { createBotWebhookRoutes, createBroadcastRoute } from "./routes/bot.js";
 import { createLoginRoutes } from "./routes/login.js";
 import { registerMcpRoutes } from "./routes/mcp.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
@@ -16,6 +19,24 @@ import { UsageTracker } from "./usage.js";
 const sessions = new SessionManager();
 const oauth = new OAuthProvider({ issuer: config.issuer, db: sessions.getDb() });
 const usage = new UsageTracker(sessions.getDb());
+
+// Optional broadcast bot (Phase 0.1). Either configure all three vars or none —
+// partial config almost always means a deploy mistake (bot answers /start with silence).
+const botVars = {
+  BOT_TOKEN: config.botToken,
+  BOT_USERNAME: config.botUsername,
+  BOT_WEBHOOK_SECRET: config.botWebhookSecret,
+};
+const botSetCount = Object.values(botVars).filter(Boolean).length;
+if (botSetCount > 0 && botSetCount < 3) {
+  const missing = Object.entries(botVars)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+  throw new Error(`Bot env partial config: missing ${missing.join(", ")}. Set all three or none.`);
+}
+const botEnabled = botSetCount === 3;
+const subscribers = botEnabled ? new Subscribers(sessions.getDb()) : null;
+const botClient = botEnabled ? new BotClient(config.botToken) : null;
 
 // Periodic cleanup of expired OAuth codes/tokens
 setInterval(() => oauth.cleanup(), 3600_000);
@@ -47,6 +68,17 @@ app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
 registerMcpRoutes(app, { oauth, sessions, usage });
 app.route("/login", createLoginRoutes({ sessions }));
+
+if (botEnabled && botClient && subscribers) {
+  const botDeps = { client: botClient, subscribers, webhookSecret: config.botWebhookSecret };
+  app.route("/bot", createBotWebhookRoutes(botDeps));
+  app.route("/api", createBroadcastRoute(botDeps));
+  logger.info("Broadcast bot routes mounted", {
+    component: "bot",
+    event: "bot.mount",
+    username: config.botUsername,
+  });
+}
 
 logger.info(`${config.brandName} starting on port ${config.port}`, {
   component: "cloud",
