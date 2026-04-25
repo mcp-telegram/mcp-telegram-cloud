@@ -178,9 +178,8 @@ export async function handleMcpRequest(
         count: todayCount,
       });
       const base = `Daily limit reached (${todayCount}/${FREE_TIER_LIMIT} calls today).`;
-      const hosted = config.issuer.includes("mcp-telegram.com");
-      return hosted
-        ? `${base} Upgrade to Pro for 5,000 calls/day at ${config.issuer}`
+      return config.proUpgradeUrl
+        ? `${base} Upgrade to Pro for 5,000 calls/day at ${config.proUpgradeUrl}`
         : `${base} Set FREE_TIER_LIMIT env var to adjust.`;
     }
     return null;

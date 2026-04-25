@@ -6,6 +6,7 @@ import { describe, it } from "node:test";
 // dynamic import so module evaluation succeeds in a bare test environment.
 process.env.TELEGRAM_API_ID ??= "1";
 process.env.TELEGRAM_API_HASH ??= "test";
+process.env.ISSUER ??= "http://localhost:3000";
 
 const { installRateLimiterEventListener } = await import("../rate-limiter-events.js");
 const { PREFIX } = await import("../rate-limiter-events-parser.js");

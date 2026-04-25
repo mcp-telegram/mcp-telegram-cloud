@@ -15,9 +15,9 @@ const intOr = (value: string | undefined, fallback: number): number => {
 };
 
 export const config = {
-  // Fallback kept until migration to mcp-telegram-infra with explicit ENV (Phase 5.2).
-  // After migration — replace with "http://localhost:3000".
-  issuer: optional(process.env.ISSUER, "https://mcp-telegram.com"),
+  /** Public origin (scheme + host, no trailing slash) — used in OAuth metadata,
+   * absolute URLs in the landing/OAuth pages, and bot webhook setup. */
+  issuer: required("ISSUER", process.env.ISSUER).replace(/\/+$/, ""),
   port: intOr(process.env.PORT, 3000),
   brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
   contactEmail: optional(process.env.CONTACT_EMAIL, ""),
@@ -48,6 +48,11 @@ export const config = {
   oauthRateLimit: intOr(process.env.OAUTH_RATE_LIMIT, 30),
   /** OAuth IP rate-limit window in milliseconds. */
   oauthRateWindowMs: intOr(process.env.OAUTH_RATE_WINDOW_MS, 60_000),
+
+  /** Optional URL to advertise in the rate-limit error message ("Upgrade to Pro
+   * at <url>"). Empty (default) means self-hosted — falls back to a hint about
+   * the FREE_TIER_LIMIT env var. */
+  proUpgradeUrl: optional(process.env.PRO_UPGRADE_URL, ""),
 
   /** Telegram Bot API token for in-product broadcasts (Phase 0.1). Empty disables bot routes. */
   botToken: optional(process.env.BOT_TOKEN, ""),

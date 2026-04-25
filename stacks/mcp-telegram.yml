@@ -26,6 +26,7 @@ services:
       ADMIN_TOKEN: $ADMIN_TOKEN
       ISSUER: "https://mcp-telegram.com"
       BRAND_NAME: "MCP Telegram"
+      PRO_UPGRADE_URL: "https://mcp-telegram.com"
       PORT: "3000"
       NODE_ENV: production
       SIGNOZ_ENDPOINT: $SIGNOZ_ENDPOINT
