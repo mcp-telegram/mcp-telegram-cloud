@@ -1,0 +1,44 @@
+name: Feature request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a feature request, please check whether your idea
+        belongs in the upstream
+        [`@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram)
+        repo instead. **New MCP tools and Telegram protocol coverage**
+        belong upstream. This repo handles hosting, OAuth, and multi-user
+        infrastructure.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user need, not the implementation.
+      placeholder: As a user of X, I want to be able to Y, because Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Optional. Skip if you only want to surface the problem.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Which repo does this belong in?
+      options:
+        - mcp-telegram-cloud (hosting, OAuth, multi-user)
+        - mcp-telegram (Telegram tools, MTProto coverage)
+        - Not sure
+    validations:
+      required: true
