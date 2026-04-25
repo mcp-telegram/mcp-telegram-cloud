@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { PREFIX, parseEvent } from "../rate-limiter-events-parser.js";
+import { PREFIX, parseEvent, truncate } from "../rate-limiter-events-parser.js";
 
 describe("parseEvent", () => {
   it("parses a flood_wait line", () => {
@@ -76,5 +76,23 @@ describe("parseEvent", () => {
     const result = parseEvent(line);
     assert.equal(result?.delayMs, 2000);
     assert.equal(result?.error, "ETIMEDOUT");
+  });
+});
+
+describe("truncate", () => {
+  it("returns the string unchanged when within max", () => {
+    assert.equal(truncate("hello", 10), "hello");
+    assert.equal(truncate("hello", 5), "hello");
+  });
+
+  it("truncates and appends an ellipsis when over max", () => {
+    const long = "a".repeat(250);
+    const result = truncate(long, 200);
+    assert.equal(result.length, 201);
+    assert.equal(result, `${"a".repeat(200)}…`);
+  });
+
+  it("handles empty string", () => {
+    assert.equal(truncate("", 10), "");
   });
 });
