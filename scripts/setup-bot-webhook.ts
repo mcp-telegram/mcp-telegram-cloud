@@ -8,8 +8,15 @@
  *   pnpm exec tsx scripts/setup-bot-webhook.ts          # set webhook
  *   pnpm exec tsx scripts/setup-bot-webhook.ts --info   # show current webhook
  *   pnpm exec tsx scripts/setup-bot-webhook.ts --delete # remove webhook
+ *
+ * dotenv is loaded best-effort: when run from CI the env is already populated
+ * and dotenv may not be installed (no `node_modules`). Local runs still get .env.
  */
-import "dotenv/config";
+try {
+  await import("dotenv/config");
+} catch {
+  // No dotenv available — fine, env is expected to be set by the caller.
+}
 
 function req(name: string): string {
   const v = process.env[name];
