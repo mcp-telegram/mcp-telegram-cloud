@@ -7,6 +7,7 @@ import { config } from "./config.js";
 import { logger } from "./logger.js";
 import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
+import { installRateLimiterEventListener } from "./rate-limiter-events.js";
 import { createAdminRoutes } from "./routes/admin.js";
 import { createBotWebhookRoutes, createBroadcastRoute } from "./routes/bot.js";
 import { createLoginRoutes } from "./routes/login.js";
@@ -15,6 +16,11 @@ import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
 import { UsageTracker } from "./usage.js";
+
+// Forward [rate-limiter] event {...} stderr lines from @overpod/mcp-telegram
+// into structured logger.warn() calls so SigNoz can aggregate by event/context.
+// Must run before any TelegramService is constructed.
+installRateLimiterEventListener();
 
 const sessions = new SessionManager();
 const oauth = new OAuthProvider({ issuer: config.issuer, db: sessions.getDb() });
