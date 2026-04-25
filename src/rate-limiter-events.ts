@@ -47,7 +47,7 @@ export function installRateLimiterEventListener(): void {
           logger.warn(`rate-limiter ${parsed.event}`, {
             component: "rate-limiter",
             event: parsed.event,
-            context: parsed.context,
+            context: truncate(parsed.context, 200),
             attempt: parsed.attempt,
             maxRetries: parsed.maxRetries,
             ...(parsed.seconds !== undefined ? { seconds: parsed.seconds } : {}),
