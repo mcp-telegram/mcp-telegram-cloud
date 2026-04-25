@@ -8,6 +8,7 @@
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/__tests__/*.test.ts",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
     "format": "biome format --write src/",
@@ -16,7 +17,7 @@
   "dependencies": {
     "@hono/node-server": "^2.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@overpod/mcp-telegram": "^1.34.0",
+    "@overpod/mcp-telegram": "^1.35.0",
     "better-sqlite3": "^12.9.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.15",
