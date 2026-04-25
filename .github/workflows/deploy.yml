@@ -84,6 +84,9 @@ jobs:
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
           CONTACT_TELEGRAM: ${{ secrets.CONTACT_TELEGRAM }}
           LOG_HASH_SALT: ${{ secrets.LOG_HASH_SALT }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
+          BOT_WEBHOOK_SECRET: ${{ secrets.BOT_WEBHOOK_SECRET }}
         run: docker stack deploy -c stacks/mcp-telegram.yml mcp-telegram
 
       - name: Post-deploy diagnostics
