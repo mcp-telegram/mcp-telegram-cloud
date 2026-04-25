@@ -69,8 +69,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # The action injects --fail / --no-update / --github-actions itself; do not duplicate.
+      # For push to main, action's auto base/head can resolve to empty strings; scan the
+      # whole branch explicitly via base="" + head=ref_name (per upstream docs).
       - name: TruffleHog
         uses: trufflesecurity/trufflehog@v3.95.2
         with:
-          path: ./
-          extra_args: --results=verified --fail
+          base: ""
+          head: ${{ github.ref_name }}
+          extra_args: --results=verified,unknown
