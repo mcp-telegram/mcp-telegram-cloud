@@ -33,6 +33,9 @@ services:
       CONTACT_EMAIL: $CONTACT_EMAIL
       CONTACT_TELEGRAM: $CONTACT_TELEGRAM
       LOG_HASH_SALT: $LOG_HASH_SALT
+      BOT_TOKEN: $BOT_TOKEN
+      BOT_USERNAME: $BOT_USERNAME
+      BOT_WEBHOOK_SECRET: $BOT_WEBHOOK_SECRET
     labels:
       traefik.enable: "true"
       traefik.http.routers.mcp-telegram.rule: 'Host("mcp-telegram.com")'
