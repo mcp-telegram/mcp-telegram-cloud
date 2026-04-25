@@ -74,8 +74,8 @@ stacks/
 ## Development
 
 ```bash
-npm install
-npm run dev        # tsx watch
+pnpm install
+pnpm dev           # tsx watch
 ```
 
 ## Environment Variables
@@ -103,3 +103,14 @@ CI/CD via GitHub Actions: push to `main` or tag `v*` triggers build, deploy, and
 ## Related
 
 - [mcp-telegram](https://github.com/mcp-telegram/mcp-telegram) — open-source self-hosted version (read + write, all tools)
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, scope rules,
+and PR workflow. By contributing you agree to the
+[Code of Conduct](./CODE_OF_CONDUCT.md). Security issues: see
+[SECURITY.md](./SECURITY.md).
+
+## License
+
+[MIT](./LICENSE) © overpod
