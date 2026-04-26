@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { config } from "../config.js";
+import { decideTgUserCookie } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
@@ -149,6 +150,27 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
         Connection: "keep-alive",
       },
     });
+  });
+
+  // Server-side setter for the `tg_user` hint cookie. Called from the
+  // AuthorizePage client script after a successful QR login so the cookie can
+  // be HttpOnly (the previous client-side `document.cookie = …` set the same
+  // value but made it readable from JS, which an XSS could exfiltrate).
+  // CSRF protection: same-origin via Origin header check against config.issuer.
+  app.post("/authorize/qr/cookie", async (c) => {
+    const result = decideTgUserCookie({
+      origin: c.req.header("origin"),
+      issuer: config.issuer,
+      body: await c.req
+        .json()
+        .then((b) => b as { username?: unknown })
+        .catch(() => null),
+    });
+    if (result.status === 204) {
+      c.header("Set-Cookie", result.setCookie);
+      return c.body(null, 204);
+    }
+    return c.text(result.body, result.status);
   });
 
   app.post("/token", async (c) => {

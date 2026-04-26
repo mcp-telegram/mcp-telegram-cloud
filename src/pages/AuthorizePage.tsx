@@ -48,14 +48,9 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
         document.getElementById('status').textContent = data.message;
       });
 
-      es.addEventListener('redirect', (e) => {
+      es.addEventListener('redirect', async (e) => {
         const data = JSON.parse(e.data);
         es.close();
-        // Save userId in cookie so subsequent OAuth flows skip QR
-        if (data.username && data.username !== 'unknown') {
-          document.cookie = 'tg_user=' + encodeURIComponent(data.username) +
-            '; path=/; max-age=2592000; SameSite=Lax; Secure';
-        }
         document.getElementById('qr-section').style.display = 'none';
         const result = document.getElementById('result');
         result.style.display = 'block';
@@ -65,6 +60,21 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
           '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')</p>' +
           '<p style="margin-top:12px;font-size:13px;color:#707579">Redirecting...</p>' +
           '</div>';
+        // Ask the server to set the HttpOnly tg_user hint cookie. Best-effort:
+        // on failure we still redirect — losing the cookie only means the next
+        // OAuth flow will show the QR again instead of the fast-redirect path.
+        if (data.username && data.username !== 'unknown') {
+          try {
+            await fetch('/oauth/authorize/qr/cookie', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: data.username }),
+              credentials: 'same-origin',
+            });
+          } catch {
+            // ignore — redirect is more important than the hint
+          }
+        }
         window.location.href = data.url;
       });
 
