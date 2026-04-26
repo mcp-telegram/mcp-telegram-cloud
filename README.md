@@ -164,7 +164,8 @@ every PR.
 PRs welcome. Please read [`CONTRIBUTING.md`](./CONTRIBUTING.md) first —
 it covers the cloud-vs-upstream scope split, dev setup, and the
 "won't merge" list. By contributing you agree to the
-[Code of Conduct](./CODE_OF_CONDUCT.md).
+[Code of Conduct](./CODE_OF_CONDUCT.md). See [`ROADMAP.md`](./ROADMAP.md)
+for what's planned, what's deferred, and what's explicitly out of scope.
 
 Tool-level features (new `telegram-*` MCP tools, MTProto coverage)
 belong in the upstream
