@@ -156,7 +156,7 @@ export const PrivacyPage: FC = () => {
           </li>
           <li>
             <strong>Self-host option</strong> — Use the{" "}
-            <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram">
+            <a class={s.link} href={config.sourceRepoUrl}>
               open-source version
             </a>{" "}
             to run everything on your own machine with zero data leaving your device.
@@ -165,9 +165,9 @@ export const PrivacyPage: FC = () => {
 
         <h2 class={s.h2}>Open source</h2>
         <p class={s.p}>
-          The core MCP server is open source under the MIT license at{" "}
-          <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram">
-            github.com/mcp-telegram/mcp-telegram
+          The server is open source under the MIT license at{" "}
+          <a class={s.link} href={config.sourceRepoUrl}>
+            {config.sourceRepoUrl.replace(/^https?:\/\//, "")}
           </a>
           . You can inspect exactly what data is accessed and how.
         </p>
@@ -175,8 +175,8 @@ export const PrivacyPage: FC = () => {
         <h2 class={s.h2}>Contact</h2>
         <p class={s.p}>
           Questions about this policy? Reach out via{" "}
-          <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram/issues">
-            GitHub Issues
+          <a class={s.link} href={config.issuesUrl}>
+            {config.issuesLabel}
           </a>
           {config.contactTelegram && (
             <>

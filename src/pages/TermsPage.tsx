@@ -81,8 +81,8 @@ export const TermsPage: FC = () => {
 
         <h2 class={s.h2}>2. Acceptance</h2>
         <p class={s.p}>
-          By connecting your Telegram account to MCP Telegram, you agree to these terms. If you do not agree, disconnect
-          the service immediately.
+          By connecting your Telegram account to {config.brandName}, you agree to these terms. If you do not agree,
+          disconnect the service immediately.
         </p>
 
         <h2 class={s.h2}>3. Your account</h2>
@@ -94,9 +94,9 @@ export const TermsPage: FC = () => {
 
         <h2 class={s.h2}>4. Permitted use</h2>
         <p class={s.p}>
-          You may use MCP Telegram for personal, lawful purposes — reading your own messages, searching your chats, and
-          accessing your contacts through AI assistants. You may not use the service to violate Telegram's Terms of
-          Service, harass others, or access accounts you do not own.
+          You may use {config.brandName} for personal, lawful purposes — reading your own messages, searching your
+          chats, and accessing your contacts through AI assistants. You may not use the service to violate Telegram's
+          Terms of Service, harass others, or access accounts you do not own.
         </p>
 
         <h2 class={s.h2}>5. Data and privacy</h2>
@@ -111,21 +111,21 @@ export const TermsPage: FC = () => {
 
         <h2 class={s.h2}>6. Service availability</h2>
         <p class={s.p}>
-          MCP Telegram is provided "as is" without warranty. We aim for high availability but do not guarantee
+          {config.brandName} is provided "as is" without warranty. We aim for high availability but do not guarantee
           uninterrupted service. We may modify, suspend, or discontinue the service at any time with reasonable notice.
         </p>
 
         <h2 class={s.h2}>7. Limitation of liability</h2>
         <p class={s.p}>
-          To the maximum extent permitted by law, MCP Telegram and its operator shall not be liable for any indirect,
-          incidental, or consequential damages arising from your use of the service.
+          To the maximum extent permitted by law, {config.brandName} and its operator shall not be liable for any
+          indirect, incidental, or consequential damages arising from your use of the service.
         </p>
 
         <h2 class={s.h2}>8. Open source</h2>
         <p class={s.p}>
-          The core MCP server is open source under the MIT license at{" "}
-          <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram">
-            github.com/mcp-telegram/mcp-telegram
+          The server is open source under the MIT license at{" "}
+          <a class={s.link} href={config.sourceRepoUrl}>
+            {config.sourceRepoUrl.replace(/^https?:\/\//, "")}
           </a>
           . You may self-host the server for full control over your data.
         </p>
@@ -139,8 +139,8 @@ export const TermsPage: FC = () => {
         <h2 class={s.h2}>10. Contact</h2>
         <p class={s.p}>
           Questions about these terms? Reach out via{" "}
-          <a class={s.link} href="https://github.com/mcp-telegram/mcp-telegram/issues">
-            GitHub Issues
+          <a class={s.link} href={config.issuesUrl}>
+            {config.issuesLabel}
           </a>
           {config.contactTelegram && (
             <>

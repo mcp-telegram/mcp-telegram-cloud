@@ -168,6 +168,67 @@ Pointing `SIGNOZ_ENDPOINT` at a remote OTLP collector lets you correlate
 `rate_limit.exceeded` and `http.request` events across replicas. Logs
 are PII-safe by default when `LOG_USER_IDS=false`.
 
+### 10. Public copy — what to review before you publish
+
+The four served HTML pages — **landing** (`/`), **authorize** (`/oauth/authorize`),
+**privacy** (`/privacy`), **terms** (`/terms`) — pull all visible
+branding and links from your config:
+
+| Surface | What's templated | Env vars |
+| --- | --- | --- |
+| Title bar, hero, footer brand | `BRAND_NAME` | `BRAND_NAME` |
+| Open-source link, "GitHub" nav, "Self-host" CTA | `SOURCE_REPO_URL` | `SOURCE_REPO_URL` |
+| Contact / issues link | `ISSUES_URL`, `ISSUES_LABEL` | `ISSUES_URL`, `ISSUES_LABEL` |
+| Email / Telegram contact lines | `CONTACT_EMAIL`, `CONTACT_TELEGRAM` | both |
+| Canonical URLs in `<link rel="canonical">` | `ISSUER` | `ISSUER` |
+
+If you set those env vars, every page renders with your branding —
+**but the legal and editorial substance still describes how the
+upstream hosted service operates**. Read each page on a staging
+deployment of your fork and rewrite anything that doesn't match your
+operation. Treat what ships in the repo as a starting template, not
+legal advice.
+
+Specific paragraphs almost everyone needs to revisit:
+
+- **Landing → hero subtitle, FAQ** — the FAQ assumes a specific tier
+  layout (free, hosted, OpenAI Apps). If you charge, run privately, or
+  don't ship the bot subscription flow (`BOT_USERNAME` empty), trim
+  the affected sections.
+- **Privacy → "What we collect" / "What we do NOT collect"** — confirm
+  the list matches your real logging (`LOG_USER_IDS`,
+  `USAGE_LOG_RETENTION_DAYS`, your own SigNoz attributes). The default
+  text claims usage logs include the Telegram user ID; if you set
+  `LOG_USER_IDS=false`, say so.
+- **Privacy → "Data retention"** — surfaces the same retention number
+  you set in `USAGE_LOG_RETENTION_DAYS`. Update if you keep logs longer
+  for support reasons.
+- **Privacy → "Third parties"** — the default text says the operator
+  does not sell data. If you ship logs to a third-party APM, name it.
+- **Privacy → "Security"** — references TLS + dedicated infrastructure.
+  Update if you run inside a shared environment or skip the proxy.
+- **Privacy → "Your rights" → "Self-host option"** — currently links
+  back to the upstream open-source repo via `SOURCE_REPO_URL`. Consider
+  whether a self-hoster forking again is the workflow you want to
+  recommend; many private deployments delete this paragraph entirely.
+- **Terms → "Acceptance" / "Permitted use"** — reference your
+  `BRAND_NAME` automatically, but the lawful-use clauses reflect a
+  read-only public service. If you enable destructive tools or run a
+  private deployment, rewrite scope and acceptable-use accordingly.
+- **Terms → "Service availability" / "Limitation of liability"** —
+  bundled wording is generic English boilerplate. Have a lawyer in your
+  jurisdiction review before publishing.
+- **Terms → "Changes"** — says material changes are communicated "via
+  the website". If you only operate a private group, point users at
+  whatever channel you actually use (email list, internal wiki, etc.).
+- **Both pages → "Last updated"** — bump the date when you finish
+  rewriting. Bots and audits read it.
+
+If you do not run a public-facing service and just self-host for
+yourself or a closed team, consider deleting both Privacy and Terms
+entirely (remove the routes from `src/server.tsx`) instead of shipping
+inaccurate boilerplate.
+
 ## Incident response
 
 If you suspect the database file has been accessed by an unauthorized

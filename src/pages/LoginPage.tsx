@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { config } from "../config.js";
 import { button, card, hidden, input, label, qrContainer, spinner, status, step, subtitle, title } from "../styles.js";
 import { Layout } from "./Layout.js";
 
@@ -62,9 +63,9 @@ const clientScript = `
 
 export const LoginPage: FC = () => {
   return (
-    <Layout title="MCP Telegram — Login">
+    <Layout title={`${config.brandName} — Login`}>
       <div class={card}>
-        <h1 class={title}>MCP Telegram Cloud</h1>
+        <h1 class={title}>{config.brandName}</h1>
         <p class={subtitle}>Connect your Telegram account</p>
 
         <div id="login-form">

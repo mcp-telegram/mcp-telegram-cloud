@@ -52,7 +52,7 @@ export const LandingPage: FC = () => {
           <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
-          <a href="https://github.com/mcp-telegram/mcp-telegram">GitHub</a>
+          <a href={config.sourceRepoUrl}>GitHub</a>
         </nav>
       </header>
 
@@ -69,7 +69,7 @@ export const LandingPage: FC = () => {
           <a class={landing.cta} href="#how-it-works">
             Connect Telegram
           </a>
-          <a class={landing.ctaSecondary} href="https://github.com/mcp-telegram/mcp-telegram">
+          <a class={landing.ctaSecondary} href={config.sourceRepoUrl}>
             Self-host (free)
           </a>
         </div>
@@ -288,9 +288,9 @@ export const LandingPage: FC = () => {
           <div class={landing.faqItem}>
             <h3>Is the source code open?</h3>
             <p>
-              The core MCP server is fully open-source (MIT license) at{" "}
-              <a href="https://github.com/mcp-telegram/mcp-telegram" style="color: #007AFF">
-                github.com/mcp-telegram/mcp-telegram
+              The server is fully open-source (MIT license) at{" "}
+              <a href={config.sourceRepoUrl} style="color: #007AFF">
+                {config.sourceRepoUrl.replace(/^https?:\/\//, "")}
               </a>
               . You can self-host it for free with full read+write access.
             </p>
@@ -316,8 +316,8 @@ export const LandingPage: FC = () => {
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer class={landing.footer}>
         <p>
-          {config.brandName} &mdash; <a href="https://github.com/mcp-telegram/mcp-telegram">Open-source core</a>{" "}
-          &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a>
+          {config.brandName} &mdash; <a href={config.sourceRepoUrl}>Open-source core</a> &middot;{" "}
+          <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a>
         </p>
         <p style="margin-top: 8px">
           &copy; {new Date().getFullYear()} {config.brandName}. Read-only Telegram access for Claude AI &amp; ChatGPT.

@@ -22,6 +22,9 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `BRAND_NAME` | | `MCP Telegram` | Display name on landing/MCP metadata |
 | `CONTACT_EMAIL` | | empty | Shown on landing/privacy/terms |
 | `CONTACT_TELEGRAM` | | empty | Same, Telegram handle (no `@`) |
+| `SOURCE_REPO_URL` | | upstream cloud repo | Used in landing/privacy/terms "Open source" links |
+| `ISSUES_URL` | | `${SOURCE_REPO_URL}/issues` | Used in privacy/terms "Contact" link |
+| `ISSUES_LABEL` | | `GitHub Issues` | Visible text for the issues link |
 | `OPENAI_APPS_CHALLENGE` | | empty | ChatGPT Apps Directory challenge token |
 | `SIGNOZ_ENDPOINT` | | empty | OTLP HTTP endpoint for remote logs |
 | `LOG_SERVICE_NAME` | | `mcp-telegram-cloud` | Service name in OTLP attributes |
@@ -118,6 +121,23 @@ once at load.
 
 For self-hosters: at minimum set one. Even an internal contact (`#ops` in
 Slack) is better than nothing for users who hit a bug.
+
+### `SOURCE_REPO_URL`, `ISSUES_URL`, `ISSUES_LABEL`
+
+Public links rendered on the landing page, privacy, and terms.
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `SOURCE_REPO_URL` | `https://github.com/mcp-telegram/mcp-telegram-cloud` | Where users go to read the source. Override if you maintain a fork. Trailing slashes are normalised. |
+| `ISSUES_URL` | `${SOURCE_REPO_URL}/issues` | Where users file bugs. Override for GitLab, Jira, mailto:, or a status page. |
+| `ISSUES_LABEL` | `GitHub Issues` | Visible link text. Change in lockstep with `ISSUES_URL` so non-GitHub trackers don't ship a misleading label. |
+
+Both URL values pass through a strict `http(s)://` allowlist at startup —
+anything else (`javascript:`, `data:`, `file:`, malformed strings) makes
+the process refuse to boot. This is deliberate: the URLs are rendered as
+anchor `href` on public pages, so a misconfigured operator setting
+`javascript:alert(1)` would otherwise create an XSS sink for every
+visitor.
 
 ## Observability
 

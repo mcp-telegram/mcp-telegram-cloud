@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { config } from "../config.js";
 import {
   card,
   clientBlock,
@@ -95,9 +96,9 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
   `;
 
   return (
-    <Layout title="MCP Telegram — Authorize">
+    <Layout title={`${config.brandName} — Authorize`}>
       <div class={card}>
-        <h1 class={title}>MCP Telegram</h1>
+        <h1 class={title}>{config.brandName}</h1>
         <p class={subtitle}>Connect your Telegram account</p>
 
         {props.error && <div class={errorInline}>{props.error}</div>}
