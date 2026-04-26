@@ -3,7 +3,7 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { BotClient } from "./bot/api.js";
 import { Subscribers } from "./bot/subscribers.js";
-import { config } from "./config.js";
+import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { logger } from "./logger.js";
 import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
@@ -25,8 +25,7 @@ installRateLimiterEventListener();
 // PII-hashing footgun: LOG_USER_IDS=false promises hashed user IDs, but with the
 // shipped sentinel salt the hash provides zero rainbow-table protection (anyone
 // with the source can rebuild the mapping). Warn loudly so it surfaces in logs.
-const SENTINEL_SALT = "mcp-telegram-default-salt-rotate-me";
-if (!config.logUserIds && config.logHashSalt === SENTINEL_SALT) {
+if (!config.logUserIds && config.logHashSalt === SENTINEL_LOG_HASH_SALT) {
   logger.warn(
     "LOG_USER_IDS=false but LOG_HASH_SALT is unset — using sentinel default. Set a real salt; see docs/configuration.md#log_user_ids--log_hash_salt",
     {

@@ -1,3 +1,8 @@
+/** Sentinel default for LOG_HASH_SALT — checked at startup to flag insecure
+ * configs. Exported so the warning in server.tsx stays in sync if the value
+ * is rotated. */
+export const SENTINEL_LOG_HASH_SALT = "mcp-telegram-default-salt-rotate-me";
+
 const required = (name: string, value: string | undefined): string => {
   if (!value?.trim()) {
     throw new Error(`Required env var ${name} is missing. See .env.example.`);
@@ -33,8 +38,11 @@ export const config = {
   signozEndpoint: optional(process.env.SIGNOZ_ENDPOINT, ""),
   logServiceName: optional(process.env.LOG_SERVICE_NAME, "mcp-telegram-cloud"),
   logUserIds: process.env.LOG_USER_IDS !== "false",
-  /** HMAC key for hashing user IDs in logs (prevents rainbow-table lookup). */
-  logHashSalt: optional(process.env.LOG_HASH_SALT, "mcp-telegram-default-salt-rotate-me"),
+  /** HMAC key for hashing user IDs in logs (prevents rainbow-table lookup).
+   * Defaults to {@link SENTINEL_LOG_HASH_SALT} so the app still boots on a
+   * misconfigured deploy; server.tsx warns at startup when this combo is
+   * insecure (LOG_USER_IDS=false + sentinel salt). */
+  logHashSalt: optional(process.env.LOG_HASH_SALT, SENTINEL_LOG_HASH_SALT),
 
   databasePath: optional(process.env.DATABASE_PATH, "./data/cloud.db"),
   /** 0 = keep forever (no retention purge). */

@@ -77,8 +77,9 @@ Pick once.
 
 ### `ADMIN_TOKEN` (recommended)
 
-Bearer token for `/api/stats` and `/api/import-session`. Used with
-`Authorization: Bearer <token>`.
+Bearer token for the admin endpoints — `/api/stats`,
+`/api/import-session`, and (when the broadcast bot is enabled)
+`/api/broadcast`. Used with `Authorization: Bearer <token>`.
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"

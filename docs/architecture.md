@@ -219,7 +219,7 @@ src/
   usage.ts                quota + retention purge
   mcp-handler.ts          MCP request dispatch, tool filter
   tools.ts                tool whitelist (cloud subset of upstream)
-  icon.ts                 PNG icon served at /icon.svg
+  icon.ts                 inline SVG icon served at /icon.svg
   styles.ts               shared design tokens for landing pages
   auth/admin.ts           bearer-token check for /api/*
   bot/                    Telegram bot client + subscriber store
