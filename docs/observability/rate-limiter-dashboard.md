@@ -146,6 +146,45 @@ service.name = "mcp-telegram-cloud" AND body CONTAINS "AUTH_KEY_DUPLICATED"
 
 The first two should return 0 rows in the 24h baseline (no flood events yet — see `docs/research/telegram-rate-limits.md`). They're "armed" filters — empty result is correct, the alert fires when count > threshold.
 
+## End-to-end verification
+
+A first end-to-end check was run in production on 2026-04-26: synthetic `flood_wait` / `network_retry` / `temporary_retry` lines were emitted from inside the cloud container, and three matching WARN records (with `component=rate-limiter`, `event=…`, `service.name=mcp-telegram-cloud`) appeared in SigNoz.
+
+### Scope of this check
+
+This procedure validates the **cloud-side** half of the pipeline only:
+
+```
+console.error → cloud parser → logger.warn → OTLP → SigNoz
+```
+
+It does **not** exercise the real `@overpod/mcp-telegram` rate-limiter, so it does not prove the upstream `mcp-telegram → console.error` hop. That hop is covered by unit tests in `mcp-telegram` plus the contract documented in [Common log shape](#common-log-shape); a real flood event in production will be the first true end-to-end signal.
+
+### Reproduction command
+
+Pick exactly one replica (the service is currently single-replica; running this against multiple replicas multiplies the synthetic-event count in shared SigNoz queries and dashboards):
+
+```sh
+CID=$(docker ps --filter name=mcp-telegram_cloud --format '{{.ID}}' | head -n 1)
+docker exec "$CID" node -e '
+  (async () => {
+    const m = await import("./dist/rate-limiter-events.js");
+    const { logger } = await import("./dist/logger.js");
+    m.installRateLimiterEventListener();
+    console.error("[rate-limiter] event " + JSON.stringify({event:"flood_wait",context:"e2e_verification",attempt:1,maxRetries:3,seconds:5}));
+    console.error("[rate-limiter] event " + JSON.stringify({event:"network_retry",context:"e2e_verification",attempt:1,maxRetries:3,delayMs:1000,error:"ECONNRESET"}));
+    console.error("[rate-limiter] event " + JSON.stringify({event:"temporary_retry",context:"e2e_verification",attempt:2,maxRetries:3,delayMs:500}));
+    await logger.flush();
+    process.exit(0);
+  })().catch((err) => { console.error(err); process.exit(1); });'
+```
+
+`logger.flush()` is awaited explicitly, so the process exits only after the OTLP POST completes — no batch-interval timing assumptions. The matching SigNoz query is `component = 'rate-limiter' AND context = 'e2e_verification'`.
+
+### Expected result
+
+Three WARN records within a few seconds, all carrying `service.name=mcp-telegram-cloud`, `component=rate-limiter`, `severity_text=WARN`, and the expected `event` value. Filter `context=e2e_verification` out of production analytics or run the check during a low-traffic window. Re-run whenever the parser, logger, or OTLP plumbing changes.
+
 ## Threshold rationale
 
 Numbers come from `docs/research/telegram-rate-limits.md` §6.4. They're conservative starts; revise after observing 4-6 weeks of real traffic at 50+ DAU.
