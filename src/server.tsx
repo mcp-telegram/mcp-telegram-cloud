@@ -22,6 +22,20 @@ import { UsageTracker } from "./usage.js";
 // Must run before any TelegramService is constructed.
 installRateLimiterEventListener();
 
+// PII-hashing footgun: LOG_USER_IDS=false promises hashed user IDs, but with the
+// shipped sentinel salt the hash provides zero rainbow-table protection (anyone
+// with the source can rebuild the mapping). Warn loudly so it surfaces in logs.
+const SENTINEL_SALT = "mcp-telegram-default-salt-rotate-me";
+if (!config.logUserIds && config.logHashSalt === SENTINEL_SALT) {
+  logger.warn(
+    "LOG_USER_IDS=false but LOG_HASH_SALT is unset — using sentinel default. Set a real salt; see docs/configuration.md#log_user_ids--log_hash_salt",
+    {
+      component: "config",
+      event: "log_hash_salt.sentinel",
+    },
+  );
+}
+
 const sessions = new SessionManager();
 const oauth = new OAuthProvider({ issuer: config.issuer, db: sessions.getDb() });
 const usage = new UsageTracker(sessions.getDb());

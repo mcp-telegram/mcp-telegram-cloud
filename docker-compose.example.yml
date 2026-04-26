@@ -1,0 +1,77 @@
+# Example Docker Compose stack for self-hosting mcp-telegram-cloud.
+#
+# Quick start:
+#   1. cp .env.example .env       # then fill in TELEGRAM_API_ID, ISSUER, etc.
+#   2. docker compose -f docker-compose.example.yml up -d --build
+#   3. point your reverse proxy at http://localhost:3000
+#
+# This file intentionally does NOT include a reverse proxy. OAuth
+# clients (Claude.ai, ChatGPT) require HTTPS, so you MUST front the app
+# with TLS termination — Traefik, nginx + certbot, Caddy, or a managed
+# load balancer. See docs/self-hosting.md §4 for guidance.
+#
+# Secrets policy: this example reads everything from `.env` via
+# `env_file:` to keep credentials out of the compose file. Do not bake
+# tokens into compose YAML — the file is too easy to commit.
+
+services:
+  cloud:
+    # Build from source (default). The Dockerfile pulls
+    # @overpod/mcp-telegram from GitHub at build time so it includes
+    # type declarations.
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Once mcp-telegram-cloud is public on GHCR, you can replace
+    # `build:` with a pinned image tag instead:
+    #
+    #   image: ghcr.io/mcp-telegram/mcp-telegram-cloud:v1.12.0
+    #
+    # Always pin to a tag, never `:latest` — see docs/self-hosting.md
+    # §"Upgrading".
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      # Bind to localhost only — your reverse proxy reaches this over
+      # the host loopback (or a private docker network).
+      - "127.0.0.1:3000:3000"
+
+    volumes:
+      # Persistent SQLite + session storage. Match DATABASE_PATH in .env;
+      # the default `./data/cloud.db` resolves to /app/data/cloud.db
+      # inside the container.
+      - cloud-data:/app/data
+
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    # Tighten if your host has spare capacity to handle concurrent
+    # users. Workers are spawned per active user and each takes ~50MB.
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+volumes:
+  cloud-data:
+    # Bind-mount example for hosts where you want the data on a
+    # specific encrypted volume:
+    #
+    # driver: local
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /var/lib/mcp-telegram/data

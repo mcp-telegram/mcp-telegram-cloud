@@ -1,6 +1,8 @@
 # Stage 1: Build mcp-telegram from source (with declarations)
 FROM node:22-alpine AS telegram-lib
-RUN apk add --no-cache git
+# python3/make/g++ needed when transitive native modules (e.g. utf-8-validate)
+# fall back to source build on architectures without prebuilt binaries (arm64).
+RUN apk add --no-cache git python3 make g++
 RUN git clone --depth 1 https://github.com/mcp-telegram/mcp-telegram.git /telegram
 WORKDIR /telegram
 RUN npm ci && npm run build
