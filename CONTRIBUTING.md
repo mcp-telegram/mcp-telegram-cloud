@@ -53,8 +53,12 @@ account** for development. The session DB stores plaintext MTProto sessions.
 - **Types**: TypeScript strict mode. No `any` without a comment explaining
   why.
 - **Comments**: only when the *why* is non-obvious. Don't restate the code.
-- **Tests**: there is no test suite yet for cloud-specific code. PRs that
-  add testing infrastructure are welcome.
+- **Tests**: unit tests live in `src/__tests__/*.test.ts` and run via
+  `pnpm test` (powered by `tsx --test`, which uses Node's built-in
+  `node:test`). Add tests for new behaviour where it's reasonable —
+  pure functions, parsers, validation, security guards. PRs that
+  expand coverage (especially around OAuth and rate-limiting paths)
+  are very welcome.
 
 ## Pull request workflow
 

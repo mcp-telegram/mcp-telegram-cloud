@@ -55,7 +55,7 @@ If you can't guarantee the above for every environment the DB touches
 | `TELEGRAM_API_ID` | ✅ | Numeric ID from my.telegram.org. |
 | `TELEGRAM_API_HASH` | ✅ | Hex hash from my.telegram.org. |
 | `ISSUER` | ✅ | Public HTTPS URL, no trailing slash. |
-| `ADMIN_TOKEN` | ✅ | 32-byte hex. See `.env.example` for generator. |
+| `ADMIN_TOKEN` | ⚠️ | 32-byte hex. Optional but strongly recommended for any public deployment — without it the admin-only `/api/stats` and `/api/import-session` (operator path) return `401`. See `.env.example` for generator. |
 
 All other vars are optional with safe defaults — see
 [`.env.example`](../.env.example) for the full list.
