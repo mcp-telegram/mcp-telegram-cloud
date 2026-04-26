@@ -2,6 +2,7 @@
   "name": "mcp-telegram-cloud",
   "version": "1.12.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.tsx",
