@@ -8,15 +8,17 @@ The SigNoz MCP tool surface lets us query/aggregate logs and update dashboards p
 
 Every captured access-log entry is emitted by [src/middleware/access-log.ts](../../src/middleware/access-log.ts) with these structured attributes:
 
-| Attribute    | Type   | Values                                                           |
-|--------------|--------|------------------------------------------------------------------|
-| `component`  | string | always `http`                                                    |
-| `event`      | string | always `http.request`                                            |
-| `method`     | string | HTTP method (`GET`, `POST`, `OPTIONS`, …)                        |
-| `path`       | string | request path (raw, no normalisation)                             |
-| `status`     | number | HTTP status code (numeric — comparison operators work)           |
-| `durationMs` | number | server-side latency in ms (excludes upstream Traefik time)       |
-| `client`     | string | classified UA bucket: `chatgpt` / `claude` / `browser` / `bot` / `script` / `empty` / `other` |
+| Attribute    | Wire type | Values                                                           |
+|--------------|-----------|------------------------------------------------------------------|
+| `component`  | string    | always `http`                                                    |
+| `event`      | string    | always `http.request`                                            |
+| `method`     | string    | HTTP method (`GET`, `POST`, `OPTIONS`, …)                        |
+| `path`       | string    | request path (raw, no normalisation)                             |
+| `status`     | string    | HTTP status code as a string (e.g. `"200"`, `"404"`, `"500"`)    |
+| `durationMs` | string    | server-side latency in ms (excludes upstream Traefik time)       |
+| `client`     | string    | classified UA bucket: `chatgpt` / `claude` / `browser` / `bot` / `script` / `empty` / `other` |
+
+**Type note (important):** [src/middleware/access-log.ts](../../src/middleware/access-log.ts) sets `status: String(status)` and `durationMs: duration` (number), and [src/logger.ts](../../src/logger.ts) `toAttributes()` coerces every value via `String(value)` into OTLP `stringValue`. So on the wire both `status` and `durationMs` are strings. SigNoz' query layer transparently coerces these to numbers for comparison/percentile operators (verified empirically — `status = 404` and `status = '404'` return identical counts, `p95(durationMs)` returns ms), so the numeric filter expressions in this doc work as written. If a future logger refactor types these fields differently, re-verify the queries.
 
 Body format: `{method} {path} {status} {durationMs}ms [{client}]` (e.g. `GET /privacy 200 10ms [script]`).
 
@@ -61,7 +63,7 @@ Aggregate: p95(durationMs)
 Panel:     Value, yAxisUnit = ms
 ```
 
-Plan §Success Metrics targets are stated for **p50** (`< 500ms`) and **p99** (`< 3s`); the plan does not pin a p95 target. p95 is shown here as a complementary middle-ground signal that catches degradations earlier than p99 without being noise-dominated like raw averages. Treat S3 as observation-only until a p95 target is added to the plan.
+Plan §Success Metrics targets are stated for **p50** (`< 500ms`) and **p99** (`< 3s`) and explicitly scoped to `/mcp`. p95 is shown here as a complementary middle-ground signal that catches degradations earlier than p99 without being noise-dominated like raw averages. **Scope deviation:** this widget covers **all** HTTP traffic (`component = 'http'`), not only `/mcp`, because at current traffic volume `/mcp` is intermittent and a `/mcp`-only percentile is undefined for most buckets. The whole-surface percentile dilutes `/mcp` regressions with cheap static-page hits — when `/mcp` traffic stabilises, add a `path = '/mcp'` filtered companion widget. Treat S3 as observation-only until a p95 target is added to the plan.
 
 ### S4 — HTTP Latency p99 (value, ms)
 
@@ -72,7 +74,7 @@ Aggregate: p99(durationMs)
 Panel:     Value, yAxisUnit = ms
 ```
 
-Plan target: **p99 < 3s**, alarm at `> 10s`. Catches tail-latency regressions invisible to p50.
+Plan target: **p99 < 3s**, alarm at `> 10s`. Same scope deviation as S3 — measured across all HTTP routes, not just `/mcp`. Catches tail-latency regressions invisible to p50.
 
 ### S5 — HTTP Latency p50 / p95 / p99 (graph, ms)
 
@@ -83,9 +85,9 @@ Three series: A=p50, B=p95, C=p99 (each grouped by nothing; series via separate 
 Panel:     Time-series graph
 ```
 
-Trend view for the same percentile triple — useful for catching gradual drift (e.g. SQLite getting slower as `usage_log` grows before retention kicks in).
+Trend view for the same percentile triple, same all-routes scope as S3/S4 — useful for catching gradual drift (e.g. SQLite getting slower as `usage_log` grows before retention kicks in).
 
-### S6 — Requests by status class (graph, stacked)
+### S6 — Requests by status code (graph, stacked)
 
 ```
 Source:    Logs
@@ -95,7 +97,7 @@ Group by:  status
 Panel:     Stacked time-series
 ```
 
-Visual baseline of request mix. Sudden colour shift = something changed (deploy, scanner wave, ChatGPT auth churn).
+Visual baseline of request mix. Note: `status` is the exact HTTP code (`200`, `401`, `404`, `500`), not a 2xx/4xx/5xx class — the access-log middleware emits exact codes and the dashboard does not bucket them. Each code becomes its own series, which is fine for typical mixes (a handful of dominant codes) but gets noisy if many distinct error codes appear. If that happens, switch to grouping by `severity_text` (which logger.ts maps to `INFO`/`WARN`/`ERROR` from the same status thresholds) for a true class view. Sudden colour shift = something changed (deploy, scanner wave, ChatGPT auth churn).
 
 ### S7 — Top error paths (table)
 
