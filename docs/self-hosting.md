@@ -100,15 +100,16 @@ chmod 0700 /var/lib/mcp-telegram/data
 chown 1000:1000 /var/lib/mcp-telegram/data   # match the container user
 ```
 
-In `stacks/*.yml`, bind-mount read-write only for the app; do not expose
-the volume to other services.
+In your compose/stack file (see `docker-compose.example.yml`),
+bind-mount read-write only for the app; do not expose the volume to
+other services.
 
 ### 4. Enforce TLS
 
 Never expose port 3000 directly. Front the service with:
 
-- Traefik with Let's Encrypt (this repo's upstream deployment uses
-  this — see `stacks/traefik.yml`).
+- Traefik with Let's Encrypt (this is what the maintainer's hosted
+  deployment uses).
 - nginx + certbot.
 - Caddy with automatic HTTPS.
 

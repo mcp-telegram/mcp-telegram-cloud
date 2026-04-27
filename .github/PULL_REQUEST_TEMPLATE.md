@@ -16,6 +16,6 @@
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm build` succeeds
 - [ ] Touched user-facing strings or env vars → `README.md` and `.env.example` updated
-- [ ] Touched `stacks/*.yml` → operational impact described above
+- [ ] Touched `Dockerfile` or `docker-compose.example.yml` → operational impact described above
 - [ ] No secrets, tokens, or session strings in the diff
 - [ ] Scope appropriate for `mcp-telegram-cloud` (not an upstream `mcp-telegram` change)

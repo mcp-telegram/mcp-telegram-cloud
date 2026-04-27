@@ -1,5 +1,7 @@
 # OSS Split Inventory
 
+> **STATUS: HISTORICAL.** The split itself was executed on 2026-04-27 — `stacks/`, deploy/diagnose workflows, and the bot-webhook setup script now live in the private `mcp-telegram-infra` repo. This document is preserved as the planning record (license audit, sensitive-data inventory, risk map). For current deploy flow see [`docker-compose.example.yml`](../../docker-compose.example.yml) and [`docs/self-hosting.md`](../self-hosting.md); production deploy lives in `mcp-telegram-infra` (private).
+
 **Phase:** 1.3 (Open Source Readiness Audit)
 **Date:** 2026-04-25
 **Goal:** разделить текущий приватный `mcp-telegram-cloud` на два репо — публичный (MIT) и приватный (`mcp-telegram-infra`) — без утечки секретов и инфраструктурных деталей.

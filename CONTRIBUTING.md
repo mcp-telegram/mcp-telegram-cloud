@@ -73,9 +73,10 @@ account** for development. The session DB stores plaintext MTProto sessions.
 4. Open the PR using the template. Fill in **what** and **why** — reviewers
    should not have to guess your motivation.
 5. CI will run gitleaks + TruffleHog on every PR
-   (`.github/workflows/security-scan.yml`). Build and deploy run on push to
-   `main` and tagged releases (`.github/workflows/deploy.yml`) — there is
-   no separate lint/typecheck PR job today, so please run them locally.
+   (`.github/workflows/security-scan.yml`). Build runs on push to `main`
+   and tagged releases (`.github/workflows/build.yml`); deploy is in a
+   separate private repo. There is no separate lint/typecheck PR job
+   today, so please run them locally.
 6. Maintainer review: usually within a few days. We may request changes
    focused on scope, security, or operational impact.
 
@@ -85,18 +86,20 @@ account** for development. The session DB stores plaintext MTProto sessions.
   if you need write tools, self-host the upstream `mcp-telegram` package.
 - Changes that add new ENV variables without documenting them in
   `.env.example` and `README.md`.
-- Changes that touch `stacks/*.yml` without explaining the operational
-  impact (this is live production config).
+- Operational/infra changes — Docker Swarm stacks, deploy workflows, and
+  Traefik config live in a separate private repo (`mcp-telegram-infra`).
+  PRs against this repo should stay focused on application code, build,
+  docs, and the public `docker-compose.example.yml`.
 - Refactors without a concrete bug or perf rationale. We try to keep the
   surface small.
 
 ## Releasing (maintainers only)
 
 Tagged release process: bump `package.json` version, push a `vX.Y.Z` git
-tag, GitHub Actions builds the Docker image and runs
-`.github/workflows/deploy.yml`. The OSS preparation roadmap and split
-plan live in
-[`claudedocs/workflow_cloud_open_source.md`](./claudedocs/workflow_cloud_open_source.md).
+tag, `.github/workflows/build.yml` builds and pushes the Docker image
+to GHCR, and `notify-release.yml` posts the release to the Telegram
+channel. Production deploy is a manual trigger in the private
+`mcp-telegram-infra` repo.
 
 ## License
 

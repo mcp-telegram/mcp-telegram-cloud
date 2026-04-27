@@ -28,7 +28,7 @@ In scope:
 
 - `src/` (runtime code): OAuth flow, MCP handler, session manager, rate
   limiter, admin endpoints, logging.
-- `Dockerfile`, `stacks/*.yml`, `.github/workflows/*.yml` (supply chain).
+- `Dockerfile`, `docker-compose.example.yml`, `.github/workflows/*.yml` (supply chain).
 - `.env.example` defaults that could lead to insecure production deploys.
 
 Out of scope:
