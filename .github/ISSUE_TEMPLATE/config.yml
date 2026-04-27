@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/mcp-telegram/mcp-telegram-cloud/blob/main/SECURITY.md
+    about: Please report security issues privately, not via public issues.
+  - name: Upstream Telegram tooling
+    url: https://github.com/mcp-telegram/mcp-telegram/issues
+    about: New MCP tools or MTProto-related issues belong in the upstream repo.
+  - name: Updates and announcements
+    url: https://t.me/mcp_telegram_cloud_bot
+    about: Talk to the broadcast bot for status updates and breaking changes.

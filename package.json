@@ -1,0 +1,47 @@
+{
+  "name": "mcp-telegram-cloud",
+  "version": "1.12.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.tsx",
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/__tests__/*.test.ts",
+    "lint": "biome check src/",
+    "lint:fix": "biome check --write src/",
+    "format": "biome format --write src/",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@overpod/mcp-telegram": "^1.35.0",
+    "better-sqlite3": "^12.9.0",
+    "dotenv": "^17.4.2",
+    "hono": "^4.12.15",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx,js}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  }
+}

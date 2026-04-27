@@ -1,0 +1,41 @@
+# Keep build context lean and secret-free.
+# Dockerfile only needs source + lockfiles; everything else is regenerated.
+
+# Dependencies (reinstalled in builder stage)
+node_modules/
+.pnpm-store/
+
+# Build artefacts
+dist/
+*.tsbuildinfo
+
+# Local secrets and runtime data — NEVER ship these into a layer
+.env
+.env.*
+!.env.example
+data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# VCS / IDE / OS
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+.DS_Store
+
+# Test / dev artefacts
+coverage/
+.nyc_output/
+*.log
+.husky/
+.gitleaks.toml
+
+# Documentation — not needed at build time
+docs/
+claudedocs/
+*.md
+!README.md

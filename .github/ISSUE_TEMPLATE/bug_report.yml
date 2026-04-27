@@ -1,0 +1,85 @@
+name: Bug report
+description: Something is broken in mcp-telegram-cloud
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much
+        detail as you can — vague reports take longer to triage.
+
+        **Security issues**: do **not** file them here. See
+        [SECURITY.md](https://github.com/mcp-telegram/mcp-telegram-cloud/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: When I do X, Y happens. I expected Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Connect to the cloud server from Claude.ai
+        2. Run tool `telegram-list-chats`
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit SHA / Docker tag
+      description: The version of mcp-telegram-cloud you are running.
+      placeholder: v1.11.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment
+      options:
+        - Hosted (mcp-telegram.com)
+        - Self-hosted (Docker)
+        - Self-hosted (other)
+        - Local development
+    validations:
+      required: true
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      options:
+        - Claude.ai
+        - ChatGPT
+        - Claude Desktop
+        - Cursor
+        - Other
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Sanitize first — strip session strings, tokens, user IDs.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I have searched existing issues for duplicates.
+          required: true
+        - label: This is not a security issue.
+          required: true

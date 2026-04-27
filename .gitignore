@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+.npmrc
+
+# Credentials & keys (never commit)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Runtime data (SQLite, sessions, logs)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+logs/
+.telegram-session
+qr-login.html
+qr-login.png
+
+# Docker / infra with prod-specific values (belongs to mcp-telegram-infra)
+# Note: stacks/*.yml currently tracked; will migrate to infra-repo in Phase 4.1
+docker-compose.prod.yml
+docker-compose.override.yml
+
+# IDE / editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Personal planning artifacts (not for public repo)
+claudedocs/
+.claude/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Ralphex (autonomous execution loop) — local only
+.ralphex/
