@@ -1,0 +1,51 @@
+# Gitleaks config for mcp-telegram-cloud
+# Runs on every commit via Husky pre-commit hook (staged files only).
+# Full repo scans run in CI.
+
+title = "mcp-telegram-cloud gitleaks config"
+
+# Extend default rules — covers AWS, GCP, generic API keys, PEM, RSA, OAuth, etc.
+[extend]
+useDefault = true
+
+# Project-specific secret patterns
+# Note: Default config already has `telegram-bot-api-token` — no need to duplicate.
+
+[[rules]]
+id = "telegram-api-hash"
+description = "Telegram API hash (32 hex chars after api_hash key)"
+regex = '''(?i)(api_hash|TELEGRAM_API_HASH)\s*[:=]\s*['""]?[a-f0-9]{32}['""]?'''
+tags = ["telegram", "secret"]
+
+[[rules]]
+id = "telegram-session-string"
+description = "GramJS StringSession (long base64-like payload)"
+# StringSession payloads are typically 300+ chars base64-ish after "1" version prefix
+regex = '''\b1[A-Za-z0-9+/=_-]{300,}\b'''
+tags = ["telegram", "session"]
+
+[[rules]]
+id = "admin-token-value"
+description = "ADMIN_TOKEN assigned to a literal value (not env reference)"
+regex = '''(?i)ADMIN_TOKEN\s*[:=]\s*['""][^'""\s$]{16,}['""]'''
+tags = ["admin", "secret"]
+
+# Allowlist: placeholders, examples, test fixtures
+[allowlist]
+description = "Allow placeholders and documented examples"
+regexes = [
+  '''change-?me''',
+  '''your-?token''',
+  '''example\.com''',
+  '''<[A-Z_]+>''',              # <API_HASH>, <TOKEN> style
+  '''\${[A-Z_]+}''',              # ${API_HASH} shell refs
+  '''xxxxx+''',                   # xxx redactions
+]
+paths = [
+  '''\.env\.example$''',
+  '''README\.md$''',
+  '''claudedocs/''',
+  '''docs/''',
+  '''pnpm-lock\.yaml$''',
+  '''package-lock\.json$''',
+]

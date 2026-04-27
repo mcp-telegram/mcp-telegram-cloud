@@ -1,0 +1,80 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "*.md"
+      - LICENSE
+      - "docs/**"
+      - "claudedocs/**"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      full_history:
+        description: "Scan full git history (run before Phase 5.1 orphan publication)"
+        type: boolean
+        default: false
+
+# Bump deliberately when validated against project rules.
+env:
+  GITLEAKS_VERSION: "8.30.1"
+
+# `inputs.full_history` is boolean but stringified in expressions ('true'/'false').
+# Including the input + event in the group prevents a long history scan from being
+# cancelled by an unrelated push to the same ref.
+concurrency:
+  group: security-scan-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ github.event.inputs.full_history || 'na' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: ${{ github.event.inputs.full_history == 'true' && 0 || 1 }}
+
+      - name: Install Gitleaks
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          curl -fsSL -o "${tmp}/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf "${tmp}/gitleaks.tar.gz" -C "${tmp}" gitleaks
+          sudo install -m 0755 "${tmp}/gitleaks" /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Scan
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event.inputs.full_history }}" = "true" ]; then
+            echo "Full git-history scan"
+            gitleaks detect --source . --config .gitleaks.toml --redact --verbose
+          else
+            echo "Working-tree scan (no-git mode)"
+            gitleaks detect --source . --config .gitleaks.toml --redact --verbose --no-git
+          fi
+
+  trufflehog:
+    name: TruffleHog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # The action injects --fail / --no-update / --github-actions itself; do not duplicate.
+      # For push to main, action's auto base/head can resolve to empty strings; scan the
+      # whole branch explicitly via base="" + head=ref_name (per upstream docs).
+      - name: TruffleHog
+        uses: trufflesecurity/trufflehog@v3.95.2
+        with:
+          base: ""
+          head: ${{ github.ref_name }}
+          extra_args: --results=verified,unknown
