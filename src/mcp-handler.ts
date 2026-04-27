@@ -178,9 +178,9 @@ export async function handleMcpRequest(
         count: todayCount,
       });
       const base = `Daily limit reached (${todayCount}/${FREE_TIER_LIMIT} calls today).`;
-      return config.proUpgradeUrl
-        ? `${base} Upgrade to Pro for 5,000 calls/day at ${config.proUpgradeUrl}`
-        : `${base} Set FREE_TIER_LIMIT env var to adjust.`;
+      // The hosted instance has a fair-use cap; self-hosters lift it via FREE_TIER_LIMIT.
+      // No paid tier — both messages point at self-host as the unlimited path.
+      return `${base} For unlimited usage, self-host the open source server: ${config.sourceRepoUrl}`;
     }
     return null;
   };

@@ -73,7 +73,7 @@ export const PrivacyPage: FC = () => {
         </a>
 
         <h1 class={s.h1}>Privacy Policy</h1>
-        <p class={s.updated}>Last updated: March 19, 2026</p>
+        <p class={s.updated}>Last updated: April 27, 2026</p>
 
         <h2 class={s.h2}>Overview</h2>
         <p class={s.p}>

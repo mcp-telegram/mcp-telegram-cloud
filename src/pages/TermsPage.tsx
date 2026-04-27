@@ -67,7 +67,7 @@ export const TermsPage: FC = () => {
         </a>
 
         <h1 class={s.h1}>Terms of Service</h1>
-        <p class={s.updated}>Last updated: March 19, 2026</p>
+        <p class={s.updated}>Last updated: April 27, 2026</p>
 
         <h2 class={s.h2}>1. Service description</h2>
         <p class={s.p}>
@@ -111,8 +111,10 @@ export const TermsPage: FC = () => {
 
         <h2 class={s.h2}>6. Service availability</h2>
         <p class={s.p}>
-          {config.brandName} is provided "as is" without warranty. We aim for high availability but do not guarantee
-          uninterrupted service. We may modify, suspend, or discontinue the service at any time with reasonable notice.
+          {config.brandName} is provided "as is" without warranty. The hosted instance is best-effort, maintained by a
+          solo developer in spare time — there is no SLA and no guarantee of uninterrupted service. We may modify,
+          suspend, or discontinue the hosted service at any time with reasonable notice. If you need stronger
+          guarantees, self-host the open source code.
         </p>
 
         <h2 class={s.h2}>7. Limitation of liability</h2>

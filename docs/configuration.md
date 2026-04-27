@@ -36,7 +36,6 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `SESSION_CLEANUP_DELAY_MINUTES` | | `5` | Idle delay before destroying Telegram session |
 | `OAUTH_RATE_LIMIT` | | `30` | Requests per IP per window on `/oauth/*`. `0` disables |
 | `OAUTH_RATE_WINDOW_MS` | | `60000` | Window duration in milliseconds |
-| `PRO_UPGRADE_URL` | | empty | If set, included in quota-exceeded message |
 | `BOT_TOKEN` | | empty | Telegram bot token for broadcasts |
 | `BOT_USERNAME` | | empty | Bot handle (no `@`) for landing CTA |
 | `BOT_WEBHOOK_SECRET` | | empty | Random secret in webhook URL path |
@@ -215,8 +214,8 @@ unlimited (recommended for self-hosted instances with a closed user
 list).
 
 When exceeded, the MCP response returns a structured error with a
-hint. If `PRO_UPGRADE_URL` is set, the message includes an upgrade CTA;
-otherwise it suggests bumping `FREE_TIER_LIMIT`.
+self-host CTA pointing at `SOURCE_REPO_URL` — there is no paid tier;
+unlimited usage means running the server yourself.
 
 ### `SESSION_CLEANUP_DELAY_MINUTES`
 
@@ -237,12 +236,6 @@ revoke). Default `30 / 60_000` = 30 requests per 60 seconds per IP.
 The IP is detected from `X-Real-IP` then `X-Forwarded-For` last hop;
 ensure your reverse proxy sets one of these.
 
-### `PRO_UPGRADE_URL`
-
-Optional URL appended to the quota-exceeded error message
-(`Upgrade to Pro at <url>`). When empty, the message instead suggests
-the operator increase `FREE_TIER_LIMIT`. Self-hosters should leave it
-empty.
 
 ## Bot broadcasts (optional)
 

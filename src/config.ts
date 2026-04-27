@@ -91,11 +91,6 @@ export const config = {
   /** OAuth IP rate-limit window in milliseconds. */
   oauthRateWindowMs: intOr(process.env.OAUTH_RATE_WINDOW_MS, 60_000),
 
-  /** Optional URL to advertise in the rate-limit error message ("Upgrade to Pro
-   * at <url>"). Empty (default) means self-hosted — falls back to a hint about
-   * the FREE_TIER_LIMIT env var. */
-  proUpgradeUrl: optional(process.env.PRO_UPGRADE_URL, ""),
-
   /** Telegram Bot API token for in-product broadcasts (Phase 0.1). Empty disables bot routes. */
   botToken: optional(process.env.BOT_TOKEN, ""),
   /** Bot username (without @) for deep-link CTA on landing. */

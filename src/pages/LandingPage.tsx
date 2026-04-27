@@ -3,12 +3,6 @@ import { config } from "../config.js";
 import { landing, landingReset } from "../styles.js";
 import { Layout } from "./Layout.js";
 
-const contactHref = config.contactEmail
-  ? `mailto:${config.contactEmail}`
-  : config.contactTelegram
-    ? `https://t.me/${config.contactTelegram}`
-    : "#";
-
 export const LandingPage: FC = () => {
   return (
     <Layout
@@ -63,14 +57,14 @@ export const LandingPage: FC = () => {
         </h1>
         <p class={landing.heroSubtitle}>
           Read messages, search chats, track contacts and download media — all from Claude.ai or ChatGPT. Connect in 30
-          seconds with a QR code.
+          seconds with a QR code. Open source under MIT — use the hosted version, or run it yourself.
         </p>
         <div>
           <a class={landing.cta} href="#how-it-works">
             Connect Telegram
           </a>
           <a class={landing.ctaSecondary} href={config.sourceRepoUrl}>
-            Self-host (free)
+            Self-host
           </a>
         </div>
       </section>
@@ -184,60 +178,50 @@ export const LandingPage: FC = () => {
 
       {/* ── Pricing ─────────────────────────────────────────────── */}
       <section class={landing.section} id="pricing">
-        <h2 class={landing.sectionTitle}>Pricing</h2>
-        <p class={landing.sectionSubtitle}>Start free, upgrade when you need more</p>
+        <h2 class={landing.sectionTitle}>Free, forever</h2>
+        <p class={landing.sectionSubtitle}>
+          Open source under MIT. Use the hosted instance, or run your own — your choice.
+        </p>
 
         <div class={landing.pricingGrid}>
-          <div class={landing.pricingCard}>
-            <h3>Free</h3>
+          <div class={landing.pricingHighlight}>
+            <div class={landing.badge}>Hosted</div>
+            <h3>Use {config.brandName}</h3>
             <div class={landing.pricingPrice}>$0</div>
-            <p class={landing.pricingDesc}>For trying it out</p>
+            <p class={landing.pricingDesc}>One click connect, maintained by the project</p>
             <ul class={landing.pricingFeatures}>
-              <li>1 Telegram account</li>
-              <li>100 tool calls / day</li>
-              <li>All tools included</li>
-              <li>QR code login</li>
+              <li>1 Telegram account per user</li>
+              <li>Read-only tool set (safe by design)</li>
+              <li>Daily fair-use cap to keep service healthy</li>
+              <li>QR code login — no API keys</li>
+              <li>Service status updates via Telegram bot</li>
             </ul>
             <a class={landing.pricingCtaOutline} href="#how-it-works">
-              Get started
-            </a>
-          </div>
-
-          <div class={landing.pricingHighlight}>
-            <div class={landing.badge}>Coming soon</div>
-            <h3>Pro</h3>
-            <div class={landing.pricingPrice}>
-              $9<span>/mo</span>
-            </div>
-            <p class={landing.pricingDesc}>For daily use</p>
-            <ul class={landing.pricingFeatures}>
-              <li>1 Telegram account</li>
-              <li>5,000 tool calls / day</li>
-              <li>All tools included</li>
-              <li>Priority support</li>
-            </ul>
-            <a class={landing.pricingCtaOutline} href={contactHref}>
-              Join waitlist
+              Connect now
             </a>
           </div>
 
           <div class={landing.pricingCard}>
-            <h3>Team</h3>
-            <div class={landing.pricingPrice}>
-              $29<span>/mo</span>
-            </div>
-            <p class={landing.pricingDesc}>For teams — coming soon</p>
+            <h3>Self-host</h3>
+            <div class={landing.pricingPrice}>$0</div>
+            <p class={landing.pricingDesc}>Full control, your machine, your data</p>
             <ul class={landing.pricingFeatures}>
-              <li>5 Telegram accounts</li>
-              <li>20,000 tool calls / day</li>
-              <li>All tools included</li>
-              <li>Priority support</li>
+              <li>All tools (read + write)</li>
+              <li>No daily limits</li>
+              <li>Your data never leaves your server</li>
+              <li>Docker Compose + .env, ~10 minutes setup</li>
+              <li>MIT licensed — fork, modify, ship</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href={contactHref}>
-              Join waitlist
+            <a class={landing.pricingCtaOutline} href={config.sourceRepoUrl}>
+              View on GitHub
             </a>
           </div>
         </div>
+
+        <p class={landing.sectionSubtitle} style="margin-top: 24px; font-size: 14px">
+          No paid tiers. No tracking. No ads. Maintained by one person in spare time — please be patient with issues and
+          PRs.
+        </p>
       </section>
 
       <hr class={landing.divider} />
@@ -316,8 +300,9 @@ export const LandingPage: FC = () => {
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer class={landing.footer}>
         <p>
-          {config.brandName} &mdash; <a href={config.sourceRepoUrl}>Open-source core</a> &middot;{" "}
-          <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a>
+          {config.brandName} &mdash; <a href={config.sourceRepoUrl}>GitHub</a> &middot; MIT licensed &middot;{" "}
+          <a href={config.issuesUrl}>{config.issuesLabel}</a> &middot; <a href="/privacy">Privacy</a> &middot;{" "}
+          <a href="/terms">Terms</a>
         </p>
         <p style="margin-top: 8px">
           &copy; {new Date().getFullYear()} {config.brandName}. Read-only Telegram access for Claude AI &amp; ChatGPT.
