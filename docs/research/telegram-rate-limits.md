@@ -135,7 +135,7 @@ new TelegramClient(session, apiId, apiHash, {
 
 - `getTodayCount(userId)` — простой счётчик за UTC день
 - `freeTierLimit=100` daily quota
-- При превышении — MCP error response `"Daily limit reached. Upgrade to Pro at {issuer} for unlimited access."` (для self-hosted — генерик "Set FREE_TIER_LIMIT")
+- При превышении — MCP error response с self-host CTA на `SOURCE_REPO_URL` (исторически здесь была "Upgrade to Pro" фраза с `PRO_UPGRADE_URL`; убрана в Phase 4.6 commit `d824c26` вместе с paid-tier удалением — нет paid плана, unlimited = self-host)
 
 **Это quota, не rate-limit.** Нет защиты от burst в 100 запросов за 1 секунду.
 
