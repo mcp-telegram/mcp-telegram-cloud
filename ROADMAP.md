@@ -8,7 +8,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
 **Last updated:** 2026-04-28
-**Current version:** 1.12.0 (cloud) / [`@overpod/mcp-telegram` 1.35.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.0.0 (cloud — first public release) / [`@overpod/mcp-telegram` 1.35.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
