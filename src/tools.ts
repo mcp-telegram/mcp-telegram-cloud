@@ -1042,4 +1042,505 @@ export function registerReadOnlyTools(
       }
     },
   );
+
+  // ── v2.2.0 parity wave 1 — 15 read-only tools ────────────────────────────
+
+  server.registerTool(
+    "telegram-get-message-link",
+    {
+      description:
+        "Get a t.me link to a specific message in a Telegram channel or supergroup. Private chats and basic groups don't expose shareable message links.",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username (channel or supergroup)"),
+        messageId: z.number().int().positive().describe("ID of the message to link to"),
+        thread: z.boolean().default(false).describe("Link to the message thread instead of the message itself"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId, thread }) => {
+      const limited = trackCall("telegram-get-message-link");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const link = await getTelegram().getMessageLink(chatId, messageId, thread);
+        logDuration("telegram-get-message-link", start);
+        return { content: [{ type: "text", text: sanitize(link) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-message-link");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-replies",
+    {
+      description: "Read reply thread / comments under a Telegram message (channel comments, group thread replies).",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        messageId: z.number().describe("Top-level message ID whose replies you want"),
+        limit: z.number().default(20).describe("Max replies to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId, limit }) => {
+      const limited = trackCall("telegram-get-replies");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const replies = await getTelegram().getReplies(chatId, messageId, limit);
+        logDuration("telegram-get-replies", start);
+        const text = replies
+          .map(
+            (m) =>
+              `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
+          )
+          .join("\n\n");
+        return { content: [{ type: "text", text: sanitize(text) || "No replies" }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-replies");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-discussion-message",
+    {
+      description:
+        "For a channel post with comments enabled, returns the linked discussion-group info (discussionGroupId, discussionMsgId, unreadCount, topMessage). Use telegram-get-replies on (discussionGroupId, discussionMsgId) to read the comment thread.",
+      inputSchema: {
+        chatId: z.string().describe("Channel ID or @username that contains the post"),
+        messageId: z.number().int().positive().describe("ID of the channel post to get discussion info for"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId }) => {
+      const limited = trackCall("telegram-get-discussion-message");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const d = await getTelegram().getDiscussionMessage(chatId, messageId);
+        logDuration("telegram-get-discussion-message", start);
+        const lines: string[] = [
+          `Discussion group: ${d.discussionGroupId}`,
+          `Discussion message id: ${d.discussionMsgId}`,
+          `Unread comments: ${d.unreadCount}`,
+        ];
+        if (d.topMessage) {
+          lines.push(`Top message [#${d.topMessage.id}] (${d.topMessage.date}): ${d.topMessage.text ?? ""}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-discussion-message");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-saved-dialogs",
+    {
+      description:
+        "List Saved Messages sub-dialogs — Telegram's per-sender grouping of messages forwarded to your Saved Messages.",
+      inputSchema: {
+        limit: z.number().int().positive().default(20).describe("Max saved dialogs to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ limit }) => {
+      const limited = trackCall("telegram-get-saved-dialogs");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const dialogs = await getTelegram().getSavedDialogs(limit);
+        logDuration("telegram-get-saved-dialogs", start);
+        if (dialogs.length === 0) return { content: [{ type: "text", text: "No saved dialogs." }] };
+        const text = dialogs.map((d) => `${d.peerTitle} (${d.peerId}) — last msg #${d.lastMsgId}`).join("\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-saved-dialogs");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-scheduled",
+    {
+      description: "List scheduled (not yet sent) messages in a chat.",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId }) => {
+      const limited = trackCall("telegram-get-scheduled");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const messages = await getTelegram().getScheduledMessages(chatId);
+        logDuration("telegram-get-scheduled", start);
+        if (messages.length === 0) return { content: [{ type: "text", text: "No scheduled messages." }] };
+        const text = messages
+          .map(
+            (m) =>
+              `[#${m.id}] [${m.date}] ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
+          )
+          .join("\n\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-scheduled");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-drafts",
+    {
+      description: "List all draft messages across chats (unsent text the user typed and left).",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-drafts");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const drafts = await getTelegram().getAllDrafts();
+        logDuration("telegram-get-drafts", start);
+        if (drafts.length === 0) return { content: [{ type: "text", text: "No drafts." }] };
+        const text = drafts.map((d) => `${d.chatTitle} (${d.chatId}) [${d.date}]: ${d.text}`).join("\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-drafts");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-poll-results",
+    {
+      description: "Get current results of a poll message (counts, percentages, your chosen options).",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        messageId: z.number().int().positive().describe("Message ID of the poll"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId }) => {
+      const limited = trackCall("telegram-get-poll-results");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const p = await getTelegram().getPollResults(chatId, messageId);
+        logDuration("telegram-get-poll-results", start);
+        const header = `${p.question}${p.isQuiz ? " [quiz]" : ""}${p.isMulti ? " [multi]" : ""}${p.isClosed ? " [closed]" : ""} — ${p.totalVoters} voters`;
+        const opts = p.options
+          .map((o) => {
+            const tags = [o.chosen ? "✓" : "", o.correct ? "★" : ""].filter(Boolean).join("");
+            return `  [${o.index}] ${o.text} — ${o.votes} (${o.percent}%) ${tags}`.trimEnd();
+          })
+          .join("\n");
+        return { content: [{ type: "text", text: sanitize(`${header}\n${opts}`) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-poll-results");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-poll-voters",
+    {
+      description: "List users who voted for specific poll options (public polls only, paginated).",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        messageId: z.number().int().positive().describe("Message ID of the poll"),
+        optionIndex: z
+          .number()
+          .int()
+          .min(0)
+          .max(9)
+          .optional()
+          .describe("Zero-based option index to filter by. Omit to get all voters"),
+        limit: z.number().int().min(1).max(100).default(20).describe("Max voters to return"),
+        offset: z.string().optional().describe("Pagination offset from previous call"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId, optionIndex, limit, offset }) => {
+      const limited = trackCall("telegram-get-poll-voters");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getPollVoters(chatId, messageId, { optionIndex, limit, offset });
+        logDuration("telegram-get-poll-voters", start);
+        if (r.voters.length === 0) return { content: [{ type: "text", text: "No voters yet." }] };
+        const lines: string[] = [
+          `${r.total} total voters${r.nextOffset ? ` (more available; nextOffset=${r.nextOffset})` : ""}`,
+        ];
+        for (const v of r.voters) {
+          const id = v.username ? `@${v.username}` : v.peerId;
+          const opts = v.options.length ? ` → [${v.options.join(",")}]` : "";
+          lines.push(`${v.name ?? id} (${v.peerId})${opts} at ${v.date}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-poll-voters");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-recent-reactions",
+    {
+      description: "List the user's most recently used reaction emojis.",
+      inputSchema: {
+        limit: z.number().default(20).describe("Max reactions to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ limit }) => {
+      const limited = trackCall("telegram-get-recent-reactions");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const reactions = await getTelegram().getRecentReactions(limit);
+        logDuration("telegram-get-recent-reactions", start);
+        if (reactions.length === 0) return { content: [{ type: "text", text: "No recent reactions." }] };
+        return { content: [{ type: "text", text: sanitize(reactions.map((r) => r.emoji).join(" ")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-recent-reactions");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-top-reactions",
+    {
+      description: "List globally popular reaction emojis (Telegram-curated trending).",
+      inputSchema: {
+        limit: z.number().default(20).describe("Max reactions to return"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ limit }) => {
+      const limited = trackCall("telegram-get-top-reactions");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const reactions = await getTelegram().getTopReactions(limit);
+        logDuration("telegram-get-top-reactions", start);
+        if (reactions.length === 0) return { content: [{ type: "text", text: "No top reactions." }] };
+        return { content: [{ type: "text", text: sanitize(reactions.map((r) => r.emoji).join(" ")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-top-reactions");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-message-buttons",
+    {
+      description:
+        "Read the inline keyboard / reply markup buttons attached to a message. Returns each button's row, column, type, label, and target (data, url, switch query, etc.).",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+        messageId: z.number().describe("Message ID"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId }) => {
+      const limited = trackCall("telegram-get-message-buttons");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getMessageButtons(chatId, messageId);
+        logDuration("telegram-get-message-buttons", start);
+        if (r.buttons.length === 0) {
+          return { content: [{ type: "text", text: `No buttons (markup: ${r.markupType}).` }] };
+        }
+        const lines = [`Markup: ${r.markupType}`];
+        for (const b of r.buttons) {
+          const target = b.url
+            ? ` url=${b.url}`
+            : b.data
+              ? ` data=${b.data}`
+              : b.switchQuery
+                ? ` switch=${b.switchQuery}`
+                : "";
+          lines.push(`  [${b.row}.${b.col}] ${b.type}: ${b.label}${target}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-message-buttons");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-message-read-participants",
+    {
+      description:
+        "List who has read a message in a small group (≤100 members, ≤7 days old). Returns readers with userId and readAt timestamp. Does NOT work for channels or groups over 100 members (CHAT_TOO_BIG error).",
+      inputSchema: {
+        chatId: z.string().describe("Group chat ID or @username"),
+        messageId: z.number().int().positive().describe("ID of the message to check read status for"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId }) => {
+      const limited = trackCall("telegram-get-message-read-participants");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getMessageReadParticipants(chatId, messageId);
+        logDuration("telegram-get-message-read-participants", start);
+        if (r.count === 0) return { content: [{ type: "text", text: "No readers recorded." }] };
+        const lines = [`${r.count} reader(s) for message #${r.messageId}:`];
+        for (const reader of r.readers) lines.push(`  ${reader.userId} at ${reader.readAt}`);
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-message-read-participants");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-web-preview",
+    {
+      description:
+        "Fetch Telegram's link preview metadata (title, description, site name) for a URL — same data shown when pasting a link into a chat.",
+      inputSchema: {
+        url: z
+          .string()
+          .url()
+          .refine(
+            (u) => {
+              try {
+                const p = new URL(u);
+                if (p.protocol !== "http:" && p.protocol !== "https:") return false;
+                const host = p.hostname
+                  .toLowerCase()
+                  .replace(/^\[|\]$/g, "")
+                  .replace(/\.$/, "");
+                if (
+                  host === "localhost" ||
+                  host.endsWith(".localhost") ||
+                  /^0\./.test(host) ||
+                  /^127\./.test(host) ||
+                  host === "::1" ||
+                  host === "::" ||
+                  /^169\.254\./.test(host) ||
+                  /^10\./.test(host) ||
+                  /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+                  /^192\.168\./.test(host)
+                ) {
+                  return false;
+                }
+                return true;
+              } catch {
+                return false;
+              }
+            },
+            { message: "URL must be public http(s); loopback / private / link-local addresses are not allowed" },
+          )
+          .describe("Public http(s) URL to preview"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ url }) => {
+      const limited = trackCall("telegram-get-web-preview");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const p = await getTelegram().getWebPreview(url);
+        logDuration("telegram-get-web-preview", start);
+        if (!p) return { content: [{ type: "text", text: "No preview available." }] };
+        const lines = [`Type: ${p.type}`];
+        if (p.url) lines.push(`URL: ${p.url}`);
+        if (p.siteName) lines.push(`Site: ${p.siteName}`);
+        if (p.title) lines.push(`Title: ${p.title}`);
+        if (p.description) lines.push(`Description: ${p.description}`);
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-web-preview");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-outbox-read-date",
+    {
+      description:
+        "Get when the recipient read your outgoing message in a private chat. Returns 'Not read yet' if unread. Errors if the recipient disabled read receipts (USER_PRIVACY_RESTRICTED).",
+      inputSchema: {
+        chatId: z.string().describe("Private chat ID or @username of the recipient"),
+        messageId: z.number().int().positive().describe("ID of your outgoing message"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, messageId }) => {
+      const limited = trackCall("telegram-get-outbox-read-date");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getOutboxReadDate(chatId, messageId);
+        logDuration("telegram-get-outbox-read-date", start);
+        return { content: [{ type: "text", text: r.readAt ? `Read at ${r.readAt}` : "Not read yet." }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-outbox-read-date");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-my-role",
+    {
+      description:
+        "Get the current user's role in a chat. Returns one of: creator, admin, member, banned, left (channels/supergroups), user (private chats), or unknown for unsupported entity types.",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId }) => {
+      const limited = trackCall("telegram-get-my-role");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getMyRole(chatId);
+        logDuration("telegram-get-my-role", start);
+        return { content: [{ type: "text", text: sanitize(`${r.role} in ${r.chatName} (${r.chatId})`) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-my-role");
+      }
+    },
+  );
 }
