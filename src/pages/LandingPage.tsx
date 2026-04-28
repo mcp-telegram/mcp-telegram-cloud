@@ -26,11 +26,7 @@ export const LandingPage: FC = () => {
             url: config.issuer,
             applicationCategory: "DeveloperApplication",
             operatingSystem: "Any",
-            offers: {
-              "@type": "Offer",
-              price: "0",
-              priceCurrency: "USD",
-            },
+            license: "https://opensource.org/licenses/MIT",
           }).replace(/</g, "\\u003c"),
         }}
       />
@@ -44,7 +40,7 @@ export const LandingPage: FC = () => {
         <nav class={landing.nav}>
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
-          <a href="#pricing">Pricing</a>
+          <a href="#choice">Hosted or self-host</a>
           <a href="#faq">FAQ</a>
           <a href={config.sourceRepoUrl}>GitHub</a>
         </nav>
@@ -57,7 +53,7 @@ export const LandingPage: FC = () => {
         </h1>
         <p class={landing.heroSubtitle}>
           Read messages, search chats, track contacts and download media — all from Claude.ai or ChatGPT. Connect in 30
-          seconds with a QR code. Open source under MIT — use the hosted version, or run it yourself.
+          seconds with a QR code.
         </p>
         <div>
           <a class={landing.cta} href="#how-it-works">
@@ -176,51 +172,43 @@ export const LandingPage: FC = () => {
 
       <hr class={landing.divider} />
 
-      {/* ── Pricing ─────────────────────────────────────────────── */}
-      <section class={landing.section} id="pricing">
-        <h2 class={landing.sectionTitle}>Free, forever</h2>
-        <p class={landing.sectionSubtitle}>
-          Open source under MIT. Use the hosted instance, or run your own — your choice.
-        </p>
+      {/* ── Hosted or Self-host ──────────────────────────────────── */}
+      <section class={landing.section} id="choice">
+        <h2 class={landing.sectionTitle}>Hosted or self-host</h2>
+        <p class={landing.sectionSubtitle}>Open source under MIT. Use the hosted instance, or run your own.</p>
 
-        <div class={landing.pricingGrid}>
-          <div class={landing.pricingHighlight}>
-            <div class={landing.badge}>Hosted</div>
-            <h3>Use {config.brandName}</h3>
-            <div class={landing.pricingPrice}>$0</div>
-            <p class={landing.pricingDesc}>One click connect, maintained by the project</p>
-            <ul class={landing.pricingFeatures}>
-              <li>1 Telegram account per user</li>
-              <li>Read-only tool set (safe by design)</li>
+        <div class={landing.choiceGrid}>
+          <div class={landing.choiceCard}>
+            <h3>Hosted</h3>
+            <p class={landing.choiceTagline}>One-click connect, maintained by the project.</p>
+            <ul class={landing.choiceFeatures}>
+              <li>QR code login — no API keys to manage</li>
+              <li>Read-only tool set, safe by design</li>
               <li>Daily fair-use cap to keep service healthy</li>
-              <li>QR code login — no API keys</li>
               <li>Service status updates via Telegram bot</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href="#how-it-works">
+            <a class={landing.choiceCta} href="#how-it-works">
               Connect now
             </a>
           </div>
 
-          <div class={landing.pricingCard}>
+          <div class={landing.choiceCard}>
             <h3>Self-host</h3>
-            <div class={landing.pricingPrice}>$0</div>
-            <p class={landing.pricingDesc}>Full control, your machine, your data</p>
-            <ul class={landing.pricingFeatures}>
-              <li>All tools (read + write)</li>
+            <p class={landing.choiceTagline}>Full control, your machine, your data.</p>
+            <ul class={landing.choiceFeatures}>
+              <li>All tools — read and write</li>
               <li>No daily limits</li>
               <li>Your data never leaves your server</li>
               <li>Docker Compose + .env, ~10 minutes setup</li>
-              <li>MIT licensed — fork, modify, ship</li>
             </ul>
-            <a class={landing.pricingCtaOutline} href={config.sourceRepoUrl}>
+            <a class={landing.choiceCta} href={config.sourceRepoUrl}>
               View on GitHub
             </a>
           </div>
         </div>
 
         <p class={landing.sectionSubtitle} style="margin-top: 24px; font-size: 14px">
-          No paid tiers. No tracking. No ads. Maintained by one person in spare time — please be patient with issues and
-          PRs.
+          No tracking. No ads. Maintained by one person in spare time — please be patient with issues and PRs.
         </p>
       </section>
 
@@ -244,7 +232,13 @@ export const LandingPage: FC = () => {
             <h3>Can you read my messages on the server?</h3>
             <p>
               We don't store your messages. Each tool call fetches data directly from Telegram's API and returns it to
-              the AI assistant. Your session key is encrypted in our database and deleted when you disconnect.
+              the AI assistant. Your Telegram session key is stored on our server so the connector can keep working
+              between requests, and is deleted whenever your session ends (see the next answer for the exact timing).
+              Storage details and hardening guidance are in our{" "}
+              <a href={`${config.sourceRepoUrl}/blob/main/SECURITY.md`} style="color: #007AFF">
+                SECURITY.md
+              </a>
+              .
             </p>
           </div>
           <div class={landing.faqItem}>
@@ -257,8 +251,11 @@ export const LandingPage: FC = () => {
           <div class={landing.faqItem}>
             <h3>What happens when I disconnect?</h3>
             <p>
-              Your Telegram session is immediately terminated (logged out) and the session key is deleted from our
-              server. No residual access remains.
+              If you explicitly remove the connector in Claude.ai or ChatGPT, the server logs the Telegram session out
+              and deletes the session key right away. If you just close the AI app without revoking, the in-memory
+              client is dropped immediately and the stored session key is kept briefly so you can resume seamlessly; if
+              you don't reconnect within a short idle window (a few minutes), the server logs out and deletes the key
+              automatically. You can also force a full revoke at any time from Telegram → Settings → Devices.
             </p>
           </div>
           <div class={landing.faqItem}>
