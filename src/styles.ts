@@ -362,55 +362,38 @@ export const landing = {
       color: ${tg.hint};
     }
   `,
-  pricingGrid: css`
+  choiceGrid: css`
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     @media (max-width: 700px) { grid-template-columns: 1fr; }
   `,
-  pricingCard: css`
-    background: ${tg.secondaryBg};
-    border-radius: 20px;
-    padding: 32px 24px;
-    text-align: center;
-    & h3 {
-      font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-  `,
-  pricingHighlight: css`
+  choiceCard: css`
     background: ${tg.bg};
-    border: 2px solid ${tg.link};
+    border: 1px solid ${tg.outline};
     border-radius: 20px;
-    padding: 32px 24px;
-    text-align: center;
+    padding: 32px 28px;
     box-shadow: ${tg.cardShadow};
     & h3 {
-      font-size: 17px;
+      font-size: 19px;
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
   `,
-  pricingPrice: css`
-    font-size: 36px;
-    font-weight: 800;
-    margin: 16px 0 4px;
-    & span { font-size: 15px; font-weight: 400; color: ${tg.hint}; }
-  `,
-  pricingDesc: css`
-    font-size: 13px;
+  choiceTagline: css`
+    font-size: 14px;
     color: ${tg.hint};
     margin-bottom: 20px;
   `,
-  pricingFeatures: css`
+  choiceFeatures: css`
     text-align: left;
     font-size: 15px;
     line-height: 28px;
     color: ${tg.text};
+    margin-bottom: 24px;
     & li {
       list-style: none;
-      padding-left: 20px;
+      padding-left: 22px;
       position: relative;
       &::before {
         content: "✓";
@@ -421,21 +404,8 @@ export const landing = {
       }
     }
   `,
-  pricingCta: css`
+  choiceCta: css`
     display: inline-block;
-    margin-top: 20px;
-    padding: 10px 24px;
-    border-radius: 12px;
-    background: ${tg.button};
-    color: ${tg.buttonText};
-    font-size: 15px;
-    font-weight: 600;
-    transition: opacity .15s ease-out;
-    &:hover { opacity: 0.85; }
-  `,
-  pricingCtaOutline: css`
-    display: inline-block;
-    margin-top: 20px;
     padding: 10px 24px;
     border-radius: 12px;
     background: transparent;
@@ -445,18 +415,6 @@ export const landing = {
     font-weight: 600;
     transition: background .15s ease-out;
     &:hover { background: ${tg.tertiaryBg}; }
-  `,
-  badge: css`
-    display: inline-block;
-    background: ${tg.link};
-    color: ${tg.buttonText};
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    margin-bottom: 12px;
   `,
   divider: css`
     border: none;
