@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -11,15 +11,16 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/__tests__/*.test.ts",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --write src/",
-    "format": "biome format --write src/",
+    "check-parity": "tsx scripts/check-parity.ts",
+    "lint": "biome check src/ scripts/",
+    "lint:fix": "biome check --write src/ scripts/",
+    "format": "biome format --write src/ scripts/",
     "prepare": "husky"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@overpod/mcp-telegram": "^1.35.0",
+    "@overpod/mcp-telegram": "^1.36.0",
     "better-sqlite3": "^12.9.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.15",

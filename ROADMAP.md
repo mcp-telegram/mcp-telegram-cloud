@@ -8,7 +8,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
 **Last updated:** 2026-04-28
-**Current version:** 2.0.0 (cloud — first public release) / [`@overpod/mcp-telegram` 1.35.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.1.0 (cloud — parity sync gate) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,9 +16,14 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 Things actively being worked on or about to ship.
 
-- **OSS preparation** — landing page rewrite under open-source positioning, repo
-  split (private `mcp-telegram-infra` vs public cloud), Terms of Service
-  refresh. Tracked as Phase 4.1, 4.6 in the working plan.
+- **Tool whitelist expansion — Wave 1 (read-only)** (Phase 2). The
+  [parity sync gate](claudedocs/workflow_cloud_open_source.md#20-parity-sync-mechanism-foundational--делается-первым)
+  is live: `pnpm check-parity` compares the cloud whitelist against the
+  upstream tool catalog (via [`@overpod/mcp-telegram/manifest`](https://www.npmjs.com/package/@overpod/mcp-telegram))
+  and CI blocks merges that introduce drift. Wave 1 = read-only catalog
+  expansion (`get-*` / `list-*` / `search-*` / `read-*` / `download-*`)
+  drawn from `scripts/parity-baseline.json`, no new safety gates needed
+  since the existing per-user daily quota already covers them.
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -27,30 +32,16 @@ Things actively being worked on or about to ship.
 
 Things planned with known scope. Order is approximate and may change.
 
-- **Public release** (Phase 5): orphan branch publication, secret rotation,
-  user migration broadcast via [@mcp_telegram_cloud_bot](https://t.me/mcp_telegram_cloud_bot)
-  (target: a few days advance notice; not a guarantee), launch announcement.
-- **Tool whitelist expansion** (Phase 2) — currently cloud exposes a
-  read-only subset (plus two safe state-change tools: `telegram-mark-as-read`
-  and `telegram-mute-chat`) out of the much larger catalogue in the
-  [upstream `@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram).
-  See [`README.md` §MCP tools exposed](README.md#mcp-tools-exposed) for the
-  current cloud whitelist.
-  Expansion happens **in groups**, each gated by a destructive-tools opt-in
-  flag + per-user daily limit + audit log:
-  - **Group A** — Profile & Business (update-profile, set-privacy,
-    set-business-* etc.)
-  - **Group B** — Folders & Privacy (create/edit/delete-folder,
-    get/set-global-privacy-settings)
-  - **Group C** — Groups & Admin (create-group, kick/ban-user,
-    set-chat-permissions)
-  - **Group D** — Topics, Stories, Polls
-  - **Group E** — Media (send-album, send-file, send-voice, download-media,
-    transcribe-audio)
-  - **Group F** — Stats & Discussion (broadcast-stats, admin-log,
-    get-replies)
-  - **Group G** — Star Gifts (opt-in via `MCP_TELEGRAM_ENABLE_STARS=1` env on
-    the upstream library; not exposed in cloud by default)
+- **Tool whitelist expansion — Wave 2 (state-change low-risk)** — folders
+  write, profile write, privacy, contacts add/block/unblock, draft mgmt,
+  reactions, votes. No opt-in flag needed — existing daily quota covers
+  the abuse surface for these.
+- **Tool whitelist expansion — Wave 3 (destructive opt-in)** — send/edit/
+  delete messages, stories write, chat admin (ban/kick/permissions),
+  groups lifecycle, business write, paid reactions. Gated by per-user
+  `enable_destructive_tools` flag + audit log + tighter daily limit
+  (separate counter from the baseline quota). Settings UI at
+  `/settings` + audit visibility at `/my/audit`.
 - **Per-user burst rate limit** (Layer 3 from the
   [layered approach in `docs/research/telegram-rate-limits.md`](docs/research/telegram-rate-limits.md#61-layered-approach)) —
   trigger: ≥10 daily active users sustained 7 days. Currently
@@ -109,6 +100,19 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-28** — **Phase 2.0 — parity sync gate** shipped (cloud v2.1.0
+  + upstream v1.36.0). Upstream now exports a `getToolManifest()` API
+  via `@overpod/mcp-telegram/manifest` that introspects every tool the
+  package can register, classifies each by risk tier (read-only / write /
+  destructive), and forces opt-in env flags ON during introspection so
+  the consumer sees the full catalog. Cloud added `pnpm check-parity`
+  (CI-blocking) which compares the cloud whitelist against that catalog
+  using `EXPLICIT_EXCLUDED` (intentional non-exposures with reasons) and
+  a baseline file (`scripts/parity-baseline.json`) listing tools deferred
+  to future expansion waves. Wave 1 (read-only) can now begin without
+  drift risk — every upstream addition needs an explicit decision.
+- **2026-04-28** — **Public release v2.0.0 — first public version**
+  ([`5479ce0`](https://github.com/mcp-telegram/mcp-telegram-cloud/commit/5479ce0)).
 - **2026-04-26** — README rewrite for public OSS, architecture.md OAuth
   refresh, SLA dashboard widgets in SigNoz, M1 (HttpOnly tg_user cookie)
   + M4 (templated public HTML — no upstream brand on self-hosted forks),
