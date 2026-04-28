@@ -1543,4 +1543,612 @@ export function registerReadOnlyTools(
       }
     },
   );
+
+  // ── v2.3.0 parity wave 1.2 — 15 read-only tools (admin/stats, boosts, stories, business, folders) ──
+
+  server.registerTool(
+    "telegram-get-admin-log",
+    {
+      description:
+        "Get the admin action log (recent event history) of a supergroup or channel. Includes bans, edits, pins, and role changes.",
+      inputSchema: {
+        chatId: z.string().describe("Chat ID or username (supergroup or channel)"),
+        limit: z.number().int().min(1).max(100).default(20).describe("Number of events to return (1-100)"),
+        q: z.string().optional().describe("Optional text filter for events"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, limit, q }) => {
+      const limited = trackCall("telegram-get-admin-log");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const events = await getTelegram().getAdminLog(chatId, limit, q);
+        logDuration("telegram-get-admin-log", start);
+        if (events.length === 0) return { content: [{ type: "text", text: "No admin log events." }] };
+        const text = events
+          .map((e) => `[${e.date}] ${e.userName} (${e.userId}) — ${e.action}: ${e.details}`)
+          .join("\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-admin-log");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-broadcast-stats",
+    {
+      description:
+        "Get broadcast channel statistics: followers, views/shares/reactions per post & story, notification percent, recent post interactions. Broadcast channels only (use telegram-get-megagroup-stats for supergroups). Admin rights required; some channels may require Telegram Premium to expose stats.",
+      inputSchema: {
+        chatId: z.string().describe("Broadcast channel ID or username"),
+        includeGraphs: z
+          .boolean()
+          .default(false)
+          .describe(
+            "Include raw graph data for each series. Default false — returns only aggregate numbers + metadata",
+          ),
+        dark: z.boolean().default(false).describe("Prefer dark-theme palette when Telegram renders graphs"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, includeGraphs, dark }) => {
+      const limited = trackCall("telegram-get-broadcast-stats");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const s = await getTelegram().getBroadcastStats(chatId, { dark, includeGraphs });
+        logDuration("telegram-get-broadcast-stats", start);
+        const lines = [
+          `Period: ${new Date(s.period.minDate * 1000).toISOString()} → ${new Date(s.period.maxDate * 1000).toISOString()}`,
+          `Followers: ${s.followers.current} (Δ ${s.followers.current - s.followers.previous})`,
+          `Views/post: ${s.viewsPerPost.current}, Shares/post: ${s.sharesPerPost.current}, Reactions/post: ${s.reactionsPerPost.current}`,
+          `Views/story: ${s.viewsPerStory.current}, Shares/story: ${s.sharesPerStory.current}, Reactions/story: ${s.reactionsPerStory.current}`,
+          `Notifications enabled: ${s.enabledNotifications.percent}% (${s.enabledNotifications.part}/${s.enabledNotifications.total})`,
+        ];
+        if (s.recentPostsInteractions.length > 0) {
+          lines.push(`\nRecent interactions (${s.recentPostsInteractions.length}):`);
+          for (const r of s.recentPostsInteractions.slice(0, 10)) {
+            const id = r.kind === "message" ? `msg #${r.msgId}` : `story #${r.storyId}`;
+            lines.push(`  ${id}: ${r.views} views, ${r.forwards} forwards, ${r.reactions} reactions`);
+          }
+        }
+        if (includeGraphs && s.graphs) {
+          lines.push(`\nGraphs available: ${Object.keys(s.graphs).join(", ")}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-broadcast-stats");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-megagroup-stats",
+    {
+      description:
+        "Get supergroup statistics: members, messages, viewers, posters (current vs previous period), top posters/admins/inviters. Supergroups only (use telegram-get-broadcast-stats for broadcast channels). Admin rights required. Telegram rate-limits this endpoint to roughly 1 request per 30 minutes per channel — expect FLOOD_WAIT on rapid repeat calls.",
+      inputSchema: {
+        chatId: z.string().describe("Supergroup ID or username"),
+        includeGraphs: z
+          .boolean()
+          .default(false)
+          .describe("Include raw graph data. Default false — returns only aggregate numbers + top lists"),
+        dark: z.boolean().default(false).describe("Prefer dark-theme palette when Telegram renders graphs"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, includeGraphs, dark }) => {
+      const limited = trackCall("telegram-get-megagroup-stats");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const s = await getTelegram().getMegagroupStats(chatId, { dark, includeGraphs });
+        logDuration("telegram-get-megagroup-stats", start);
+        const lines = [
+          `Period: ${new Date(s.period.minDate * 1000).toISOString()} → ${new Date(s.period.maxDate * 1000).toISOString()}`,
+          `Members: ${s.members.current}, Messages: ${s.messages.current}, Viewers: ${s.viewers.current}, Posters: ${s.posters.current}`,
+        ];
+        if (s.topPosters.length > 0) {
+          lines.push(`\nTop posters (${s.topPosters.length}):`);
+          for (const p of s.topPosters.slice(0, 10))
+            lines.push(`  ${p.userId}: ${p.messages} msgs, ${p.avgChars} avg chars`);
+        }
+        if (s.topAdmins.length > 0) {
+          lines.push(`\nTop admins (${s.topAdmins.length}):`);
+          for (const a of s.topAdmins.slice(0, 10))
+            lines.push(`  ${a.userId}: ${a.deleted} del, ${a.kicked} kick, ${a.banned} ban`);
+        }
+        if (s.topInviters.length > 0) {
+          lines.push(`\nTop inviters (${s.topInviters.length}):`);
+          for (const i of s.topInviters.slice(0, 10)) lines.push(`  ${i.userId}: ${i.invitations} invites`);
+        }
+        if (includeGraphs && s.graphs) {
+          lines.push(`\nGraphs available: ${Object.keys(s.graphs).join(", ")}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-megagroup-stats");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-my-boosts",
+    {
+      description:
+        "List the user's premium boost slots. Each entry includes slot index, the peer it currently boosts (if any), the date the boost was applied, expiration timestamp, and cooldownUntilDate (when a slot can be reassigned). Premium users have multiple slots; non-Premium users typically have a single slot.",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-my-boosts");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getMyBoosts();
+        logDuration("telegram-get-my-boosts", start);
+        if (r.count === 0) return { content: [{ type: "text", text: "No boost slots." }] };
+        const lines = [`${r.count} boost slot(s):`];
+        for (const b of r.myBoosts) {
+          const peer = b.peer ? `${b.peer.kind}:${b.peer.id}` : "(unassigned)";
+          const cd = b.cooldownUntilDate ? `, cooldown until ${b.cooldownUntilDate}` : "";
+          lines.push(`  slot ${b.slot}: ${peer} since ${b.date}, expires ${b.expires}${cd}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-my-boosts");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-boosts-status",
+    {
+      description:
+        "Fetch the boost status of a channel/supergroup. Returns current boost level, total boosts, progress to next level, giftBoosts, premiumAudience ratio, public boostUrl, and whether the current user is boosting (myBoost + myBoostSlots). Also includes any prepaidGiveaways attached to the chat.",
+      inputSchema: {
+        chatId: z.string().describe("Channel or supergroup to query — id or @username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId }) => {
+      const limited = trackCall("telegram-get-boosts-status");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const s = await getTelegram().getBoostsStatus(chatId);
+        logDuration("telegram-get-boosts-status", start);
+        const lines = [
+          `Level: ${s.level} (${s.boosts} boosts)`,
+          `Progress: ${s.currentLevelBoosts}${s.nextLevelBoosts != null ? ` / ${s.nextLevelBoosts}` : ""}`,
+          `Boost URL: ${s.boostUrl}`,
+        ];
+        if (s.giftBoosts != null) lines.push(`Gift boosts: ${s.giftBoosts}`);
+        if (s.premiumAudience) {
+          lines.push(`Premium audience: ${s.premiumAudience.part}/${s.premiumAudience.total}`);
+        }
+        if (s.myBoost) lines.push(`I'm boosting (slots: ${s.myBoostSlots?.join(", ") ?? "?"})`);
+        if (s.prepaidGiveaways && s.prepaidGiveaways.length > 0) {
+          lines.push(`\nPrepaid giveaways (${s.prepaidGiveaways.length}):`);
+          for (const g of s.prepaidGiveaways) {
+            const detail = g.kind === "premium" ? `${g.months}mo premium` : `${g.stars} stars`;
+            lines.push(`  ${g.id}: ${g.quantity}× ${detail} (boosts: ${g.boosts ?? "?"})`);
+          }
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-boosts-status");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-boosts-list",
+    {
+      description:
+        "List the boosts applied to a channel/supergroup. Returns paginated boost entries with id, userId (or undefined for anonymous gift boosts), date, expires, flags (gift, giveaway, unclaimed), optional giveawayMsgId, usedGiftSlug, multiplier, and stars. Requires channel admin permissions. Supports pagination via nextOffset and an optional gifts filter to show only gift boosts.",
+      inputSchema: {
+        chatId: z.string().describe("Channel or supergroup to query — id or @username"),
+        gifts: z.boolean().optional().describe("If true, return only gift boosts"),
+        offset: z.string().optional().describe("Pagination cursor returned as nextOffset from the previous call"),
+        limit: z.number().int().min(1).max(100).default(50).describe("Max boosts per page (1-100, default 50)"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, gifts, offset, limit }) => {
+      const limited = trackCall("telegram-get-boosts-list");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getBoostsList(chatId, { gifts, offset, limit });
+        logDuration("telegram-get-boosts-list", start);
+        if (r.boosts.length === 0) return { content: [{ type: "text", text: "No boosts." }] };
+        const lines = [
+          `${r.count} total boosts${r.nextOffset ? ` (more available; nextOffset=${r.nextOffset})` : ""}:`,
+        ];
+        for (const b of r.boosts) {
+          const flags = [b.gift ? "gift" : "", b.giveaway ? "giveaway" : "", b.unclaimed ? "unclaimed" : ""]
+            .filter(Boolean)
+            .join(",");
+          const tag = flags ? ` [${flags}]` : "";
+          const x = b.multiplier && b.multiplier > 1 ? ` ×${b.multiplier}` : "";
+          lines.push(`  ${b.id}: user=${b.userId ?? "anon"} from ${b.date} until ${b.expires}${x}${tag}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-boosts-list");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-all-stories",
+    {
+      description:
+        "Fetch active stories from contacts/channels the user follows. Pagination via 'next' + 'state' — pass the returned state back on the next call with next:true to load more. Use hidden:true to read stories from muted/archived peers. Returns compact story metadata (id, date, expireDate, caption, mediaType, counters) without raw media blobs.",
+      inputSchema: {
+        next: z.boolean().optional().describe("Load the next page (use with state from a prior response)"),
+        hidden: z.boolean().optional().describe("Fetch stories from hidden/archived peers instead of the main feed"),
+        state: z.string().optional().describe("Pagination state token returned by a previous call"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ next, hidden, state }) => {
+      const limited = trackCall("telegram-get-all-stories");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      if (next === true && !state) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "'state' is required when 'next' is true — use the state token from a prior telegram-get-all-stories response",
+            },
+          ],
+          isError: true as const,
+        };
+      }
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getAllStories({ next, hidden, state });
+        logDuration("telegram-get-all-stories", start);
+        const lines = [
+          `State: ${r.state} (modified=${r.modified}, hasMore=${r.hasMore ?? false}, count=${r.count ?? "?"})`,
+        ];
+        if (r.stealthMode) {
+          lines.push(
+            `Stealth mode: active until ${r.stealthMode.activeUntilDate ?? "n/a"}, cooldown ${r.stealthMode.cooldownUntilDate ?? "n/a"}`,
+          );
+        }
+        for (const ps of r.peerStories) {
+          lines.push(`\nPeer ${ps.peer.kind}:${ps.peer.id} (maxRead=${ps.maxReadId ?? "n/a"}):`);
+          for (const s of ps.stories) {
+            const meta = [
+              s.date ? `at ${s.date}` : "",
+              s.mediaType ?? "",
+              s.pinned ? "pinned" : "",
+              s.public ? "public" : "",
+            ]
+              .filter(Boolean)
+              .join(", ");
+            const cap = s.caption ? `: ${s.caption.slice(0, 80)}` : "";
+            lines.push(`  [#${s.id}] ${s.kind} (${meta})${cap}`);
+          }
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-all-stories");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-peer-stories",
+    {
+      description:
+        "Fetch currently active stories posted by a specific peer (user/channel). Returns compact story metadata (id, date, expireDate, caption, mediaType, counters) without raw media blobs. Use telegram-download-media with the story id if you need media bytes.",
+      inputSchema: {
+        chatId: z.string().describe("Peer to fetch stories from — user/channel id or @username"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId }) => {
+      const limited = trackCall("telegram-get-peer-stories");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getPeerStories(chatId);
+        logDuration("telegram-get-peer-stories", start);
+        if (!r) return { content: [{ type: "text", text: "No stories from this peer." }] };
+        const lines = [
+          `Peer ${r.peer.kind}:${r.peer.id} (maxRead=${r.maxReadId ?? "n/a"}), ${r.stories.length} story(ies):`,
+        ];
+        for (const s of r.stories) {
+          const meta = [
+            s.date ? `at ${s.date}` : "",
+            s.mediaType ?? "",
+            s.pinned ? "pinned" : "",
+            s.public ? "public" : "",
+          ]
+            .filter(Boolean)
+            .join(", ");
+          const cap = s.caption ? `: ${s.caption.slice(0, 80)}` : "";
+          const counters = s.viewsCount != null ? ` [${s.viewsCount} views, ${s.reactionsCount ?? 0} reactions]` : "";
+          lines.push(`  [#${s.id}] ${s.kind} (${meta})${cap}${counters}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-peer-stories");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-stories-by-id",
+    {
+      description:
+        "Fetch specific stories from a peer by their numeric IDs. Useful for retrieving archived/pinned stories outside the active feed. Returns compact story metadata and optional pinnedToTop list. Pass up to 100 ids per request.",
+      inputSchema: {
+        chatId: z.string().describe("Peer to fetch stories from — user/channel id or @username"),
+        ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to fetch (1-100 per request)"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, ids }) => {
+      const limited = trackCall("telegram-get-stories-by-id");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getStoriesById(chatId, ids);
+        logDuration("telegram-get-stories-by-id", start);
+        const lines = [`${r.count} story(ies):`];
+        if (r.pinnedToTop && r.pinnedToTop.length > 0) lines.push(`Pinned to top: ${r.pinnedToTop.join(", ")}`);
+        for (const s of r.stories) {
+          const meta = [
+            s.date ? `at ${s.date}` : "",
+            s.mediaType ?? "",
+            s.pinned ? "pinned" : "",
+            s.public ? "public" : "",
+          ]
+            .filter(Boolean)
+            .join(", ");
+          const cap = s.caption ? `: ${s.caption.slice(0, 80)}` : "";
+          lines.push(`  [#${s.id}] ${s.kind} (${meta})${cap}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-stories-by-id");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-story-views",
+    {
+      description:
+        "List viewers of one of YOUR stories. Returns per-viewer entries (user id, view date, their reaction emoji if any), plus totals (viewsCount, forwardsCount, reactionsCount) and nextOffset for pagination. This only works for stories you posted. Some accounts (non-Premium, old stories) may not get a full viewer list.",
+      inputSchema: {
+        chatId: z.string().describe("Peer owning the story — usually 'me' or your own user id/@username"),
+        storyId: z.number().int().positive().describe("Story ID to fetch viewers for"),
+        q: z.string().optional().describe("Filter viewers by name substring"),
+        justContacts: z.boolean().optional().describe("Return only contacts"),
+        reactionsFirst: z.boolean().optional().describe("Sort viewers who reacted first"),
+        forwardsFirst: z.boolean().optional().describe("Sort forwards/reposts first"),
+        offset: z.string().optional().describe("Pagination cursor from previous call"),
+        limit: z.number().int().min(1).max(100).default(50).describe("Max viewers per page (1-100)"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, storyId, q, justContacts, reactionsFirst, forwardsFirst, offset, limit }) => {
+      const limited = trackCall("telegram-get-story-views");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getStoryViewsList(chatId, {
+          id: storyId,
+          q,
+          justContacts,
+          reactionsFirst,
+          forwardsFirst,
+          offset,
+          limit,
+        });
+        logDuration("telegram-get-story-views", start);
+        const lines = [
+          `Story #${storyId}: ${r.count} viewers (${r.viewsCount} views, ${r.forwardsCount} forwards, ${r.reactionsCount} reactions)${r.nextOffset ? `, nextOffset=${r.nextOffset}` : ""}`,
+        ];
+        for (const v of r.views) {
+          if (v.kind === "user") {
+            const reaction = v.reaction ? ` ${v.reaction}` : "";
+            const blocked = v.blocked ? " [blocked]" : "";
+            lines.push(`  user ${v.userId} at ${v.date}${reaction}${blocked}`);
+          } else if (v.kind === "publicForward") {
+            lines.push(`  forward to ${v.peer ? `${v.peer.kind}:${v.peer.id}` : "?"} (msg ${v.messageId ?? "?"})`);
+          } else {
+            lines.push(`  repost from ${v.peer ? `${v.peer.kind}:${v.peer.id}` : "?"} (story ${v.storyId ?? "?"})`);
+          }
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        const msg = (e as Error).message ?? "";
+        if (/PREMIUM|PAYMENT_REQUIRED/i.test(msg)) {
+          return {
+            content: [{ type: "text", text: "Story view stats may require Telegram Premium." }],
+            isError: true as const,
+          };
+        }
+        return handleToolError(e, onRevoked, "telegram-get-story-views");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-stories-archive",
+    {
+      description:
+        "Fetch auto-archived (expired) stories from a peer's archive. Paginate via offsetId (pass last story id from previous page).",
+      inputSchema: {
+        chatId: z.string().default("me").describe("Peer whose archive to fetch (default: 'me')"),
+        offsetId: z
+          .number()
+          .int()
+          .nonnegative()
+          .default(0)
+          .describe("Pagination cursor — last story id from previous page (0 to start)"),
+        limit: z.number().int().min(1).max(100).default(50).describe("Max stories to return (1-100, default 50)"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, offsetId, limit }) => {
+      const limited = trackCall("telegram-get-stories-archive");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getStoriesArchive(chatId, offsetId, limit);
+        logDuration("telegram-get-stories-archive", start);
+        if (r.stories.length === 0) return { content: [{ type: "text", text: "No archived stories." }] };
+        const lines = [`${r.count} archived story(ies):`];
+        for (const s of r.stories) {
+          const meta = [s.date ? `at ${s.date}` : "", s.mediaType ?? ""].filter(Boolean).join(", ");
+          const cap = s.caption ? `: ${s.caption.slice(0, 80)}` : "";
+          lines.push(`  [#${s.id}] ${s.kind} (${meta})${cap}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-stories-archive");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-export-story-link",
+    {
+      description: "Get a shareable t.me/… URL for a public story.",
+      inputSchema: {
+        chatId: z.string().describe("Peer who posted the story"),
+        storyId: z.number().int().positive().describe("Story ID to get the link for"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ chatId, storyId }) => {
+      const limited = trackCall("telegram-export-story-link");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().exportStoryLink(chatId, storyId);
+        logDuration("telegram-export-story-link", start);
+        return { content: [{ type: "text", text: sanitize(r.link) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-export-story-link");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-suggested-folders",
+    {
+      description:
+        "Get Telegram's suggested chat folders based on your chat list (e.g. 'Unread', 'Personal', 'Work'). Returns folder templates you can create with telegram-create-folder.",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-suggested-folders");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const folders = await getTelegram().getSuggestedFolders();
+        logDuration("telegram-get-suggested-folders", start);
+        if (folders.length === 0) return { content: [{ type: "text", text: "No suggested folders." }] };
+        const text = folders.map((f) => `${f.emoticon ?? ""} ${f.title}`.trim()).join("\n");
+        return { content: [{ type: "text", text: sanitize(text) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-suggested-folders");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-get-business-chat-links",
+    {
+      description:
+        "List Telegram Business chat links configured for the account. Each entry includes the t.me/m/<slug> link, the prefilled message, optional title (admin-facing label), views count, and entityCount. Requires Telegram Business — returns empty list when none configured.",
+      inputSchema: {},
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async () => {
+      const limited = trackCall("telegram-get-business-chat-links");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().getBusinessChatLinks();
+        logDuration("telegram-get-business-chat-links", start);
+        if (r.count === 0) return { content: [{ type: "text", text: "No business chat links configured." }] };
+        const lines = [`${r.count} link(s):`];
+        for (const l of r.links) {
+          const label = l.title ? ` (${l.title})` : "";
+          lines.push(`  ${l.link}${label} — ${l.views} views: ${l.message.slice(0, 100)}`);
+        }
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-get-business-chat-links");
+      }
+    },
+  );
+
+  server.registerTool(
+    "telegram-resolve-business-chat-link",
+    {
+      description:
+        "Resolve a Telegram Business chat link by slug to see whose chat it opens and the pre-filled message.",
+      inputSchema: {
+        slug: z.string().min(1).describe("Link slug to resolve (from t.me/m/<slug>)"),
+      },
+      annotations: READ_ONLY_ANNOTATIONS,
+    },
+    async ({ slug }) => {
+      const limited = trackCall("telegram-resolve-business-chat-link");
+      if (limited) return limited;
+      const err = await requireConnection();
+      if (err) return { content: [{ type: "text", text: err }] };
+      const start = Date.now();
+      try {
+        const r = await getTelegram().resolveBusinessChatLink(slug);
+        logDuration("telegram-resolve-business-chat-link", start);
+        const lines = [`Peer: ${r.peer.type}:${r.peer.id}`, `Entities: ${r.entityCount}`, `Message: ${r.message}`];
+        return { content: [{ type: "text", text: sanitize(lines.join("\n")) }] };
+      } catch (e) {
+        return handleToolError(e, onRevoked, "telegram-resolve-business-chat-link");
+      }
+    },
+  );
 }
