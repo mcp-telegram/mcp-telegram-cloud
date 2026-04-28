@@ -5,6 +5,8 @@ FROM node:22-alpine AS telegram-lib
 RUN apk add --no-cache git python3 make g++
 RUN git clone --depth 1 https://github.com/mcp-telegram/mcp-telegram.git /telegram
 WORKDIR /telegram
+# Upstream `mcp-telegram` is an npm project (not pnpm); use npm ci here.
+# Stage 2 below uses pnpm, which is what the cloud project itself uses.
 RUN npm ci && npm run build
 
 # Stage 2: Build cloud app

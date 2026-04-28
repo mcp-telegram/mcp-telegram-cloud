@@ -1,5 +1,9 @@
 # Dependencies
 node_modules/
+# This project uses pnpm exclusively — package-lock.json is a stale npm artifact.
+# Corepack pin via package.json#packageManager keeps contributors on pnpm.
+package-lock.json
+yarn.lock
 
 # Build artifacts
 dist/
@@ -36,7 +40,6 @@ qr-login.html
 qr-login.png
 
 # Docker / infra with prod-specific values (belongs to mcp-telegram-infra)
-# Note: stacks/*.yml currently tracked; will migrate to infra-repo in Phase 4.1
 docker-compose.prod.yml
 docker-compose.override.yml
 
