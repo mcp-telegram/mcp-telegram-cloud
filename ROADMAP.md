@@ -7,7 +7,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 For the internal, fact-check-audited working plan with risks and exit criteria, see
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
-**Last updated:** 2026-04-26
+**Last updated:** 2026-04-28
 **Current version:** 1.12.0 (cloud) / [`@overpod/mcp-telegram` 1.35.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
@@ -30,12 +30,12 @@ Things planned with known scope. Order is approximate and may change.
 - **Public release** (Phase 5): orphan branch publication, secret rotation,
   user migration broadcast via [@mcp_telegram_cloud_bot](https://t.me/mcp_telegram_cloud_bot)
   (target: a few days advance notice; not a guarantee), launch announcement.
-- **Tool whitelist expansion** (Phase 2) — currently cloud exposes **26
-  tools** (24 read-only + 2 safe state-change: `telegram-mark-as-read` and
-  `telegram-mute-chat`) out of the much larger catalogue in the
-  [upstream `@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram)
-  (see [`README.md` §MCP tools exposed](README.md#mcp-tools-exposed) for the
-  current cloud whitelist).
+- **Tool whitelist expansion** (Phase 2) — currently cloud exposes a
+  read-only subset (plus two safe state-change tools: `telegram-mark-as-read`
+  and `telegram-mute-chat`) out of the much larger catalogue in the
+  [upstream `@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram).
+  See [`README.md` §MCP tools exposed](README.md#mcp-tools-exposed) for the
+  current cloud whitelist.
   Expansion happens **in groups**, each gated by a destructive-tools opt-in
   flag + per-user daily limit + audit log:
   - **Group A** — Profile & Business (update-profile, set-privacy,
