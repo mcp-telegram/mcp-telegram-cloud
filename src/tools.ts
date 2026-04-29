@@ -97,6 +97,40 @@ function textResult(text: string) {
   return { content: [{ type: "text" as const, text }] };
 }
 
+/** Format a group-call participant line. Surfaces every flag the upstream summary advertises. */
+function renderGroupCallParticipant(p: {
+  peer?: { kind: string; id: string | number };
+  source: number;
+  volume?: number;
+  muted?: boolean;
+  left?: boolean;
+  self?: boolean;
+  mutedByYou?: boolean;
+  videoJoined?: boolean;
+  justJoined?: boolean;
+  hasVideo?: boolean;
+  hasPresentation?: boolean;
+  raiseHandRating?: string;
+  about?: string;
+}): string {
+  const flags = [
+    p.muted ? "muted" : "",
+    p.mutedByYou ? "mutedByYou" : "",
+    p.left ? "left" : "",
+    p.self ? "self" : "",
+    p.videoJoined ? "videoJoined" : "",
+    p.hasVideo ? "video" : "",
+    p.hasPresentation ? "presentation" : "",
+    p.justJoined ? "justJoined" : "",
+  ]
+    .filter(Boolean)
+    .join(",");
+  const vol = p.volume !== undefined ? ` vol=${p.volume}` : "";
+  const raise = p.raiseHandRating ? ` raise=${p.raiseHandRating}` : "";
+  const about = p.about ? ` about="${p.about}"` : "";
+  return `  ${formatPeer(p.peer ?? null)} src=${p.source}${flags ? ` [${flags}]` : ""}${vol}${raise}${about}`;
+}
+
 const MAX_INLINE_MEDIA = 950_000; // ~950KB to stay under 1MB base64 limit
 
 export const READ_ONLY_TOOLS: ToolDefinition[] = [
@@ -1351,6 +1385,417 @@ export const READ_ONLY_TOOLS: ToolDefinition[] = [
     handler: async ({ slug }, { telegram }) => {
       const r = await telegram.resolveBusinessChatLink(slug);
       const lines = [`Peer: ${r.peer.type}:${r.peer.id}`, `Entities: ${r.entityCount}`, `Message: ${r.message}`];
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-state",
+    description:
+      "Initialize the polling cursor by fetching the current Telegram updates state {pts, qts, date, seq, unreadCount}. Call once before telegram-get-updates; then persist {pts, qts, date} in your agent state and feed them into telegram-get-updates. The MCP server does NOT store the cursor — you do.",
+    inputSchema: {},
+    annotations: READ_ONLY,
+    handler: async (_args, { telegram }) => {
+      const s = await telegram.getUpdatesState();
+      return textResult(`pts=${s.pts} qts=${s.qts} date=${s.date} seq=${s.seq} unreadCount=${s.unreadCount}`);
+    },
+  },
+
+  {
+    name: "telegram-get-updates",
+    description:
+      "Fetch new messages, deleted messages, and other updates since a previously-known {pts, qts, date} cursor (from telegram-get-state or a prior call). Returns compact newMessages[], deletedMessageIds[], otherUpdates[] (className only), and the new cursor state. isFinal=false means more updates are queued — call again with the returned state. If Telegram reports the gap is too long, a fallback hint is returned suggesting to resync via telegram-read-messages per chat. Cursor is stateless — the agent must persist {pts, qts, date} between calls.",
+    inputSchema: {
+      pts: z.number().int().describe("Last known pts (from telegram-get-state or prior telegram-get-updates)"),
+      qts: z.number().int().describe("Last known qts (secret-chat / encrypted stream cursor; 0 if unknown)"),
+      date: z.number().int().describe("Last known date (unix seconds from prior state)"),
+      ptsLimit: z
+        .number()
+        .int()
+        .positive()
+        .max(1000)
+        .optional()
+        .describe("Max updates per batch (default 100, capped at 1000)"),
+      ptsTotalLimit: z
+        .number()
+        .int()
+        .positive()
+        .max(1000)
+        .optional()
+        .describe("Max total updates across paginated slices (default 1000, capped at 1000)"),
+    },
+    annotations: READ_ONLY,
+    handler: async ({ pts, qts, date, ptsLimit, ptsTotalLimit }, { telegram }) => {
+      const d = await telegram.getUpdates({ pts, qts, date, ptsLimit, ptsTotalLimit });
+      const lines = [
+        `state: pts=${d.state.pts} qts=${d.state.qts} date=${d.state.date} seq=${d.state.seq}${d.state.unreadCount !== undefined ? ` unread=${d.state.unreadCount}` : ""}`,
+        `isFinal=${d.isFinal} newMessages=${d.newMessages.length} deletedGroups=${d.deletedMessageIds.length} otherUpdates=${d.otherUpdates.length}`,
+      ];
+      if (d.fallback) lines.push(`fallback=${d.fallback.kind}: ${d.fallback.suggestedAction}`);
+      for (const m of d.newMessages.slice(0, 50)) {
+        lines.push(
+          `  [#${m.id}] ${formatPeer(m.peer)} ${m.fromId ? `from ${formatPeer(m.fromId)} ` : ""}date=${m.date}: ${m.text}`,
+        );
+      }
+      if (d.newMessages.length > 50) lines.push(`  ... (${d.newMessages.length - 50} more)`);
+      for (const g of d.deletedMessageIds.slice(0, 20)) {
+        lines.push(`  deleted in ${formatPeer(g.peer ?? null)}: [${g.messageIds.join(",")}]`);
+      }
+      if (d.deletedMessageIds.length > 20) {
+        lines.push(`  ... (${d.deletedMessageIds.length - 20} more deleted groups)`);
+      }
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-channel-updates",
+    description:
+      "Fetch new messages and updates for a single channel/supergroup since a known per-channel pts cursor. Separate from the global cursor used by telegram-get-updates. Returns compact newMessages[], otherUpdates[], and new {pts, isFinal, timeout?}. If the channel gap is too long, Telegram returns a dialog snapshot — this tool forwards it and hints to resync via telegram-read-messages. Cursor is stateless — the agent stores pts.",
+    inputSchema: {
+      chatId: z.string().describe("Channel or supergroup ID or username"),
+      pts: z.number().int().describe("Last known per-channel pts"),
+      limit: z.number().int().positive().optional().describe("Max updates per batch (default 100)"),
+      force: z
+        .boolean()
+        .optional()
+        .describe("Force request updates even if the client hasn't processed previous ones (rarely needed)"),
+    },
+    annotations: READ_ONLY,
+    handler: async ({ chatId, pts, limit, force }, { telegram }) => {
+      const d = await telegram.getChannelUpdates(chatId, { pts, limit, force });
+      const lines = [
+        `channel=${d.channelId} pts=${d.pts} isFinal=${d.isFinal}${d.timeout !== undefined ? ` timeout=${d.timeout}` : ""}`,
+        `newMessages=${d.newMessages.length} otherUpdates=${d.otherUpdates.length}`,
+      ];
+      if (d.fallback) lines.push(`fallback=${d.fallback.kind}: ${d.fallback.suggestedAction}`);
+      for (const m of d.newMessages.slice(0, 50)) {
+        lines.push(`  [#${m.id}] ${m.fromId ? `from ${formatPeer(m.fromId)} ` : ""}date=${m.date}: ${m.text}`);
+      }
+      if (d.newMessages.length > 50) lines.push(`  ... (${d.newMessages.length - 50} more)`);
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-fact-check",
+    description:
+      "Get fact-check annotations on channel messages. Fact-checks are added by independent fact-checkers in supported countries. Most messages will show no fact-check.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (channel)"),
+      messageIds: z
+        .array(z.number().int().positive())
+        .min(1)
+        .max(100)
+        .describe("Message IDs to get fact-checks for (1-100)"),
+    },
+    annotations: READ_ONLY,
+    handler: async ({ chatId, messageIds }, { telegram }) => {
+      const r = await telegram.getFactCheck(chatId, messageIds);
+      if (r.length === 0) return textResult("No fact-check data.");
+      const lines = r.map((f) => {
+        const country = f.country ? ` [${f.country}]` : "";
+        const text = f.text ? `: ${f.text}` : f.needCheck ? " (needs check)" : " (none)";
+        return `  #${f.messageId}${country}${text}`;
+      });
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-global-privacy-settings",
+    description:
+      "Get your account-level global privacy settings: whether new non-contacts are auto-archived/muted, whether archived chats are kept unmuted, whether read receipts are hidden, and whether non-contacts must have Premium to message you.",
+    inputSchema: {},
+    annotations: READ_ONLY,
+    handler: async (_args, { telegram }) => {
+      const s = await telegram.getGlobalPrivacySettings();
+      const lines = [
+        `archiveAndMuteNewNoncontactPeers: ${s.archiveAndMuteNewNoncontactPeers}`,
+        `keepArchivedUnmuted: ${s.keepArchivedUnmuted}`,
+        `keepArchivedFolders: ${s.keepArchivedFolders}`,
+        `hideReadMarks: ${s.hideReadMarks}`,
+        `newNoncontactPeersRequirePremium: ${s.newNoncontactPeersRequirePremium}`,
+      ];
+      return textResult(lines.join("\n"));
+    },
+  },
+
+  {
+    name: "telegram-get-groups-for-discussion",
+    description:
+      "List groups that can be linked as a discussion group to a channel you admin. Helper for channel admins setting up comment threads.",
+    inputSchema: {},
+    annotations: READ_ONLY,
+    handler: async (_args, { telegram }) => {
+      const r = await telegram.getGroupsForDiscussion();
+      if (r.groups.length === 0) return textResult("No eligible groups.");
+      const lines = r.groups.map((g) => {
+        const u = g.username ? ` @${g.username}` : "";
+        const c = g.participantsCount !== undefined ? ` [${g.participantsCount} members]` : "";
+        return `  ${g.title} (${g.id})${u}${c}`;
+      });
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-paid-reaction-privacy",
+    description: "Get your current default paid reaction privacy setting (anonymous vs show name).",
+    inputSchema: {},
+    annotations: READ_ONLY,
+    handler: async (_args, { telegram }) => {
+      const r = await telegram.getPaidReactionPrivacy();
+      return textResult(`Default paid reaction privacy: ${r.private ? "anonymous" : "show name"}`);
+    },
+  },
+
+  {
+    name: "telegram-get-transcription",
+    description:
+      "Poll for an updated voice/video-note transcription result. Calls the same endpoint as telegram-transcribe-audio — Telegram guarantees idempotency (returns the same transcriptionId with updated text once processing completes).",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID of the voice or video note"),
+    },
+    annotations: READ_ONLY,
+    handler: async ({ chatId, messageId }, { telegram }) => {
+      const r = await telegram.transcribeAudio(chatId, messageId);
+      const trial = r.trialRemainsNum !== undefined ? `\nTrial remaining: ${r.trialRemainsNum}` : "";
+      if (r.pending) {
+        return textResult(`Transcription pending for #${messageId}\nTranscriptionId: ${r.transcriptionId}${trial}`);
+      }
+      return textResult(
+        sanitize(
+          `Transcription for #${messageId}:\nTranscriptionId: ${r.transcriptionId}\nStatus: complete${trial}\n\n${r.text}`,
+        ),
+      );
+    },
+  },
+
+  {
+    name: "telegram-inline-query",
+    description:
+      "Query an inline bot (like @gif, @bing) in a chat context and return the compact result list. Returns queryId, cacheTime, and results[{id,type,title?,description?,url?}]. The queryId is typically valid for ~60s. Bot must be a real bot account.",
+    inputSchema: {
+      bot: z.string().describe("Inline bot username (e.g. @gif) or numeric user ID"),
+      chatId: z.string().describe("Chat ID or username providing context for the inline query"),
+      query: z.string().describe("Query text the bot should resolve (may be empty string)"),
+      offset: z
+        .string()
+        .optional()
+        .describe("Pagination offset returned by a previous call as nextOffset (empty string on first call)"),
+    },
+    annotations: READ_ONLY,
+    handler: async ({ bot, chatId, query, offset }, { telegram }) => {
+      const r = await telegram.getInlineBotResults(bot, chatId, query, offset);
+      const lines = [
+        `queryId=${r.queryId} cacheTime=${r.cacheTime}${r.gallery ? " [gallery]" : ""}${r.nextOffset ? ` nextOffset=${r.nextOffset}` : ""}`,
+        `results: ${r.results.length}`,
+      ];
+      for (const item of r.results.slice(0, 50)) {
+        const title = item.title ? ` "${item.title}"` : "";
+        const desc = item.description ? ` — ${item.description}` : "";
+        const url = item.url ? ` (${item.url})` : "";
+        lines.push(`  [${item.id}] ${item.type}${title}${desc}${url}`);
+      }
+      if (r.results.length > 50) lines.push(`  ... (${r.results.length - 50} more)`);
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-list-emoji-statuses",
+    description:
+      "List default or recently-used emoji statuses available for your account. Useful for finding a documentId to pass to a status-set tool.",
+    inputSchema: {
+      kind: z
+        .enum(["default", "recent", "channel_default", "collectible"])
+        .default("default")
+        .describe(
+          "Which list: default (popular set), recent (your recent usage), channel_default (for channels), collectible (paid unique)",
+        ),
+      limit: z.number().int().positive().max(200).default(50).describe("Max items to return"),
+    },
+    annotations: READ_ONLY,
+    handler: async ({ kind, limit }, { telegram }) => {
+      const items = await telegram.listEmojiStatuses(kind, limit);
+      if (items.length === 0) return textResult(`[${kind}] (no statuses)`);
+      const lines = items.map((s) => {
+        const id = s.collectibleId ?? s.documentId ?? "empty";
+        const until = s.until ? ` until=${s.until}` : " until=permanent";
+        const title = s.title ? ` title="${s.title}"` : "";
+        return `${s.kind} id=${id}${until}${title}`;
+      });
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-quick-replies",
+    description:
+      "Fetch the list of quick-reply shortcuts configured for the user account (messages.GetQuickReplies). Each entry has {shortcutId, shortcut, topMessage, count} — use the shortcutId with telegram-get-quick-reply-messages to inspect the stored messages. Optional `hash` implements Telegram's hash-based diff: pass the last-known aggregate hash as a decimal string and the server may respond with notModified=true if nothing changed.",
+    inputSchema: {
+      hash: z
+        .string()
+        .regex(/^\d+$/)
+        .optional()
+        .describe("Aggregate hash from a previous response (decimal string); omit for a fresh fetch"),
+    },
+    annotations: READ_ONLY,
+    requiresEnv: "MCP_TELEGRAM_ENABLE_QUICK_REPLIES",
+    handler: async ({ hash }, { telegram }) => {
+      const r = await telegram.getQuickReplies(hash);
+      if (r.notModified) return textResult("notModified");
+      const list = r.quickReplies ?? [];
+      if (list.length === 0) return textResult("No quick-reply shortcuts.");
+      const lines = list.map(
+        (q) => `  [${q.shortcutId}] ${q.shortcut} — ${q.count} message(s), topMessage=${q.topMessage}`,
+      );
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-quick-reply-messages",
+    description:
+      "Fetch messages stored under a quick-reply shortcut (messages.GetQuickReplyMessages). Use `shortcutId` from telegram-get-quick-replies. Optional `ids` narrows to specific message ids within the shortcut. Optional `hash` implements Telegram's hash-based diff: pass the last-known aggregate hash as a decimal string — the server may respond with {notModified:true, count} if nothing changed.",
+    inputSchema: {
+      shortcutId: z.number().int().nonnegative().describe("Shortcut id from telegram-get-quick-replies"),
+      ids: z
+        .array(z.number().int().nonnegative())
+        .optional()
+        .describe("Optional list of message ids to fetch within the shortcut"),
+      hash: z
+        .string()
+        .regex(/^\d+$/)
+        .optional()
+        .describe("Aggregate hash from a previous response (decimal string); omit for a fresh fetch"),
+    },
+    annotations: READ_ONLY,
+    requiresEnv: "MCP_TELEGRAM_ENABLE_QUICK_REPLIES",
+    handler: async ({ shortcutId, ids, hash }, { telegram }) => {
+      const r = await telegram.getQuickReplyMessages(shortcutId, { ids, hash });
+      if (r.notModified) return textResult(`notModified${r.count !== undefined ? ` count=${r.count}` : ""}`);
+      const messages = r.messages ?? [];
+      if (messages.length === 0) return textResult(`No messages in shortcut #${shortcutId}.`);
+      const lines = [`shortcut=${shortcutId} count=${r.count ?? messages.length}`];
+      for (const m of messages) {
+        const svc = m.isService ? " [service]" : "";
+        const reply = m.replyToMsgId !== undefined ? ` reply→#${m.replyToMsgId}` : "";
+        const from = m.fromId ? ` from ${formatPeer(m.fromId)}` : "";
+        lines.push(`  [#${m.id}] date=${m.date}${from}${reply}${svc}: ${m.text}`);
+      }
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-group-call",
+    description:
+      "Fetch metadata + an optional initial slice of participants for the active group call (voice/video chat) attached to a chat (phone.GetGroupCall). Returns call info (id, accessHash, participantsCount, title, scheduleDate, recordStartDate, streamDcId, flags) plus a participant slice (peer, date, muted/left/self flags, source, volume, video/presentation indicators) and participantsNextOffset. Pass limit:0 (default) for metadata only. Cloud requires MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 (set on this server).",
+    inputSchema: {
+      chat: z
+        .string()
+        .describe(
+          "Group/supergroup/channel that currently has an active group call — id, @username, or display name fragment",
+        ),
+      limit: z
+        .number()
+        .int()
+        .min(0)
+        .max(500)
+        .optional()
+        .describe(
+          "Max participants to include (default 0 — metadata only; use telegram-get-group-call-participants for pagination)",
+        ),
+    },
+    annotations: READ_ONLY,
+    requiresEnv: "MCP_TELEGRAM_ENABLE_GROUP_CALLS",
+    handler: async ({ chat, limit }, { telegram }) => {
+      const r = await telegram.getGroupCall(chat, { limit });
+      const c = r.call;
+      const lines: string[] = [];
+      if (c.kind === "active") {
+        lines.push(
+          `call id=${c.id} accessHash=${c.accessHash} participants=${c.participantsCount} version=${c.version}${c.title ? ` title="${c.title}"` : ""}`,
+        );
+        if (c.scheduleDate !== undefined) lines.push(`scheduled=${c.scheduleDate}`);
+        if (c.recordStartDate !== undefined) lines.push(`recordingSince=${c.recordStartDate}`);
+        if (c.streamDcId !== undefined) lines.push(`streamDcId=${c.streamDcId}`);
+        if (c.unmutedVideoCount !== undefined) {
+          lines.push(`unmutedVideo=${c.unmutedVideoCount}/${c.unmutedVideoLimit}`);
+        }
+        const callFlags = [
+          c.joinMuted ? "joinMuted" : "",
+          c.canChangeJoinMuted ? "canChangeJoinMuted" : "",
+          c.recordVideoActive ? "recordingVideo" : "",
+          c.rtmpStream ? "rtmp" : "",
+          c.listenersHidden ? "listenersHidden" : "",
+        ]
+          .filter(Boolean)
+          .join(",");
+        if (callFlags) lines.push(`flags=[${callFlags}]`);
+      } else {
+        lines.push(`call id=${c.id} accessHash=${c.accessHash} kind=discarded duration=${c.duration}`);
+      }
+      lines.push(
+        `participants returned: ${r.participants.length}${r.participantsNextOffset ? ` (nextOffset=${r.participantsNextOffset})` : ""}`,
+      );
+      for (const p of r.participants.slice(0, 50)) {
+        lines.push(renderGroupCallParticipant(p));
+      }
+      if (r.participants.length > 50) {
+        lines.push(`  ... (${r.participants.length - 50} more)`);
+      }
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-get-group-call-participants",
+    description:
+      "List participants of the active group call (voice/video chat) attached to a chat with pagination (phone.GetGroupParticipants). Looks up the chat's current InputGroupCall automatically, then returns {count, participants[], nextOffset?, version}. Each participant includes peer, date, source, volume, muted/self/left/videoJoined flags, raise-hand rating, about text, and hasVideo/hasPresentation indicators. Cloud requires MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 (set on this server).",
+    inputSchema: {
+      chat: z
+        .string()
+        .describe(
+          "Group/supergroup/channel that currently has an active group call — id, @username, or display name fragment",
+        ),
+      ids: z
+        .array(z.string())
+        .max(100)
+        .optional()
+        .describe("Optional list of participant peer ids/@usernames to filter (max 100)"),
+      sources: z
+        .array(z.number().int())
+        .max(100)
+        .optional()
+        .describe("Optional list of numeric source ids (audio SSRC) to filter participants"),
+      offset: z
+        .string()
+        .optional()
+        .describe("Pagination cursor from a previous response's nextOffset; omit for the first page"),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(500)
+        .optional()
+        .describe("Max participants to return in this page (default 100)"),
+    },
+    annotations: READ_ONLY,
+    requiresEnv: "MCP_TELEGRAM_ENABLE_GROUP_CALLS",
+    handler: async ({ chat, ids, sources, offset, limit }, { telegram }) => {
+      const r = await telegram.getGroupCallParticipants(chat, { ids, sources, offset, limit });
+      const lines = [
+        `count=${r.count} version=${r.version}${r.nextOffset ? ` nextOffset=${r.nextOffset}` : ""}`,
+        `participants returned: ${r.participants.length}`,
+      ];
+      for (const p of r.participants.slice(0, 100)) {
+        lines.push(renderGroupCallParticipant(p));
+      }
+      if (r.participants.length > 100) lines.push(`  ... (${r.participants.length - 100} more)`);
       return textResult(sanitize(lines.join("\n")));
     },
   },

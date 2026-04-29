@@ -33,18 +33,37 @@ import type { TelegramService } from "@overpod/mcp-telegram/service";
 const { EXPLICIT_EXCLUDED } = await import("../src/parity-config.js");
 const { registerReadOnlyTools } = await import("../src/tools.js");
 
+/**
+ * Opt-in env flags that gate cloud tool registration via `ToolDefinition.requiresEnv`.
+ * Force-enable them while introspecting so the parity gate sees the full whitelist —
+ * mirrors the same trick `@overpod/mcp-telegram/manifest` plays for its own opt-in tools.
+ */
+const OPT_IN_ENV_FLAGS = ["MCP_TELEGRAM_ENABLE_GROUP_CALLS", "MCP_TELEGRAM_ENABLE_QUICK_REPLIES"];
+
 function collectCloudWhitelist(): Set<string> {
-  const server: McpServer = new McpServerImpl({ name: "parity-introspect", version: "0.0.0" });
-  registerReadOnlyTools(
-    server,
-    () => ({}) as TelegramService,
-    async () => null,
-  );
-  const registered = (server as unknown as { _registeredTools?: Record<string, unknown> })._registeredTools;
-  if (!registered) {
-    throw new Error("Cloud whitelist introspection failed: _registeredTools missing on McpServer");
+  const restoreEnv: Array<[string, string | undefined]> = [];
+  for (const key of OPT_IN_ENV_FLAGS) {
+    restoreEnv.push([key, process.env[key]]);
+    process.env[key] = "1";
   }
-  return new Set(Object.keys(registered));
+  try {
+    const server: McpServer = new McpServerImpl({ name: "parity-introspect", version: "0.0.0" });
+    registerReadOnlyTools(
+      server,
+      () => ({}) as TelegramService,
+      async () => null,
+    );
+    const registered = (server as unknown as { _registeredTools?: Record<string, unknown> })._registeredTools;
+    if (!registered) {
+      throw new Error("Cloud whitelist introspection failed: _registeredTools missing on McpServer");
+    }
+    return new Set(Object.keys(registered));
+  } finally {
+    for (const [key, prev] of restoreEnv) {
+      if (prev === undefined) delete process.env[key];
+      else process.env[key] = prev;
+    }
+  }
 }
 
 interface ParityReport {

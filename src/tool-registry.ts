@@ -28,6 +28,12 @@ export interface ToolDefinition<TShape extends ZodRawShapeCompat = ZodRawShapeCo
   annotations: ToolAnnotations;
   /** Skip requireConnection() — tool handles disconnected state itself (e.g. telegram-status). */
   skipRequireConnection?: boolean;
+  /**
+   * Opt-in env flag: tool is registered only when `process.env[requiresEnv] === "1"`.
+   * Mirrors upstream's opt-in pattern (e.g. MCP_TELEGRAM_ENABLE_GROUP_CALLS) so self-hosters
+   * can disable categories of tools by overriding the env in their image/compose.
+   */
+  requiresEnv?: string;
   /** Synchronous pre-handler check, runs after rate-limit but before requireConnection. */
   preValidate?: (args: Args<TShape>) => CallToolResult | null;
   /** Main handler. Errors thrown propagate to handleToolError unless onError handles them. */
@@ -90,6 +96,16 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
   const onRevoked = opts.onSessionRevoked ?? (async () => {});
 
   for (const tool of tools) {
+    if (tool.requiresEnv && process.env[tool.requiresEnv] !== "1") {
+      logger.info(`Skipping tool ${tool.name}: env ${tool.requiresEnv} not set`, {
+        component: "tools",
+        event: "tool.skipped",
+        tool: tool.name,
+        env: tool.requiresEnv,
+      });
+      continue;
+    }
+
     const config: {
       description: string;
       annotations: ToolAnnotations;
