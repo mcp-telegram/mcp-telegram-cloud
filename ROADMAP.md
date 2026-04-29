@@ -7,8 +7,8 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 For the internal, fact-check-audited working plan with risks and exit criteria, see
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
-**Last updated:** 2026-04-28
-**Current version:** 2.4.0 (cloud — TOOL_REGISTRY refactor) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-04-29
+**Current version:** 2.6.0 (cloud — Wave 2.1 reactions/drafts/votes) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -22,8 +22,10 @@ Things actively being worked on or about to ship.
   4 are Group-call + Quick-reply tools, exposed only when the matching
   opt-in env flag is set, which the cloud Docker image enables by default).
   Stars (6 RO tools) is intentionally deferred to Wave 3 alongside its
-  destructive siblings. Next up is Wave 2: 93 write tools (send / edit /
-  forward / pin / react / typing / mark-as-read on more entities).
+  destructive siblings. **Wave 2 started in v2.6.0** with the reactions /
+  drafts / votes batch (8 tools); 85 write tools remain across batches
+  (profile/business write, contacts add/block, send-message family,
+  story-write, chat admin, folders write).
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -100,6 +102,16 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-29** — **Phase 2 Wave 2.1 shipped** (cloud v2.6.0).
+  First write batch: 8 tools — `send-reaction`, `set-default-reaction`,
+  `send-paid-reaction`, `toggle-paid-reaction-privacy`, `react-to-story`,
+  `save-draft`, `vote-poll`, `rate-transcription`. All low-risk (no
+  destructive intent, no opt-in env flag). The data-driven array was
+  renamed `READ_ONLY_TOOLS` → `TOOLS` and the public registration
+  function `registerReadOnlyTools` → `registerAllAllowedTools` to
+  reflect the broader catalog. New `WRITE` annotation tier added
+  alongside the existing `READ_ONLY` and `SAFE_WRITE` tiers.
+  Whitelist 70 → 78; baseline pending 103 → 95.
 - **2026-04-29** — **Phase 2 Wave 1.3 shipped** (cloud v2.5.0). 14 new
   read-only tools: polling cursor (`get-state`, `get-updates`,
   `get-channel-updates`), fact-check, global privacy, groups-for-discussion,

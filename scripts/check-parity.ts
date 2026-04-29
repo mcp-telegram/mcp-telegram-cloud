@@ -2,7 +2,7 @@
 /**
  * Phase 2.0 parity gate.
  *
- * Compares the cloud whitelist (from `registerReadOnlyTools`) against the upstream
+ * Compares the cloud whitelist (from `registerAllAllowedTools`) against the upstream
  * `@overpod/mcp-telegram` tool catalog (from `getToolManifest`). Every upstream tool
  * must be either:
  *   - present in the cloud whitelist (intentionally exposed), OR
@@ -31,7 +31,7 @@ import { getToolManifest } from "@overpod/mcp-telegram/manifest";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 
 const { EXPLICIT_EXCLUDED } = await import("../src/parity-config.js");
-const { registerReadOnlyTools } = await import("../src/tools.js");
+const { registerAllAllowedTools } = await import("../src/tools.js");
 
 /**
  * Opt-in env flags that gate cloud tool registration via `ToolDefinition.requiresEnv`.
@@ -48,7 +48,7 @@ function collectCloudWhitelist(): Set<string> {
   }
   try {
     const server: McpServer = new McpServerImpl({ name: "parity-introspect", version: "0.0.0" });
-    registerReadOnlyTools(
+    registerAllAllowedTools(
       server,
       () => ({}) as TelegramService,
       async () => null,
