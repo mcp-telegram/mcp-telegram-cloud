@@ -22,8 +22,22 @@ const READ_ONLY = {
   openWorldHint: false,
 } as const;
 
-/** Mark-as-read & similar safe state-change operations (not destructive, not read-only) */
+// SAFE_WRITE and WRITE share the same MCP annotation shape; the constants are kept distinct
+// so call-sites self-document the operator-level intent of the side effect:
+//   SAFE_WRITE — local read-state nudges (mark-as-read, mark-dialog-unread). No outbound payload,
+//                no money, no content visible to peers.
+//   WRITE      — outbound side effects visible to peers or that move balances/state on the wire
+//                (reactions, drafts, poll votes, transcription ratings, paid-reaction privacy).
+
+/** Local read-state operations: mark-as-read, mark-dialog-unread. No content reaches peers. */
 const SAFE_WRITE = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  openWorldHint: false,
+} as const;
+
+/** Non-destructive outbound writes: reactions, drafts, votes, ratings, paid-reaction privacy. */
+const WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
   openWorldHint: false,
@@ -133,7 +147,7 @@ function renderGroupCallParticipant(p: {
 
 const MAX_INLINE_MEDIA = 950_000; // ~950KB to stay under 1MB base64 limit
 
-export const READ_ONLY_TOOLS: ToolDefinition[] = [
+export const TOOLS: ToolDefinition[] = [
   {
     name: "telegram-status",
     description: "Check Telegram connection status",
@@ -1799,16 +1813,178 @@ export const READ_ONLY_TOOLS: ToolDefinition[] = [
       return textResult(sanitize(lines.join("\n")));
     },
   },
+
+  // ─── Write: reactions / drafts / votes (Phase 2 Wave 2.1) ──────────────────
+
+  {
+    name: "telegram-send-reaction",
+    description:
+      "Send emoji reaction(s) to a message. Supports multiple reactions and adding to existing ones. Omit emoji to remove all reactions",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().describe("Message ID to react to"),
+      emoji: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .describe("Reaction emoji(s): single '👍' or array ['👍','🔥']. Omit to remove all reactions"),
+      addToExisting: z
+        .boolean()
+        .default(false)
+        .describe("If true, add reaction(s) to existing ones instead of replacing"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, emoji, addToExisting }, { telegram }) => {
+      const updated = await telegram.sendReaction(chatId, messageId, emoji, addToExisting);
+      const emojiStr = Array.isArray(emoji) ? emoji.join("") : emoji;
+      const action = emoji ? `Reacted ${emojiStr} to` : "Removed reactions from";
+      const reactionsInfo = updated
+        ? ` | Reactions: ${updated.map((r) => `${r.emoji}×${r.count}${r.me ? "(me)" : ""}`).join(" ")}`
+        : "";
+      return textResult(sanitize(`${action} message ${messageId} in ${chatId}${reactionsInfo}`));
+    },
+  },
+
+  {
+    name: "telegram-set-default-reaction",
+    description: "Set the default emoji reaction used in quick-reaction menus across Telegram",
+    inputSchema: {
+      emoji: z.string().min(1).max(8).describe("Emoji character (e.g. 👍 ❤️ 🔥)"),
+    },
+    annotations: WRITE,
+    handler: async ({ emoji }, { telegram }) => {
+      await telegram.setDefaultReaction(emoji);
+      return textResult(sanitize(`Default reaction set to ${emoji}`));
+    },
+  },
+
+  {
+    name: "telegram-send-paid-reaction",
+    description:
+      "Send a paid reaction (★ Stars) on a channel post. Stars are spent from your balance. Optional private flag controls leaderboard visibility.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (channel)"),
+      messageId: z.number().int().positive().describe("Message ID of the channel post"),
+      count: z.number().int().min(1).max(2500).default(1).describe("Number of Stars to send (1-2500)"),
+      private: z
+        .boolean()
+        .optional()
+        .describe("true = anonymous on leaderboard, false = show name, omit = use account default"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, count, private: privateFlag }, { telegram }) => {
+      await telegram.sendPaidReaction(chatId, messageId, count, { private: privateFlag });
+      const privacy = privateFlag === true ? " (anonymous)" : privateFlag === false ? " (public)" : "";
+      return textResult(`Sent ★×${count} paid reaction to message #${messageId} in ${chatId}${privacy}`);
+    },
+  },
+
+  {
+    name: "telegram-toggle-paid-reaction-privacy",
+    description: "Change leaderboard visibility of your paid reaction on a specific channel post (Layer 198 API).",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (channel)"),
+      messageId: z.number().int().positive().describe("Message ID of the channel post"),
+      private: z.boolean().describe("true = anonymous on leaderboard, false = show name"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, private: privateFlag }, { telegram }) => {
+      await telegram.togglePaidReactionPrivacy(chatId, messageId, privateFlag);
+      return textResult(
+        `Updated paid reaction privacy on message #${messageId} in ${chatId}: ${privateFlag ? "anonymous" : "show name"}`,
+      );
+    },
+  },
+
+  {
+    name: "telegram-react-to-story",
+    description: "React to a story with an emoji, or remove the current reaction by passing ''.",
+    inputSchema: {
+      chatId: z.string().describe("Peer who posted the story"),
+      storyId: z.number().int().positive().describe("Story ID to react to"),
+      emoji: z.string().max(8).describe("Reaction emoji. Empty string '' removes the reaction."),
+      addToRecent: z.boolean().optional().describe("Add emoji to your recently used reactions"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, storyId, emoji, addToRecent }, { telegram }) => {
+      await telegram.sendStoryReaction(chatId, storyId, emoji, addToRecent);
+      return textResult(
+        sanitize(emoji === "" ? `Removed reaction from story #${storyId}` : `Reacted ${emoji} to story #${storyId}`),
+      );
+    },
+  },
+
+  {
+    name: "telegram-save-draft",
+    description:
+      "Save or clear a message draft for a chat. Pass empty text to clear the draft. Optional replyTo sets the message being replied to",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      text: z.string().describe("Draft text. Empty string clears the draft"),
+      replyTo: z.number().int().positive().optional().describe("Message ID this draft replies to"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, text, replyTo }, { telegram }) => {
+      await telegram.saveDraft(chatId, text, replyTo);
+      return textResult(text === "" ? `Draft cleared for ${chatId}` : `Draft saved for ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-vote-poll",
+    description: "Vote in a poll by option index (single or multi-choice). Empty array retracts vote.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID of the poll"),
+      optionIndexes: z
+        .array(z.number().int().min(0).max(9))
+        .min(0)
+        .max(10)
+        .describe("Zero-based option indexes. Empty [] retracts vote."),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, optionIndexes }, { telegram }) => {
+      const result = await telegram.sendPollVote(chatId, messageId, optionIndexes);
+      if (optionIndexes.length === 0) {
+        return textResult(`Retracted vote from poll #${messageId}`);
+      }
+      return textResult(
+        sanitize(
+          `Voted in poll #${messageId}: option(s) ${result.chosenLabels.join(", ")} | Total: ${result.totalVoters} voters`,
+        ),
+      );
+    },
+  },
+
+  {
+    name: "telegram-rate-transcription",
+    description: "Rate transcription quality (good/poor) to improve Telegram speech-to-text.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID of the voice or video note"),
+      transcriptionId: z.string().describe("Transcription ID returned by telegram-transcribe-audio"),
+      good: z.boolean().describe("true = good quality, false = poor quality"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, transcriptionId, good }, { telegram }) => {
+      await telegram.rateTranscription(chatId, messageId, transcriptionId, good);
+      return textResult(
+        `Rated transcription ${transcriptionId} for message #${messageId} as ${good ? "good" : "poor"}`,
+      );
+    },
+  },
 ];
 
 /**
- * Register read-only Telegram tools + safe state-change tools on the given MCP server.
- * Write operations (send, edit, delete, forward, pin, etc.) are intentionally excluded.
+ * Register all whitelisted Telegram tools on the given MCP server.
  *
- * Backward-compatible thin wrapper around the data-driven registry. New tools should be
- * added as entries to READ_ONLY_TOOLS rather than as new function calls here.
+ * Catalog covers read-only, safe state-change, and write operations as the cloud
+ * whitelist grows toward upstream parity. The parity gate (`scripts/check-parity.ts`)
+ * enforces that every upstream tool is either here or in `EXPLICIT_EXCLUDED`.
+ *
+ * Thin wrapper around the data-driven registry — new tools should be added as
+ * entries to {@link TOOLS} rather than as new function calls here.
  */
-export function registerReadOnlyTools(
+export function registerAllAllowedTools(
   server: McpServer,
   getTelegram: () => TelegramService,
   requireConnection: RequireConnection,
@@ -1816,7 +1992,7 @@ export function registerReadOnlyTools(
   onToolCall?: OnToolCall,
   checkRateLimit?: RateLimitCheck,
 ): void {
-  registerAllTools(server, READ_ONLY_TOOLS, {
+  registerAllTools(server, TOOLS, {
     getTelegram,
     requireConnection,
     onSessionRevoked,

@@ -5,7 +5,7 @@ import { config, iconUrl } from "./config.js";
 import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
-import { registerReadOnlyTools } from "./tools.js";
+import { registerAllAllowedTools } from "./tools.js";
 import type { UsageTracker } from "./usage.js";
 
 /** Map of MCP session ID → transport (for multi-request sessions) */
@@ -185,7 +185,7 @@ export async function handleMcpRequest(
     return null;
   };
 
-  registerReadOnlyTools(server, getTelegram, requireConnection, onSessionRevoked, onToolCall, checkRateLimit);
+  registerAllAllowedTools(server, getTelegram, requireConnection, onSessionRevoked, onToolCall, checkRateLimit);
 
   await server.connect(transport);
   return transport.handleRequest(req);
