@@ -23,4 +23,39 @@ export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
     reason:
       "Cloud uses OAuth `revoke` + `destroyUserSession()` to log a user out. Exposing the upstream tool would let an LLM forcibly log the user out without going through the cloud's session lifecycle.",
   },
+  // Telegram Stars ecosystem (paid). Read-only tools alone are not harmful, but exposing them
+  // signals that cloud is in scope for Stars and would invite the matching write/destructive
+  // tools (change-stars-subscription, send-paid-reaction, save/convert star gifts) before the
+  // destructive infrastructure (Phase 2.1) and Wave 3 opt-in plumbing land. Deferred until
+  // Wave 3, when the destructive path can carry the necessary confirmation/UX guarantees.
+  {
+    name: "telegram-get-stars-status",
+    reason:
+      "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
+  },
+  {
+    name: "telegram-get-stars-transactions",
+    reason:
+      "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
+  },
+  {
+    name: "telegram-get-stars-subscriptions",
+    reason:
+      "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
+  },
+  {
+    name: "telegram-get-stars-topup-options",
+    reason:
+      "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
+  },
+  {
+    name: "telegram-get-available-star-gifts",
+    reason:
+      "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
+  },
+  {
+    name: "telegram-get-saved-star-gifts",
+    reason:
+      "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
+  },
 ];

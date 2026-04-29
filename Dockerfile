@@ -32,6 +32,13 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 RUN mkdir -p /app/data
 ENV NODE_ENV=production
+# Cloud distribution policy: opt-in upstream tools that are read-only and zero-cost
+# are pre-enabled in the cloud image. Self-hosters can override these per-feature.
+#  - MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 : voice-chat metadata + participant listing
+#  - MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1 : quick-reply shortcut catalog + messages
+# Telegram Stars (paid ecosystem) is intentionally NOT enabled — see parity-config.ts.
+ENV MCP_TELEGRAM_ENABLE_GROUP_CALLS=1
+ENV MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1
 EXPOSE 3000
 VOLUME ["/app/data"]
 CMD ["node", "dist/server.js"]

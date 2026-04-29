@@ -16,14 +16,14 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 Things actively being worked on or about to ship.
 
-- **Tool whitelist expansion — Wave 1 (read-only)** (Phase 2). The
-  [parity sync gate](claudedocs/workflow_cloud_open_source.md#20-parity-sync-mechanism-foundational--делается-первым)
-  is live: `pnpm check-parity` compares the cloud whitelist against the
-  upstream tool catalog (via [`@overpod/mcp-telegram/manifest`](https://www.npmjs.com/package/@overpod/mcp-telegram))
-  and CI blocks merges that introduce drift. Wave 1 = read-only catalog
-  expansion (`get-*` / `list-*` / `search-*` / `read-*` / `download-*`)
-  drawn from `scripts/parity-baseline.json`, no new safety gates needed
-  since the existing per-user daily quota already covers them.
+- **Tool whitelist expansion — Wave 2 (state-change low-risk)** (Phase 2).
+  Wave 1 (read-only) is essentially complete after v2.5.0 — read-only
+  parity now stands at 70/74 = 95% of the upstream RO tier (the remaining
+  4 are Group-call + Quick-reply tools, exposed only when the matching
+  opt-in env flag is set, which the cloud Docker image enables by default).
+  Stars (6 RO tools) is intentionally deferred to Wave 3 alongside its
+  destructive siblings. Next up is Wave 2: 93 write tools (send / edit /
+  forward / pin / react / typing / mark-as-read on more entities).
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -100,6 +100,24 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-29** — **Phase 2 Wave 1.3 shipped** (cloud v2.5.0). 14 new
+  read-only tools: polling cursor (`get-state`, `get-updates`,
+  `get-channel-updates`), fact-check, global privacy, groups-for-discussion,
+  paid-reaction privacy, transcription poll, inline-query, list-emoji-statuses,
+  group-calls (2, opt-in), quick-replies (2, opt-in). 6 Stars read-only
+  tools intentionally deferred to Wave 3 with documented reason in
+  `EXPLICIT_EXCLUDED`. Read-only parity 70/74 = 95% of upstream's RO tier.
+  `ToolDefinition` gained a `requiresEnv` field so cloud can honestly gate
+  opt-in upstream features (Group-calls, Quick-replies) at registration time.
+- **2026-04-28** — **Phase 2.0.5 — `TOOL_REGISTRY` refactor** (cloud
+  v2.4.0). 56 inline `server.registerTool()` blocks → data-driven
+  `READ_ONLY_TOOLS` array + `registerAllTools` helper that wires
+  cross-cutting concerns (rate-limit, connection-check, timing,
+  error-mapping) in one place. `tools.ts` 2154 → 1381 lines (−29.5%).
+  Each new tool now adds 10–30 lines instead of 30–60. Made Wave 2
+  (93 write tools) tractable.
+- **2026-04-28** — **Phase 2 Wave 1.1 + 1.2 shipped** (cloud v2.2.0
+  + v2.3.0). 30 read-only tools added (15 + 15). Whitelist 26 → 56.
 - **2026-04-28** — **Phase 2.0 — parity sync gate** shipped (cloud v2.1.0
   + upstream v1.36.0). Upstream now exports a `getToolManifest()` API
   via `@overpod/mcp-telegram/manifest` that introspects every tool the
@@ -109,8 +127,7 @@ For full history see
   (CI-blocking) which compares the cloud whitelist against that catalog
   using `EXPLICIT_EXCLUDED` (intentional non-exposures with reasons) and
   a baseline file (`scripts/parity-baseline.json`) listing tools deferred
-  to future expansion waves. Wave 1 (read-only) can now begin without
-  drift risk — every upstream addition needs an explicit decision.
+  to future expansion waves.
 - **2026-04-28** — **Public release v2.0.0 — first public version**
   ([`5479ce0`](https://github.com/mcp-telegram/mcp-telegram-cloud/commit/5479ce0)).
 - **2026-04-26** — README rewrite for public OSS, architecture.md OAuth
