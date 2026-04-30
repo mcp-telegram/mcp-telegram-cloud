@@ -1,6 +1,6 @@
 {
   "_comment": "Phase 2.0 parity baseline. Each name is an upstream tool not yet exposed in cloud whitelist and not in EXPLICIT_EXCLUDED. CI fails on (a) new drift = upstream additions not in this list, (b) resolved-pending = entries here that have since been exposed or excluded but not removed from baseline. As Phase 2 waves ship, names move out of `pending` into either cloud whitelist or EXPLICIT_EXCLUDED (with reason).",
-  "_generated": "2026-04-30 (snapshot at upstream v1.36.0 — Wave 2.2 of Phase 2: 12 messaging-core write tools exposed (send/edit/forward/typing/location/venue/contact/dice/sticker/translate/get-unread-mentions/get-unread-reactions); 5 FS-bound send tools (send-file/voice/video-note/album/story) moved to EXPLICIT_EXCLUDED; cloud v2.7.0)",
+  "_generated": "2026-04-30 (post-v2.7.0 — Wave 2.2 of Phase 2: 12 messaging-core write tools exposed (send/edit/forward/typing/location/venue/contact/dice/sticker/translate/get-unread-mentions/get-unread-reactions); 5 FS-bound send tools (send-file/voice/video-note/album/story) moved to EXPLICIT_EXCLUDED. ROADMAP-decision update 2026-04-30: telegram-terminate-session moved to EXPLICIT_EXCLUDED as permanent exclusion (security: prompt-injection risk asymmetry). Snapshot at upstream v1.36.0; cloud whitelist=90, excluded=14, pending=77.)",
   "pending": [
     "telegram-activate-stealth-mode",
     "telegram-add-contact",
@@ -67,7 +67,6 @@
     "telegram-set-profile-color",
     "telegram-set-profile-photo",
     "telegram-set-slow-mode",
-    "telegram-terminate-session",
     "telegram-toggle-anti-spam",
     "telegram-toggle-channel-signatures",
     "telegram-toggle-folder-tags",
