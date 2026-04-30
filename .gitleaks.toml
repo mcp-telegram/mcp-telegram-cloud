@@ -48,4 +48,7 @@ paths = [
   '''docs/''',
   '''pnpm-lock\.yaml$''',
   '''package-lock\.json$''',
+  # PNG icon assets are inlined as base64 buffers — long high-entropy strings
+  # trip the telegram-session-string heuristic but are not secrets.
+  '''src/icon\.ts$''',
 ]

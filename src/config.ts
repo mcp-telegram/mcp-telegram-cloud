@@ -100,3 +100,5 @@ export const config = {
 };
 
 export const iconUrl = `${config.issuer}/icon.svg`;
+export const iconPngUrl = `${config.issuer}/icon.png`;
+export const iconPng256Url = `${config.issuer}/icon-256.png`;
