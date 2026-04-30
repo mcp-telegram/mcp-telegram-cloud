@@ -8,7 +8,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
 **Last updated:** 2026-04-30
-**Current version:** 2.9.0 (cloud — Wave 2.4 profile / folders / business writes) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.10.0 (cloud — Phase 2.0.6 `tools.ts` split refactor) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,7 +16,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 **Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
 
-As of v2.9.0 the cloud whitelist covers 130 of 181 upstream tools (~72%).
+As of v2.10.0 the cloud whitelist covers 130 of 181 upstream tools (~72%).
 Read-only parity is essentially complete (70/74 = 95% of the RO tier).
 Remaining work: 36 pending write/destructive tools + 14 excluded behind
 blockers that may eventually unblock (filesystem upload path including
@@ -29,13 +29,6 @@ and gated in CI by `npm run check-parity`.
 
 Things actively being worked on or about to ship.
 
-- **`tools.ts` split refactor** — pure code-quality cleanup, **mandatory
-  before Wave 2.5**. `tools.ts` is already 3354 lines after Wave 2.4;
-  Wave 2.5's groups/invites/topics batch will push it past ~4000.
-  Split by domain: `tools/messaging.ts`, `tools/admin.ts`,
-  `tools/groups.ts`, `tools/profile.ts`, `tools/business.ts`,
-  `tools/read.ts`. Mirrors the v2.4.0 `TOOL_REGISTRY` extraction —
-  pure-mechanical, no behavior change.
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -154,6 +147,24 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-30** — **Phase 2.0.6 — `tools.ts` split refactor** (cloud
+  v2.10.0). Pure code-quality cleanup, **mandatory before Wave 2.5**.
+  `src/tools.ts` 3354 → 54 lines (barrel) + new `src/tools/` directory
+  with 7 domain modules and one helpers module: `_helpers.ts` (171 lines,
+  shared `sanitize`/render-functions/annotation constants/error mappers),
+  `read.ts` (39 read-only tools), `messaging.ts` (20 send/edit/forward/
+  reactions/drafts), `chats.ts` (20 moderation/folders), `profile.ts`
+  (24 profile/business/privacy/emoji writes), `stories.ts` (7),
+  `stats.ts` (7 admin-log/boosts/sessions), `misc.ts` (13 stickers/
+  polling/inline/quick-replies/group-calls). External API preserved —
+  `TOOLS` and `registerAllAllowedTools` still exported from `tools.ts`
+  with identical signatures, both consumers (`mcp-handler.ts` +
+  `scripts/check-parity.ts`) untouched. Verified zero behavioral diff:
+  all 130 tool blocks byte-identical to original via brace-matching
+  extraction. typecheck + lint + 157/157 tests + parity gate green.
+  /sc:analyze 1 LOW (unnecessary `export` on internal `renderStoryMeta`)
+  fixed. /sc:cleanup verdict = no further worthwhile cleanup. Copilot
+  CLI APPROVED 1 pass (no findings). Wave 2.5 unblocked.
 - **2026-04-30** — **Phase 2 Wave 2.4 shipped** (cloud v2.9.0). Profile,
   folders, and business writes: 26 non-destructive tools — folders
   (`create/edit/delete-folder`, `reorder-folders`, `toggle-folder-tags`),
