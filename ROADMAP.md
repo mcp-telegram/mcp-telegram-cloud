@@ -12,45 +12,71 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 ---
 
+## Goal
+
+**Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
+
+As of v2.7.0 the cloud whitelist covers 90 of 181 upstream tools (~50%).
+Read-only parity is essentially complete (70/74 = 95% of the RO tier).
+Remaining work: 77 pending write/destructive tools + 13 excluded behind
+blockers that may eventually unblock (filesystem upload path, Stars
+opt-in, OAuth lifecycle alternatives) + 1 permanently excluded
+(`telegram-terminate-session`, see §Not planned). Tracked in
+[`scripts/parity-baseline.json`](scripts/parity-baseline.json) and gated
+in CI by `pnpm check-parity`.
+
 ## Now (in flight)
 
 Things actively being worked on or about to ship.
 
-- **Tool whitelist expansion — Wave 2 (state-change low-risk)** (Phase 2).
-  Wave 1 (read-only) is essentially complete after v2.5.0 — read-only
-  parity now stands at 70/74 = 95% of the upstream RO tier (the remaining
-  4 are Group-call + Quick-reply tools, exposed only when the matching
-  opt-in env flag is set, which the cloud Docker image enables by default).
-  Stars (6 RO tools) is intentionally deferred to Wave 3 alongside its
-  destructive siblings. **Wave 2 ongoing**: v2.6.0 shipped reactions /
-  drafts / votes (8 tools); v2.7.0 shipped the messaging core
-  (12 tools — send/edit/forward, send-typing/location/venue/contact/dice/
-  sticker, translate, get-unread-mentions/reactions). Filesystem-bound
-  send tools (file/voice/video-note/album/story) are intentionally
-  **not** exposed — they require an absolute path on the cloud container
-  filesystem, which the user does not control; deferred until a
-  buffered/HTTPS-fetch upload path lands. 73 write tools remain across
-  later batches (profile/business write, chat admin, folders write,
-  privacy, contacts add/block).
+- **Wave 2.3 — Chat admin / moderation (~14 tools)**. Next batch in
+  flight. Covers ban/unban/kick, set/remove-admin, block/unblock, set chat
+  reactions / slow-mode, toggle anti-spam / prehistory, mark-dialog-unread,
+  pin-chat, archive-chat, report-spam. All non-destructive (reversible);
+  no opt-in flag. Daily quota covers the abuse surface.
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
 
 ## Next (planned, not started)
 
-Things planned with known scope. Order is approximate and may change.
+Ordered by current intent. Subject to change as decisions are locked.
 
-- **Tool whitelist expansion — Wave 2 (state-change low-risk)** — folders
-  write, profile write, privacy, contacts add/block/unblock, chat admin
-  light (pin/archive/mark-dialog-unread), business hours/away/greeting.
-  No opt-in flag needed — existing daily quota covers the abuse surface
-  for these.
-- **Tool whitelist expansion — Wave 3 (destructive opt-in)** — send/edit/
-  delete messages, stories write, chat admin (ban/kick/permissions),
-  groups lifecycle, business write, paid reactions. Gated by per-user
-  `enable_destructive_tools` flag + audit log + tighter daily limit
-  (separate counter from the baseline quota). Settings UI at
-  `/settings` + audit visibility at `/my/audit`.
+- **Wave 2.4 — Groups, invites, folders, topics (~14)**. create/edit
+  groups, join/leave/invite, create-invite-link, approve-join-request,
+  create/edit/reorder folders, create/edit topics. (Their destructive
+  siblings — delete-folder, delete-topic, revoke-invite-link,
+  toggle-forum-mode — go to Phase 2.1.)
+- **`tools.ts` split refactor** — pure code-quality cleanup before
+  Wave 2.5 lands the 20-tool profile/business batch. `tools.ts` is
+  already 2050+ lines; will hit ~4000 without a split. Split by domain:
+  `tools/messaging.ts`, `tools/admin.ts`, `tools/groups.ts`,
+  `tools/profile.ts`, `tools/read.ts`. Mirrors the v2.4.0 TOOL_REGISTRY
+  split — pure-mechanical, no behavior change.
+- **Wave 2.5 — Profile / privacy / business setters (~20)**.
+  update-profile, set profile photo / color / emoji-status / birthday,
+  set-privacy + global-privacy + stealth-mode, business-* setters
+  (away/greeting/hours/intro/location), business chat-link CRUD.
+  Telegram Premium / Business Account required for some — handled with
+  graceful "feature not available" errors rather than a separate opt-in
+  flag.
+- **Wave 2.6 — Stories write + miscellaneous (~12)**. edit-story,
+  read-stories, toggle-story-pinned variants, report-story; create/close
+  polls; pin/unpin-message, send-scheduled, transcribe-audio,
+  press-button, toggle-channel-signatures, add-contact, inline-query-send.
+- **Wave 2.7 — Stars (3 write + 6 RO unlock)**. Gated by
+  `MCP_TELEGRAM_ENABLE_STARS=1` (matches the existing pattern for
+  group-calls and quick-replies). change-stars-subscription,
+  save/convert-star-gift; promotes the 6 currently-deferred Stars
+  read-only tools out of `EXPLICIT_EXCLUDED`. Off by default in the
+  cloud Docker image; self-hosters opt in.
+- **Phase 2.1 — Destructive infrastructure (10 tools)**. Required before
+  any destructive tool ships. Per-user `enable_destructive_tools` opt-in
+  toggle at `/settings`, separate daily quota (independent of
+  `FREE_TIER_LIMIT`), audit log table + `/my/audit` visibility. Then
+  expose: delete-message, delete-scheduled, delete-stories, delete-topic,
+  delete-fact-check, delete-folder, clear-drafts, revoke-invite-link,
+  toggle-forum-mode, set-chat-permissions.
 - **Per-user burst rate limit** (Layer 3 from the
   [layered approach in `docs/research/telegram-rate-limits.md`](docs/research/telegram-rate-limits.md#61-layered-approach)) —
   trigger: ≥10 daily active users sustained 7 days. Currently
@@ -63,6 +89,20 @@ Things planned with known scope. Order is approximate and may change.
 
 Direction is set, but timing depends on usage signals or external events.
 
+- **Phase X — Filesystem upload path**. Unblocks the last 5 currently
+  excluded tools (`telegram-send-file`, `-send-voice`, `-send-video-note`,
+  `-send-album`, `-send-story`). They require an absolute path on the
+  cloud container's filesystem, which the user does not control. Needs a
+  design call: presigned upload URL vs. multipart `/upload` endpoint vs.
+  HTTPS-fetch from a user-supplied URL; ephemeral container disk vs.
+  object storage; per-user upload quota. Deferred until non-FS parity is
+  closed (Wave 2.3 → 2.7 + Phase 2.1) — at that point only these 5 tools
+  are gated on it.
+- **`MCP_TELEGRAM_ENABLE_STARS=0` in default cloud image**. Stars
+  remains opt-in via env flag for self-hosters; the hosted
+  `mcp-telegram.com` image does not register Stars tools by default
+  (matches the broader "no paid ecosystem on hosted free tier" stance,
+  with no judgment on Stars itself).
 - **Proxy pool** — currently single-IP. Activation is investigation-led,
   not automatic — see
   [`docs/research/proxy-pool-strategy.md` §3 Triggers](docs/research/proxy-pool-strategy.md).
@@ -103,12 +143,29 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 - **Multi-account per user** — one Telegram account per cloud user.
   Multi-account complicates session storage, OAuth, and rate-limit
   accounting; not enough demand to justify the cost.
+- **`telegram-terminate-session` will not be exposed**. Permanently in
+  `EXPLICIT_EXCLUDED`. The upstream tool is dual-mode — terminate one
+  specific session by hash, or `terminateAllOther=true` to revoke every
+  session except the caller's. The "all other" path is the concern: a
+  prompt-injected LLM call could revoke the user's official Telegram
+  clients on phone/desktop while the cloud session keeps working,
+  leaving the user locked out of their own UI. The risk-vs-utility
+  asymmetry is unfavorable. To revoke a Telegram session, use the
+  official Telegram clients.
 
 ## Done (recent highlights)
 
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-30** — **Roadmap decision lock-in** (no release tag — policy
+  + docs only). Five planning decisions ratified into `ROADMAP.md` (full
+  1:1 parity goal, Wave 2.3–2.7 + Phase 2.1 skeleton, Phase X deferred,
+  Stars off-by-default in cloud image). `telegram-terminate-session`
+  moved from `baseline.pending` to `EXPLICIT_EXCLUDED` as a permanent
+  exclusion (security: prompt-injection blast radius across the user's
+  *other* sessions — phone, desktop). `pending 78 → 77`,
+  `excluded 13 → 14`; CI parity gate green at `90/14/77`.
 - **2026-04-30** — **Phase 2 Wave 2.2 shipped** (cloud v2.7.0).
   Messaging core: 12 tools — `send-message`, `edit-message`,
   `forward-message`, `send-typing`, `send-location`, `send-venue`,

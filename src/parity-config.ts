@@ -23,6 +23,11 @@ export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
     reason:
       "Cloud uses OAuth `revoke` + `destroyUserSession()` to log a user out. Exposing the upstream tool would let an LLM forcibly log the user out without going through the cloud's session lifecycle.",
   },
+  {
+    name: "telegram-terminate-session",
+    reason:
+      "Permanent exclusion: the upstream tool is dual-mode — terminate a specific session by hash, or `terminateAllOther=true` to revoke every session except the caller's. The all-other path is the worry: a prompt-injected LLM call could revoke the user's official Telegram clients on phone/desktop in one round-trip while the cloud session keeps working, leaving the user locked out of their own UI. The risk-vs-utility asymmetry is unfavorable. Users should manage sessions via official Telegram clients.",
+  },
   // Telegram Stars ecosystem (paid). Read-only tools alone are not harmful, but exposing them
   // signals that cloud is in scope for Stars and would invite the matching write/destructive
   // tools (change-stars-subscription, send-paid-reaction, save/convert star gifts) before the
