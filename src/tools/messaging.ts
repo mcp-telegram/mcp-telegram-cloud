@@ -1,6 +1,16 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { renderMessage, replyTargetFields, SAFE_WRITE, safeOpt, sanitize, textResult, WRITE } from "./_helpers.js";
+import {
+  errorResult,
+  premiumOnlyOnError,
+  renderMessage,
+  replyTargetFields,
+  SAFE_WRITE,
+  safeOpt,
+  sanitize,
+  textResult,
+  WRITE,
+} from "./_helpers.js";
 
 export const MESSAGING_TOOLS: ToolDefinition[] = [
   {
@@ -488,6 +498,234 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       const messages = await telegram.getUnreadReactions(chatId, limit);
       const text = messages.map(renderMessage).join("\n\n");
       return textResult(sanitize(text) || "No messages with unread reactions");
+    },
+  },
+
+  {
+    name: "telegram-create-poll",
+    description:
+      "Create a poll in a Telegram chat. Supports multiple choice and quiz mode (one correct answer). Returns the new message ID.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      question: z.string().min(1).max(300).describe("Poll question"),
+      answers: z.array(z.string().min(1).max(100)).min(2).max(10).describe("Answer options (2-10)"),
+      multipleChoice: z.boolean().default(false).describe("Allow multiple answers"),
+      quiz: z.boolean().default(false).describe("Quiz mode (one correct answer)"),
+      correctAnswer: z
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .describe("Index of correct answer (0-based, required for quiz mode)"),
+    },
+    annotations: WRITE,
+    preValidate: ({ answers, multipleChoice, quiz, correctAnswer }) => {
+      if (multipleChoice && quiz) return errorResult("multipleChoice and quiz are mutually exclusive");
+      if (quiz && correctAnswer === undefined) return errorResult("quiz=true requires correctAnswer (0-based index)");
+      if (correctAnswer !== undefined && correctAnswer >= answers.length) {
+        return errorResult(`correctAnswer index ${correctAnswer} is out of bounds (answers.length=${answers.length})`);
+      }
+      return null;
+    },
+    handler: async ({ chatId, question, answers, multipleChoice, quiz, correctAnswer }, { telegram }) => {
+      const safeAnswers = answers.map(sanitize);
+      const msgId = await telegram.createPoll(chatId, sanitize(question), safeAnswers, {
+        multipleChoice,
+        quiz,
+        correctAnswer,
+      });
+      return textResult(`Poll created in ${chatId}${msgId ? ` (message #${msgId})` : ""}`);
+    },
+  },
+
+  {
+    name: "telegram-close-poll",
+    description: "Close a poll permanently. This is a one-way operation — closed polls cannot be reopened.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID of the poll to close"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId }, { telegram }) => {
+      const result = await telegram.closePoll(chatId, messageId);
+      return textResult(`Closed poll #${messageId} (final: ${result.totalVoters} voters)`);
+    },
+  },
+
+  {
+    name: "telegram-pin-message",
+    description: "Pin a message in a Telegram chat",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID to pin"),
+      silent: z.boolean().default(false).describe("Pin without notification"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, silent }, { telegram }) => {
+      await telegram.pinMessage(chatId, messageId, silent);
+      return textResult(`Message ${messageId} pinned in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-unpin-message",
+    description: "Unpin a message in a Telegram chat",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID to unpin"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId }, { telegram }) => {
+      await telegram.unpinMessage(chatId, messageId);
+      return textResult(`Message ${messageId} unpinned in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-send-scheduled",
+    description:
+      "Send a scheduled message to a Telegram chat. The message will be delivered at the specified time by Telegram servers.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (use 'me' or 'self' for Saved Messages)"),
+      text: z.string().min(1).describe("Message text"),
+      scheduleDate: z
+        .number()
+        .int()
+        .positive()
+        .describe("Unix timestamp when to send the message (must be in the future)"),
+      replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
+      parseMode: z.enum(["md", "html"]).optional().describe("Message format: md (Markdown) or html"),
+    },
+    annotations: WRITE,
+    preValidate: ({ scheduleDate }) => {
+      const nowSec = Math.floor(Date.now() / 1000);
+      return scheduleDate <= nowSec ? errorResult("scheduleDate must be a Unix timestamp in the future") : null;
+    },
+    handler: async ({ chatId, text, scheduleDate, replyTo, parseMode }, { telegram }) => {
+      // Mirror upstream's Saved-Messages alias resolution: TelegramService.resolvePeer
+      // only intercepts "@me", so plain "me"/"self" fall through to dialog lookup.
+      // Upstream extras.js explicitly pre-resolves both via getMe() before calling sendScheduledMessage.
+      const target = chatId === "me" || chatId === "self" ? (await telegram.getMe()).id : chatId;
+      await telegram.sendScheduledMessage(target, sanitize(text), scheduleDate, replyTo, parseMode);
+      return textResult(`Scheduled message for ${chatId} at ${new Date(scheduleDate * 1000).toISOString()}`);
+    },
+  },
+
+  {
+    name: "telegram-inline-query-send",
+    description:
+      "Send an inline bot result to a chat by queryId + resultId (as returned by telegram-inline-query). The queryId is valid for ~60s after the original query, so call this soon after telegram-inline-query.",
+    inputSchema: {
+      chatId: z.string().describe("Target chat ID or username to send the result into"),
+      queryId: z
+        .string()
+        .regex(/^\d+$/, "queryId must be a numeric string")
+        .describe("queryId from a prior telegram-inline-query call (valid ~60s)"),
+      resultId: z.string().describe("id of the chosen result from telegram-inline-query results[]"),
+      replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
+      silent: z.boolean().optional().describe("Send without notification"),
+      hideVia: z.boolean().optional().describe("Hide the 'via @bot' label on the sent message"),
+      clearDraft: z.boolean().optional().describe("Clear the chat draft after sending"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, queryId, resultId, replyTo, silent, hideVia, clearDraft }, { telegram }) => {
+      const { messageId } = await telegram.sendInlineBotResult(chatId, queryId, resultId, {
+        replyTo,
+        silent,
+        hideVia,
+        clearDraft,
+      });
+      const idInfo = messageId ? ` [#${messageId}]` : "";
+      return textResult(`Inline result ${resultId} sent to ${chatId}${idInfo}`);
+    },
+  },
+
+  {
+    name: "telegram-press-button",
+    description:
+      "Press an inline keyboard callback button on a message. Identify the button by (row, column) from telegram-get-message-buttons, or pass raw callback_data as base64. URL, switch-inline, game and 2FA-password buttons are rejected with a clear error.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username where the message lives"),
+      messageId: z.number().int().positive().describe("Message ID whose inline button to press"),
+      row: z
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .describe("Button row index (0-based) — required unless data is provided"),
+      column: z
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .describe("Button column index (0-based) — required unless data is provided"),
+      data: z.string().optional().describe("Raw callback_data as base64 string (escape hatch — prefer row/column)"),
+    },
+    annotations: WRITE,
+    preValidate: ({ row, column, data }) => {
+      const hasIndex = row !== undefined && column !== undefined;
+      const hasPartialIndex = (row !== undefined) !== (column !== undefined);
+      if (hasPartialIndex) return errorResult("Provide both row and column together, or neither");
+      if (!hasIndex && data === undefined)
+        return errorResult("Provide either both row+column, or data (base64 callback_data)");
+      if (hasIndex && data !== undefined) return errorResult("Provide either row+column OR data, not both");
+      return null;
+    },
+    handler: async ({ chatId, messageId, row, column, data }, { telegram }) => {
+      const hasIndex = row !== undefined && column !== undefined;
+      const answer = await telegram.pressButton(chatId, messageId, {
+        buttonIndex: hasIndex ? { row: row as number, column: column as number } : undefined,
+        data,
+      });
+      return textResult(JSON.stringify(answer));
+    },
+  },
+
+  {
+    name: "telegram-transcribe-audio",
+    description:
+      "Request server-side transcription of a voice note or video note (Telegram Premium feature). Returns immediately with transcriptionId — if pending:true, call telegram-get-transcription to poll for completion.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().int().positive().describe("Message ID of the voice or video note"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId }, { telegram }) => {
+      const result = await telegram.transcribeAudio(chatId, messageId);
+      const trialInfo =
+        result.trialRemainsNum !== undefined
+          ? `\nTrial remaining: ${result.trialRemainsNum} free transcription(s)`
+          : "";
+      if (result.pending) {
+        return textResult(
+          `Transcription started for message #${messageId}\nTranscriptionId: ${result.transcriptionId}\nStatus: pending${trialInfo}`,
+        );
+      }
+      return textResult(
+        sanitize(
+          `Transcription for message #${messageId}:\nTranscriptionId: ${result.transcriptionId}\nStatus: complete\n\n${result.text}`,
+        ),
+      );
+    },
+    onError: premiumOnlyOnError("Audio transcription requires Telegram Premium on this account."),
+  },
+
+  {
+    name: "telegram-edit-fact-check",
+    description:
+      "Add or update a fact-check annotation on a channel message. Requires fact-checker privileges (limited to independent verifiers in supported countries).",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (channel)"),
+      messageId: z.number().int().positive().describe("Message ID to annotate"),
+      text: z.string().min(1).max(1024).describe("Fact-check annotation text (1-1024 chars)"),
+      parseMode: z.enum(["md", "html"]).optional().describe("Text format (currently ignored — plain text only)"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, text, parseMode }, { telegram }) => {
+      const safeText = sanitize(text);
+      await telegram.editFactCheck(chatId, messageId, safeText, { parseMode });
+      const preview = `${safeText.slice(0, 80)}${safeText.length > 80 ? "..." : ""}`;
+      return textResult(`Fact-check set on message #${messageId} in ${chatId}: "${preview}"`);
     },
   },
 ];
