@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { config, iconUrl } from "./config.js";
+import { config, iconPng256Url, iconPngUrl, iconUrl } from "./config.js";
 import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
@@ -116,7 +116,15 @@ export async function handleMcpRequest(
   const server = new McpServer({
     name: config.logServiceName,
     version: "0.1.0",
-    icons: [{ src: iconUrl, mimeType: "image/svg+xml" }],
+    // PNG listed first because ChatGPT (as of 2026-04) does not appear to consume
+    // the SVG variant in its connector avatar — Apps Directory submission requires
+    // a 128×128 PNG. The SVG remains as a high-quality fallback for clients that
+    // do prefer scalable graphics.
+    icons: [
+      { src: iconPngUrl, mimeType: "image/png", sizes: ["128x128"] },
+      { src: iconPng256Url, mimeType: "image/png", sizes: ["256x256"] },
+      { src: iconUrl, mimeType: "image/svg+xml", sizes: ["any"] },
+    ],
   });
 
   await sessions.getOrCreateSession(userId);

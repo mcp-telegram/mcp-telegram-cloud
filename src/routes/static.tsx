@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { config } from "../config.js";
-import { TELEGRAM_ICON_SVG } from "../icon.js";
+import { TELEGRAM_ICON_PNG_128, TELEGRAM_ICON_PNG_256, TELEGRAM_ICON_SVG } from "../icon.js";
 import { LandingPage } from "../pages/LandingPage.js";
 import { PrivacyPage } from "../pages/PrivacyPage.js";
 import { TermsPage } from "../pages/TermsPage.js";
@@ -33,6 +33,26 @@ export function createStaticRoutes({ sessions }: StaticRoutesDeps): Hono {
     return c.body(TELEGRAM_ICON_SVG, {
       headers: {
         "Content-Type": "image/svg+xml",
+        "Cache-Control": "public, max-age=86400",
+      },
+    });
+  });
+
+  // PNG variants exposed for clients that don't render SVG (e.g. ChatGPT app avatar).
+  // 128×128 is the standard Apps Directory size; 256×256 is the retina variant.
+  app.get("/icon.png", (c) => {
+    return c.body(TELEGRAM_ICON_PNG_128, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=86400",
+      },
+    });
+  });
+
+  app.get("/icon-256.png", (c) => {
+    return c.body(TELEGRAM_ICON_PNG_256, {
+      headers: {
+        "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400",
       },
     });
