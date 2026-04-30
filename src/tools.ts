@@ -15,6 +15,15 @@ function sanitize(text: string): string {
   return text.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "�");
 }
 
+/** Sanitize an optional free-text field, preserving `undefined` so spread-args don't clobber defaults. */
+const safeOpt = (v: string | undefined): string | undefined => (v === undefined ? undefined : sanitize(v));
+
+/** Standard `replyTo` + `topicId` optional zod fields used by every "send-*" tool. */
+const replyTargetFields = {
+  replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
+  topicId: z.number().int().positive().optional().describe("Forum topic ID (groups with Topics enabled)"),
+} as const;
+
 /** Most cloud tools are read-only — annotate accordingly for ChatGPT/Claude */
 const READ_ONLY = {
   readOnlyHint: true,
@@ -1970,6 +1979,327 @@ export const TOOLS: ToolDefinition[] = [
       return textResult(
         `Rated transcription ${transcriptionId} for message #${messageId} as ${good ? "good" : "poor"}`,
       );
+    },
+  },
+
+  // ─── Write: messaging core (Phase 2 Wave 2.2) ──────────────────────────────
+  // Outbound peer-visible writes via the existing free-tier daily quota
+  // (mcp-handler.ts:checkRateLimit) — no per-tool throttling on top.
+  // FS-bound send tools (send-file/voice/video-note/album) are intentionally
+  // excluded — they require an absolute path on the cloud container's
+  // filesystem, which the user does not control.
+
+  {
+    name: "telegram-send-message",
+    description: "Send a message to a Telegram chat",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (e.g. @username or numeric ID)"),
+      text: z.string().describe("Message text"),
+      replyTo: z.number().optional().describe("Message ID to reply to"),
+      parseMode: z.enum(["md", "html"]).optional().describe("Message format: md (Markdown) or html"),
+      topicId: z.number().optional().describe("Forum topic ID to send message into (for groups with Topics enabled)"),
+      quoteText: z
+        .string()
+        .optional()
+        .describe(
+          "Optional excerpt from the replied-to message to show as a quote above your reply. " +
+            "Requires `replyTo` to be set. Must be a verbatim substring of the original message text.",
+        ),
+      effect: z
+        .string()
+        .regex(/^\d{1,19}$/)
+        .optional()
+        .describe(
+          "Optional message effect ID (numeric string, up to 19 digits). Premium animated effect attached to the message.",
+        ),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, text, replyTo, parseMode, topicId, quoteText, effect }, { telegram }) => {
+      const extra = quoteText || effect ? { quoteText: safeOpt(quoteText), effect } : undefined;
+      const result = await telegram.sendMessage(chatId, sanitize(text), replyTo, parseMode, topicId, extra);
+      const dest = topicId ? `topic ${topicId} in ${chatId}` : chatId;
+      const idInfo = result?.id ? ` [#${result.id}]` : "";
+      return textResult(`Message sent to ${dest}${idInfo}`);
+    },
+  },
+
+  {
+    name: "telegram-edit-message",
+    description: "Edit a previously sent message in Telegram",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageId: z.number().describe("ID of the message to edit"),
+      text: z.string().describe("New message text"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageId, text }, { telegram }) => {
+      await telegram.editMessage(chatId, messageId, sanitize(text));
+      return textResult(`Message ${messageId} edited in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-forward-message",
+    description: "Forward messages between Telegram chats",
+    inputSchema: {
+      fromChatId: z.string().describe("Source chat ID or username"),
+      toChatId: z.string().describe("Destination chat ID or username"),
+      messageIds: z.array(z.number()).describe("Array of message IDs to forward"),
+    },
+    annotations: WRITE,
+    handler: async ({ fromChatId, toChatId, messageIds }, { telegram }) => {
+      await telegram.forwardMessage(fromChatId, toChatId, messageIds);
+      return textResult(`Forwarded ${messageIds.length} message(s) from ${fromChatId} to ${toChatId}`);
+    },
+  },
+
+  {
+    name: "telegram-send-typing",
+    description: "Send a typing/upload indicator to a Telegram chat (or cancel it)",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      action: z
+        .enum(["typing", "upload_photo", "upload_document", "cancel"])
+        .default("typing")
+        .describe("Typing action to broadcast"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, action }, { telegram }) => {
+      await telegram.sendTyping(chatId, action);
+      return textResult(`Typing indicator (${action}) sent to ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-send-location",
+    description:
+      "Send a geographic location to a Telegram chat. Static pin by default; set livePeriod to share a live-updating location for N seconds.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      latitude: z.number().min(-90).max(90).describe("Latitude in decimal degrees (-90 to 90)"),
+      longitude: z.number().min(-180).max(180).describe("Longitude in decimal degrees (-180 to 180)"),
+      accuracyRadius: z
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .describe("Horizontal accuracy radius in meters (0 = unknown)"),
+      livePeriod: z
+        .number()
+        .int()
+        .min(60)
+        .max(86400)
+        .optional()
+        .describe("If set, sends a live location updated for N seconds (60-86400). Omit for static pin."),
+      heading: z
+        .number()
+        .int()
+        .min(1)
+        .max(360)
+        .optional()
+        .describe("Direction the user is heading, 1-360 degrees (meaningful only for live locations)"),
+      proximityRadius: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Alert radius for proximity notification in meters (live only)"),
+      replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
+      topicId: z.number().int().positive().optional().describe("Forum topic ID"),
+    },
+    annotations: WRITE,
+    handler: async (
+      { chatId, latitude, longitude, accuracyRadius, livePeriod, heading, proximityRadius, replyTo, topicId },
+      { telegram },
+    ) => {
+      const { id } = await telegram.sendLocation(chatId, latitude, longitude, {
+        accuracyRadius,
+        livePeriod,
+        heading,
+        proximityRadius,
+        replyTo,
+        topicId,
+      });
+      const label = livePeriod ? `Live location sent to ${chatId} for ${livePeriod}s` : `Location sent to ${chatId}`;
+      return textResult(`${label} [#${id}]`);
+    },
+  },
+
+  {
+    name: "telegram-send-venue",
+    description: "Send a venue card (point-of-interest with title and address) to a Telegram chat.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      latitude: z.number().min(-90).max(90).describe("Venue latitude"),
+      longitude: z.number().min(-180).max(180).describe("Venue longitude"),
+      title: z.string().min(1).max(256).describe("Venue name (e.g. 'Red Square')"),
+      address: z.string().min(1).max(512).describe("Street address"),
+      provider: z
+        .string()
+        .max(32)
+        .optional()
+        .describe("Data provider — typically 'foursquare' or 'gplaces'. Defaults to 'foursquare'."),
+      venueId: z.string().max(256).optional().describe("Provider-specific venue ID"),
+      venueType: z.string().max(256).optional().describe("Provider-specific venue type category"),
+      ...replyTargetFields,
+    },
+    annotations: WRITE,
+    handler: async (
+      { chatId, latitude, longitude, title, address, provider, venueId, venueType, replyTo, topicId },
+      { telegram },
+    ) => {
+      const safeTitle = sanitize(title);
+      const { id } = await telegram.sendVenue(chatId, latitude, longitude, safeTitle, sanitize(address), {
+        provider: safeOpt(provider),
+        venueId: safeOpt(venueId),
+        venueType: safeOpt(venueType),
+        replyTo,
+        topicId,
+      });
+      return textResult(`Venue "${safeTitle}" sent to ${chatId} [#${id}]`);
+    },
+  },
+
+  {
+    name: "telegram-send-contact",
+    description: "Send a contact card (phone number + name) to a Telegram chat.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      phone: z
+        .string()
+        .regex(/^\+?\d{6,15}$/)
+        .describe(
+          "Phone number in E.164-like format — 6-15 digits, optional leading +. " +
+            "Note: sent as-is; Telegram shows the number to the recipient.",
+        ),
+      firstName: z.string().min(1).max(64).describe("Contact first name"),
+      lastName: z.string().max(64).optional().describe("Contact last name"),
+      vcard: z.string().max(2048).optional().describe("Optional vCard v3.0 text content"),
+      ...replyTargetFields,
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, phone, firstName, lastName, vcard, replyTo, topicId }, { telegram }) => {
+      const safeFirstName = sanitize(firstName);
+      const { id } = await telegram.sendContact(chatId, phone, safeFirstName, {
+        lastName: safeOpt(lastName),
+        vcard: safeOpt(vcard),
+        replyTo,
+        topicId,
+      });
+      return textResult(`Contact ${safeFirstName} sent to ${chatId} [#${id}]`);
+    },
+  },
+
+  {
+    name: "telegram-send-dice",
+    description:
+      "Send an animated dice/game emoji to a Telegram chat. Returns the server-rolled value — useful for games, " +
+      "coin-flips, random picks. Values: 🎲🎯🎳 = 1-6, 🏀⚽ = 1-5, 🎰 = slot combo 1-64.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      emoji: z
+        .enum(["🎲", "🎯", "🎰", "🏀", "⚽", "🎳"])
+        .default("🎲")
+        .describe(
+          "Dice emoji: 🎲 dice (1-6), 🎯 dart (1-6), 🎰 slot machine (1-64), 🏀 basketball (1-5), ⚽ football (1-5), 🎳 bowling (1-6)",
+        ),
+      ...replyTargetFields,
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, emoji, replyTo, topicId }, { telegram }) => {
+      const { id, value } = await telegram.sendDice(chatId, emoji, { replyTo, topicId });
+      const rolled = value !== undefined ? `: rolled ${value}` : " (value pending)";
+      return textResult(`Dice ${emoji} sent to ${chatId}${rolled} [#${id}]`);
+    },
+  },
+
+  {
+    name: "telegram-translate-message",
+    description:
+      "Translate one or more Telegram messages to a target language (requires Telegram Premium). Consumes account translation quota.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageIds: z
+        .array(z.number().int().positive())
+        .min(1)
+        .max(100)
+        .describe("Array of message IDs to translate (1-100)"),
+      toLang: z
+        .string()
+        .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/)
+        .describe("ISO 639-1 (e.g. 'en', 'ru') or locale (e.g. 'en-US')"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, messageIds, toLang }, { telegram }) => {
+      const translations = await telegram.translateText(chatId, messageIds, toLang);
+      const text =
+        translations.length === messageIds.length
+          ? translations.map((t, i) => `[#${messageIds[i]}] ${t}`).join("\n\n")
+          : translations.join("\n\n");
+      return textResult(sanitize(text) || "No translations");
+    },
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/PREMIUM|PAYMENT_REQUIRED|TRANSLATE_REQ/i.test(msg)) {
+        return {
+          content: [{ type: "text", text: "Message translation requires Telegram Premium on this account" }],
+          isError: true,
+        };
+      }
+      return null;
+    },
+  },
+
+  {
+    name: "telegram-send-sticker",
+    description:
+      "Send a sticker from a sticker set to a chat. First use telegram-get-sticker-set to browse available stickers and find the index",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      stickerSet: z.string().min(1).describe("Short name of the sticker set (e.g. 'HotCherry')"),
+      index: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("Index of the sticker in the set (0-based, get from telegram-get-sticker-set)"),
+      replyTo: z.number().int().optional().describe("Message ID to reply to"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, stickerSet, index, replyTo }, { telegram }) => {
+      await telegram.sendSticker(chatId, stickerSet, index, replyTo);
+      return textResult(sanitize(`Sticker sent from "${stickerSet}" [${index}] to ${chatId}`));
+    },
+  },
+
+  {
+    name: "telegram-get-unread-mentions",
+    description:
+      "Get unread @mentions addressed to you in a Telegram chat. Marks all mentions as read on the server when all unread mentions fit within the requested limit.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      limit: z.number().default(20).describe("Maximum number of mentions to return"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, limit }, { telegram }) => {
+      const messages = await telegram.getUnreadMentions(chatId, limit);
+      const text = messages.map(renderMessage).join("\n\n");
+      return textResult(sanitize(text) || "No unread mentions");
+    },
+  },
+
+  {
+    name: "telegram-get-unread-reactions",
+    description:
+      "Get messages with unread reactions on your posts in a Telegram chat. Marks all reactions as read on the server when all unread reactions fit within the requested limit.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      limit: z.number().default(20).describe("Maximum number of messages to return"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, limit }, { telegram }) => {
+      const messages = await telegram.getUnreadReactions(chatId, limit);
+      const text = messages.map(renderMessage).join("\n\n");
+      return textResult(sanitize(text) || "No messages with unread reactions");
     },
   },
 ];
