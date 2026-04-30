@@ -94,4 +94,9 @@ export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
     reason:
       "Requires an absolute path on the cloud container filesystem to upload story media. Deferred alongside the other filesystem-bound send tools until a buffered/HTTPS-fetch upload path is added.",
   },
+  {
+    name: "telegram-set-profile-photo",
+    reason:
+      "Requires an absolute path on the cloud container filesystem to upload an avatar (image or MP4). Deferred alongside the other filesystem-bound send tools until a buffered/HTTPS-fetch upload path is added.",
+  },
 ];
