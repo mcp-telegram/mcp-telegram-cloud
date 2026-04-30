@@ -58,4 +58,35 @@ export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
     reason:
       "Telegram Stars (paid ecosystem) deferred until Wave 3. Read-only Stars tools are gated alongside the destructive Stars tools to avoid signalling Stars scope before destructive infra (Phase 2.1) lands.",
   },
+  // Filesystem-bound send tools. The upstream tool requires an absolute path on the
+  // host's local filesystem; in cloud the `host` is the container running the MCP
+  // server, not the user's machine. Exposing them would either fail (no such path)
+  // or read arbitrary files from the cloud container's filesystem if the LLM is
+  // tricked into supplying a path that does exist (info-leak risk). Deferred until
+  // a buffered/HTTPS-fetch upload path lands (Phase X — not on Wave 2/3 critical path).
+  {
+    name: "telegram-send-file",
+    reason:
+      "Requires an absolute path on the cloud container filesystem, which the user does not control. Deferred until a buffered/HTTPS-fetch upload path is added.",
+  },
+  {
+    name: "telegram-send-voice",
+    reason:
+      "Requires an absolute path on the cloud container filesystem, which the user does not control. Deferred until a buffered/HTTPS-fetch upload path is added.",
+  },
+  {
+    name: "telegram-send-video-note",
+    reason:
+      "Requires an absolute path on the cloud container filesystem, which the user does not control. Deferred until a buffered/HTTPS-fetch upload path is added.",
+  },
+  {
+    name: "telegram-send-album",
+    reason:
+      "Requires absolute paths on the cloud container filesystem, which the user does not control. Deferred until a buffered/HTTPS-fetch upload path is added.",
+  },
+  {
+    name: "telegram-send-story",
+    reason:
+      "Requires an absolute path on the cloud container filesystem to upload story media. Deferred alongside the other filesystem-bound send tools until a buffered/HTTPS-fetch upload path is added.",
+  },
 ];

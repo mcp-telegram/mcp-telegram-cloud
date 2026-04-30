@@ -7,8 +7,8 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 For the internal, fact-check-audited working plan with risks and exit criteria, see
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
-**Last updated:** 2026-04-29
-**Current version:** 2.6.0 (cloud — Wave 2.1 reactions/drafts/votes) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-04-30
+**Current version:** 2.7.0 (cloud — Wave 2.2 messaging core) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -22,10 +22,16 @@ Things actively being worked on or about to ship.
   4 are Group-call + Quick-reply tools, exposed only when the matching
   opt-in env flag is set, which the cloud Docker image enables by default).
   Stars (6 RO tools) is intentionally deferred to Wave 3 alongside its
-  destructive siblings. **Wave 2 started in v2.6.0** with the reactions /
-  drafts / votes batch (8 tools); 85 write tools remain across batches
-  (profile/business write, contacts add/block, send-message family,
-  story-write, chat admin, folders write).
+  destructive siblings. **Wave 2 ongoing**: v2.6.0 shipped reactions /
+  drafts / votes (8 tools); v2.7.0 shipped the messaging core
+  (12 tools — send/edit/forward, send-typing/location/venue/contact/dice/
+  sticker, translate, get-unread-mentions/reactions). Filesystem-bound
+  send tools (file/voice/video-note/album/story) are intentionally
+  **not** exposed — they require an absolute path on the cloud container
+  filesystem, which the user does not control; deferred until a
+  buffered/HTTPS-fetch upload path lands. 73 write tools remain across
+  later batches (profile/business write, chat admin, folders write,
+  privacy, contacts add/block).
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -35,9 +41,10 @@ Things actively being worked on or about to ship.
 Things planned with known scope. Order is approximate and may change.
 
 - **Tool whitelist expansion — Wave 2 (state-change low-risk)** — folders
-  write, profile write, privacy, contacts add/block/unblock, draft mgmt,
-  reactions, votes. No opt-in flag needed — existing daily quota covers
-  the abuse surface for these.
+  write, profile write, privacy, contacts add/block/unblock, chat admin
+  light (pin/archive/mark-dialog-unread), business hours/away/greeting.
+  No opt-in flag needed — existing daily quota covers the abuse surface
+  for these.
 - **Tool whitelist expansion — Wave 3 (destructive opt-in)** — send/edit/
   delete messages, stories write, chat admin (ban/kick/permissions),
   groups lifecycle, business write, paid reactions. Gated by per-user
@@ -102,6 +109,20 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-30** — **Phase 2 Wave 2.2 shipped** (cloud v2.7.0).
+  Messaging core: 12 tools — `send-message`, `edit-message`,
+  `forward-message`, `send-typing`, `send-location`, `send-venue`,
+  `send-contact`, `send-dice`, `send-sticker`, `translate-message`,
+  `get-unread-mentions`, `get-unread-reactions`. 5 filesystem-bound send
+  tools (`send-file`, `send-voice`, `send-video-note`, `send-album`,
+  `send-story`) moved to `EXPLICIT_EXCLUDED` — they require an absolute
+  path on the cloud container filesystem, which the user does not
+  control; deferred until a buffered/HTTPS-fetch upload path lands.
+  Whitelist 78 → 90, baseline pending 95 → 78. Two tiny helpers added in
+  `src/tools.ts`: `safeOpt` (sanitize an optional free-text field while
+  preserving `undefined`) and `replyTargetFields` (shared
+  `replyTo` + `topicId` zod fields used by the send-* tools — also
+  normalized field descriptions across them).
 - **2026-04-29** — **Phase 2 Wave 2.1 shipped** (cloud v2.6.0).
   First write batch: 8 tools — `send-reaction`, `set-default-reaction`,
   `send-paid-reaction`, `toggle-paid-reaction-privacy`, `react-to-story`,
