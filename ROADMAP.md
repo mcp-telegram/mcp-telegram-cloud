@@ -8,7 +8,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
 **Last updated:** 2026-04-30
-**Current version:** 2.10.0 (cloud — Phase 2.0.6 `tools.ts` split refactor) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.11.0 (cloud — Phase 2 Wave 2.5 SAFE writes) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,9 +16,11 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 **Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
 
-As of v2.10.0 the cloud whitelist covers 130 of 181 upstream tools (~72%).
-Read-only parity is essentially complete (70/74 = 95% of the RO tier).
-Remaining work: 36 pending write/destructive tools + 14 excluded behind
+As of v2.11.0 the cloud whitelist covers 152 of 181 upstream tools (~84%).
+Read-only parity is essentially complete (70/74 = 95% of the RO tier);
+SAFE write parity covers groups, invites, topics, polls, pin/unpin,
+inline-query/press-button, transcribe-audio, story toggles, and edit-fact-check.
+Remaining work: 14 pending destructive/Stars tools + 14 excluded behind
 blockers that may eventually unblock (filesystem upload path including
 the new `set-profile-photo`, Stars opt-in, OAuth lifecycle alternatives)
 + 1 permanently excluded (`telegram-terminate-session`, see §Not
@@ -37,35 +39,27 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **Wave 2.5 — Groups, invites, topics, polls (~17 tools)**. The batch
-  re-planned out of the original Wave 2.4 scope after profile/folders/
-  business shipped first in v2.9.0. Covers `create-group`, `edit-group`,
-  `join-chat`, `leave-chat`, `invite-to-group`, `create-invite-link`,
-  `toggle-channel-signatures`, `set-chat-reactions`, `create-topic`,
-  `edit-topic`, `create-poll`, `close-poll`, `pin-message`,
-  `delete-fact-check`, `edit-fact-check`, `inline-query-send`,
-  `press-button`. Their destructive siblings (`delete-topic`,
-  `delete-message`, `unpin-message`, `revoke-invite-link`,
-  `toggle-forum-mode`, `delete-folder`, `clear-drafts`,
-  `set-chat-permissions`, etc.) go to Phase 2.1.
-- **Wave 2.6 — Stories write + remaining miscellany (~12)**. `edit-story`,
-  `read-stories`, `toggle-story-pinned` (×2), `report-story`,
-  `delete-stories`; `send-scheduled`, `transcribe-audio`,
-  `delete-scheduled`. Plus any leftover small writes that don't fit
-  Wave 2.5.
+- **Wave 2.6 — Remaining destructive-adjacent miscellany (~3-5)**. After
+  Wave 2.5 swept the SAFE-write batch (groups/invites/topics/polls/pins/
+  story toggles/transcribe/inline-query/press-button/edit-fact-check),
+  the only non-destructive holdouts are: `edit-story` (which Telegram
+  flags DESTRUCTIVE because it can drop attached media), `set-chat-reactions`
+  (DESTRUCTIVE), and the Stars-write trio. They all carry destructive
+  semantics and land with Phase 2.1 + Wave 2.7, not as a separate
+  Wave 2.6.
 - **Wave 2.7 — Stars (3 write + 6 RO unlock)**. Gated by
   `MCP_TELEGRAM_ENABLE_STARS=1` (matches the existing pattern for
   group-calls and quick-replies). change-stars-subscription,
   save/convert-star-gift; promotes the 6 currently-deferred Stars
   read-only tools out of `EXPLICIT_EXCLUDED`. Off by default in the
   cloud Docker image; self-hosters opt in.
-- **Phase 2.1 — Destructive infrastructure (10 tools)**. Required before
+- **Phase 2.1 — Destructive infrastructure (~11 tools)**. Required before
   any destructive tool ships. Per-user `enable_destructive_tools` opt-in
   toggle at `/settings`, separate daily quota (independent of
   `FREE_TIER_LIMIT`), audit log table + `/my/audit` visibility. Then
   expose: delete-message, delete-scheduled, delete-stories, delete-topic,
-  delete-fact-check, delete-folder, clear-drafts, revoke-invite-link,
-  toggle-forum-mode, set-chat-permissions.
+  delete-fact-check, clear-drafts, revoke-invite-link, toggle-forum-mode,
+  set-chat-permissions, set-chat-reactions, edit-story.
 - **Per-user burst rate limit** (Layer 3 from the
   [layered approach in `docs/research/telegram-rate-limits.md`](docs/research/telegram-rate-limits.md#61-layered-approach)) —
   trigger: ≥10 daily active users sustained 7 days. Currently
@@ -147,6 +141,28 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-30** — **Phase 2 Wave 2.5 shipped** (cloud v2.11.0). 22
+  SAFE WRITE tools across three domains — groups (`create-group`,
+  `edit-group`, `invite-to-group`, `join-chat`, `leave-group`), invite
+  links (`create-invite-link`), topics (`create-topic`, `edit-topic`),
+  polls (`create-poll`, `close-poll`), messaging (`pin-message`,
+  `unpin-message`, `send-scheduled`, `inline-query-send`, `press-button`,
+  `transcribe-audio`, `edit-fact-check`), broadcast toggles
+  (`toggle-channel-signatures`), and story actions (`toggle-story-pinned`,
+  `toggle-story-pinned-to-top`, `read-stories`, `report-story`).
+  Coverage: whitelist 130 → 152 (~84% of 181); baseline pending 36 → 14.
+  `edit-group.photoPath` deliberately omitted (FS-bound, parity with
+  send-file/voice/etc.). Remaining 14 pending tools all upstream-
+  DESTRUCTIVE (or Stars-paid) — go to Phase 2.1 / Wave 2.7. Saved-
+  Messages alias `"me"`/`"self"` mirrored from upstream's `getMe()`
+  pre-resolve in `send-scheduled` (cloud's `resolvePeer` only intercepts
+  `"@me"`). 22 cross-field preValidates for poll/group/topic/button/
+  schedule sanity. Premium/Business gating via existing `premiumOnlyOnError`
+  helper for `transcribe-audio`. typecheck + lint + 157/157 tests +
+  parity gate green. /sc:analyze 1 MEDIUM (`send-scheduled` "self" alias
+  was unresolved) verified in code BEFORE fix and patched. /sc:cleanup
+  verdict = NO-OP (all candidate refactors below the 3+ occurrence bar).
+  Copilot CLI APPROVED 1 pass (no findings worth fixing).
 - **2026-04-30** — **Phase 2.0.6 — `tools.ts` split refactor** (cloud
   v2.10.0). Pure code-quality cleanup, **mandatory before Wave 2.5**.
   `src/tools.ts` 3354 → 54 lines (barrel) + new `src/tools/` directory

@@ -172,6 +172,78 @@ export const STORIES_TOOLS: ToolDefinition[] = [
   },
 
   {
+    name: "telegram-toggle-story-pinned",
+    description: "Pin or unpin stories in your profile highlights (Telegram allows up to 3 pinned stories).",
+    inputSchema: {
+      chatId: z.string().default("me").describe("Peer owning the stories"),
+      ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to pin or unpin"),
+      pinned: z.boolean().describe("true to pin, false to unpin"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, ids, pinned }, { telegram }) => {
+      const result = await telegram.toggleStoryPinned(chatId, ids, pinned);
+      const { affected } = result;
+      return textResult(
+        `${pinned ? "Pinned" : "Unpinned"} ${affected.length} stor${affected.length === 1 ? "y" : "ies"}: [${affected.join(", ")}]`,
+      );
+    },
+  },
+
+  {
+    name: "telegram-toggle-story-pinned-to-top",
+    description:
+      "Pin stories to the very top of your pinned row. Pass an empty array [] to clear all top-pinned stories.",
+    inputSchema: {
+      chatId: z.string().default("me").describe("Peer owning the stories"),
+      ids: z.array(z.number().int().positive()).max(100).describe("Story IDs to pin to the top row; pass [] to clear"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, ids }, { telegram }) => {
+      await telegram.toggleStoryPinnedToTop(chatId, ids);
+      return textResult(
+        ids.length === 0
+          ? "Cleared top-pinned stories"
+          : `Pinned ${ids.length} stor${ids.length === 1 ? "y" : "ies"} to top: [${ids.join(", ")}]`,
+      );
+    },
+  },
+
+  {
+    name: "telegram-read-stories",
+    description: "Mark stories as seen up to a given story ID (maxId, inclusive).",
+    inputSchema: {
+      chatId: z.string().describe("Peer whose stories to mark as seen"),
+      maxId: z.number().int().positive().describe("Stories up to and including this ID will be marked seen"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, maxId }, { telegram }) => {
+      const result = await telegram.readStories(chatId, maxId);
+      return textResult(`Marked stories as read up to #${maxId} (${result.ids.length} newly seen)`);
+    },
+  },
+
+  {
+    name: "telegram-report-story",
+    description:
+      "Report a story via the multi-step option flow. First call with option:'' starts the flow; subsequent calls pass the base64 option bytes from the previous response.",
+    inputSchema: {
+      chatId: z.string().describe("Peer who posted the story"),
+      ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to report"),
+      option: z
+        .string()
+        .max(128)
+        .default("")
+        .describe("Base64-encoded option bytes from a prior report step, or empty string to start the flow"),
+      message: z.string().max(1024).default("").describe("Optional message to accompany the report"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, ids, option, message }, { telegram }) => {
+      const result = await telegram.reportStory(chatId, ids, option, sanitize(message));
+      return textResult(JSON.stringify(result));
+    },
+  },
+
+  {
     name: "telegram-activate-stealth-mode",
     description:
       "Hide your story views retroactively (past=true) and/or for the next 25 minutes (future=true). Requires Telegram Premium — non-Premium accounts receive PREMIUM_ACCOUNT_REQUIRED.",
