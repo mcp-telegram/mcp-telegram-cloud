@@ -2302,6 +2302,213 @@ export const TOOLS: ToolDefinition[] = [
       return textResult(sanitize(text) || "No messages with unread reactions");
     },
   },
+
+  // ── Wave 2.3 — chat admin / moderation (14 non-destructive write tools) ──
+  // `telegram-set-chat-permissions` is upstream-DESTRUCTIVE (downgrades all non-admin users'
+  // rights group-wide) → deferred to Phase 2.1 alongside the destructive opt-in plumbing.
+
+  {
+    name: "telegram-kick-user",
+    description: "Kick a user from a Telegram group (removes without permanent ban)",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      userId: z.string().describe("User ID or username to kick"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, userId }, { telegram }) => {
+      await telegram.kickUser(chatId, userId);
+      return textResult(`Kicked ${userId} from ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-ban-user",
+    description: "Ban a user from a supergroup or channel (permanent until unbanned)",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      userId: z.string().describe("User ID or username to ban"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, userId }, { telegram }) => {
+      await telegram.banUser(chatId, userId);
+      return textResult(`Banned ${userId} from ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-unban-user",
+    description: "Unban a previously banned user from a supergroup or channel",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      userId: z.string().describe("User ID or username to unban"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, userId }, { telegram }) => {
+      await telegram.unbanUser(chatId, userId);
+      return textResult(`Unbanned ${userId} in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-set-admin",
+    description: "Promote a user to admin in a supergroup or channel with full permissions",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      userId: z.string().describe("User ID or username to promote"),
+      title: z.string().optional().describe("Custom admin title"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, userId, title }, { telegram }) => {
+      await telegram.setAdmin(chatId, userId, { title: safeOpt(title) });
+      return textResult(`Promoted ${userId} to admin in ${chatId}${title ? ` (${title})` : ""}`);
+    },
+  },
+
+  {
+    name: "telegram-remove-admin",
+    description: "Remove admin rights from a user in a supergroup or channel",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      userId: z.string().describe("User ID or username to demote"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, userId }, { telegram }) => {
+      await telegram.removeAdmin(chatId, userId);
+      return textResult(`Removed admin rights from ${userId} in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-archive-chat",
+    description: "Archive or unarchive a Telegram dialog (moves to/from the Archive folder)",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      archive: z.boolean().describe("true to archive, false to unarchive"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, archive }, { telegram }) => {
+      await telegram.archiveChat(chatId, archive);
+      return textResult(`${archive ? "Archived" : "Unarchived"} ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-pin-chat",
+    description: "Pin or unpin a Telegram dialog in the dialog list",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      pin: z.boolean().describe("true to pin, false to unpin"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, pin }, { telegram }) => {
+      await telegram.pinDialog(chatId, pin);
+      return textResult(`${pin ? "Pinned" : "Unpinned"} ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-mark-dialog-unread",
+    description: "Mark a Telegram dialog as unread (or clear the unread mark)",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      unread: z.boolean().describe("true to mark as unread, false to clear the mark"),
+    },
+    annotations: SAFE_WRITE,
+    handler: async ({ chatId, unread }, { telegram }) => {
+      await telegram.markDialogUnread(chatId, unread);
+      return textResult(`Marked ${chatId} as ${unread ? "unread" : "read"}`);
+    },
+  },
+
+  {
+    name: "telegram-set-slow-mode",
+    description:
+      "Set slow mode for a supergroup (minimum interval between messages per user). Allowed values: 0, 10, 30, 60, 300, 900, 3600 seconds (0 disables slow mode)",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (supergroup)"),
+      seconds: z
+        .union([
+          z.literal(0),
+          z.literal(10),
+          z.literal(30),
+          z.literal(60),
+          z.literal(300),
+          z.literal(900),
+          z.literal(3600),
+        ])
+        .describe("Interval in seconds: 0 (off), 10, 30, 60, 300, 900, or 3600"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, seconds }, { telegram }) => {
+      await telegram.setSlowMode(chatId, seconds);
+      return textResult(
+        seconds === 0 ? `Disabled slow mode in ${chatId}` : `Set slow mode to ${seconds}s in ${chatId}`,
+      );
+    },
+  },
+
+  {
+    name: "telegram-toggle-anti-spam",
+    description:
+      "Enable or disable aggressive anti-spam filtering in a supergroup. Supergroup only (not broadcast channels); requires admin with ban_users permission",
+    inputSchema: {
+      chatId: z.string().describe("Supergroup ID or username"),
+      enabled: z.boolean().describe("true to enable aggressive anti-spam, false to disable"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, enabled }, { telegram }) => {
+      await telegram.toggleAntiSpam(chatId, enabled);
+      return textResult(`${enabled ? "Enabled" : "Disabled"} aggressive anti-spam in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-toggle-prehistory-hidden",
+    description:
+      "Toggle pre-history visibility for new members in a supergroup. When hidden=true, new joiners cannot see messages posted before they joined. Supergroup only; requires admin",
+    inputSchema: {
+      chatId: z.string().describe("Supergroup ID or username"),
+      hidden: z.boolean().describe("true to hide prior history from new members, false to make it visible"),
+    },
+    annotations: WRITE,
+    handler: async ({ chatId, hidden }, { telegram }) => {
+      await telegram.togglePrehistoryHidden(chatId, hidden);
+      return textResult(`${hidden ? "Hid" : "Revealed"} prehistory for new members in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-block-user",
+    description: "Block a Telegram user. Blocked users cannot send you messages",
+    inputSchema: { userId: z.string().describe("User ID or username to block") },
+    annotations: WRITE,
+    handler: async ({ userId }, { telegram }) => {
+      await telegram.blockUser(userId);
+      return textResult(`User blocked: ${userId}`);
+    },
+  },
+
+  {
+    name: "telegram-unblock-user",
+    description: "Unblock a previously blocked Telegram user",
+    inputSchema: { userId: z.string().describe("User ID or username to unblock") },
+    annotations: WRITE,
+    handler: async ({ userId }, { telegram }) => {
+      await telegram.unblockUser(userId);
+      return textResult(`User unblocked: ${userId}`);
+    },
+  },
+
+  {
+    name: "telegram-report-spam",
+    description: "Report a chat as spam to Telegram",
+    inputSchema: { chatId: z.string().describe("Chat ID or username to report") },
+    annotations: WRITE,
+    handler: async ({ chatId }, { telegram }) => {
+      await telegram.reportSpam(chatId);
+      return textResult(`Reported as spam: ${chatId}`);
+    },
+  },
 ];
 
 /**
