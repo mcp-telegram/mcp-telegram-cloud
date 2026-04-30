@@ -8,7 +8,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
 **Last updated:** 2026-04-30
-**Current version:** 2.7.0 (cloud — Wave 2.2 messaging core) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.8.0 (cloud — Wave 2.3 chat admin / moderation) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,9 +16,9 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 **Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
 
-As of v2.7.0 the cloud whitelist covers 90 of 181 upstream tools (~50%).
+As of v2.8.0 the cloud whitelist covers 104 of 181 upstream tools (~57%).
 Read-only parity is essentially complete (70/74 = 95% of the RO tier).
-Remaining work: 77 pending write/destructive tools + 13 excluded behind
+Remaining work: 63 pending write/destructive tools + 13 excluded behind
 blockers that may eventually unblock (filesystem upload path, Stars
 opt-in, OAuth lifecycle alternatives) + 1 permanently excluded
 (`telegram-terminate-session`, see §Not planned). Tracked in
@@ -29,11 +29,12 @@ in CI by `pnpm check-parity`.
 
 Things actively being worked on or about to ship.
 
-- **Wave 2.3 — Chat admin / moderation (~14 tools)**. Next batch in
-  flight. Covers ban/unban/kick, set/remove-admin, block/unblock, set chat
-  reactions / slow-mode, toggle anti-spam / prehistory, mark-dialog-unread,
-  pin-chat, archive-chat, report-spam. All non-destructive (reversible);
-  no opt-in flag. Daily quota covers the abuse surface.
+- **Wave 2.4 — Groups, invites, folders, topics (~14 tools)**. Next batch
+  in flight. Covers create/edit-group, join/leave-chat, invite-to-group,
+  create-invite-link, approve-join-request, create/edit/reorder-folders,
+  toggle-folder-tags, create/edit-topic. (Their destructive siblings —
+  delete-folder, delete-topic, revoke-invite-link, toggle-forum-mode — go
+  to Phase 2.1.)
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -42,11 +43,6 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **Wave 2.4 — Groups, invites, folders, topics (~14)**. create/edit
-  groups, join/leave/invite, create-invite-link, approve-join-request,
-  create/edit/reorder folders, create/edit topics. (Their destructive
-  siblings — delete-folder, delete-topic, revoke-invite-link,
-  toggle-forum-mode — go to Phase 2.1.)
 - **`tools.ts` split refactor** — pure code-quality cleanup before
   Wave 2.5 lands the 20-tool profile/business batch. `tools.ts` is
   already 2050+ lines; will hit ~4000 without a split. Split by domain:
@@ -158,6 +154,16 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-30** — **Phase 2 Wave 2.3 shipped** (cloud v2.8.0). Chat
+  admin / moderation: 14 non-destructive write tools — `kick-user`,
+  `ban-user`, `unban-user`, `set-admin`, `remove-admin`, `archive-chat`,
+  `pin-chat`, `mark-dialog-unread`, `set-slow-mode`, `toggle-anti-spam`,
+  `toggle-prehistory-hidden`, `block-user`, `unblock-user`, `report-spam`.
+  No opt-in flag — daily quota covers the abuse surface. Coverage:
+  whitelist 90 → 104; baseline pending 77 → 63 (~57% of upstream's 181
+  tools). `set-chat-permissions` is upstream-DESTRUCTIVE so it stays
+  pending and lands with Phase 2.1 alongside the destructive opt-in
+  plumbing.
 - **2026-04-30** — **Roadmap decision lock-in** (no release tag — policy
   + docs only). Five planning decisions ratified into `ROADMAP.md` (full
   1:1 parity goal, Wave 2.3–2.7 + Phase 2.1 skeleton, Phase X deferred,
