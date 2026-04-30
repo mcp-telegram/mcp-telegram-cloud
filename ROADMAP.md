@@ -8,7 +8,7 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
 **Last updated:** 2026-04-30
-**Current version:** 2.8.0 (cloud — Wave 2.3 chat admin / moderation) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.9.0 (cloud — Wave 2.4 profile / folders / business writes) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,25 +16,26 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 **Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
 
-As of v2.8.0 the cloud whitelist covers 104 of 181 upstream tools (~57%).
+As of v2.9.0 the cloud whitelist covers 130 of 181 upstream tools (~72%).
 Read-only parity is essentially complete (70/74 = 95% of the RO tier).
-Remaining work: 63 pending write/destructive tools + 13 excluded behind
-blockers that may eventually unblock (filesystem upload path, Stars
-opt-in, OAuth lifecycle alternatives) + 1 permanently excluded
-(`telegram-terminate-session`, see §Not planned). Tracked in
-[`scripts/parity-baseline.json`](scripts/parity-baseline.json) and gated
-in CI by `pnpm check-parity`.
+Remaining work: 36 pending write/destructive tools + 14 excluded behind
+blockers that may eventually unblock (filesystem upload path including
+the new `set-profile-photo`, Stars opt-in, OAuth lifecycle alternatives)
++ 1 permanently excluded (`telegram-terminate-session`, see §Not
+planned). Tracked in [`scripts/parity-baseline.json`](scripts/parity-baseline.json)
+and gated in CI by `npm run check-parity`.
 
 ## Now (in flight)
 
 Things actively being worked on or about to ship.
 
-- **Wave 2.4 — Groups, invites, folders, topics (~14 tools)**. Next batch
-  in flight. Covers create/edit-group, join/leave-chat, invite-to-group,
-  create-invite-link, approve-join-request, create/edit/reorder-folders,
-  toggle-folder-tags, create/edit-topic. (Their destructive siblings —
-  delete-folder, delete-topic, revoke-invite-link, toggle-forum-mode — go
-  to Phase 2.1.)
+- **`tools.ts` split refactor** — pure code-quality cleanup, **mandatory
+  before Wave 2.5**. `tools.ts` is already 3354 lines after Wave 2.4;
+  Wave 2.5's groups/invites/topics batch will push it past ~4000.
+  Split by domain: `tools/messaging.ts`, `tools/admin.ts`,
+  `tools/groups.ts`, `tools/profile.ts`, `tools/business.ts`,
+  `tools/read.ts`. Mirrors the v2.4.0 `TOOL_REGISTRY` extraction —
+  pure-mechanical, no behavior change.
 - **Observability hardening** — external uptime monitoring + manual SigNoz
   alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
   alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
@@ -43,23 +44,22 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **`tools.ts` split refactor** — pure code-quality cleanup before
-  Wave 2.5 lands the 20-tool profile/business batch. `tools.ts` is
-  already 2050+ lines; will hit ~4000 without a split. Split by domain:
-  `tools/messaging.ts`, `tools/admin.ts`, `tools/groups.ts`,
-  `tools/profile.ts`, `tools/read.ts`. Mirrors the v2.4.0 TOOL_REGISTRY
-  split — pure-mechanical, no behavior change.
-- **Wave 2.5 — Profile / privacy / business setters (~20)**.
-  update-profile, set profile photo / color / emoji-status / birthday,
-  set-privacy + global-privacy + stealth-mode, business-* setters
-  (away/greeting/hours/intro/location), business chat-link CRUD.
-  Telegram Premium / Business Account required for some — handled with
-  graceful "feature not available" errors rather than a separate opt-in
-  flag.
-- **Wave 2.6 — Stories write + miscellaneous (~12)**. edit-story,
-  read-stories, toggle-story-pinned variants, report-story; create/close
-  polls; pin/unpin-message, send-scheduled, transcribe-audio,
-  press-button, toggle-channel-signatures, add-contact, inline-query-send.
+- **Wave 2.5 — Groups, invites, topics, polls (~17 tools)**. The batch
+  re-planned out of the original Wave 2.4 scope after profile/folders/
+  business shipped first in v2.9.0. Covers `create-group`, `edit-group`,
+  `join-chat`, `leave-chat`, `invite-to-group`, `create-invite-link`,
+  `toggle-channel-signatures`, `set-chat-reactions`, `create-topic`,
+  `edit-topic`, `create-poll`, `close-poll`, `pin-message`,
+  `delete-fact-check`, `edit-fact-check`, `inline-query-send`,
+  `press-button`. Their destructive siblings (`delete-topic`,
+  `delete-message`, `unpin-message`, `revoke-invite-link`,
+  `toggle-forum-mode`, `delete-folder`, `clear-drafts`,
+  `set-chat-permissions`, etc.) go to Phase 2.1.
+- **Wave 2.6 — Stories write + remaining miscellany (~12)**. `edit-story`,
+  `read-stories`, `toggle-story-pinned` (×2), `report-story`,
+  `delete-stories`; `send-scheduled`, `transcribe-audio`,
+  `delete-scheduled`. Plus any leftover small writes that don't fit
+  Wave 2.5.
 - **Wave 2.7 — Stars (3 write + 6 RO unlock)**. Gated by
   `MCP_TELEGRAM_ENABLE_STARS=1` (matches the existing pattern for
   group-calls and quick-replies). change-stars-subscription,
@@ -154,6 +154,24 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
+- **2026-04-30** — **Phase 2 Wave 2.4 shipped** (cloud v2.9.0). Profile,
+  folders, and business writes: 26 non-destructive tools — folders
+  (`create/edit/delete-folder`, `reorder-folders`, `toggle-folder-tags`),
+  global-privacy write (`set-global-privacy-settings`), business profile
+  (`create/edit/delete-business-chat-link`, `set-business-hours/location/
+  greeting/away/intro`), profile (`set-emoji-status`, `clear-recent-
+  emoji-statuses`, `set-profile-color`, `set-birthday`,
+  `set-personal-channel`, `delete-profile-photo`, `update-profile`,
+  `set-privacy`), and misc state-change (`set-auto-delete`, `add-contact`,
+  `approve-join-request`, `activate-stealth-mode`). Premium/Business
+  tiers handled via `premiumOnlyOnError` and `businessOnlyOnError`
+  helpers — no separate opt-in flag, the daily quota covers abuse.
+  `telegram-set-profile-photo` moved from `pending` to
+  `EXPLICIT_EXCLUDED` (filesystem-bound, parity with `send-file/voice/
+  video-note/album/story`). `telegram-clear-drafts` stays pending —
+  upstream-DESTRUCTIVE, lands with Phase 2.1. Coverage: whitelist
+  104 → 130 (~72%); baseline pending 63 → 36; `excluded 14 → 15`. 54
+  new test cases in `tools-write-wave-2.4.test.ts`; 157/157 tests pass.
 - **2026-04-30** — **Phase 2 Wave 2.3 shipped** (cloud v2.8.0). Chat
   admin / moderation: 14 non-destructive write tools — `kick-user`,
   `ban-user`, `unban-user`, `set-admin`, `remove-admin`, `archive-chat`,
