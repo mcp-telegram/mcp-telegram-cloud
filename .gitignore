@@ -60,3 +60,4 @@ coverage/
 
 # Ralphex (autonomous execution loop) — local only
 .ralphex/
+.review-context/
