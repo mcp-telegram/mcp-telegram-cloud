@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { errorResult, formatPeer, READ_ONLY, sanitize, textResult } from "./_helpers.js";
+import { errorResult, formatPeer, READ_ONLY, sanitize, textResult, WRITE } from "./_helpers.js";
 
 const STARS_ENV = "MCP_TELEGRAM_ENABLE_STARS";
 
@@ -177,6 +177,107 @@ export const STARS_TOOLS: ToolDefinition[] = [
       }
       if (r.nextOffset) lines.push(`nextOffset=${r.nextOffset}`);
       return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
+    name: "telegram-save-star-gift",
+    description:
+      "Show or hide a received Telegram Star Gift on your profile (payments.SaveStarGift). Pass msgId for a gift received as a personal DM, or chatId + savedId for a gift in a chat/channel you administrate. Set unsave=true to hide the gift (remove from profile display); false/omit to show it. Reversible. Cloud requires MCP_TELEGRAM_ENABLE_STARS=1 (set on this server).",
+    inputSchema: {
+      msgId: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Message ID of the gift (from your DMs) — use this for personal gifts"),
+      chatId: z
+        .string()
+        .min(1)
+        .optional()
+        .describe("Chat/channel ID where the gift was received — required with savedId for chat gifts"),
+      savedId: z
+        .string()
+        .regex(/^\d+$/, "must be a numeric saved gift ID")
+        .optional()
+        .describe("Saved gift ID (from telegram-get-saved-star-gifts) — required with chatId for chat gifts"),
+      unsave: z.boolean().optional().describe("true = hide the gift from profile; false/omit = show it"),
+    },
+    annotations: WRITE,
+    requiresEnv: STARS_ENV,
+    preValidate: ({ msgId, chatId, savedId }) => {
+      if (msgId === undefined && !(chatId && savedId)) {
+        return errorResult("Provide msgId (for DM gifts), or both chatId and savedId (for chat gifts)");
+      }
+      if (msgId !== undefined && (chatId || savedId)) {
+        return errorResult("Provide msgId OR chatId+savedId, not both");
+      }
+      return null;
+    },
+    handler: async ({ msgId, chatId, savedId, unsave }, { telegram }) => {
+      await telegram.saveStarGift({ msgId, chatId, savedId, unsave });
+      return textResult(unsave ? "Gift hidden from profile" : "Gift shown on profile");
+    },
+  },
+
+  {
+    name: "telegram-convert-star-gift",
+    description:
+      "Convert a received Telegram Star Gift into Stars (payments.ConvertStarGift). The gift is removed from your profile and its conversion value (convertStars from telegram-get-saved-star-gifts) is credited to your Stars balance. **Non-reversible** — once converted, the original gift cannot be restored. Pass msgId for personal DM gifts, or chatId + savedId for chat gifts. Cloud requires MCP_TELEGRAM_ENABLE_STARS=1.",
+    inputSchema: {
+      msgId: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Message ID of the gift (from your DMs) — for personal gifts"),
+      chatId: z.string().min(1).optional().describe("Chat/channel ID — required with savedId for chat gifts"),
+      savedId: z
+        .string()
+        .regex(/^\d+$/, "must be a numeric saved gift ID")
+        .optional()
+        .describe("Saved gift ID (from telegram-get-saved-star-gifts) — required with chatId for chat gifts"),
+    },
+    annotations: WRITE,
+    requiresEnv: STARS_ENV,
+    preValidate: ({ msgId, chatId, savedId }) => {
+      if (msgId === undefined && !(chatId && savedId)) {
+        return errorResult("Provide msgId (for DM gifts), or both chatId and savedId (for chat gifts)");
+      }
+      if (msgId !== undefined && (chatId || savedId)) {
+        return errorResult("Provide msgId OR chatId+savedId, not both");
+      }
+      return null;
+    },
+    handler: async ({ msgId, chatId, savedId }, { telegram }) => {
+      await telegram.convertStarGift({ msgId, chatId, savedId });
+      const ref =
+        msgId !== undefined
+          ? `msgId=${msgId}`
+          : `${formatPeer({ kind: "peer", id: chatId ?? "?" })}/savedId=${savedId}`;
+      return textResult(sanitize(`Gift ${ref} converted to Stars`));
+    },
+  },
+
+  {
+    name: "telegram-change-stars-subscription",
+    description:
+      "Cancel or restore a Telegram Stars subscription (payments.ChangeStarsSubscription). Pass canceled=true to cancel an active subscription before its next renewal, or canceled=false to restore a previously canceled one (only valid if the subscription has not yet expired). Reversible while the subscription window is still open. Cloud requires MCP_TELEGRAM_ENABLE_STARS=1.",
+    inputSchema: {
+      chatId: z
+        .string()
+        .min(1)
+        .describe("The peer the subscription belongs to — 'me' for your own subscriptions, or a bot/channel you own"),
+      subscriptionId: z.string().min(1).describe("Subscription ID (from telegram-get-stars-subscriptions)"),
+      canceled: z.boolean().describe("true = cancel the subscription; false = restore a canceled subscription"),
+    },
+    annotations: WRITE,
+    requiresEnv: STARS_ENV,
+    handler: async ({ chatId, subscriptionId, canceled }, { telegram }) => {
+      await telegram.changeStarsSubscription(chatId, subscriptionId, canceled);
+      return textResult(
+        sanitize(canceled ? `Subscription ${subscriptionId} canceled` : `Subscription ${subscriptionId} restored`),
+      );
     },
   },
 ];

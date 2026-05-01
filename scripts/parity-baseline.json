@@ -1,10 +1,8 @@
 {
   "_comment": "Phase 2.0 parity baseline. Each name is an upstream tool not yet exposed in cloud whitelist and not in EXPLICIT_EXCLUDED. CI fails on (a) new drift = upstream additions not in this list, (b) resolved-pending = entries here that have since been exposed or excluded but not removed from baseline. As Phase 2 waves ship, names move out of `pending` into either cloud whitelist or EXPLICIT_EXCLUDED (with reason).",
-  "_generated": "Phase 2 Wave 2.5 \u2014 22 SAFE WRITE tools shipped (cloud v2.11.0).",
+  "_generated": "Phase 2 Wave 2.7 — 3 Stars-write tools shipped (cloud v2.13.0). Remaining 11 = Phase 2.1 destructive infrastructure batch.",
   "pending": [
-    "telegram-change-stars-subscription",
     "telegram-clear-drafts",
-    "telegram-convert-star-gift",
     "telegram-delete-fact-check",
     "telegram-delete-message",
     "telegram-delete-scheduled",
@@ -12,7 +10,6 @@
     "telegram-delete-topic",
     "telegram-edit-story",
     "telegram-revoke-invite-link",
-    "telegram-save-star-gift",
     "telegram-set-chat-permissions",
     "telegram-set-chat-reactions",
     "telegram-toggle-forum-mode"

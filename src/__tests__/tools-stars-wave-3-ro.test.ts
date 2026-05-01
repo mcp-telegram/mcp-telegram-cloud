@@ -20,12 +20,6 @@ const STARS_RO_TOOLS = [
   "telegram-get-saved-star-gifts",
 ] as const;
 
-const STARS_WRITE_PENDING = [
-  "telegram-save-star-gift",
-  "telegram-convert-star-gift",
-  "telegram-change-stars-subscription",
-] as const;
-
 describe("Wave 3 RO Stars — read-only Stars wallet/gifts/subscriptions (opt-in)", () => {
   for (const name of STARS_RO_TOOLS) {
     it(`registers ${name} as READ_ONLY + gated by MCP_TELEGRAM_ENABLE_STARS`, () => {
@@ -48,17 +42,6 @@ describe("Wave 3 RO Stars — read-only Stars wallet/gifts/subscriptions (opt-in
     for (const name of STARS_RO_TOOLS) {
       const excluded = EXPLICIT_EXCLUDED.find((e) => e.name === name);
       assert.equal(excluded, undefined, `${name} was unlocked in Wave 3 RO and must NOT remain in EXPLICIT_EXCLUDED`);
-    }
-  });
-
-  it("Stars-write tools remain pending (deferred to Phase 2.1)", () => {
-    // Sanity: the destructive infra (Phase 2.1) gate hasn't shipped, so save/convert/change are
-    // intentionally NOT in the whitelist. They live in scripts/parity-baseline.json `pending`.
-    for (const name of STARS_WRITE_PENDING) {
-      const tool = TOOLS.find((t) => t.name === name);
-      assert.equal(tool, undefined, `${name} must NOT be whitelisted yet — Phase 2.1 gates Stars writes`);
-      const excluded = EXPLICIT_EXCLUDED.find((e) => e.name === name);
-      assert.equal(excluded, undefined, `${name} is pending, not permanently excluded`);
     }
   });
 
