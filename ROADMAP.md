@@ -7,8 +7,8 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 For the internal, fact-check-audited working plan with risks and exit criteria, see
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
-**Last updated:** 2026-04-30
-**Current version:** 2.11.0 (cloud — Phase 2 Wave 2.5 SAFE writes) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-05-01
+**Current version:** 2.13.0 (cloud — Phase 2 Wave 2.7 Stars-write opt-in) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,16 +16,19 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 **Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
 
-As of v2.11.0 the cloud whitelist covers 152 of 181 upstream tools (~84%).
-Read-only parity is essentially complete (70/74 = 95% of the RO tier);
-SAFE write parity covers groups, invites, topics, polls, pin/unpin,
-inline-query/press-button, transcribe-audio, story toggles, and edit-fact-check.
-Remaining work: 14 pending destructive/Stars tools + 14 excluded behind
-blockers that may eventually unblock (filesystem upload path including
-the new `set-profile-photo`, Stars opt-in, OAuth lifecycle alternatives)
-+ 1 permanently excluded (`telegram-terminate-session`, see §Not
-planned). Tracked in [`scripts/parity-baseline.json`](scripts/parity-baseline.json)
-and gated in CI by `npm run check-parity`.
+As of v2.13.0 the cloud whitelist covers **161 of 181 upstream tools (~89%)**.
+Stars parity is now complete in opt-in form: the 6 RO Stars tools (Wave 3 RO,
+v2.12.0) plus the 3 Stars-write tools (Wave 2.7, v2.13.0) all register only
+when `MCP_TELEGRAM_ENABLE_STARS=1` is set on the server (default OFF on the
+hosted image). SAFE-write parity covers groups, invites, topics, polls,
+pin/unpin, inline-query/press-button, transcribe-audio, story toggles, and
+edit-fact-check. Remaining work: 11 pending destructive tools (Phase 2.1
+infrastructure: per-user opt-in toggle + audit log + separate quota) + 6
+excluded behind the filesystem upload path (Phase X) + 3 excluded auth
+lifecycle tools (covered by the OAuth/QR flow) + 1 permanently excluded
+(`telegram-terminate-session`, see §Not planned). Tracked in
+[`scripts/parity-baseline.json`](scripts/parity-baseline.json) and gated in
+CI by `pnpm check-parity`.
 
 ## Now (in flight)
 
@@ -39,27 +42,15 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **Wave 2.6 — Remaining destructive-adjacent miscellany (~3-5)**. After
-  Wave 2.5 swept the SAFE-write batch (groups/invites/topics/polls/pins/
-  story toggles/transcribe/inline-query/press-button/edit-fact-check),
-  the only non-destructive holdouts are: `edit-story` (which Telegram
-  flags DESTRUCTIVE because it can drop attached media), `set-chat-reactions`
-  (DESTRUCTIVE), and the Stars-write trio. They all carry destructive
-  semantics and land with Phase 2.1 + Wave 2.7, not as a separate
-  Wave 2.6.
-- **Wave 2.7 — Stars (3 write + 6 RO unlock)**. Gated by
-  `MCP_TELEGRAM_ENABLE_STARS=1` (matches the existing pattern for
-  group-calls and quick-replies). change-stars-subscription,
-  save/convert-star-gift; promotes the 6 currently-deferred Stars
-  read-only tools out of `EXPLICIT_EXCLUDED`. Off by default in the
-  cloud Docker image; self-hosters opt in.
 - **Phase 2.1 — Destructive infrastructure (~11 tools)**. Required before
   any destructive tool ships. Per-user `enable_destructive_tools` opt-in
   toggle at `/settings`, separate daily quota (independent of
   `FREE_TIER_LIMIT`), audit log table + `/my/audit` visibility. Then
   expose: delete-message, delete-scheduled, delete-stories, delete-topic,
   delete-fact-check, clear-drafts, revoke-invite-link, toggle-forum-mode,
-  set-chat-permissions, set-chat-reactions, edit-story.
+  set-chat-permissions, set-chat-reactions, edit-story. After this phase
+  ships, the only remaining gap to full 1:1 parity will be the 6 FS-bound
+  tools (Phase X) — pending count drops to 0.
 - **Per-user burst rate limit** (Layer 3 from the
   [layered approach in `docs/research/telegram-rate-limits.md`](docs/research/telegram-rate-limits.md#61-layered-approach)) —
   trigger: ≥10 daily active users sustained 7 days. Currently
@@ -140,6 +131,31 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
+
+- **2026-05-01** — **Phase 2 Wave 2.7 shipped** (cloud v2.13.0). 3
+  Stars-write tools — `telegram-save-star-gift` (show/hide a received
+  Star Gift on profile), `telegram-convert-star-gift` (non-reversible —
+  convert gift back into Stars balance), `telegram-change-stars-subscription`
+  (cancel/restore a Stars subscription). All gated by
+  `MCP_TELEGRAM_ENABLE_STARS=1` (server-default OFF on the hosted image,
+  consistent with Wave 3 RO Stars in v2.12.0). Annotation: WRITE
+  (non-destructive) — Telegram tier=write; the convert path is
+  non-reversible per Telegram itself but does not delete user data on
+  the cloud side, so it shipped under the standard SAFE-write gate
+  rather than waiting for Phase 2.1 destructive infrastructure. Each
+  tool with two-mode peer addressing (`save`, `convert`) carries a
+  `preValidate` enforcing `msgId` XOR `chatId+savedId`. Coverage:
+  whitelist 158 → **161 (~89% of 181)**; baseline pending 14 → 11.
+  Stars parity is now complete in opt-in form; remaining 11 pending
+  are all destructive and gated on Phase 2.1.
+
+- **2026-05-01** — **Phase 2 Wave 3 RO Stars shipped** (cloud v2.12.0).
+  6 read-only Stars tools — `get-stars-status`, `get-stars-transactions`,
+  `get-stars-subscriptions`, `get-stars-topup-options`,
+  `get-available-star-gifts`, `get-saved-star-gifts`. Gated by
+  `MCP_TELEGRAM_ENABLE_STARS=1`; server-default OFF on the hosted image
+  (zero behavioral change for current users). All 6 promoted out of
+  `EXPLICIT_EXCLUDED`. Coverage: whitelist 152 → 158 (~87.3% of 181).
 
 - **2026-04-30** — **Phase 2 Wave 2.5 shipped** (cloud v2.11.0). 22
   SAFE WRITE tools across three domains — groups (`create-group`,
