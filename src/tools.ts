@@ -13,6 +13,7 @@ import { MESSAGING_TOOLS } from "./tools/messaging.js";
 import { MISC_TOOLS } from "./tools/misc.js";
 import { PROFILE_TOOLS } from "./tools/profile.js";
 import { READ_TOOLS } from "./tools/read.js";
+import { STARS_TOOLS } from "./tools/stars.js";
 import { STATS_TOOLS } from "./tools/stats.js";
 import { STORIES_TOOLS } from "./tools/stories.js";
 
@@ -23,6 +24,7 @@ export const TOOLS: ToolDefinition[] = [
   ...PROFILE_TOOLS,
   ...STORIES_TOOLS,
   ...STATS_TOOLS,
+  ...STARS_TOOLS,
   ...MISC_TOOLS,
 ];
 

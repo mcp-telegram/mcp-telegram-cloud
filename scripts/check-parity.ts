@@ -38,7 +38,11 @@ const { registerAllAllowedTools } = await import("../src/tools.js");
  * Force-enable them while introspecting so the parity gate sees the full whitelist —
  * mirrors the same trick `@overpod/mcp-telegram/manifest` plays for its own opt-in tools.
  */
-const OPT_IN_ENV_FLAGS = ["MCP_TELEGRAM_ENABLE_GROUP_CALLS", "MCP_TELEGRAM_ENABLE_QUICK_REPLIES"];
+const OPT_IN_ENV_FLAGS = [
+  "MCP_TELEGRAM_ENABLE_GROUP_CALLS",
+  "MCP_TELEGRAM_ENABLE_QUICK_REPLIES",
+  "MCP_TELEGRAM_ENABLE_STARS",
+];
 
 function collectCloudWhitelist(): Set<string> {
   const restoreEnv: Array<[string, string | undefined]> = [];
