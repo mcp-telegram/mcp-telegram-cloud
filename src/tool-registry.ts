@@ -3,6 +3,8 @@ import type { ShapeOutput, ZodRawShapeCompat } from "@modelcontextprotocol/sdk/s
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { logger } from "./logger.js";
+import type { UploadStore } from "./upload-store.js";
+import type { fetchUrlSafely } from "./url-fetcher.js";
 
 export type RequireConnection = () => Promise<string | null>;
 export type OnSessionRevoked = () => Promise<void>;
@@ -25,6 +27,14 @@ export interface ToolAnnotations {
 
 export interface ToolDeps {
   readonly telegram: TelegramService;
+  /** Owner of the active MCP session. Set by mcp-handler.ts; absent in unit-test fixtures
+   * that exercise tools not requiring user identity. Phase X upload tools require it. */
+  readonly userId?: string;
+  /** Phase X: per-user pending uploads. Required for the 6 FS-bound tools
+   * (`telegram-send-file/voice/video-note/album/story`, `telegram-set-profile-photo`). */
+  readonly uploads?: UploadStore;
+  /** Phase X: SSRF-hardened URL fetcher. Required for the URL variant of the 6 FS-bound tools. */
+  readonly fetchUrl?: typeof fetchUrlSafely;
 }
 
 type Args<TShape extends ZodRawShapeCompat> = ShapeOutput<TShape>;
@@ -99,6 +109,12 @@ export interface RegisterAllOptions {
    * the registry will not call one without the other being meaningful. */
   checkDestructive?: DestructiveCheck;
   recordDestructive?: DestructiveRecord;
+  /** Phase X: piped through to {@link ToolDeps.userId} for upload-backed tools. */
+  userId?: string;
+  /** Phase X: piped through to {@link ToolDeps.uploads}. */
+  uploads?: UploadStore;
+  /** Phase X: piped through to {@link ToolDeps.fetchUrl}. */
+  fetchUrl?: typeof fetchUrlSafely;
 }
 
 /**
@@ -155,7 +171,13 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
 
       const start = Date.now();
       try {
-        const result = await tool.handler(args, { telegram: opts.getTelegram() });
+        const deps: ToolDeps = {
+          telegram: opts.getTelegram(),
+          ...(opts.userId !== undefined && { userId: opts.userId }),
+          ...(opts.uploads !== undefined && { uploads: opts.uploads }),
+          ...(opts.fetchUrl !== undefined && { fetchUrl: opts.fetchUrl }),
+        };
+        const result = await tool.handler(args, deps);
         const duration = Date.now() - start;
         logger.info(`Tool ${tool.name} completed in ${duration}ms`, {
           component: "tools",

@@ -18,6 +18,9 @@ import { READ_TOOLS } from "./tools/read.js";
 import { STARS_TOOLS } from "./tools/stars.js";
 import { STATS_TOOLS } from "./tools/stats.js";
 import { STORIES_TOOLS } from "./tools/stories.js";
+import { UPLOAD_TOOLS } from "./tools/uploads.js";
+import type { UploadStore } from "./upload-store.js";
+import type { fetchUrlSafely } from "./url-fetcher.js";
 
 export const TOOLS: ToolDefinition[] = [
   ...READ_TOOLS,
@@ -28,6 +31,7 @@ export const TOOLS: ToolDefinition[] = [
   ...STATS_TOOLS,
   ...STARS_TOOLS,
   ...MISC_TOOLS,
+  ...UPLOAD_TOOLS,
 ];
 
 /**
@@ -40,6 +44,15 @@ export const TOOLS: ToolDefinition[] = [
  * Thin wrapper around the data-driven registry — new tools should be added as
  * entries to a domain file under `src/tools/` rather than as new function calls here.
  */
+export interface RegisterAllowedToolsExtras {
+  /** Phase X: owner of this MCP session, used by upload-backed tools to scope upload IDs. */
+  userId?: string;
+  /** Phase X: per-user upload store. Required for the 6 FS-bound tools to function. */
+  uploads?: UploadStore;
+  /** Phase X: SSRF-hardened URL fetcher for the URL variant of upload-backed tools. */
+  fetchUrl?: typeof fetchUrlSafely;
+}
+
 export function registerAllAllowedTools(
   server: McpServer,
   getTelegram: () => TelegramService,
@@ -49,6 +62,7 @@ export function registerAllAllowedTools(
   checkRateLimit?: RateLimitCheck,
   checkDestructive?: DestructiveCheck,
   recordDestructive?: DestructiveRecord,
+  extras?: RegisterAllowedToolsExtras,
 ): void {
   registerAllTools(server, TOOLS, {
     getTelegram,
@@ -58,5 +72,8 @@ export function registerAllAllowedTools(
     checkRateLimit,
     checkDestructive,
     recordDestructive,
+    ...(extras?.userId !== undefined && { userId: extras.userId }),
+    ...(extras?.uploads !== undefined && { uploads: extras.uploads }),
+    ...(extras?.fetchUrl !== undefined && { fetchUrl: extras.fetchUrl }),
   });
 }

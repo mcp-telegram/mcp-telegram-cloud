@@ -8,7 +8,6 @@ import { describe, it } from "node:test";
 import { z } from "zod";
 
 const { TOOLS } = await import("../tools.js");
-const { EXPLICIT_EXCLUDED } = await import("../parity-config.js");
 
 const WAVE_2_2_TOOLS = [
   "telegram-send-message",
@@ -23,14 +22,6 @@ const WAVE_2_2_TOOLS = [
   "telegram-translate-message",
   "telegram-get-unread-mentions",
   "telegram-get-unread-reactions",
-] as const;
-
-const WAVE_2_2_FS_EXCLUDED = [
-  "telegram-send-file",
-  "telegram-send-voice",
-  "telegram-send-video-note",
-  "telegram-send-album",
-  "telegram-send-story",
 ] as const;
 
 describe("Wave 2.2 — write tools (messaging core)", () => {
@@ -60,19 +51,6 @@ describe("Wave 2.2 — write tools (messaging core)", () => {
       assert.ok(tool, `${name} missing`);
       if (!tool) continue;
       assert.equal(tool.requiresEnv, undefined, `${name} unexpectedly gated by ${tool.requiresEnv}`);
-    }
-  });
-
-  it("filesystem-bound send tools are explicitly excluded with reason mentioning the cloud-FS gap", () => {
-    for (const name of WAVE_2_2_FS_EXCLUDED) {
-      const entry = EXPLICIT_EXCLUDED.find((e) => e.name === name);
-      assert.ok(entry, `${name} should be in EXPLICIT_EXCLUDED`);
-      if (!entry) continue;
-      assert.match(
-        entry.reason,
-        /cloud container filesystem|the user does not control/i,
-        `${name} exclusion reason should mention the cloud-FS gap`,
-      );
     }
   });
 
@@ -247,8 +225,7 @@ describe("Wave 2.2 — write tools (messaging core)", () => {
     assert.ok(!calls[0].text.includes(lone), "edit-message must sanitize before passing to the service");
   });
 
-  it("WAVE_2_2_TOOLS list and EXPLICIT_EXCLUDED FS-bound list are exactly the expected sizes (drift detector)", () => {
+  it("WAVE_2_2_TOOLS list is exactly the expected size (drift detector)", () => {
     assert.equal(WAVE_2_2_TOOLS.length, 12, "Wave 2.2 should expose exactly 12 tools");
-    assert.equal(WAVE_2_2_FS_EXCLUDED.length, 5, "Wave 2.2 should exclude exactly 5 FS-bound send tools");
   });
 });

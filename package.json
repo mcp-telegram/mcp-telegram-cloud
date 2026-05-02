@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -24,6 +24,7 @@
     "better-sqlite3": "^12.9.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.15",
+    "undici": "^8.2.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
