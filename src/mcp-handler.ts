@@ -7,6 +7,8 @@ import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 import { registerAllAllowedTools } from "./tools.js";
+import type { UploadStore } from "./upload-store.js";
+import { fetchUrlSafely } from "./url-fetcher.js";
 import type { UsageTracker } from "./usage.js";
 
 /** Map of MCP session ID → transport (for multi-request sessions) */
@@ -33,6 +35,7 @@ export async function handleMcpRequest(
   usage: UsageTracker,
   oauth: OAuthProvider,
   destructive: DestructiveGuard,
+  uploads: UploadStore,
   userId: string,
   clientName: string,
   req: Request,
@@ -240,6 +243,7 @@ export async function handleMcpRequest(
     checkRateLimit,
     checkDestructive,
     recordDestructive,
+    { userId, uploads, fetchUrl: fetchUrlSafely },
   );
 
   await server.connect(transport);

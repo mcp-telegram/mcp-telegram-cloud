@@ -1,15 +1,19 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
 import { logger, logUser } from "../logger.js";
 import { AuditPage } from "../pages/AuditPage.js";
 import { SettingsPage } from "../pages/SettingsPage.js";
+import { UploadsPage, type UploadsPageProps } from "../pages/UploadsPage.js";
 import type { SessionManager } from "../session-manager.js";
+import type { UploadStore } from "../upload-store.js";
 
 export interface MyRoutesDeps {
   destructive: DestructiveGuard;
   sessions: SessionManager;
+  uploads: UploadStore;
 }
 
 /**
@@ -23,8 +27,20 @@ export interface MyRoutesDeps {
 
 function getUsernameFromCookie(c: Context): string | undefined {
   const cookies = c.req.header("cookie") ?? "";
-  const match = cookies.match(/tg_user=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : undefined;
+  // Anchor on start-of-string or `; ` so a cookie named `xtg_user` or one whose
+  // value happens to contain the literal substring `tg_user=victim` doesn't
+  // get picked up first. Defense in depth — typical browsers don't construct
+  // such headers, but adjacent cookie-injection paths shouldn't compromise auth.
+  const match = cookies.match(/(?:^|;\s*)tg_user=([^;]+)/);
+  if (!match) return undefined;
+  // decodeURIComponent throws URIError on malformed `%xx` sequences; treat that
+  // as missing-cookie so the route returns its normal unauthenticated branch
+  // (401/302) instead of leaking a 500.
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return undefined;
+  }
 }
 
 function requireUser(c: Context, sessions: SessionManager): string | null {
@@ -49,10 +65,106 @@ function originMatchesIssuer(headerValue: string): boolean {
   }
 }
 
-export function createMyRoutes({ destructive, sessions }: MyRoutesDeps): Hono {
+export function createMyRoutes({ destructive, sessions, uploads }: MyRoutesDeps): Hono {
   const app = new Hono({ strict: false });
 
   app.get("/", (c) => c.redirect("/my/settings", 302));
+
+  app.get("/uploads", (c) => {
+    const userId = requireUser(c, sessions);
+    if (!userId) return unauthorizedRedirect(c);
+
+    const flash = c.req.query("flash") ?? undefined;
+    const rows = uploads.listForUser(userId, 50);
+    const props: UploadsPageProps = {
+      username: userId,
+      rows,
+      fileMaxBytes: config.uploadFileMaxBytes,
+      quotaBytes: config.uploadQuotaBytes,
+      ttlSeconds: config.uploadTtlSeconds,
+      pendingBytes: uploads.pendingBytesForUser(userId),
+    };
+    if (flash !== undefined) props.flash = flash;
+    return c.html(<UploadsPage {...props} />);
+  });
+
+  // bodyLimit caps multipart parser allocation BEFORE preflight runs. Without it,
+  // a logged-in user could POST a multi-GB body and exhaust container RAM before
+  // UploadStore.preflight (which only sees the parsed Buffer) gets a chance to deny.
+  // Slack of 1 MB covers multipart boundaries + small header overhead per part.
+  const UPLOAD_BODY_SLACK_BYTES = 1024 * 1024;
+  app.post(
+    "/upload",
+    bodyLimit({
+      maxSize: config.uploadFileMaxBytes + UPLOAD_BODY_SLACK_BYTES,
+      onError: (c) =>
+        c.json(
+          {
+            error: "file_too_large",
+            message: `Request body exceeds the per-file cap (${config.uploadFileMaxBytes} bytes + multipart slack).`,
+          },
+          413,
+        ),
+    }),
+    async (c) => {
+      const userId = requireUser(c, sessions);
+      if (!userId) return c.json({ error: "unauthorized" }, 401);
+
+      // CSRF: same-origin only, identical to /settings POST.
+      const headerValue = c.req.header("origin") ?? c.req.header("referer");
+      if (!headerValue || !originMatchesIssuer(headerValue)) {
+        return c.json({ error: "forbidden" }, 403);
+      }
+
+      let form: FormData;
+      try {
+        form = await c.req.formData();
+      } catch (e) {
+        return c.json({ error: "bad_request", message: `Invalid multipart body: ${(e as Error).message}` }, 400);
+      }
+      const file = form.get("file");
+      if (!(file instanceof File)) {
+        return c.json({ error: "bad_request", message: "Missing 'file' field" }, 400);
+      }
+
+      const buf = Buffer.from(await file.arrayBuffer());
+      const denied = uploads.preflight(userId, buf.byteLength);
+      if (denied) {
+        logger.warn(`Upload denied: ${denied.reason}`, {
+          component: "uploads",
+          userId: logUser(userId),
+          event: "uploads.denied",
+          reason: denied.reason,
+          size: buf.byteLength,
+        });
+        const status = denied.reason === "file_too_large" ? 413 : 429;
+        return c.json({ error: denied.reason, message: denied.message }, status);
+      }
+
+      const result = await uploads.put(userId, buf, file.type || "application/octet-stream", file.name || null);
+      if (!result.ok) {
+        // TOCTOU between preflight and put — same envelope, log & return.
+        const status = result.reason === "file_too_large" ? 413 : 429;
+        return c.json({ error: result.reason, message: result.message }, status);
+      }
+
+      logger.info(`Upload stored: ${result.id}`, {
+        component: "uploads",
+        userId: logUser(userId),
+        event: "uploads.stored",
+        uploadId: result.id,
+        size: buf.byteLength,
+        mime: file.type,
+      });
+
+      return c.json({
+        id: result.id,
+        expiresAt: result.expiresAt.toISOString(),
+        size: buf.byteLength,
+        mime: file.type || "application/octet-stream",
+      });
+    },
+  );
 
   app.get("/settings", (c) => {
     const userId = requireUser(c, sessions);

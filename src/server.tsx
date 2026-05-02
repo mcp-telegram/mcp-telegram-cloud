@@ -19,6 +19,8 @@ import { createMyRoutes } from "./routes/my.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
+import { purgeUrlFetchOrphans } from "./tools/uploads.js";
+import { UploadStore } from "./upload-store.js";
 import { UsageTracker } from "./usage.js";
 
 // Forward [rate-limiter] event {...} stderr lines from @overpod/mcp-telegram
@@ -46,6 +48,12 @@ const destructive = new DestructiveGuard(
   sessions.getDb(),
   config.destructiveDailyLimit,
   `${config.issuer}/my/settings`,
+);
+const uploads = new UploadStore(
+  sessions.getDb(),
+  config.uploadFileMaxBytes,
+  config.uploadQuotaBytes,
+  config.uploadTtlSeconds * 1000,
 );
 
 // Optional broadcast bot (Phase 0.1). Either configure all three vars or none —
@@ -99,6 +107,58 @@ if (config.destructiveAuditRetentionDays > 0) {
   }, 24 * 3600_000);
 }
 
+// Phase X — periodic purge of expired pending uploads (TTL: config.uploadTtlSeconds).
+// Sweep at 1/4 of TTL so any expired row is gone within ~ttl/4 walltime.
+const uploadPurgeIntervalMs = Math.max(60_000, (config.uploadTtlSeconds * 1000) / 4);
+// 5 min — long enough that a healthy in-flight URL-fetch (timeout 30s + send to Telegram) finishes
+// before a stale orphan from a SIGKILL'd predecessor would be deleted, short enough to bound disk.
+const URL_FETCH_ORPHAN_MAX_AGE_MS = 5 * 60_000;
+
+// Boot-time wipe: any URL-fetch leftovers from a previous process (SIGKILL between writeFile
+// and cleanup, OOM, etc.) are stale by definition — no in-flight tool call can own them.
+purgeUrlFetchOrphans(0)
+  .then((n) => {
+    if (n > 0) {
+      logger.info(`Boot wipe removed ${n} URL-fetch orphans`, {
+        component: "uploads",
+        event: "uploads.boot_wipe",
+        removed: n,
+      });
+    }
+  })
+  .catch((e) => {
+    logger.warn(`Boot wipe of URL-fetch dir failed: ${(e as Error).message}`, {
+      component: "uploads",
+      event: "uploads.boot_wipe_failed",
+    });
+  });
+
+setInterval(async () => {
+  try {
+    const removedPending = await uploads.purgeExpired();
+    if (removedPending > 0) {
+      logger.info(`Purged ${removedPending} expired pending uploads`, {
+        component: "uploads",
+        event: "uploads.purge",
+        removed: removedPending,
+      });
+    }
+    const removedOrphans = await purgeUrlFetchOrphans(URL_FETCH_ORPHAN_MAX_AGE_MS);
+    if (removedOrphans > 0) {
+      logger.info(`Purged ${removedOrphans} URL-fetch orphans`, {
+        component: "uploads",
+        event: "uploads.urlfetch_purge",
+        removed: removedOrphans,
+      });
+    }
+  } catch (e) {
+    logger.warn(`Upload purge failed: ${(e as Error).message}`, {
+      component: "uploads",
+      event: "uploads.purge_failed",
+    });
+  }
+}, uploadPurgeIntervalMs);
+
 // strict: false makes Hono treat `/mcp` and `/mcp/` as the same route
 // (and same for all other paths) — ChatGPT and some proxies send trailing
 // slash to the MCP endpoint, and default strict mode 404s those.
@@ -109,9 +169,9 @@ app.route("/", createStaticRoutes({ sessions }));
 app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
-registerMcpRoutes(app, { oauth, sessions, usage, destructive });
+registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions }));
-app.route("/my", createMyRoutes({ destructive, sessions }));
+app.route("/my", createMyRoutes({ destructive, sessions, uploads }));
 
 if (botEnabled && botClient && subscribers) {
   const botDeps = { client: botClient, subscribers, webhookSecret: config.botWebhookSecret };

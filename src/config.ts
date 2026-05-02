@@ -91,6 +91,14 @@ export const config = {
   destructiveAuditRetentionDays: intOr(process.env.DESTRUCTIVE_AUDIT_RETENTION_DAYS, 90),
   sessionCleanupDelayMinutes: intOr(process.env.SESSION_CLEANUP_DELAY_MINUTES, 5),
 
+  /** Phase X — per-file cap for `/my/upload` (bytes). Default 50 MB. */
+  uploadFileMaxBytes: intOr(process.env.UPLOAD_FILE_MAX_BYTES, 50 * 1024 * 1024),
+  /** Phase X — per-user pending uploads quota (bytes). Sum of currently-pending,
+   * unexpired rows. Default 100 MB (room for 2 max-size files in flight). */
+  uploadQuotaBytes: intOr(process.env.UPLOAD_QUOTA_BYTES, 100 * 1024 * 1024),
+  /** Phase X — TTL on a pending upload before TTL purge eats it. Default 15 min. */
+  uploadTtlSeconds: intOr(process.env.UPLOAD_TTL_SECONDS, 15 * 60),
+
   /** OAuth IP rate-limit: max requests per window per IP. 0 disables. */
   oauthRateLimit: intOr(process.env.OAUTH_RATE_LIMIT, 30),
   /** OAuth IP rate-limit window in milliseconds. */

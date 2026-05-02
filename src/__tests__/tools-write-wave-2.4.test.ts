@@ -8,7 +8,6 @@ import { describe, it } from "node:test";
 import { z } from "zod";
 
 const { TOOLS } = await import("../tools.js");
-const { EXPLICIT_EXCLUDED } = await import("../parity-config.js");
 
 const WAVE_2_4_TOOLS = [
   // Folders + global-privacy write
@@ -90,15 +89,6 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
       if (!tool) continue;
       assert.equal(tool.requiresEnv, undefined, `${name} unexpectedly gated by ${tool.requiresEnv}`);
     }
-  });
-
-  it("set-profile-photo is in EXPLICIT_EXCLUDED with FS-bound reason (parity with send-file/voice/etc.)", () => {
-    const excluded = EXPLICIT_EXCLUDED.find((e) => e.name === "telegram-set-profile-photo");
-    assert.ok(excluded, "set-profile-photo must be in EXPLICIT_EXCLUDED — it's filesystem-bound");
-    assert.match(excluded.reason, /absolute path|filesystem/i, "exclusion reason should cite the FS-bound rationale");
-    // And NOT in TOOLS:
-    const tool = TOOLS.find((t) => t.name === "telegram-set-profile-photo");
-    assert.equal(tool, undefined, "set-profile-photo must NOT be exposed");
   });
 
   describe("PREMIUM error mapping", () => {

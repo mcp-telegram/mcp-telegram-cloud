@@ -4,6 +4,7 @@ import type { DestructiveGuard } from "../destructive-guard.js";
 import { handleMcpRequest } from "../mcp-handler.js";
 import type { OAuthProvider } from "../oauth.js";
 import type { SessionManager } from "../session-manager.js";
+import type { UploadStore } from "../upload-store.js";
 import type { UsageTracker } from "../usage.js";
 
 export interface McpRoutesDeps {
@@ -11,6 +12,7 @@ export interface McpRoutesDeps {
   sessions: SessionManager;
   usage: UsageTracker;
   destructive: DestructiveGuard;
+  uploads: UploadStore;
 }
 
 /**
@@ -22,7 +24,7 @@ export interface McpRoutesDeps {
  * boundaries loses the trailing slash. Registering on the root app
  * with explicit paths is the portable approach.
  */
-export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructive }: McpRoutesDeps): void {
+export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructive, uploads }: McpRoutesDeps): void {
   const corsMiddleware = cors({
     origin: "*",
     allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
@@ -60,7 +62,7 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
       );
     }
 
-    return handleMcpRequest(sessions, usage, oauth, destructive, userId, clientName, c.req.raw);
+    return handleMcpRequest(sessions, usage, oauth, destructive, uploads, userId, clientName, c.req.raw);
   };
 
   app.all("/mcp", handler);
