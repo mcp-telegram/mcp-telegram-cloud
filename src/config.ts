@@ -84,6 +84,11 @@ export const config = {
 
   /** 0 = unlimited (rate-limit check effectively disabled). */
   freeTierLimit: intOr(process.env.FREE_TIER_LIMIT, 100),
+  /** Separate daily quota for destructive tools (Phase 2.1). 0 = unlimited.
+   * Counts only successful calls; denied attempts don't burn quota. */
+  destructiveDailyLimit: intOr(process.env.DESTRUCTIVE_DAILY_LIMIT, 20),
+  /** Retention for `destructive_audit` rows. 0 = keep forever. */
+  destructiveAuditRetentionDays: intOr(process.env.DESTRUCTIVE_AUDIT_RETENTION_DAYS, 90),
   sessionCleanupDelayMinutes: intOr(process.env.SESSION_CLEANUP_DELAY_MINUTES, 5),
 
   /** OAuth IP rate-limit: max requests per window per IP. 0 disables. */

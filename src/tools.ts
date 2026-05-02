@@ -1,6 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import {
+  type DestructiveCheck,
+  type DestructiveRecord,
   type OnSessionRevoked,
   type OnToolCall,
   type RateLimitCheck,
@@ -45,6 +47,8 @@ export function registerAllAllowedTools(
   onSessionRevoked?: OnSessionRevoked,
   onToolCall?: OnToolCall,
   checkRateLimit?: RateLimitCheck,
+  checkDestructive?: DestructiveCheck,
+  recordDestructive?: DestructiveRecord,
 ): void {
   registerAllTools(server, TOOLS, {
     getTelegram,
@@ -52,5 +56,7 @@ export function registerAllAllowedTools(
     onSessionRevoked,
     onToolCall,
     checkRateLimit,
+    checkDestructive,
+    recordDestructive,
   });
 }

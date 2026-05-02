@@ -1,17 +1,5 @@
 {
   "_comment": "Phase 2.0 parity baseline. Each name is an upstream tool not yet exposed in cloud whitelist and not in EXPLICIT_EXCLUDED. CI fails on (a) new drift = upstream additions not in this list, (b) resolved-pending = entries here that have since been exposed or excluded but not removed from baseline. As Phase 2 waves ship, names move out of `pending` into either cloud whitelist or EXPLICIT_EXCLUDED (with reason).",
-  "_generated": "Phase 2 Wave 2.7 — 3 Stars-write tools shipped (cloud v2.13.0). Remaining 11 = Phase 2.1 destructive infrastructure batch.",
-  "pending": [
-    "telegram-clear-drafts",
-    "telegram-delete-fact-check",
-    "telegram-delete-message",
-    "telegram-delete-scheduled",
-    "telegram-delete-stories",
-    "telegram-delete-topic",
-    "telegram-edit-story",
-    "telegram-revoke-invite-link",
-    "telegram-set-chat-permissions",
-    "telegram-set-chat-reactions",
-    "telegram-toggle-forum-mode"
-  ]
+  "_generated": "Phase 2.1 destructive infrastructure shipped (cloud v2.14.0) — all 11 destructive tools moved from pending into whitelist, gated server-side by DestructiveGuard (per-user `/my/settings` toggle + separate daily quota + `/my/audit` log). Pending is now empty; the only remaining gap to upstream is the 9 EXPLICIT_EXCLUDED entries.",
+  "pending": []
 }

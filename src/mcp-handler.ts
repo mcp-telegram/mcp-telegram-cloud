@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { config, iconPng256Url, iconPngUrl, iconUrl } from "./config.js";
+import { type DestructiveGuard, summarizeArgs } from "./destructive-guard.js";
 import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
@@ -31,6 +32,7 @@ export async function handleMcpRequest(
   sessions: SessionManager,
   usage: UsageTracker,
   oauth: OAuthProvider,
+  destructive: DestructiveGuard,
   userId: string,
   clientName: string,
   req: Request,
@@ -193,7 +195,52 @@ export async function handleMcpRequest(
     return null;
   };
 
-  registerAllAllowedTools(server, getTelegram, requireConnection, onSessionRevoked, onToolCall, checkRateLimit);
+  // Cache args summary once per (toolName, args) pair so checkDestructive's
+  // pre-handler write and recordDestructive's post-handler write share the
+  // exact same audit string — avoids subtle drift if args mutate, and one
+  // less call to summarizeArgs per destructive call.
+  const lastSummary = new WeakMap<object, string>();
+  const summaryFor = (args: unknown): string => {
+    if (!args || typeof args !== "object") return "";
+    const obj = args as object;
+    const cached = lastSummary.get(obj);
+    if (cached !== undefined) return cached;
+    const s = summarizeArgs(args);
+    lastSummary.set(obj, s);
+    return s;
+  };
+
+  const checkDestructive = (toolName: string, args: unknown): string | null => {
+    const summary = summaryFor(args);
+    const err = destructive.preflight(userId, toolName, summary);
+    if (err) {
+      logger.warn(`Destructive denied: ${toolName}`, {
+        component: "tools",
+        userId: logUser(userId),
+        event: "destructive.denied",
+        tool: toolName,
+        // The first sentence of the message classifies the deny reason
+        // (Destructive tools are disabled / Daily destructive-action limit reached).
+        reason: err.split(".")[0],
+      });
+    }
+    return err;
+  };
+
+  const recordDestructive = (toolName: string, args: unknown, result: "ok" | "error"): void => {
+    destructive.recordResult(userId, toolName, summaryFor(args), result);
+  };
+
+  registerAllAllowedTools(
+    server,
+    getTelegram,
+    requireConnection,
+    onSessionRevoked,
+    onToolCall,
+    checkRateLimit,
+    checkDestructive,
+    recordDestructive,
+  );
 
   await server.connect(transport);
   return transport.handleRequest(req);

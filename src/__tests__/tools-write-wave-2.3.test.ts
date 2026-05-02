@@ -8,7 +8,6 @@ import { describe, it } from "node:test";
 import { z } from "zod";
 
 const { TOOLS } = await import("../tools.js");
-const { EXPLICIT_EXCLUDED } = await import("../parity-config.js");
 
 const WAVE_2_3_TOOLS = [
   "telegram-kick-user",
@@ -55,20 +54,6 @@ describe("Wave 2.3 — chat admin / moderation (non-destructive write tools)", (
       if (!tool) continue;
       assert.equal(tool.requiresEnv, undefined, `${name} unexpectedly gated by ${tool.requiresEnv}`);
     }
-  });
-
-  it("set-chat-permissions remains pending (DESTRUCTIVE upstream → Phase 2.1, not in this wave)", () => {
-    // Sanity check: Wave 2.3 deliberately defers `telegram-set-chat-permissions`.
-    // Once Phase 2.1 (destructive opt-in plumbing) lands, this assertion will need
-    // to flip — and that change should be intentional, not a silent oversight.
-    const tool = TOOLS.find((t) => t.name === "telegram-set-chat-permissions");
-    assert.equal(tool, undefined, "set-chat-permissions should NOT be exposed until Phase 2.1");
-    const excluded = EXPLICIT_EXCLUDED.find((e) => e.name === "telegram-set-chat-permissions");
-    assert.equal(
-      excluded,
-      undefined,
-      "set-chat-permissions should NOT be in EXPLICIT_EXCLUDED — it's pending, not excluded",
-    );
   });
 
   it("set-slow-mode accepts only the seven Telegram-supported intervals", () => {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  DESTRUCTIVE,
   errorResult,
   premiumOnlyOnError,
   renderMessage,
@@ -708,6 +709,42 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       );
     },
     onError: premiumOnlyOnError("Audio transcription requires Telegram Premium on this account."),
+  },
+
+  // ─── Destructive (Phase 2.1, gated by DestructiveGuard) ─────────────────
+  {
+    name: "telegram-delete-message",
+    description: "Delete messages in a Telegram chat. Irreversible.",
+    inputSchema: {
+      // Cloud tightens vs upstream `z.array(z.number())` to match the
+      // `telegram-delete-scheduled` shape and the actual MTProto
+      // `messages.deleteMessages` per-call limit (100 IDs).
+      chatId: z.string().describe("Chat ID or username"),
+      messageIds: z.array(z.number().int().positive()).min(1).max(100).describe("Message IDs to delete (1-100)"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, messageIds }, { telegram }) => {
+      await telegram.deleteMessages(chatId, messageIds);
+      return textResult(`Deleted ${messageIds.length} message(s) in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-delete-scheduled",
+    description: "Delete scheduled messages in a Telegram chat. Irreversible.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      messageIds: z
+        .array(z.number().int().positive())
+        .min(1)
+        .max(100)
+        .describe("Scheduled message IDs to delete (1-100)"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, messageIds }, { telegram }) => {
+      await telegram.deleteScheduledMessages(chatId, messageIds);
+      return textResult(`Deleted ${messageIds.length} scheduled message(s) in ${chatId}`);
+    },
   },
 
   {

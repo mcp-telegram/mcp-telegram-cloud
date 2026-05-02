@@ -101,13 +101,6 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
     assert.equal(tool, undefined, "set-profile-photo must NOT be exposed");
   });
 
-  it("clear-drafts remains deferred (DESTRUCTIVE upstream → Phase 2.1, neither exposed nor excluded)", () => {
-    const tool = TOOLS.find((t) => t.name === "telegram-clear-drafts");
-    assert.equal(tool, undefined, "clear-drafts should NOT be exposed until Phase 2.1");
-    const excluded = EXPLICIT_EXCLUDED.find((e) => e.name === "telegram-clear-drafts");
-    assert.equal(excluded, undefined, "clear-drafts should NOT be in EXPLICIT_EXCLUDED — it's pending, not excluded");
-  });
-
   describe("PREMIUM error mapping", () => {
     for (const name of PREMIUM_TOOLS) {
       it(`${name} maps PREMIUM_ACCOUNT_REQUIRED to a friendly error`, () => {
