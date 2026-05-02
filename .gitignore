@@ -53,6 +53,7 @@ docker-compose.override.yml
 # Personal planning artifacts (not for public repo)
 claudedocs/
 .claude/
+docs/observability/plan.md
 
 # Test coverage
 coverage/
