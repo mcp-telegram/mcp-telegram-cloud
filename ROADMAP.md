@@ -4,9 +4,6 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-For the internal, fact-check-audited working plan with risks and exit criteria, see
-[`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
-
 **Last updated:** 2026-05-02
 **Current version:** 2.14.0 (cloud — Phase 2.1 destructive infrastructure + 11 tools) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
@@ -40,8 +37,7 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **Per-user burst rate limit** (Layer 3 from the
-  [layered approach in `docs/research/telegram-rate-limits.md`](docs/research/telegram-rate-limits.md#61-layered-approach)) —
+- **Per-user burst rate limit** (Layer 3) —
   trigger: ≥10 daily active users sustained 7 days. Currently
   Layer 1 (per-IP HTTP rate-limit on `/oauth/*`, 30 req/min) and Layer 2
   (per-user daily quota, default 100 calls/day via `FREE_TIER_LIMIT`) are
@@ -67,8 +63,7 @@ Direction is set, but timing depends on usage signals or external events.
   (matches the broader "no paid ecosystem on hosted free tier" stance,
   with no judgment on Stars itself).
 - **Proxy pool** — currently single-IP. Activation is investigation-led,
-  not automatic — see
-  [`docs/research/proxy-pool-strategy.md` §3 Triggers](docs/research/proxy-pool-strategy.md).
+  not automatic.
   Signals to investigate: SigNoz alerts A1 (`flood_wait > 10/hour`) or A2
   (`> 50/hour`), 10+ DAU sustained 7 consecutive days, or repeated user
   reports of unexplained session drops. `AUTH_KEY_DUPLICATED` is treated
@@ -93,7 +88,7 @@ Direction is set, but timing depends on usage signals or external events.
 ## Not planned (out of scope)
 
 Explicitly **not** on the roadmap. If this changes, it'll be noted in the
-[changelog](claudedocs/workflow_cloud_open_source.md#changelog).
+"Done" section below.
 
 - **Donate / paid tiers** — currently not accepted; revisit conditional on
   legal/banking changes that allow individual contributors to receive
@@ -117,9 +112,6 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
-
-For full history see
-[`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
 
 - **2026-05-02** — **Phase 2.1 shipped** (cloud v2.14.0). 11 destructive
   tools out of pending into whitelist behind a per-user opt-in gate:

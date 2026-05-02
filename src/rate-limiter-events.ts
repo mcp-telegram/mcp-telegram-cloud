@@ -18,7 +18,7 @@
  *     wrapper sits closer to the source than another wrapper.
  * The cost is one stderr line per event also being captured by other
  * interceptors. With ~zero FLOOD_WAIT/network errors in steady state
- * (see docs/research/telegram-rate-limits.md) this is negligible.
+ * this is negligible.
  *
  * Available since @overpod/mcp-telegram >= 1.35.0; older versions emit
  * human-readable strings that simply pass through, so this is a no-op until

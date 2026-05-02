@@ -144,7 +144,7 @@ service.name = "mcp-telegram-cloud" AND component = "rate-limiter" AND event = "
 service.name = "mcp-telegram-cloud" AND body CONTAINS "AUTH_KEY_DUPLICATED"
 ```
 
-The first two should return 0 rows in the 24h baseline (no flood events yet — see `docs/research/telegram-rate-limits.md`). They're "armed" filters — empty result is correct, the alert fires when count > threshold.
+The first two should return 0 rows in the 24h baseline (no flood events yet on a low-traffic deploy). They're "armed" filters — empty result is correct, the alert fires when count > threshold.
 
 ## End-to-end verification
 
@@ -187,4 +187,4 @@ Three WARN records within a few seconds, all carrying `service.name=mcp-telegram
 
 ## Threshold rationale
 
-Numbers come from `docs/research/telegram-rate-limits.md` §6.4. They're conservative starts; revise after observing 4-6 weeks of real traffic at 50+ DAU.
+Conservative starting thresholds; revise after observing 4-6 weeks of real traffic at 50+ DAU.

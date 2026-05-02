@@ -182,7 +182,7 @@ Expected at the time of adding (24h baseline, low-traffic deployment): 5xx = 0, 
 
 ## Threshold rationale
 
-Numbers come from `claudedocs/workflow_cloud_open_source.md` §Success Metrics. They're conservative starts; revise after observing 4-6 weeks of real traffic at 50+ DAU. All thresholds assume single-replica deploy — if scaling out, divide rate-based thresholds by replica count or aggregate before alerting.
+Conservative starting thresholds; revise after observing 4-6 weeks of real traffic at 50+ DAU. All thresholds assume single-replica deploy — if scaling out, divide rate-based thresholds by replica count or aggregate before alerting.
 
 ## Scope of this doc
 

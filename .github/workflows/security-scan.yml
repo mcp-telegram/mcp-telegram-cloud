@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       full_history:
-        description: "Scan full git history (run before Phase 5.1 orphan publication)"
+        description: "Scan full git history (slower; use before opening repo or after history rewrites)"
         type: boolean
         default: false
 
