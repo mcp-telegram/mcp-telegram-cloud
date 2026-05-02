@@ -42,6 +42,15 @@ export const WRITE = {
   openWorldHint: false,
 } as const;
 
+/** Irreversible state changes: delete content, revoke invite, change chat-wide
+ * settings, edit story, clear drafts. Phase 2.1 — gated server-side by
+ * `DestructiveGuard` (per-user opt-in toggle + separate daily quota + audit log). */
+export const DESTRUCTIVE = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  openWorldHint: false,
+} as const;
+
 /** Format reactions array into compact text like: [👍×5 ❤️×3(me) 🔥×1] */
 export function formatReactions(reactions?: { emoji: string; count: number; me: boolean }[]): string {
   if (!reactions?.length) return "";

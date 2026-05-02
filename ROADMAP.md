@@ -7,8 +7,8 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 For the internal, fact-check-audited working plan with risks and exit criteria, see
 [`claudedocs/workflow_cloud_open_source.md`](claudedocs/workflow_cloud_open_source.md).
 
-**Last updated:** 2026-05-01
-**Current version:** 2.13.0 (cloud — Phase 2 Wave 2.7 Stars-write opt-in) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-05-02
+**Current version:** 2.14.0 (cloud — Phase 2.1 destructive infrastructure + 11 tools) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -16,19 +16,17 @@ For the internal, fact-check-audited working plan with risks and exit criteria, 
 
 **Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
 
-As of v2.13.0 the cloud whitelist covers **161 of 181 upstream tools (~89%)**.
-Stars parity is now complete in opt-in form: the 6 RO Stars tools (Wave 3 RO,
-v2.12.0) plus the 3 Stars-write tools (Wave 2.7, v2.13.0) all register only
-when `MCP_TELEGRAM_ENABLE_STARS=1` is set on the server (default OFF on the
-hosted image). SAFE-write parity covers groups, invites, topics, polls,
-pin/unpin, inline-query/press-button, transcribe-audio, story toggles, and
-edit-fact-check. Remaining work: 11 pending destructive tools (Phase 2.1
-infrastructure: per-user opt-in toggle + audit log + separate quota) + 6
-excluded behind the filesystem upload path (Phase X) + 3 excluded auth
-lifecycle tools (covered by the OAuth/QR flow) + 1 permanently excluded
-(`telegram-terminate-session`, see §Not planned). Tracked in
-[`scripts/parity-baseline.json`](scripts/parity-baseline.json) and gated in
-CI by `pnpm check-parity`.
+As of v2.14.0 the cloud whitelist covers **172 of 181 upstream tools (~95%)** —
+**100% of what is achievable on a shared HTTP server**. The remaining 9 are
+all `EXPLICIT_EXCLUDED`: 6 filesystem-bound send tools (Phase X — needs an
+upload-path design), and 3 auth-lifecycle tools that conflict with cloud's
+OAuth/QR flow (`telegram-login`, `telegram-logout`, `telegram-terminate-session`).
+The 11 destructive tools shipped in v2.14.0 behind a per-user opt-in toggle
+(server-default OFF) at `/my/settings`, with an `/my/audit` history view and
+a separate `DESTRUCTIVE_DAILY_LIMIT` quota independent of `FREE_TIER_LIMIT`.
+Stars parity is complete in opt-in form (`MCP_TELEGRAM_ENABLE_STARS=1`).
+Tracked in [`scripts/parity-baseline.json`](scripts/parity-baseline.json) —
+`pending` is now `[]` — and gated in CI by `pnpm check-parity`.
 
 ## Now (in flight)
 
@@ -42,15 +40,6 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **Phase 2.1 — Destructive infrastructure (~11 tools)**. Required before
-  any destructive tool ships. Per-user `enable_destructive_tools` opt-in
-  toggle at `/settings`, separate daily quota (independent of
-  `FREE_TIER_LIMIT`), audit log table + `/my/audit` visibility. Then
-  expose: delete-message, delete-scheduled, delete-stories, delete-topic,
-  delete-fact-check, clear-drafts, revoke-invite-link, toggle-forum-mode,
-  set-chat-permissions, set-chat-reactions, edit-story. After this phase
-  ships, the only remaining gap to full 1:1 parity will be the 6 FS-bound
-  tools (Phase X) — pending count drops to 0.
 - **Per-user burst rate limit** (Layer 3 from the
   [layered approach in `docs/research/telegram-rate-limits.md`](docs/research/telegram-rate-limits.md#61-layered-approach)) —
   trigger: ≥10 daily active users sustained 7 days. Currently
@@ -131,6 +120,28 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 For full history see
 [`claudedocs/workflow_cloud_open_source.md` §Changelog](claudedocs/workflow_cloud_open_source.md#changelog).
+
+- **2026-05-02** — **Phase 2.1 shipped** (cloud v2.14.0). 11 destructive
+  tools out of pending into whitelist behind a per-user opt-in gate:
+  `delete-message`, `delete-scheduled`, `delete-stories`, `delete-topic`,
+  `delete-fact-check`, `clear-drafts`, `revoke-invite-link`,
+  `toggle-forum-mode`, `set-chat-permissions`, `set-chat-reactions`,
+  `edit-story`. Gating: a single `enable_destructive` toggle per user at
+  `/my/settings` (server-default OFF), separate `DESTRUCTIVE_DAILY_LIMIT`
+  quota independent of `FREE_TIER_LIMIT` (default 20/day, 0 = unlimited),
+  and a `destructive_audit` table feeding `/my/audit`. Every gated
+  invocation — including denied attempts — writes one audit row with
+  `result ∈ {ok, error, denied_disabled, denied_quota}`. Auth on `/my/*`
+  via the `tg_user` cookie + saved-session membership; CSRF on POST via
+  exact-origin match. Cloud tightens vs upstream where reasonable
+  (`edit-story` rejects `privacy='selected'` without a non-empty
+  `allowUserIds`, `set-chat-permissions` requires at least one flag,
+  `clear-drafts` rejects ambiguous chatId+confirmAllChats=both).
+  `edit-story` ships without the `filePath` upstream field (FS-bound,
+  Phase X). Coverage: whitelist 161 → **172 (~95% of 181) = 100%
+  achievable**; baseline pending 11 → **0**. The only remaining gap to
+  full 1:1 parity is the 9 EXPLICIT_EXCLUDED entries (6 FS-bound +
+  3 auth-lifecycle).
 
 - **2026-05-01** — **Phase 2 Wave 2.7 shipped** (cloud v2.13.0). 3
   Stars-write tools — `telegram-save-star-gift` (show/hide a received

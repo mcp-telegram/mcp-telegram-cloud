@@ -8,6 +8,14 @@ export type RequireConnection = () => Promise<string | null>;
 export type OnSessionRevoked = () => Promise<void>;
 export type RateLimitCheck = (toolName: string) => string | null;
 export type OnToolCall = (toolName: string) => void;
+/** Phase 2.1 hook for tools whose annotation has `destructiveHint=true`. Returns
+ * a human-readable error to short-circuit, or null to proceed. The hook is
+ * responsible for writing its own audit row on deny — the registry only relays. */
+export type DestructiveCheck = (toolName: string, args: unknown) => string | null;
+/** Phase 2.1 result hook: invoked after a destructive tool finishes (success or
+ * thrown). The registry passes a normalized outcome so the guard can record an
+ * audit row without re-running its summarizer. */
+export type DestructiveRecord = (toolName: string, args: unknown, result: "ok" | "error") => void;
 
 export interface ToolAnnotations {
   readonly readOnlyHint: boolean;
@@ -85,6 +93,12 @@ export interface RegisterAllOptions {
   onSessionRevoked?: OnSessionRevoked;
   onToolCall?: OnToolCall;
   checkRateLimit?: RateLimitCheck;
+  /** Pre-handler check for destructive tools (annotation `destructiveHint=true`).
+   * Skipped for non-destructive tools — they never reach the guard.
+   * Both `checkDestructive` and `recordDestructive` should be wired together;
+   * the registry will not call one without the other being meaningful. */
+  checkDestructive?: DestructiveCheck;
+  recordDestructive?: DestructiveRecord;
 }
 
 /**
@@ -116,6 +130,8 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
     };
     if (tool.inputSchema) config.inputSchema = tool.inputSchema;
 
+    const isDestructive = tool.annotations.destructiveHint;
+
     server.registerTool(tool.name, config, async (rawArgs: unknown) => {
       opts.onToolCall?.(tool.name);
       const limitErr = opts.checkRateLimit?.(tool.name);
@@ -126,6 +142,11 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
 
       const preErr = tool.preValidate?.(args);
       if (preErr) return preErr;
+
+      if (isDestructive && opts.checkDestructive) {
+        const destErr = opts.checkDestructive(tool.name, args);
+        if (destErr) return { content: [{ type: "text", text: destErr }], isError: true };
+      }
 
       if (!tool.skipRequireConnection) {
         const connErr = await opts.requireConnection();
@@ -142,8 +163,16 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
           tool: tool.name,
           durationMs: duration,
         });
+        if (isDestructive) {
+          // `result.isError === true` is the convention for handler-returned faults;
+          // record those as 'error' so the audit page distinguishes denied/error/ok.
+          opts.recordDestructive?.(tool.name, args, result.isError === true ? "error" : "ok");
+        }
         return result;
       } catch (e) {
+        if (isDestructive) {
+          opts.recordDestructive?.(tool.name, args, "error");
+        }
         const custom = tool.onError?.(e);
         if (custom) return custom;
         return handleToolError(e, onRevoked, tool.name);

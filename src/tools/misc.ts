@@ -1,6 +1,15 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { formatPeer, READ_ONLY, renderGroupCallParticipant, sanitize, textResult, WRITE } from "./_helpers.js";
+import {
+  DESTRUCTIVE,
+  errorResult,
+  formatPeer,
+  READ_ONLY,
+  renderGroupCallParticipant,
+  sanitize,
+  textResult,
+  WRITE,
+} from "./_helpers.js";
 
 export const MISC_TOOLS: ToolDefinition[] = [
   {
@@ -389,6 +398,59 @@ export const MISC_TOOLS: ToolDefinition[] = [
       }
       if (r.participants.length > 100) lines.push(`  ... (${r.participants.length - 100} more)`);
       return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  // ─── Destructive (Phase 2.1, gated by DestructiveGuard) ─────────────────
+  {
+    name: "telegram-clear-drafts",
+    description:
+      "Delete saved message drafts. Pass chatId to clear the draft for a single chat. Without chatId, clears drafts in ALL chats — requires confirmAllChats:true.",
+    inputSchema: {
+      chatId: z.string().optional().describe("Chat ID or username. If provided, clears draft only for this chat"),
+      confirmAllChats: z
+        .boolean()
+        .optional()
+        .describe("Must be true to wipe drafts across ALL chats when chatId is omitted"),
+    },
+    annotations: DESTRUCTIVE,
+    preValidate: ({ chatId, confirmAllChats }) => {
+      if (chatId !== undefined && confirmAllChats === true) {
+        return errorResult("Pass either chatId or confirmAllChats=true, not both.");
+      }
+      if (chatId === undefined && confirmAllChats !== true) {
+        return errorResult(
+          "Refusing to clear drafts in ALL chats without explicit confirmation. " +
+            "Pass chatId for a single chat, or confirmAllChats=true to wipe all drafts.",
+        );
+      }
+      return null;
+    },
+    handler: async ({ chatId, confirmAllChats }, { telegram }) => {
+      if (chatId !== undefined) {
+        await telegram.saveDraft(chatId, "");
+        return textResult(`Draft cleared for ${chatId}`);
+      }
+      if (confirmAllChats === true) {
+        await telegram.clearAllDrafts();
+        return textResult("Cleared drafts across all chats.");
+      }
+      // Defensive — preValidate already covers both branches.
+      return errorResult("Unreachable");
+    },
+  },
+
+  {
+    name: "telegram-delete-fact-check",
+    description: "Remove a fact-check annotation. Requires fact-checker privileges.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (channel)"),
+      messageId: z.number().int().positive().describe("Message ID whose fact-check to remove"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, messageId }, { telegram }) => {
+      await telegram.deleteFactCheck(chatId, messageId);
+      return textResult(`Removed fact-check from message #${messageId} in ${chatId}`);
     },
   },
 ];

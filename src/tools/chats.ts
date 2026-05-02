@@ -1,6 +1,15 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { errorResult, premiumOnlyOnError, SAFE_WRITE, safeOpt, sanitize, textResult, WRITE } from "./_helpers.js";
+import {
+  DESTRUCTIVE,
+  errorResult,
+  premiumOnlyOnError,
+  SAFE_WRITE,
+  safeOpt,
+  sanitize,
+  textResult,
+  WRITE,
+} from "./_helpers.js";
 
 export const CHATS_TOOLS: ToolDefinition[] = [
   {
@@ -602,6 +611,133 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     handler: async ({ chatId, enabled }, { telegram }) => {
       await telegram.toggleChannelSignatures(chatId, enabled);
       return textResult(`${enabled ? "Enabled" : "Disabled"} author signatures in ${chatId}`);
+    },
+  },
+
+  // ─── Destructive (Phase 2.1, gated by DestructiveGuard) ─────────────────
+  {
+    name: "telegram-revoke-invite-link",
+    description: "Revoke an invite link for a group or channel. Irreversible — the link stops working immediately.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      link: z.string().min(1).describe("The invite link to revoke"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, link }, { telegram }) => {
+      await telegram.revokeInviteLink(chatId, link);
+      return textResult(`Invite link revoked: ${link}`);
+    },
+  },
+
+  {
+    name: "telegram-set-chat-permissions",
+    description:
+      "Set the default permissions for all non-admin members of a group, supergroup, or channel. Omitted flags keep their current state; true = allowed, false = denied. Chat-wide change visible to every member.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username"),
+      sendMessages: z.boolean().optional().describe("Allow sending text messages"),
+      sendMedia: z.boolean().optional().describe("Allow sending photos/videos/documents"),
+      sendStickers: z.boolean().optional().describe("Allow sending stickers"),
+      sendGifs: z.boolean().optional().describe("Allow sending GIFs"),
+      sendPolls: z.boolean().optional().describe("Allow sending polls"),
+      sendInline: z.boolean().optional().describe("Allow inline bot usage"),
+      embedLinks: z.boolean().optional().describe("Allow link previews"),
+      changeInfo: z.boolean().optional().describe("Allow changing chat info (title, photo, description)"),
+      inviteUsers: z.boolean().optional().describe("Allow inviting new members"),
+      pinMessages: z.boolean().optional().describe("Allow pinning messages"),
+    },
+    annotations: DESTRUCTIVE,
+    preValidate: ({ chatId: _chatId, ...permissions }) => {
+      const provided = Object.values(permissions).filter((v) => v !== undefined);
+      if (provided.length === 0) {
+        return errorResult("At least one permission flag must be provided.");
+      }
+      return null;
+    },
+    handler: async ({ chatId, ...permissions }, { telegram }) => {
+      await telegram.setChatPermissions(chatId, permissions);
+      const changed = Object.entries(permissions)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => `${k}=${v ? "allow" : "deny"}`);
+      return textResult(`Updated permissions in ${chatId}: ${changed.join(", ")}`);
+    },
+  },
+
+  {
+    name: "telegram-set-chat-reactions",
+    description:
+      "Set which reactions are available in a chat. type='all' allows all standard emoji (set allowCustom=true to also permit custom emoji for Premium users), type='some' restricts to a specific emoji list, type='none' disables reactions entirely. Requires admin.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username (group, supergroup, or channel)"),
+      reactions: z
+        .discriminatedUnion("type", [
+          z.object({
+            type: z.literal("all"),
+            allowCustom: z
+              .boolean()
+              .optional()
+              .describe("If true, also allow custom emoji reactions (requires Premium users)"),
+          }),
+          z.object({
+            type: z.literal("some"),
+            emoji: z
+              .array(z.string().min(1).max(8))
+              .min(1)
+              .max(100)
+              .describe("List of allowed reaction emoji (e.g. ['👍','❤️','🔥'])"),
+          }),
+          z.object({ type: z.literal("none") }),
+        ])
+        .describe("Reaction policy for the chat"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, reactions }, { telegram }) => {
+      await telegram.setChatAvailableReactions(chatId, reactions);
+      const summary =
+        reactions.type === "all"
+          ? `all${reactions.allowCustom ? " (custom allowed)" : ""}`
+          : reactions.type === "some"
+            ? `some [${reactions.emoji.join(",")}]`
+            : "none";
+      // emoji are length-validated only; sanitize to drop unpaired surrogates per RO precedent
+      // (get-stars-subscriptions:86) — wrap the final string, not per-value.
+      return textResult(sanitize(`Reactions in ${chatId}: ${summary}`));
+    },
+  },
+
+  {
+    name: "telegram-toggle-forum-mode",
+    description:
+      "Enable or disable forum/topics mode in a supergroup. Disabling DELETES every existing topic — pass confirm=true when enabled=false. Requires creator or admin.",
+    inputSchema: {
+      chatId: z.string().describe("Supergroup ID or username"),
+      enabled: z.boolean().describe("true to enable forum mode, false to disable"),
+      confirm: z.boolean().optional().describe("Must be true when disabling — disabling removes ALL topics."),
+    },
+    annotations: DESTRUCTIVE,
+    preValidate: ({ enabled, confirm }) => {
+      if (!enabled && confirm !== true) {
+        return errorResult("Disabling forum mode deletes all existing topics. Pass confirm=true to proceed.");
+      }
+      return null;
+    },
+    handler: async ({ chatId, enabled }, { telegram }) => {
+      await telegram.toggleForumMode(chatId, enabled);
+      return textResult(`${enabled ? "Enabled" : "Disabled"} forum mode in ${chatId}`);
+    },
+  },
+
+  {
+    name: "telegram-delete-topic",
+    description: "Delete a forum topic and all its message history. Irreversible.",
+    inputSchema: {
+      chatId: z.string().describe("Chat ID or username of the forum supergroup"),
+      topicId: z.number().int().positive().describe("Topic ID to delete"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, topicId }, { telegram }) => {
+      await telegram.deleteForumTopic(chatId, topicId);
+      return textResult(`Deleted topic ${topicId} in ${chatId}`);
     },
   },
 ];

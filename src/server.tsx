@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { BotClient } from "./bot/api.js";
 import { Subscribers } from "./bot/subscribers.js";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
+import { DestructiveGuard } from "./destructive-guard.js";
 import { logger } from "./logger.js";
 import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
@@ -14,6 +15,7 @@ import { createAdminRoutes } from "./routes/admin.js";
 import { createBotWebhookRoutes, createBroadcastRoute } from "./routes/bot.js";
 import { createLoginRoutes } from "./routes/login.js";
 import { registerMcpRoutes } from "./routes/mcp.js";
+import { createMyRoutes } from "./routes/my.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
@@ -40,6 +42,11 @@ if (!config.logUserIds && config.logHashSalt === SENTINEL_LOG_HASH_SALT) {
 const sessions = new SessionManager();
 const oauth = new OAuthProvider({ issuer: config.issuer, db: sessions.getDb() });
 const usage = new UsageTracker(sessions.getDb());
+const destructive = new DestructiveGuard(
+  sessions.getDb(),
+  config.destructiveDailyLimit,
+  `${config.issuer}/my/settings`,
+);
 
 // Optional broadcast bot (Phase 0.1). Either configure all three vars or none —
 // partial config almost always means a deploy mistake (bot answers /start with silence).
@@ -77,6 +84,21 @@ if (config.usageLogRetentionDays > 0) {
   }, 24 * 3600_000);
 }
 
+// Periodic purge of old destructive_audit rows (retention policy)
+if (config.destructiveAuditRetentionDays > 0) {
+  setInterval(() => {
+    const removed = destructive.purgeOldRows(config.destructiveAuditRetentionDays);
+    if (removed > 0) {
+      logger.info(`Purged ${removed} old destructive_audit rows`, {
+        component: "destructive",
+        event: "retention.purge",
+        removed,
+        retentionDays: config.destructiveAuditRetentionDays,
+      });
+    }
+  }, 24 * 3600_000);
+}
+
 // strict: false makes Hono treat `/mcp` and `/mcp/` as the same route
 // (and same for all other paths) — ChatGPT and some proxies send trailing
 // slash to the MCP endpoint, and default strict mode 404s those.
@@ -87,8 +109,9 @@ app.route("/", createStaticRoutes({ sessions }));
 app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
-registerMcpRoutes(app, { oauth, sessions, usage });
+registerMcpRoutes(app, { oauth, sessions, usage, destructive });
 app.route("/login", createLoginRoutes({ sessions }));
+app.route("/my", createMyRoutes({ destructive, sessions }));
 
 if (botEnabled && botClient && subscribers) {
   const botDeps = { client: botClient, subscribers, webhookSecret: config.botWebhookSecret };

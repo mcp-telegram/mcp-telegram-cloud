@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  DESTRUCTIVE,
   errorResult,
   formatPeer,
   premiumOnlyOnError,
@@ -261,5 +262,72 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       return textResult(`Stealth mode activated (past: ${past ?? false}, future: ${future ?? false})`);
     },
     onError: premiumOnlyOnError("Stealth mode requires Telegram Premium."),
+  },
+
+  // ─── Destructive (Phase 2.1, gated by DestructiveGuard) ─────────────────
+  {
+    name: "telegram-delete-stories",
+    description: "Delete one or more of your own stories. Irreversible — requires confirm:true.",
+    inputSchema: {
+      chatId: z.string().default("me").describe("Peer owning the stories"),
+      ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to delete (1-100 per request)"),
+      confirm: z.literal(true).describe("Pass true to confirm irreversible deletion"),
+    },
+    annotations: DESTRUCTIVE,
+    handler: async ({ chatId, ids }, { telegram }) => {
+      const result = await telegram.deleteStories(chatId, ids);
+      const { deleted } = result;
+      return textResult(`Deleted ${deleted.length} stor${deleted.length === 1 ? "y" : "ies"}: [${deleted.join(", ")}]`);
+    },
+  },
+
+  {
+    name: "telegram-edit-story",
+    description:
+      "Edit an existing story: update caption ('' clears it) or change privacy rules. Cloud disallows replacing the media file (filesystem-bound) — use a fresh story for media changes.",
+    inputSchema: {
+      chatId: z.string().default("me").describe("Peer owning the story"),
+      storyId: z.number().int().positive().describe("ID of the story to edit"),
+      caption: z.string().max(2048).optional().describe("New caption; pass '' to clear"),
+      parseMode: z.enum(["md", "html"]).optional().describe("Caption parse mode"),
+      privacy: z.enum(["everyone", "contacts", "close_friends", "selected"]).optional().describe("New privacy setting"),
+      allowUserIds: z
+        .array(z.string().regex(/^\d{1,19}$/, "must be a numeric Telegram user ID"))
+        .optional()
+        .describe("Required when privacy='selected'"),
+      disallowUserIds: z
+        .array(z.string().regex(/^\d{1,19}$/, "must be a numeric Telegram user ID"))
+        .optional()
+        .describe("Blocked user IDs (ignored for 'selected')"),
+    },
+    annotations: DESTRUCTIVE,
+    preValidate: ({ caption, privacy, allowUserIds }) => {
+      if (caption === undefined && privacy === undefined) {
+        return errorResult("Provide at least one of: caption, privacy.");
+      }
+      // Mirror upstream guard (account.js:193-195): privacy='selected' without
+      // a non-empty allowUserIds is rejected at the wire; surface it pre-handler
+      // so the audit log records the validation refusal, not a wire-level error.
+      if (privacy === "selected" && (!allowUserIds || allowUserIds.length === 0)) {
+        return errorResult("privacy='selected' requires at least one user ID in allowUserIds.");
+      }
+      return null;
+    },
+    handler: async ({ chatId, storyId, caption, parseMode, privacy, allowUserIds, disallowUserIds }, { telegram }) => {
+      const opts: {
+        caption?: string;
+        parseMode?: "md" | "html";
+        privacy?: "everyone" | "contacts" | "close_friends" | "selected";
+        allowUserIds?: string[];
+        disallowUserIds?: string[];
+      } = {};
+      if (caption !== undefined) opts.caption = sanitize(caption);
+      if (parseMode !== undefined) opts.parseMode = parseMode;
+      if (privacy !== undefined) opts.privacy = privacy;
+      if (allowUserIds !== undefined) opts.allowUserIds = allowUserIds;
+      if (disallowUserIds !== undefined) opts.disallowUserIds = disallowUserIds;
+      const result = await telegram.editStory(chatId, storyId, opts);
+      return textResult(`Edited story #${storyId} in ${chatId}: ${result.changed.join(", ") || "no changes"}`);
+    },
   },
 ];
