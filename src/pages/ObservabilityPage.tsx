@@ -1,4 +1,4 @@
-import { css } from "hono/css";
+import { css, cx } from "hono/css";
 import type { FC } from "hono/jsx";
 import type { TelemetryMode } from "../config.js";
 import { card, subtitle, tg, title } from "../styles.js";
@@ -101,19 +101,20 @@ export const ObservabilityPage: FC<ObservabilityPageProps> = ({
   recentErrors,
 }) => {
   const c = modeColors[telemetryMode];
+  const badgeStyle = `background:${c.bg};color:${c.fg};`;
+  const warnStyle = `color:${tg.destructive};margin-left:8px;font-size:12px;`;
+  const hintStyle = `color:${tg.hint};font-size:12px;margin-top:24px;`;
   return (
     <Layout title="Observability — Admin" description="Local observability dashboard">
-      <main class={`${card} ${wide}`}>
+      <main class={cx(card, wide)}>
         <h1 class={title}>Observability</h1>
         <p class={subtitle}>
           Telemetry mode:{" "}
-          <span class={badge} style={`background:${c.bg};color:${c.fg};`}>
+          <span class={badge} style={badgeStyle}>
             {telemetryMode}
           </span>
           {telemetryMode === "on" && !signozEndpointConfigured && (
-            <span style={`color:${tg.destructive};margin-left:8px;font-size:12px;`}>
-              ⚠ SIGNOZ_ENDPOINT not set — outbound disabled
-            </span>
+            <span style={warnStyle}>⚠ SIGNOZ_ENDPOINT not set — outbound disabled</span>
           )}
         </p>
 
@@ -225,7 +226,7 @@ export const ObservabilityPage: FC<ObservabilityPageProps> = ({
           )}
         </section>
 
-        <p style={`color:${tg.hint};font-size:12px;margin-top:24px;`}>
+        <p style={hintStyle}>
           Data sources: SQLite usage_log (daily/clients/users), in-memory ring buffer (errors, lost on restart). See
           SECURITY.md for the full privacy contract.
         </p>
