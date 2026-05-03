@@ -62,6 +62,43 @@ database as the crown jewel.
 - **Log bloat / indefinite retention** — `USAGE_LOG_RETENTION_DAYS` purges
   old rows daily (default 90d).
 
+### Privacy contract — what enters telemetry
+
+Outbound telemetry (logs/metrics/traces to SigNoz) is gated by the
+`MCP_TELEGRAM_TELEMETRY` master switch:
+
+| Mode         | SQLite `usage_log` | Console / docker logs | OTLP → SigNoz | In-memory error buffer |
+|--------------|:------------------:|:---------------------:|:-------------:|:----------------------:|
+| `local-only` *(default)* | ✅ | ✅ | ❌ | ✅ |
+| `on`         | ✅ | ✅ | ✅ (if `SIGNOZ_ENDPOINT` set) | ✅ |
+| `off`        | ✅ | ❌ | ❌ | ✅ |
+
+**Allowed in any mode** (recorded in usage_log + log attrs):
+
+- Tool name (e.g. `telegram-list-chats`)
+- MCP client classification (`claude`, `chatgpt`, `browser`, `bot`, `script`, `other`)
+- HTTP method, route template, status class, duration
+- Component / event labels we author (`component=oauth`, `event=token.issued`)
+- HMAC-hashed user id (10-hex-char prefix; HMAC key `LOG_HASH_SALT`)
+- Aggregate counts (DAU, calls/day)
+
+**Never recorded** (CI gate: `pnpm check-telemetry` runs in `.github/workflows/build.yml` on every push and blocks the build on any finding):
+
+- Raw Telegram user id, peer id, chat id, message id, message text
+- Phone, email, first/last name, username
+- MTProto session string, auth key, API hash
+- OAuth `code`, `state`, access tokens, refresh tokens
+- HTTP query strings (only the route path)
+- `Authorization` and `Cookie` headers
+- Any Telegram update payload bodies
+
+**For self-hosters**: the default `local-only` mode means a fresh `docker run`
+emits **zero outbound network traffic for telemetry**. The
+`/api/observability` page renders DAU, by-tool, by-client, and recent errors
+straight from SQLite + an in-memory ring buffer (last 500 ERRORs, lost on
+restart). Set `MCP_TELEGRAM_TELEMETRY=on` and `SIGNOZ_ENDPOINT=...` only when
+you operate your own SigNoz and want centralized dashboards.
+
 ### What we do **not** protect against (self-hosters read this)
 
 - **Plaintext session storage** — the SQLite DB contains MTProto session
@@ -88,10 +125,13 @@ See [`docs/self-hosting.md`](./docs/self-hosting.md) for the full
 operations guide. The short version:
 
 1. Generate a strong `ADMIN_TOKEN` and `LOG_HASH_SALT` (32 bytes hex).
-2. Set `LOG_USER_IDS=false` unless you have a specific need.
-3. Put the service behind TLS — never expose `:3000` directly.
-4. Restrict the database volume to the service user (`0600`).
-5. Back up the DB **encrypted** — it contains live sessions.
-6. Firewall `/api/stats` and `/api/import-session` to trusted IPs if
-   possible.
-7. Subscribe to this repo's releases for security advisories.
+2. Leave `LOG_USER_IDS` unset (default = HMAC-hashed). Only set
+   `LOG_USER_IDS=true` for short local debugging — never in production.
+3. Leave `MCP_TELEGRAM_TELEMETRY` unset (default = `local-only`, zero
+   outbound). Set to `on` only if you run your own SigNoz.
+4. Put the service behind TLS — never expose `:3000` directly.
+5. Restrict the database volume to the service user (`0600`).
+6. Back up the DB **encrypted** — it contains live sessions.
+7. Firewall `/api/stats`, `/api/observability`, and `/api/import-session`
+   to trusted IPs if possible.
+8. Subscribe to this repo's releases for security advisories.

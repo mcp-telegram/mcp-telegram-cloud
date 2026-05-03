@@ -1,16 +1,26 @@
 /**
- * Lightweight structured logger that sends logs to SigNoz via OTLP HTTP.
+ * Lightweight structured logger.
+ *
+ * Outbound destinations are gated by `config.telemetryMode`:
+ * - `on`        → console + OTLP HTTP exporter to SigNoz (if `signozEndpoint` set)
+ * - `local-only`→ console only (default; **zero outbound**), error ring buffer captures ERRORs
+ * - `off`       → ring buffer only (no console, no OTLP — silent for embedded/test use)
+ *
  * Zero external dependencies — uses Node.js built-in fetch.
- * Also logs to console for local/docker visibility.
  */
 
 import { createHmac } from "node:crypto";
 import { config } from "./config.js";
+import { recordError } from "./telemetry/error-buffer.js";
 
 const OTLP_ENDPOINT = config.signozEndpoint;
 const SERVICE_NAME = config.logServiceName;
 const BATCH_INTERVAL_MS = 5_000;
 const MAX_BATCH_SIZE = 50;
+/** Outbound OTLP active only when telemetry is fully on AND endpoint is configured. */
+const OTLP_ACTIVE = config.telemetryMode === "on" && OTLP_ENDPOINT !== "";
+/** Console output is suppressed only in `off` mode (used for embedded/tests where the host swallows stdout). */
+const CONSOLE_ACTIVE = config.telemetryMode !== "off";
 
 /**
  * Return a user identifier safe for logs. When LOG_USER_IDS=false, returns
@@ -55,8 +65,8 @@ function toAttributes(attrs: Record<string, string | number | undefined>) {
 
 async function flush() {
   if (batch.length === 0) return;
-  if (!OTLP_ENDPOINT) {
-    batch.length = 0; // drain — no endpoint configured, keep console logs only
+  if (!OTLP_ACTIVE) {
+    batch.length = 0; // drain — exporter inactive (telemetryMode != "on" or no endpoint)
     return;
   }
   const records = batch.splice(0);
@@ -98,18 +108,25 @@ function scheduleFlush() {
 }
 
 function log(severity: Severity, message: string, attrs: Record<string, string | number | undefined> = {}) {
-  // Console output (keeps docker logs working)
-  const prefix = attrs.component ? `[${attrs.component}]` : "";
+  // Always feed the in-memory ring buffer (used by /api/observability) for ERRORs,
+  // regardless of telemetry mode — the buffer is local-only by definition.
   if (severity === "ERROR") {
-    console.error(`${prefix} ${message}`);
-  } else {
-    console.log(`${prefix} ${message}`);
+    recordError(message, attrs);
   }
 
-  // Skip batching entirely when no remote endpoint is configured
-  if (!OTLP_ENDPOINT) return;
+  // Console output (keeps docker logs working). Suppressed only in `off` mode.
+  if (CONSOLE_ACTIVE) {
+    const prefix = attrs.component ? `[${attrs.component}]` : "";
+    if (severity === "ERROR") {
+      console.error(`${prefix} ${message}`);
+    } else {
+      console.log(`${prefix} ${message}`);
+    }
+  }
 
-  // OTLP batch
+  // Skip OTLP batching when exporter is inactive
+  if (!OTLP_ACTIVE) return;
+
   batch.push({
     timeUnixNano: String(Date.now() * 1_000_000),
     severityNumber: SEVERITY_NUMBER[severity],

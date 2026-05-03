@@ -51,4 +51,8 @@ paths = [
   # PNG icon assets are inlined as base64 buffers — long high-entropy strings
   # trip the telegram-session-string heuristic but are not secrets.
   '''src/icon\.ts$''',
+  # Test fixtures use deterministic literal tokens for unit tests of auth
+  # primitives; they are never deployed. Real prod tokens live in deploy
+  # secrets and never appear in source.
+  '''src/__tests__/''',
 ]

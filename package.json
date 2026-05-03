@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.15.1",
+  "version": "2.16.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/__tests__/*.test.ts",
     "check-parity": "tsx scripts/check-parity.ts",
+    "check-telemetry": "tsx scripts/check-telemetry.ts",
     "lint": "biome check src/ scripts/",
     "lint:fix": "biome check --write src/ scripts/",
     "format": "biome format --write src/ scripts/",

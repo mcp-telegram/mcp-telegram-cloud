@@ -28,12 +28,12 @@ import { UsageTracker } from "./usage.js";
 // Must run before any TelegramService is constructed.
 installRateLimiterEventListener();
 
-// PII-hashing footgun: LOG_USER_IDS=false promises hashed user IDs, but with the
-// shipped sentinel salt the hash provides zero rainbow-table protection (anyone
-// with the source can rebuild the mapping). Warn loudly so it surfaces in logs.
+// PII-hashing footgun: hashed-user-id mode (the default) promises rainbow-table
+// protection, but with the shipped sentinel salt the hash provides none — anyone
+// with the source can rebuild the mapping. Warn loudly so it surfaces in logs.
 if (!config.logUserIds && config.logHashSalt === SENTINEL_LOG_HASH_SALT) {
   logger.warn(
-    "LOG_USER_IDS=false but LOG_HASH_SALT is unset — using sentinel default. Set a real salt; see docs/configuration.md#log_user_ids--log_hash_salt",
+    "LOG_USER_IDS unset/false but LOG_HASH_SALT is unset — using sentinel default. Set a real salt; see docs/configuration.md#log_user_ids--log_hash_salt",
     {
       component: "config",
       event: "log_hash_salt.sentinel",
@@ -180,7 +180,7 @@ if (botEnabled && botClient && subscribers) {
   logger.info("Broadcast bot routes mounted", {
     component: "bot",
     event: "bot.mount",
-    username: config.botUsername,
+    username: config.botUsername, // telemetry-allow: public bot handle, not user PII
   });
 }
 

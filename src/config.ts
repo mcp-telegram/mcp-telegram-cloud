@@ -43,6 +43,18 @@ const intOr = (value: string | undefined, fallback: number): number => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+/** Telemetry pipeline mode. Master kill-switch for outbound observability data.
+ * - `local-only` (default): writes SQLite usage_log + console logs + in-memory error ring buffer for /api/observability. **Zero outbound** to SigNoz.
+ * - `on`: same as local-only PLUS OTLP HTTP exporter to SigNoz (logs, metrics, traces in later phases).
+ * - `off`: suppresses everything except SQLite usage_log (truly silent). */
+export type TelemetryMode = "on" | "off" | "local-only";
+/** Exported for unit tests; not for runtime use outside config.ts. */
+export const parseTelemetryMode = (raw: string | undefined): TelemetryMode => {
+  const v = raw?.trim().toLowerCase();
+  if (v === "on" || v === "off" || v === "local-only") return v;
+  return "local-only";
+};
+
 export const config = {
   /** Public origin (scheme + host, no trailing slash) — used in OAuth metadata,
    * absolute URLs in the landing/OAuth pages, and bot webhook setup. */
@@ -71,7 +83,11 @@ export const config = {
 
   signozEndpoint: optional(process.env.SIGNOZ_ENDPOINT, ""),
   logServiceName: optional(process.env.LOG_SERVICE_NAME, "mcp-telegram-cloud"),
-  logUserIds: process.env.LOG_USER_IDS !== "false",
+  /** Master kill-switch for outbound telemetry. See {@link TelemetryMode}. Default `local-only`. */
+  telemetryMode: parseTelemetryMode(process.env.MCP_TELEGRAM_TELEMETRY),
+  /** When `true`, raw Telegram user IDs appear in logs. Default `false` (HMAC-hashed via {@link logHashSalt}).
+   * Use `LOG_USER_IDS=true` only for local debugging — never in production. */
+  logUserIds: process.env.LOG_USER_IDS === "true",
   /** HMAC key for hashing user IDs in logs (prevents rainbow-table lookup).
    * Defaults to {@link SENTINEL_LOG_HASH_SALT} so the app still boots on a
    * misconfigured deploy; server.tsx warns at startup when this combo is

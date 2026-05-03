@@ -155,7 +155,7 @@ export async function handleMcpRequest(
 
   const onSessionRevoked = async () => {
     const uid = logUser(userId);
-    logger.warn(`Session revoked, cleaning up`, { component: "cloud", userId: uid, event: "session.revoked" });
+    logger.warn(`Session revoked, cleaning up`, { component: "cloud", userId: uid, event: "session.revoked" }); // telemetry-allow: uid = logUser(userId) hashed above
     await sessions.destroyUserSession(userId);
     // Invalidate all OAuth tokens → ChatGPT gets 401 → refresh fails → triggers re-auth → QR
     const revoked = oauth.revokeAllUserTokens(userId);

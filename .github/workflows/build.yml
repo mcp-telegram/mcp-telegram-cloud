@@ -38,6 +38,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm check-parity
+      - run: pnpm check-telemetry
 
   build:
     needs: check
