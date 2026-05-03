@@ -8,6 +8,8 @@ process.env.ISSUER ??= "https://example.com";
 
 const { ObservabilityPage } = await import("../pages/ObservabilityPage.js");
 
+const emptyMetrics = { counters: [], histograms: [], gauges: [] };
+
 /**
  * Regression test for the v2.16.0 → v2.16.1 SSR bug.
  *
@@ -32,6 +34,7 @@ describe("ObservabilityPage SSR", () => {
       clients: [{ client: "claude", totalCalls: 5, uniqueUsers: 1 }],
       topUsers: [{ userId: "u:abc1234567", totalCalls: 5 }],
       recentErrors: [{ timestamp: "2026-05-03T05:00:00Z", message: "test", attrs: { component: "x" } }],
+      metrics: emptyMetrics,
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(html.length > 1000, `expected non-trivial HTML, got ${html.length} bytes`);
@@ -49,6 +52,7 @@ describe("ObservabilityPage SSR", () => {
       clients: [],
       topUsers: [],
       recentErrors: [],
+      metrics: emptyMetrics,
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(html.includes("No usage recorded yet."));
@@ -66,6 +70,7 @@ describe("ObservabilityPage SSR", () => {
       clients: [],
       topUsers: [],
       recentErrors: [],
+      metrics: emptyMetrics,
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(!html.includes("SIGNOZ_ENDPOINT not set"));
@@ -80,6 +85,7 @@ describe("ObservabilityPage SSR", () => {
       clients: [],
       topUsers: [],
       recentErrors: [],
+      metrics: emptyMetrics,
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(html.includes("SIGNOZ_ENDPOINT not set"));

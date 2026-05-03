@@ -6,6 +6,7 @@ import { type DestructiveGuard, summarizeArgs } from "./destructive-guard.js";
 import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
+import { incr, RATE_LIMIT_HITS } from "./telemetry/metrics.js";
 import { registerAllAllowedTools } from "./tools.js";
 import type { UploadStore } from "./upload-store.js";
 import { fetchUrlSafely } from "./url-fetcher.js";
@@ -183,6 +184,7 @@ export async function handleMcpRequest(
     if (FREE_TIER_LIMIT <= 0) return null; // 0 = unlimited
     const todayCount = usage.getTodayCount(userId);
     if (todayCount >= FREE_TIER_LIMIT) {
+      incr(RATE_LIMIT_HITS, { tier: "free", tool: toolName });
       logger.warn(`Rate limit hit: ${todayCount}/${FREE_TIER_LIMIT}`, {
         component: "tools",
         userId: logUser(userId),
@@ -217,6 +219,7 @@ export async function handleMcpRequest(
     const summary = summaryFor(args);
     const err = destructive.preflight(userId, toolName, summary);
     if (err) {
+      incr(RATE_LIMIT_HITS, { tier: "destructive", tool: toolName });
       logger.warn(`Destructive denied: ${toolName}`, {
         component: "tools",
         userId: logUser(userId),

@@ -8,6 +8,7 @@ import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
 import { oauthRateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
+import { incr, OAUTH_FLOW } from "../telemetry/metrics.js";
 
 export interface OAuthRoutesDeps {
   oauth: OAuthProvider;
@@ -59,9 +60,11 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
   app.post("/register", async (c) => {
     const body = await c.req.json();
     if (!body.redirect_uris || !Array.isArray(body.redirect_uris)) {
+      incr(OAUTH_FLOW, { step: "register", outcome: "error" });
       return c.json({ error: "redirect_uris required" }, 400);
     }
     const client = oauth.registerClient(body);
+    incr(OAUTH_FLOW, { step: "register", outcome: "ok" });
     return c.json(client, 201);
   });
 
@@ -74,11 +77,13 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
 
     const client = oauth.getClient(clientId);
     if (!client) {
+      incr(OAUTH_FLOW, { step: "authorize", outcome: "unknown_client" });
       return c.text("Unknown client", 400);
     }
 
     const allowedUris: string[] = JSON.parse(client.redirect_uris);
     if (!allowedUris.includes(redirectUri)) {
+      incr(OAUTH_FLOW, { step: "authorize", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
     }
 
@@ -105,9 +110,12 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
           userId: logUser(userIdHint),
         });
 
+        incr(OAUTH_FLOW, { step: "authorize", outcome: "fast_redirect" });
         return c.redirect(url.toString(), 302);
       }
     }
+
+    incr(OAUTH_FLOW, { step: "authorize", outcome: "qr_page" });
 
     return c.html(
       <AuthorizePage
@@ -185,9 +193,11 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       });
 
       if (!result) {
+        incr(OAUTH_FLOW, { step: "token", outcome: "invalid_grant" });
         return c.json({ error: "invalid_grant" }, 400);
       }
 
+      incr(OAUTH_FLOW, { step: "token", outcome: "ok" });
       return c.json(result);
     }
 
@@ -198,12 +208,15 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       });
 
       if (!result) {
+        incr(OAUTH_FLOW, { step: "refresh", outcome: "invalid_grant" });
         return c.json({ error: "invalid_grant" }, 400);
       }
 
+      incr(OAUTH_FLOW, { step: "refresh", outcome: "ok" });
       return c.json(result);
     }
 
+    incr(OAUTH_FLOW, { step: "token", outcome: "unsupported_grant" });
     return c.json({ error: "unsupported_grant_type" }, 400);
   });
 
@@ -237,8 +250,10 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
         userId: uid,
         event: "oauth.revoke.done",
       });
+      incr(OAUTH_FLOW, { step: "revoke", outcome: "ok" });
     } else {
       logger.info(`Token not found or already expired`, { component: "oauth", event: "oauth.revoke.notfound" });
+      incr(OAUTH_FLOW, { step: "revoke", outcome: "notfound" });
     }
 
     // RFC 7009: always return 200, even if token was invalid

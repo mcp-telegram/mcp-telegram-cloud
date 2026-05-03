@@ -113,6 +113,21 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 ## Done (recent highlights)
 
+- **2026-05-03** — **Phase B observability metrics shipped** (cloud v2.17.0).
+  Custom zero-dep metrics layer (`src/telemetry/metrics.ts`) emitting
+  counters, histograms and gauges over OTLP HTTP — same `MCP_TELEGRAM_TELEMETRY`
+  kill-switch as logs, default `local-only` (zero outbound). Surface:
+  `http.requests` + `http.duration` (route templated via
+  `src/telemetry/route-template.ts`, status_class label),
+  `mcp.tool.calls` + `mcp.tool.duration` (tool, outcome),
+  `oauth.flow` (step × outcome), `rate_limit.hits` (tier × tool),
+  gauges `mcp.sessions.active` and `uploads.pending.bytes`.
+  `/api/observability` page now renders gauges + counter totals + p50/p95/p99
+  histogram quantiles from in-process state — visible without SigNoz at all.
+  18 new tests (343 → 358). Pattern intentionally mirrors `logger.ts`
+  rather than introducing `@opentelemetry/sdk-node` — keeps transitive deps
+  small and the kill-switch contract symmetric across logs/metrics.
+
 - **2026-05-02** — **Phase 2.1 shipped** (cloud v2.14.0). 11 destructive
   tools out of pending into whitelist behind a per-user opt-in gate:
   `delete-message`, `delete-scheduled`, `delete-stories`, `delete-topic`,

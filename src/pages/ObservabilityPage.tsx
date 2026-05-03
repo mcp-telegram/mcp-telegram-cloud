@@ -3,7 +3,10 @@ import type { FC } from "hono/jsx";
 import type { TelemetryMode } from "../config.js";
 import { card, subtitle, tg, title } from "../styles.js";
 import type { ErrorEntry } from "../telemetry/error-buffer.js";
+import type { snapshot } from "../telemetry/metrics.js";
 import { Layout } from "./Layout.js";
+
+type MetricsSnapshot = ReturnType<typeof snapshot>;
 
 interface ObservabilityPageProps {
   telemetryMode: TelemetryMode;
@@ -13,6 +16,7 @@ interface ObservabilityPageProps {
   clients: { client: string; totalCalls: number; uniqueUsers: number }[];
   topUsers: { userId: string; totalCalls: number }[];
   recentErrors: ErrorEntry[];
+  metrics: MetricsSnapshot;
 }
 
 const wide = css`
@@ -91,6 +95,25 @@ function fmtAttrs(attrs: Record<string, string>): string {
   return entries.map(([k, v]) => `${k}=${v}`).join(" ");
 }
 
+function fmtLabels(labels: Record<string, string>): string {
+  const entries = Object.entries(labels);
+  if (entries.length === 0) return "—";
+  return entries.map(([k, v]) => `${k}=${v}`).join(" ");
+}
+
+/** Linear interpolation across cumulative buckets to estimate a quantile (e.g. p95).
+ * Returns "—" when count=0 or buckets are empty (process just started). */
+function quantileMs(boundaries: number[], buckets: number[], totalCount: number, q: number): string {
+  if (totalCount === 0) return "—";
+  const target = totalCount * q;
+  let cumulative = 0;
+  for (let i = 0; i < boundaries.length; i++) {
+    cumulative += buckets[i];
+    if (cumulative >= target) return `${boundaries[i]}`;
+  }
+  return `>${boundaries[boundaries.length - 1]}`;
+}
+
 export const ObservabilityPage: FC<ObservabilityPageProps> = ({
   telemetryMode,
   signozEndpointConfigured,
@@ -99,6 +122,7 @@ export const ObservabilityPage: FC<ObservabilityPageProps> = ({
   clients,
   topUsers,
   recentErrors,
+  metrics,
 }) => {
   const c = modeColors[telemetryMode];
   const badgeStyle = `background:${c.bg};color:${c.fg};`;
@@ -226,9 +250,107 @@ export const ObservabilityPage: FC<ObservabilityPageProps> = ({
           )}
         </section>
 
+        <section style="margin-top:32px;">
+          <h2 style="font-size:16px;margin:0 0 8px 0;">Process metrics</h2>
+          <p style="color:#888;font-size:12px;margin:0 0 12px 0;">
+            Cumulative since process start. Same numbers exported to SigNoz when{" "}
+            <code style="font-size:11px;">MCP_TELEGRAM_TELEMETRY=on</code>.
+          </p>
+          {metrics.gauges.length > 0 && (
+            <div style="margin-bottom:16px;">
+              <h3 style="font-size:13px;margin:0 0 6px 0;color:#666;">Gauges</h3>
+              <table class={tbl}>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Labels</th>
+                    <th style="text-align:right;">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metrics.gauges.flatMap((g) =>
+                    g.points.map((p) => (
+                      <tr>
+                        <td>
+                          <code style="font-size:12px;">{g.name}</code>
+                        </td>
+                        <td>{fmtLabels(p.labels)}</td>
+                        <td class="num">{p.value}</td>
+                      </tr>
+                    )),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {metrics.counters.some((c) => c.points.length > 0) && (
+            <div style="margin-bottom:16px;">
+              <h3 style="font-size:13px;margin:0 0 6px 0;color:#666;">Counters</h3>
+              <table class={tbl}>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Labels</th>
+                    <th style="text-align:right;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metrics.counters.flatMap((cnt) =>
+                    cnt.points.map((p) => (
+                      <tr>
+                        <td>
+                          <code style="font-size:12px;">{cnt.name}</code>
+                        </td>
+                        <td>{fmtLabels(p.labels)}</td>
+                        <td class="num">{p.value}</td>
+                      </tr>
+                    )),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {metrics.histograms.some((h) => h.points.length > 0) && (
+            <div>
+              <h3 style="font-size:13px;margin:0 0 6px 0;color:#666;">Latency histograms</h3>
+              <table class={tbl}>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Labels</th>
+                    <th style="text-align:right;">Count</th>
+                    <th style="text-align:right;">p50 (ms)</th>
+                    <th style="text-align:right;">p95 (ms)</th>
+                    <th style="text-align:right;">p99 (ms)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metrics.histograms.flatMap((h) =>
+                    h.points.map((p) => (
+                      <tr>
+                        <td>
+                          <code style="font-size:12px;">{h.name}</code>
+                        </td>
+                        <td>{fmtLabels(p.labels)}</td>
+                        <td class="num">{p.count}</td>
+                        <td class="num">{quantileMs(h.boundaries, p.buckets, p.count, 0.5)}</td>
+                        <td class="num">{quantileMs(h.boundaries, p.buckets, p.count, 0.95)}</td>
+                        <td class="num">{quantileMs(h.boundaries, p.buckets, p.count, 0.99)}</td>
+                      </tr>
+                    )),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
         <p style={hintStyle}>
-          Data sources: SQLite usage_log (daily/clients/users), in-memory ring buffer (errors, lost on restart). See
-          SECURITY.md for the full privacy contract.
+          Data sources: SQLite usage_log (daily/clients/users), in-memory ring buffer (errors, lost on restart),
+          in-process counters/histograms/gauges (metrics, lost on restart). See SECURITY.md for the full privacy
+          contract.
         </p>
       </main>
     </Layout>

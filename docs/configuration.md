@@ -26,10 +26,11 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `ISSUES_URL` | | `${SOURCE_REPO_URL}/issues` | Used in privacy/terms "Contact" link |
 | `ISSUES_LABEL` | | `GitHub Issues` | Visible text for the issues link |
 | `OPENAI_APPS_CHALLENGE` | | empty | ChatGPT Apps Directory challenge token |
-| `SIGNOZ_ENDPOINT` | | empty | OTLP HTTP endpoint for remote logs |
+| `MCP_TELEGRAM_TELEMETRY` | | `local-only` | Master kill-switch: `local-only` (default, zero outbound) / `on` / `off` |
+| `SIGNOZ_ENDPOINT` | | empty | OTLP HTTP endpoint for remote logs + metrics |
 | `LOG_SERVICE_NAME` | | `mcp-telegram-cloud` | Service name in OTLP attributes |
-| `LOG_USER_IDS` | | `true` | Set `false` to hash user IDs in logs |
-| `LOG_HASH_SALT` | conditional | empty | Required when `LOG_USER_IDS=false` |
+| `LOG_USER_IDS` | | `false` | Default hashes user IDs in logs; set `true` only for local debugging |
+| `LOG_HASH_SALT` | conditional | empty | Required when `LOG_USER_IDS=false` (which is the default) |
 | `DATABASE_PATH` | | `./data/cloud.db` | SQLite file path |
 | `USAGE_LOG_RETENTION_DAYS` | | `90` | Daily purge of `usage_log`. `0` = keep forever |
 | `FREE_TIER_LIMIT` | | `100` | Per-user daily tool-call quota. `0` = unlimited |
@@ -140,15 +141,48 @@ visitor.
 
 ## Observability
 
+### `MCP_TELEGRAM_TELEMETRY`
+
+Master kill-switch for outbound observability data. Three modes:
+
+- `local-only` *(default)* — SQLite usage_log, console logs, in-memory
+  ring buffer (errors), and in-process counters/histograms/gauges all
+  populate. **Zero outbound** to SigNoz. The `/api/observability` admin
+  page shows everything live.
+- `on` — same as `local-only`, plus OTLP HTTP push of logs **and metrics**
+  to `SIGNOZ_ENDPOINT` (no-op if endpoint unset).
+- `off` — silent: no console, no OTLP, no ring buffer. SQLite usage_log
+  still records (used for fair-use limits).
+
+Defaults are privacy-first by design — operators who run their own SigNoz
+explicitly opt in via `MCP_TELEGRAM_TELEMETRY=on`.
+
 ### `SIGNOZ_ENDPOINT`
 
 OTLP HTTP endpoint, **no trailing slash**. Example:
-`https://your-signoz.example.com:4318`.
+`https://your-signoz.example.com:4318`. The same endpoint receives both
+`/v1/logs` and `/v1/metrics` (logs flushed every 5s, metrics every 15s).
 
-When empty, log shipping is a no-op — `console.log/info/warn/error`
-output still appears in container stdout for `docker logs` / journald.
-Set this only if you want structured aggregation across replicas, alert
-rules, or a dashboard.
+When empty (or `MCP_TELEGRAM_TELEMETRY` is not `on`), the OTLP exporter is
+a no-op — `console.log/info/warn/error` output still appears in container
+stdout for `docker logs` / journald. Set this only if you want structured
+aggregation across replicas, alert rules, or a dashboard.
+
+### Metrics surfaced
+
+Every metric is gated by `MCP_TELEGRAM_TELEMETRY` and exported to SigNoz
+with `service.name=$LOG_SERVICE_NAME`:
+
+| Metric | Type | Labels | Notes |
+| --- | --- | --- | --- |
+| `http.requests` | counter | `route`, `method`, `status_class`, `client` | `route` is template-collapsed — `/bot/webhook/<secret>` → `/bot/webhook/:secret` |
+| `http.duration` | histogram (ms) | `route`, `method`, `status_class` | Buckets `5/10/25/50/100/250/500/1000/2500/5000/10000` |
+| `mcp.tool.calls` | counter | `tool`, `outcome` | `outcome` ∈ `{ok, error}` |
+| `mcp.tool.duration` | histogram (ms) | `tool`, `outcome` | Buckets `50/100/250/500/1000/2500/5000/10000/30000` |
+| `oauth.flow` | counter | `step`, `outcome` | `step` ∈ `{register, authorize, token, refresh, revoke}` |
+| `rate_limit.hits` | counter | `tier`, `tool` | `tier` ∈ `{free, destructive}` |
+| `mcp.sessions.active` | gauge | — | Live MTProto session count in pool |
+| `uploads.pending.bytes` | gauge | — | Sum of unexpired pending upload bytes (all users) |
 
 ### `LOG_SERVICE_NAME`
 
@@ -161,10 +195,12 @@ behind one SigNoz and need to distinguish them.
 Telegram user IDs are short numeric values — direct logging makes them
 trivially correlatable across log epochs.
 
-- `LOG_USER_IDS=true` (default) — log raw numeric IDs. Acceptable for
-  private internal deployments where logs are already access-controlled.
-- `LOG_USER_IDS=false` — log only `u:` + the first 10 hex chars of
-  `HMAC-SHA256(salt, userId)`. The cloud-public deployment uses this.
+- `LOG_USER_IDS=false` *(default)* — log only `u:` + the first 10 hex
+  chars of `HMAC-SHA256(salt, userId)`. The cloud-public deployment uses
+  this.
+- `LOG_USER_IDS=true` — log raw numeric IDs. Acceptable only for
+  short-lived local debugging; the daemon **logs a startup warning** when
+  this is set in production.
 
 When `LOG_USER_IDS=false` and `LOG_HASH_SALT` is empty (or set to the
 sentinel default `mcp-telegram-default-salt-rotate-me`), the

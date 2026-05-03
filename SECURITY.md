@@ -67,11 +67,11 @@ database as the crown jewel.
 Outbound telemetry (logs/metrics/traces to SigNoz) is gated by the
 `MCP_TELEGRAM_TELEMETRY` master switch:
 
-| Mode         | SQLite `usage_log` | Console / docker logs | OTLP → SigNoz | In-memory error buffer |
-|--------------|:------------------:|:---------------------:|:-------------:|:----------------------:|
-| `local-only` *(default)* | ✅ | ✅ | ❌ | ✅ |
-| `on`         | ✅ | ✅ | ✅ (if `SIGNOZ_ENDPOINT` set) | ✅ |
-| `off`        | ✅ | ❌ | ❌ | ✅ |
+| Mode         | SQLite `usage_log` | Console / docker logs | OTLP logs → SigNoz | OTLP metrics → SigNoz | In-memory ring (errors + metrics) |
+|--------------|:------------------:|:---------------------:|:------------------:|:---------------------:|:---------------------------------:|
+| `local-only` *(default)* | ✅ | ✅ | ❌ | ❌ | ✅ |
+| `on`         | ✅ | ✅ | ✅ (if `SIGNOZ_ENDPOINT` set) | ✅ (if `SIGNOZ_ENDPOINT` set) | ✅ |
+| `off`        | ✅ | ❌ | ❌ | ❌ | ✅ |
 
 **Allowed in any mode** (recorded in usage_log + log attrs):
 
@@ -94,10 +94,13 @@ Outbound telemetry (logs/metrics/traces to SigNoz) is gated by the
 
 **For self-hosters**: the default `local-only` mode means a fresh `docker run`
 emits **zero outbound network traffic for telemetry**. The
-`/api/observability` page renders DAU, by-tool, by-client, and recent errors
-straight from SQLite + an in-memory ring buffer (last 500 ERRORs, lost on
-restart). Set `MCP_TELEGRAM_TELEMETRY=on` and `SIGNOZ_ENDPOINT=...` only when
-you operate your own SigNoz and want centralized dashboards.
+`/api/observability` page renders DAU, by-tool, by-client, recent errors,
+and process metrics (HTTP/tool latency p50/p95/p99, OAuth flow counters,
+active sessions, pending upload bytes) straight from SQLite + an in-memory
+ring buffer (last 500 ERRORs, lost on restart) + in-process counters/
+histograms/gauges (cumulative since boot, lost on restart). Set
+`MCP_TELEGRAM_TELEMETRY=on` and `SIGNOZ_ENDPOINT=...` only when you operate
+your own SigNoz and want centralized dashboards.
 
 ### What we do **not** protect against (self-hosters read this)
 

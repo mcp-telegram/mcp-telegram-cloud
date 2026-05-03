@@ -19,6 +19,7 @@ import { createMyRoutes } from "./routes/my.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
+import { flushMetrics, registerGauge, startMetricsFlush, stopMetricsFlush } from "./telemetry/metrics.js";
 import { purgeUrlFetchOrphans } from "./tools/uploads.js";
 import { UploadStore } from "./upload-store.js";
 import { UsageTracker } from "./usage.js";
@@ -184,6 +185,19 @@ if (botEnabled && botClient && subscribers) {
   });
 }
 
+// Register process-wide gauges before flush starts so the first OTLP push
+// already carries values (otelcol won't synthesize zero data points for us).
+registerGauge("mcp.sessions.active", "Active Telegram sessions in pool", () => sessions.getActiveCount(), {}, "1");
+registerGauge(
+  "uploads.pending.bytes",
+  "Sum of pending upload bytes (all users)",
+  () => uploads.pendingBytesTotal(),
+  {},
+  "By",
+);
+
+startMetricsFlush();
+
 logger.info(`${config.brandName} starting on port ${config.port}`, {
   component: "cloud",
   event: "server.start",
@@ -194,6 +208,11 @@ serve({ fetch: app.fetch, port: config.port });
 for (const sig of ["SIGTERM", "SIGINT"] as const) {
   process.on(sig, async () => {
     logger.info(`Received ${sig}, shutting down`, { component: "cloud", event: "server.stop" });
+    stopMetricsFlush();
+    // Final drain of accumulated counters/histograms/gauges before the process
+    // exits — without this, ~15s of post-last-tick data is lost on every
+    // graceful restart / deploy. No-op when telemetryMode != "on".
+    await flushMetrics();
     await logger.flush();
     process.exit(0);
   });

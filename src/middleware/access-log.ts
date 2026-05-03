@@ -1,5 +1,7 @@
 import type { MiddlewareHandler } from "hono";
 import { logger } from "../logger.js";
+import { HTTP_DURATION, HTTP_REQUESTS, incr, observe } from "../telemetry/metrics.js";
+import { statusClass, templatePath } from "../telemetry/route-template.js";
 
 function classifyClient(ua: string): string {
   const l = ua.toLowerCase();
@@ -18,17 +20,26 @@ export const accessLog: MiddlewareHandler = async (c, next) => {
   const duration = Date.now() - start;
   const status = c.res.status;
   const method = c.req.method;
-  const path = c.req.path;
-
-  if (path === "/health" || path === "/icon.svg") return;
-
+  const rawPath = c.req.path;
+  const route = templatePath(rawPath);
+  const cls = statusClass(status);
   const client = classifyClient(c.req.header("user-agent") ?? "");
+
+  // Always record metrics — gating happens at OTLP-flush layer.
+  // /health and /icon.svg still skip the noisy access log but feed counters,
+  // which lets `/api/observability` show that the process is actually serving.
+  incr(HTTP_REQUESTS, { route, method, status_class: cls, client });
+  observe(HTTP_DURATION, duration, { route, method, status_class: cls });
+
+  if (rawPath === "/health" || rawPath === "/icon.svg") return;
+
   const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
-  logger[level](`${method} ${path} ${status} ${duration}ms [${client}]`, {
+  logger[level](`${method} ${rawPath} ${status} ${duration}ms [${client}]`, {
     component: "http",
     event: "http.request",
     method,
-    path,
+    path: rawPath,
+    route,
     status: String(status),
     durationMs: duration,
     client,

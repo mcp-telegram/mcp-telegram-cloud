@@ -3,6 +3,7 @@ import type { ShapeOutput, ZodRawShapeCompat } from "@modelcontextprotocol/sdk/s
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { logger } from "./logger.js";
+import { incr, observe, TOOL_CALLS, TOOL_DURATION } from "./telemetry/metrics.js";
 import type { UploadStore } from "./upload-store.js";
 import type { fetchUrlSafely } from "./url-fetcher.js";
 
@@ -179,6 +180,9 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
         };
         const result = await tool.handler(args, deps);
         const duration = Date.now() - start;
+        const outcome = result.isError === true ? "error" : "ok";
+        incr(TOOL_CALLS, { tool: tool.name, outcome });
+        observe(TOOL_DURATION, duration, { tool: tool.name, outcome });
         logger.info(`Tool ${tool.name} completed in ${duration}ms`, {
           component: "tools",
           event: "tool.duration",
@@ -188,10 +192,13 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
         if (isDestructive) {
           // `result.isError === true` is the convention for handler-returned faults;
           // record those as 'error' so the audit page distinguishes denied/error/ok.
-          opts.recordDestructive?.(tool.name, args, result.isError === true ? "error" : "ok");
+          opts.recordDestructive?.(tool.name, args, outcome);
         }
         return result;
       } catch (e) {
+        const duration = Date.now() - start;
+        incr(TOOL_CALLS, { tool: tool.name, outcome: "error" });
+        observe(TOOL_DURATION, duration, { tool: tool.name, outcome: "error" });
         if (isDestructive) {
           opts.recordDestructive?.(tool.name, args, "error");
         }

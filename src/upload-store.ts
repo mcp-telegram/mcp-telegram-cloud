@@ -62,6 +62,7 @@ export class UploadStore {
   private insertStmt: Database.Statement;
   private deleteStmt: Database.Statement;
   private quotaSumStmt: Database.Statement;
+  private quotaSumGlobalStmt: Database.Statement;
   private expiredStmt: Database.Statement;
   private bumpExpiryStmt: Database.Statement;
 
@@ -119,6 +120,9 @@ export class UploadStore {
       `SELECT COALESCE(SUM(size), 0) AS total FROM pending_uploads
        WHERE user_id = ? AND expires_at > datetime('now')`,
     );
+    this.quotaSumGlobalStmt = db.prepare(
+      `SELECT COALESCE(SUM(size), 0) AS total FROM pending_uploads WHERE expires_at > datetime('now')`,
+    );
     this.expiredStmt = db.prepare("SELECT id, tmp_path FROM pending_uploads WHERE expires_at <= datetime('now')");
     this.bumpExpiryStmt = db.prepare("UPDATE pending_uploads SET expires_at = ? WHERE id = ? AND expires_at < ?");
   }
@@ -126,6 +130,14 @@ export class UploadStore {
   /** Sum of currently-pending bytes for a user (excluding expired rows). */
   pendingBytesForUser(userId: string): number {
     const row = this.quotaSumStmt.get(userId) as { total: number };
+    return row.total;
+  }
+
+  /** Sum of currently-pending bytes across all users (excluding expired rows).
+   * Surfaces as a gauge in `/api/observability` and SigNoz so an operator can
+   * spot disk-pressure pre-purge. */
+  pendingBytesTotal(): number {
+    const row = this.quotaSumGlobalStmt.get() as { total: number };
     return row.total;
   }
 
