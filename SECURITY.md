@@ -100,7 +100,10 @@ active sessions, pending upload bytes) straight from SQLite + an in-memory
 ring buffer (last 500 ERRORs, lost on restart) + in-process counters/
 histograms/gauges (cumulative since boot, lost on restart). Set
 `MCP_TELEGRAM_TELEMETRY=on` and `SIGNOZ_ENDPOINT=...` only when you operate
-your own SigNoz and want centralized dashboards.
+your own SigNoz and want centralized dashboards. If your SigNoz ingest is
+exposed publicly behind an HTTP Basic auth gateway (e.g. Traefik), set
+`SIGNOZ_AUTH="user:password"` so the exporter attaches the correct
+`Authorization` header. The credentials are not logged or persisted.
 
 ### What we do **not** protect against (self-hosters read this)
 

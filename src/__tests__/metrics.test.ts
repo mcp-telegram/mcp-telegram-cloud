@@ -200,6 +200,60 @@ describe("metrics — OTLP gating (H1)", () => {
     }
   });
 
+  it("flushMetrics() omits Authorization header when SIGNOZ_AUTH is empty (backward-compat)", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origEndpoint = cfg.signozEndpoint;
+    const origAuth = cfg.signozAuth;
+    (cfg as { telemetryMode: string }).telemetryMode = "on";
+    (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
+    (cfg as { signozAuth: string }).signozAuth = "";
+    incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
+    const captured: { headers: Record<string, string> } = { headers: {} };
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (_url, init) => {
+      captured.headers = (init as RequestInit).headers as Record<string, string>;
+      return new Response("");
+    };
+    try {
+      await flushMetrics();
+      assert.equal(captured.headers["Content-Type"], "application/json");
+      assert.equal(captured.headers.Authorization, undefined, "no Authorization when auth empty");
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+      (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
+      (cfg as { signozAuth: string }).signozAuth = origAuth;
+    }
+  });
+
+  it("flushMetrics() emits Basic Authorization header when SIGNOZ_AUTH is set", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origEndpoint = cfg.signozEndpoint;
+    const origAuth = cfg.signozAuth;
+    (cfg as { telemetryMode: string }).telemetryMode = "on";
+    (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
+    (cfg as { signozAuth: string }).signozAuth = "ingest-user:s3cret-pw";
+    incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
+    const captured: { headers: Record<string, string> } = { headers: {} };
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (_url, init) => {
+      captured.headers = (init as RequestInit).headers as Record<string, string>;
+      return new Response("");
+    };
+    try {
+      await flushMetrics();
+      const expected = `Basic ${Buffer.from("ingest-user:s3cret-pw").toString("base64")}`;
+      assert.equal(captured.headers.Authorization, expected);
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+      (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
+      (cfg as { signozAuth: string }).signozAuth = origAuth;
+    }
+  });
+
   it("concurrent flushMetrics() callers share the same in-flight promise (regression: copilot pass-2 MEDIUM)", async () => {
     // Pre-fix bug: a second flushMetrics() call returned immediately when
     // `flushInFlight` was true, so a SIGTERM landing mid-export saw `await

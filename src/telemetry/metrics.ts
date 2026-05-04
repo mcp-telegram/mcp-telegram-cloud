@@ -341,10 +341,16 @@ let flushTimer: ReturnType<typeof setInterval> | null = null;
 let inFlight: Promise<void> | null = null;
 
 async function doFlush(): Promise<void> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  // signozAuth read dynamically alongside signozEndpoint (post-H1 fix pattern); format
+  // `"user:password"`, empty disables the Authorization header.
+  if (config.signozAuth) {
+    headers.Authorization = `Basic ${Buffer.from(config.signozAuth).toString("base64")}`;
+  }
   try {
     await fetch(`${config.signozEndpoint}/v1/metrics`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(buildOtlpPayload()),
       signal: AbortSignal.timeout(5000),
     });

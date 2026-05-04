@@ -113,6 +113,15 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 ## Done (recent highlights)
 
+- **2026-05-04** — **SigNoz HTTP Basic auth support** (cloud v2.17.1).
+  New `SIGNOZ_AUTH="user:password"` env var attaches an `Authorization: Basic`
+  header to every OTLP `POST /v1/logs` and `/v1/metrics`, so the exporter can
+  ingest into a SigNoz instance fronted by a Traefik/nginx Basic-auth gateway.
+  Empty value preserves the previous unauthenticated behaviour
+  (`src/config.ts`, `src/logger.ts`, `src/telemetry/metrics.ts`). 4 new tests
+  (2 metrics + 2 logger) cover header present/absent. No behaviour change
+  for self-hosters whose SigNoz collector accepts unauthenticated OTLP.
+
 - **2026-05-03** — **Phase B observability metrics shipped** (cloud v2.17.0).
   Custom zero-dep metrics layer (`src/telemetry/metrics.ts`) emitting
   counters, histograms and gauges over OTLP HTTP — same `MCP_TELEGRAM_TELEMETRY`

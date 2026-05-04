@@ -82,6 +82,9 @@ export const config = {
   telegramApiHash: required("TELEGRAM_API_HASH", process.env.TELEGRAM_API_HASH),
 
   signozEndpoint: optional(process.env.SIGNOZ_ENDPOINT, ""),
+  /** HTTP Basic auth credentials for OTLP ingest endpoint. Format: `"user:password"`.
+   * Empty = no `Authorization` header sent (backward-compatible with unauthenticated ingest). */
+  signozAuth: optional(process.env.SIGNOZ_AUTH, ""),
   logServiceName: optional(process.env.LOG_SERVICE_NAME, "mcp-telegram-cloud"),
   /** Master kill-switch for outbound telemetry. See {@link TelemetryMode}. Default `local-only`. */
   telemetryMode: parseTelemetryMode(process.env.MCP_TELEGRAM_TELEMETRY),

@@ -28,6 +28,7 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `OPENAI_APPS_CHALLENGE` | | empty | ChatGPT Apps Directory challenge token |
 | `MCP_TELEGRAM_TELEMETRY` | | `local-only` | Master kill-switch: `local-only` (default, zero outbound) / `on` / `off` |
 | `SIGNOZ_ENDPOINT` | | empty | OTLP HTTP endpoint for remote logs + metrics |
+| `SIGNOZ_AUTH` | | empty | Optional HTTP Basic auth for OTLP endpoint, format `user:password`. Empty = no Authorization header |
 | `LOG_SERVICE_NAME` | | `mcp-telegram-cloud` | Service name in OTLP attributes |
 | `LOG_USER_IDS` | | `false` | Default hashes user IDs in logs; set `true` only for local debugging |
 | `LOG_HASH_SALT` | conditional | empty | Required when `LOG_USER_IDS=false` (which is the default) |
@@ -167,6 +168,18 @@ When empty (or `MCP_TELEGRAM_TELEMETRY` is not `on`), the OTLP exporter is
 a no-op — `console.log/info/warn/error` output still appears in container
 stdout for `docker logs` / journald. Set this only if you want structured
 aggregation across replicas, alert rules, or a dashboard.
+
+### `SIGNOZ_AUTH`
+
+Optional HTTP Basic auth credentials for the OTLP ingest endpoint. Format:
+`"user:password"` (single string, colon-separated). When set, the exporter
+adds `Authorization: Basic <base64(user:password)>` to every OTLP POST.
+Empty = no Authorization header sent (backward-compatible with
+unauthenticated SigNoz instances).
+
+Use this when SigNoz is exposed publicly behind a reverse proxy (Traefik /
+nginx) that enforces Basic auth on the ingest path. The credentials never
+leave the OTLP HTTP request — they aren't logged, persisted, or echoed.
 
 ### Metrics surfaced
 

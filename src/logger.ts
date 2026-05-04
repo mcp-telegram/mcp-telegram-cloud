@@ -87,10 +87,17 @@ async function flush() {
     ],
   };
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  // signozAuth read dynamically (not cached at module load) so tests can set it
+  // post-import; format `"user:password"`, empty disables the Authorization header.
+  if (config.signozAuth) {
+    headers.Authorization = `Basic ${Buffer.from(config.signozAuth).toString("base64")}`;
+  }
+
   try {
     await fetch(`${OTLP_ENDPOINT}/v1/logs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),
     });
