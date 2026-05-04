@@ -161,6 +161,33 @@ describe("POST /alerts/signoz", () => {
     assert.match(bot.sent[0].text, /Investigate\./);
   });
 
+  it("accepts HTTP Basic auth (alertmanager webhook_password path)", async () => {
+    const bot = new FakeBot();
+    const basic = Buffer.from(`signoz:${SECRET}`).toString("base64");
+    const res = await post(
+      buildApp(bot),
+      { alerts: [{ labels: { alertname: "B" } }] },
+      { Authorization: `Basic ${basic}` },
+    );
+    assert.equal(res.status, 200);
+    assert.equal(bot.sent.length, 1);
+  });
+
+  it("rejects Basic auth with wrong password", async () => {
+    const bot = new FakeBot();
+    const basic = Buffer.from("signoz:nope").toString("base64");
+    const res = await post(buildApp(bot), { alerts: [] }, { Authorization: `Basic ${basic}` });
+    assert.equal(res.status, 401);
+    assert.equal(bot.sent.length, 0);
+  });
+
+  it("rejects malformed Authorization header", async () => {
+    const bot = new FakeBot();
+    const res = await post(buildApp(bot), { alerts: [] }, { Authorization: "Bearer something" });
+    assert.equal(res.status, 401);
+    assert.equal(bot.sent.length, 0);
+  });
+
   it("returns 500 when bot send fails (so SigNoz retries)", async () => {
     const bot = new FakeBot();
     bot.next = { ok: false, errorCode: 502, description: "Bad Gateway" };

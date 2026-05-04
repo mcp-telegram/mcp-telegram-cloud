@@ -20,6 +20,31 @@ function safeEqual(a: string | undefined, b: string): boolean {
   return timingSafeEqual(ab, bb);
 }
 
+/**
+ * Accept the shared secret in either of two channels:
+ *   1. `X-Webhook-Secret: <secret>` (custom, simple).
+ *   2. `Authorization: Basic <base64(any-user:secret)>` — what SigNoz
+ *      alertmanager emits when the channel is configured with
+ *      webhook_username / webhook_password. The username half is ignored;
+ *      only the password is matched against the secret.
+ *
+ * Both paths use timing-safe compare so the route doesn't leak which
+ * mechanism is in use via response timing.
+ */
+function isAuthorized(authHeader: string | undefined, customHeader: string | undefined, secret: string): boolean {
+  if (safeEqual(customHeader, secret)) return true;
+  if (!authHeader?.startsWith("Basic ")) return false;
+  let decoded: string;
+  try {
+    decoded = Buffer.from(authHeader.slice(6), "base64").toString("utf8");
+  } catch {
+    return false;
+  }
+  const colon = decoded.indexOf(":");
+  if (colon < 0) return false;
+  return safeEqual(decoded.slice(colon + 1), secret);
+}
+
 interface SignozAlert {
   status?: string;
   labels?: Record<string, unknown>;
@@ -98,7 +123,7 @@ export function createAlertRoutes({ client, webhookSecret, alertChatId }: AlertR
   const app = new Hono();
 
   app.post("/alerts/signoz", async (c) => {
-    if (!safeEqual(c.req.header("X-Webhook-Secret"), webhookSecret)) {
+    if (!isAuthorized(c.req.header("Authorization"), c.req.header("X-Webhook-Secret"), webhookSecret)) {
       return c.json({ error: "unauthorized" }, 401);
     }
 
