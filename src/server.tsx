@@ -8,7 +8,9 @@ import { Subscribers } from "./bot/subscribers.js";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { DestructiveGuard } from "./destructive-guard.js";
 import { logger } from "./logger.js";
+import { getActiveSessionsByClient } from "./mcp-handler.js";
 import { accessLog } from "./middleware/access-log.js";
+import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { OAuthProvider } from "./oauth.js";
 import { installRateLimiterEventListener } from "./rate-limiter-events.js";
 import { createAdminRoutes } from "./routes/admin.js";
@@ -223,6 +225,20 @@ if (botClient && config.alertWebhookSecret && config.alertChatId !== 0) {
 // Register process-wide gauges before flush starts so the first OTLP push
 // already carries values (otelcol won't synthesize zero data points for us).
 registerGauge("mcp.sessions.active", "Active Telegram sessions in pool", () => sessions.getActiveCount(), {}, "1");
+// `mcp.sessions.by_client`: same shape as `http.requests{client}` so the
+// dashboard can stack them. Distinct from `mcp.sessions.active` (Telegram
+// pool size) — counts open MCP transport sessions classified by UA. One
+// provider per `CLIENT_CLASSES` value so SigNoz sees zero-points for
+// quiet buckets and the legend stays stable across deploys.
+for (const cls of CLIENT_CLASSES) {
+  registerGauge(
+    "mcp.sessions.by_client",
+    "Active MCP transport sessions by UA-classified client",
+    () => getActiveSessionsByClient(cls),
+    { client: cls },
+    "1",
+  );
+}
 registerGauge(
   "uploads.pending.bytes",
   "Sum of pending upload bytes (all users)",

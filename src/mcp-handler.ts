@@ -4,6 +4,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { config, iconPng256Url, iconPngUrl, iconUrl } from "./config.js";
 import { type DestructiveGuard, summarizeArgs } from "./destructive-guard.js";
 import { logger, logUser } from "./logger.js";
+import { CLIENT_CLASSES, type ClientClass, classifyClient } from "./middleware/classify-client.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, RATE_LIMIT_HITS } from "./telemetry/metrics.js";
@@ -20,6 +21,60 @@ const sessionOwners = new Map<string, string>();
 
 /** Count of active MCP sessions per userId */
 const activeSessionCount = new Map<string, number>();
+
+/**
+ * Active MCP transport sessions broken down by UA-classified client.
+ * Each entry counts open SSE/streamable-http transports — incremented in
+ * `onsessioninitialized`, decremented in `onsessionclosed`. The companion
+ * `sessionClient` map records the class captured at session start so
+ * decrement bills the same bucket even if the close handler fires after
+ * the request UA is gone.
+ *
+ * Cardinality bounded by {@link CLIENT_CLASSES}. Read by the
+ * `mcp.sessions.by_client` gauge providers in `server.tsx`.
+ */
+const activeSessionsByClient = new Map<ClientClass, number>();
+const sessionClient = new Map<string, ClientClass>();
+
+/** Read the current active-session count for a single client class. */
+export function getActiveSessionsByClient(client: ClientClass): number {
+  return activeSessionsByClient.get(client) ?? 0;
+}
+
+/**
+ * Test-only: simulate session lifecycle without spinning up a full MCP transport.
+ * Mirrors the increment/decrement done in `onsessioninitialized`/`onsessionclosed`
+ * so tests can assert read-side correctness and decrement-on-zero behavior.
+ *
+ * Asserts on duplicate-`sid` track to surface test bugs early — production
+ * `onsessioninitialized` is guarded by the SDK's `_initialized` flag, so a
+ * second init for the same transport is unreachable; a test that double-tracks
+ * is almost certainly a typo.
+ * @internal
+ */
+export function _trackSessionForTest(sid: string, client: ClientClass): void {
+  if (sessionClient.has(sid)) {
+    throw new Error(`_trackSessionForTest: sid "${sid}" already tracked — likely a test bug`);
+  }
+  sessionClient.set(sid, client);
+  activeSessionsByClient.set(client, (activeSessionsByClient.get(client) ?? 0) + 1);
+}
+
+/** @internal */
+export function _untrackSessionForTest(sid: string): void {
+  if (!sessionClient.has(sid)) return; // idempotent — mirrors teardownSession's guard
+  const cls = sessionClient.get(sid) ?? "other";
+  sessionClient.delete(sid);
+  const prev = activeSessionsByClient.get(cls) ?? 0;
+  if (prev > 1) activeSessionsByClient.set(cls, prev - 1);
+  else activeSessionsByClient.delete(cls);
+}
+
+/** @internal */
+export function _resetSessionTrackingForTest(): void {
+  activeSessionsByClient.clear();
+  sessionClient.clear();
+}
 
 /** Pending cleanup timers per userId — cancelled if user reconnects */
 const cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -61,6 +116,71 @@ export async function handleMcpRequest(
     });
   }
 
+  // Capture UA-derived client class at session-creation time. The close handler
+  // can fire long after the originating request is gone, so we must remember
+  // which bucket to decrement — `sessionClient` carries this across the lifetime.
+  const clientClass = classifyClient(req.headers.get("user-agent") ?? "");
+
+  // The MCP SDK fires `_onsessionclosed` ONLY from `handleDeleteRequest`
+  // (DELETE /mcp). Real clients frequently abandon sessions without sending
+  // DELETE — process exit, network drop, idle TCP timeout, "Disconnect" buttons
+  // that just stop sending requests. `transport.close()` (via SDK or our own
+  // shutdown) fires `transport.onclose` instead. To keep the gauge accurate, we
+  // run the same teardown from BOTH callbacks, guarded for idempotency by
+  // checking whether `sid` is still present in `sessionClient`. Whichever
+  // callback fires first wins; the other becomes a no-op.
+  const teardownSession = (sid: string): void => {
+    if (!sessionClient.has(sid)) return; // already torn down via the other path
+    transports.delete(sid);
+    sessionOwners.delete(sid);
+
+    const cls = sessionClient.get(sid) ?? "other";
+    sessionClient.delete(sid);
+    const prev = activeSessionsByClient.get(cls) ?? 0;
+    if (prev > 1) {
+      activeSessionsByClient.set(cls, prev - 1);
+    } else {
+      activeSessionsByClient.delete(cls);
+    }
+
+    const remaining = (activeSessionCount.get(userId) ?? 1) - 1;
+    activeSessionCount.set(userId, remaining);
+    logger.info(`MCP session closed: ${sid}`, {
+      component: "cloud",
+      userId: logUser(userId),
+      event: "session.close",
+      sessionId: sid,
+      remaining,
+      clientClass: cls,
+    });
+
+    // Only disconnect Telegram when the LAST MCP session for this user closes
+    if (remaining > 0) return;
+    activeSessionCount.delete(userId);
+
+    // Immediately disconnect Telegram client to stop GramJS update loop (no more TIMEOUT spam)
+    // Session string is already saved in SQLite — reconnect will restore from it
+    sessions.disconnectUser(userId);
+
+    // Schedule full cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
+    const timer = setTimeout(async () => {
+      cleanupTimers.delete(userId);
+      logger.info(`Cleanup timer fired, destroying session`, {
+        component: "cloud",
+        userId: logUser(userId),
+        event: "cleanup.fired",
+      });
+      await sessions.destroyUserSession(userId);
+    }, CLEANUP_DELAY_MS);
+
+    cleanupTimers.set(userId, timer);
+    logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, {
+      component: "cloud",
+      userId: logUser(userId),
+      event: "cleanup.scheduled",
+    });
+  };
+
   // New session — create MCP server + transport
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
@@ -68,56 +188,26 @@ export async function handleMcpRequest(
       transports.set(sid, transport);
       sessionOwners.set(sid, userId);
       activeSessionCount.set(userId, (activeSessionCount.get(userId) ?? 0) + 1);
+      sessionClient.set(sid, clientClass);
+      activeSessionsByClient.set(clientClass, (activeSessionsByClient.get(clientClass) ?? 0) + 1);
       logger.info(`MCP session started: ${sid}`, {
         component: "cloud",
         userId: logUser(userId),
         event: "session.start",
         sessionId: sid,
         active: activeSessionCount.get(userId),
+        clientClass,
       });
     },
-    onsessionclosed: (sid) => {
-      transports.delete(sid);
-      sessionOwners.delete(sid);
-
-      const remaining = (activeSessionCount.get(userId) ?? 1) - 1;
-      activeSessionCount.set(userId, remaining);
-      logger.info(`MCP session closed: ${sid}`, {
-        component: "cloud",
-        userId: logUser(userId),
-        event: "session.close",
-        sessionId: sid,
-        remaining,
-      });
-
-      // Only disconnect Telegram when the LAST MCP session for this user closes
-      if (remaining > 0) return;
-
-      activeSessionCount.delete(userId);
-
-      // Immediately disconnect Telegram client to stop GramJS update loop (no more TIMEOUT spam)
-      // Session string is already saved in SQLite — reconnect will restore from it
-      sessions.disconnectUser(userId);
-
-      // Schedule full cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
-      const timer = setTimeout(async () => {
-        cleanupTimers.delete(userId);
-        logger.info(`Cleanup timer fired, destroying session`, {
-          component: "cloud",
-          userId: logUser(userId),
-          event: "cleanup.fired",
-        });
-        await sessions.destroyUserSession(userId);
-      }, CLEANUP_DELAY_MS);
-
-      cleanupTimers.set(userId, timer);
-      logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, {
-        component: "cloud",
-        userId: logUser(userId),
-        event: "cleanup.scheduled",
-      });
-    },
+    onsessionclosed: teardownSession,
   });
+
+  // Catch the abandoned-session path: SDK fires `onclose` from `transport.close()`
+  // but NOT `_onsessionclosed`. Without this, ungraceful disconnects leak
+  // gauge state until container restart.
+  transport.onclose = () => {
+    if (transport.sessionId) teardownSession(transport.sessionId);
+  };
 
   const server = new McpServer({
     name: config.logServiceName,

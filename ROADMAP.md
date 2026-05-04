@@ -4,8 +4,8 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-05-02
-**Current version:** 2.14.0 (cloud — Phase 2.1 destructive infrastructure + 11 tools) / [`@overpod/mcp-telegram` 1.36.0](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-05-04
+**Current version:** 2.20.0 (cloud — `client` label on active MCP sessions gauge) / [`@overpod/mcp-telegram` 1.36.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -112,6 +112,19 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-04** — **`client` label on active MCP sessions gauge** (cloud v2.20.0).
+  New metric `mcp.sessions.by_client` (gauge, label `client` ∈ `{claude, chatgpt, browser, bot, script, empty, other}`)
+  exposes per-client live MCP transport sessions to SigNoz. Captured at session-init from
+  the request UA via `classifyClient()` (now extracted to `src/middleware/classify-client.ts`
+  as the single source of truth for the bounded `CLIENT_CLASSES` const). Distinct from
+  pre-existing `mcp.sessions.active` which reflects the Telegram pool size; both ship.
+  Teardown also wired to `transport.onclose` (not just SDK's `_onsessionclosed`, which
+  fires only on DELETE) — abandoned sessions (network drop, process exit) now decrement
+  correctly instead of leaking gauge state until container restart. Idempotent guard so
+  whichever path closes first wins. 7 gauge providers registered upfront so the legend
+  stays stable across deploys, even for quiet buckets. 451/451 tests, parity 178/3/0
+  unchanged. /sc:analyze 1 HIGH (H1 abandoned-session leak) fixed inline; /sc:cleanup NO-OP.
 
 - **2026-05-04** — **Phase A.2: compile-time PII whitelist for log attributes** (cloud v2.17.3).
   New `LogFields` type (`src/telemetry/log-fields.ts`) closes the unknown-key gap

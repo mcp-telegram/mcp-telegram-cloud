@@ -3,17 +3,7 @@ import { logger } from "../logger.js";
 import { HTTP_DURATION, HTTP_REQUESTS, incr, observe } from "../telemetry/metrics.js";
 import { statusClass, templatePath } from "../telemetry/route-template.js";
 import { formatTraceparent, parseTraceparent, SpanKind, withSpan } from "../telemetry/tracer.js";
-
-function classifyClient(ua: string): string {
-  const l = ua.toLowerCase();
-  if (l.includes("chatgpt") || l.includes("openai")) return "chatgpt";
-  if (l.includes("claude") || l.includes("anthropic")) return "claude";
-  if (l.includes("bot") || l.includes("spider") || l.includes("crawler") || l.includes("scan")) return "bot";
-  if (l.includes("mozilla") || l.includes("chrome") || l.includes("safari") || l.includes("firefox")) return "browser";
-  if (l.includes("node") || l.includes("python") || l.includes("curl") || l.includes("fetch")) return "script";
-  if (!l) return "empty";
-  return "other";
-}
+import { classifyClient } from "./classify-client.js";
 
 export const accessLog: MiddlewareHandler = async (c, next) => {
   const method = c.req.method;
