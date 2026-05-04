@@ -110,6 +110,17 @@ export const config = {
   destructiveAuditRetentionDays: intOr(process.env.DESTRUCTIVE_AUDIT_RETENTION_DAYS, 90),
   sessionCleanupDelayMinutes: intOr(process.env.SESSION_CLEANUP_DELAY_MINUTES, 5),
 
+  /** Idle reaper TTL (ms). MCP transport sessions whose `lastActivity` is older
+   * than this get torn down by the periodic reaper, decrementing the
+   * `mcp.sessions.by_client` gauge. Default 10 min — long enough that normal
+   * idle pauses between tool calls in a conversation don't trigger reaping,
+   * short enough that abandoned sessions clear within the lifetime of a
+   * typical user session. 0 disables the reaper entirely. */
+  mcpIdleReapMs: intOr(process.env.MCP_IDLE_REAP_MS, 10 * 60 * 1000),
+  /** Reaper sweep interval (ms). Smaller = more responsive, larger = cheaper.
+   * Default 60s. Must be > 0 when reaper enabled. */
+  mcpIdleReapIntervalMs: intOr(process.env.MCP_IDLE_REAP_INTERVAL_MS, 60_000),
+
   /** Phase X — per-file cap for `/my/upload` (bytes). Default 50 MB. */
   uploadFileMaxBytes: intOr(process.env.UPLOAD_FILE_MAX_BYTES, 50 * 1024 * 1024),
   /** Phase X — per-user pending uploads quota (bytes). Sum of currently-pending,

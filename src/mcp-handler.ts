@@ -23,6 +23,15 @@ const sessionOwners = new Map<string, string>();
 const activeSessionCount = new Map<string, number>();
 
 /**
+ * Last-activity timestamp (epoch ms) per session id. Bumped on every
+ * `handleMcpRequest` hit (init + every session-reuse) so the reaper can
+ * tell live-but-idle from abandoned. Stored alongside `transports` rather
+ * than inside it so the reaper can iterate without disturbing the existing
+ * Map shape used by the SDK plumbing.
+ */
+const lastActivity = new Map<string, number>();
+
+/**
  * Active MCP transport sessions broken down by UA-classified client.
  * Each entry counts open SSE/streamable-http transports — incremented in
  * `onsessioninitialized`, decremented in `onsessionclosed`. The companion
@@ -67,6 +76,35 @@ export function _trackSessionForTest(sid: string, client: ClientClass): void {
   activeSessionsByClient.set(client, (activeSessionsByClient.get(client) ?? 0) + 1);
 }
 
+/**
+ * Test-only: register a fully-fledged tracked session in the same shape as
+ * production `onsessioninitialized` (transports + sessionClient + counts +
+ * lastActivity), with an injected mock transport. Exists so reaper tests can
+ * exercise the iteration path over `transports` without spinning up a real
+ * `WebStandardStreamableHTTPServerTransport`.
+ *
+ * @param mockTransport stub object exposing at least `close()`
+ * @internal
+ */
+export function _trackFullSessionForTest(
+  sid: string,
+  client: ClientClass,
+  userId: string,
+  // biome-ignore lint/suspicious/noExplicitAny: test-only mock
+  mockTransport: any,
+  lastActivityMs: number,
+): void {
+  if (sessionClient.has(sid)) {
+    throw new Error(`_trackFullSessionForTest: sid "${sid}" already tracked — likely a test bug`);
+  }
+  sessionClient.set(sid, client);
+  activeSessionsByClient.set(client, (activeSessionsByClient.get(client) ?? 0) + 1);
+  transports.set(sid, mockTransport);
+  sessionOwners.set(sid, userId);
+  activeSessionCount.set(userId, (activeSessionCount.get(userId) ?? 0) + 1);
+  lastActivity.set(sid, lastActivityMs);
+}
+
 /** @internal */
 export function _untrackSessionForTest(sid: string): void {
   if (!sessionClient.has(sid)) return; // idempotent — mirrors teardownSession's guard
@@ -79,8 +117,193 @@ export function _untrackSessionForTest(sid: string): void {
 
 /** @internal */
 export function _resetSessionTrackingForTest(): void {
+  // Clear cleanupTimers FIRST so any test that triggered the last-session
+  // path (which schedules a 5-min setTimeout) doesn't leave a timer handle
+  // pinning the event loop after `node --test` finishes the suite.
+  for (const t of cleanupTimers.values()) clearTimeout(t);
+  cleanupTimers.clear();
   activeSessionsByClient.clear();
   sessionClient.clear();
+  lastActivity.clear();
+  transports.clear();
+  sessionOwners.clear();
+  activeSessionCount.clear();
+  if (reaperTimer) {
+    clearInterval(reaperTimer);
+    reaperTimer = null;
+  }
+}
+
+/**
+ * Module-level teardown shared by the request-handler `onsessionclosed` /
+ * `transport.onclose` callbacks AND the idle reaper. Decrements the
+ * `mcp.sessions.by_client` gauge buckets, drops the transport from `transports`,
+ * fires Telegram-disconnect + cleanup timer when this was the last live MCP
+ * session for the user.
+ *
+ * Idempotent — second call for same sid is a no-op (guard via `sessionClient.has`).
+ *
+ * @internal — exported only because the reaper lives in this same module;
+ *             not meant for external callers.
+ */
+function teardownSessionImpl(sid: string, userId: string, sessions: SessionManager | null): void {
+  if (!sessionClient.has(sid)) return; // already torn down via the other path
+  transports.delete(sid);
+  sessionOwners.delete(sid);
+  lastActivity.delete(sid);
+
+  const cls = sessionClient.get(sid) ?? "other";
+  sessionClient.delete(sid);
+  const prev = activeSessionsByClient.get(cls) ?? 0;
+  if (prev > 1) {
+    activeSessionsByClient.set(cls, prev - 1);
+  } else {
+    activeSessionsByClient.delete(cls);
+  }
+
+  const remaining = (activeSessionCount.get(userId) ?? 1) - 1;
+  activeSessionCount.set(userId, remaining);
+  logger.info(`MCP session closed: ${sid}`, {
+    component: "cloud",
+    userId: logUser(userId),
+    event: "session.close",
+    sessionId: sid,
+    remaining,
+    clientClass: cls,
+  });
+
+  // Only disconnect Telegram when the LAST MCP session for this user closes.
+  if (remaining > 0) return;
+  activeSessionCount.delete(userId);
+
+  // Reaper passes `sessions=null` for users we don't own (defensive — should
+  // not happen in practice since reaper iterates only `transports`, all of
+  // which were registered through a request handler that knows `sessions`).
+  if (!sessions) return;
+
+  sessions.disconnectUser(userId);
+
+  const timer = setTimeout(async () => {
+    cleanupTimers.delete(userId);
+    logger.info(`Cleanup timer fired, destroying session`, {
+      component: "cloud",
+      userId: logUser(userId),
+      event: "cleanup.fired",
+    });
+    await sessions.destroyUserSession(userId);
+  }, CLEANUP_DELAY_MS);
+
+  cleanupTimers.set(userId, timer);
+  logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, {
+    component: "cloud",
+    userId: logUser(userId),
+    event: "cleanup.scheduled",
+  });
+}
+
+/**
+ * Reap MCP transport sessions whose last activity is older than {@link config.mcpIdleReapMs}.
+ * Closes the transport (which fires our `onclose` → teardown chain when SDK
+ * cooperates) AND drives `teardownSessionImpl` directly to cover the case
+ * where `transport.close()` does not fire `onclose` (e.g. transport already
+ * detached from its stream — same SDK shape we observed in v2.20.0 review).
+ *
+ * Idempotent — if a sid is already gone from `sessionClient`, teardown is a no-op.
+ *
+ * @param nowMs current time in epoch milliseconds — injectable for tests
+ * @returns count of sessions reaped
+ */
+export function reapIdleSessions(nowMs: number = Date.now()): number {
+  const threshold = config.mcpIdleReapMs;
+  if (threshold <= 0) return 0; // disabled
+  const sessions = reaperSessionManager;
+  let reaped = 0;
+  // Snapshot keys to avoid mutating during iteration.
+  const sids = Array.from(transports.keys());
+  for (const sid of sids) {
+    const seen = lastActivity.get(sid) ?? 0;
+    if (nowMs - seen <= threshold) continue;
+
+    const transport = transports.get(sid);
+    const userId = sessionOwners.get(sid) ?? "unknown";
+    const cls = sessionClient.get(sid) ?? "other";
+    logger.info(`Reaping idle MCP session: ${sid}`, {
+      component: "cloud",
+      event: "session.reap",
+      sessionId: sid,
+      userId: logUser(userId),
+      clientClass: cls,
+      idleMs: nowMs - seen,
+    });
+
+    // Drive teardown directly first — covers the SDK's silent stream-cancel
+    // case where `transport.close()` may not refire `onclose`. Idempotent
+    // guard inside teardownSessionImpl prevents double-decrement if onclose
+    // still fires.
+    teardownSessionImpl(sid, userId, sessions);
+
+    // Then close the transport itself so any lingering SSE write attempts
+    // surface as errors instead of silently buffering.
+    if (transport) {
+      try {
+        const maybe = transport.close() as unknown;
+        if (maybe && typeof (maybe as Promise<unknown>).then === "function") {
+          (maybe as Promise<unknown>).catch(() => {});
+        }
+      } catch {
+        // ignore — transport may already be half-closed
+      }
+    }
+    reaped += 1;
+  }
+  return reaped;
+}
+
+let reaperTimer: ReturnType<typeof setInterval> | null = null;
+let reaperSessionManager: SessionManager | null = null;
+
+/**
+ * Start the idle reaper timer. Idempotent — safe to call once at boot.
+ * Captures a reference to `SessionManager` for the duration of the process
+ * so reaped last-of-user sessions also drop the Telegram pool entry.
+ */
+export function startIdleReaper(sessions: SessionManager): void {
+  reaperSessionManager = sessions;
+  if (reaperTimer) return;
+  if (config.mcpIdleReapMs <= 0) return; // disabled via env
+  const intervalMs = config.mcpIdleReapIntervalMs;
+  reaperTimer = setInterval(() => {
+    try {
+      const n = reapIdleSessions();
+      if (n > 0) {
+        logger.info(`Idle reaper swept ${n} session${n === 1 ? "" : "s"}`, {
+          component: "cloud",
+          event: "session.reap.batch",
+          count: n,
+        });
+      }
+    } catch (err) {
+      logger.error("Idle reaper crashed (timer continues)", {
+        component: "cloud",
+        event: "session.reap.error",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, intervalMs);
+}
+
+/** Stop the reaper timer. Used by graceful shutdown so the process can exit. */
+export function stopIdleReaper(): void {
+  if (reaperTimer) {
+    clearInterval(reaperTimer);
+    reaperTimer = null;
+  }
+  reaperSessionManager = null;
+}
+
+/** @internal */
+export function _setReaperSessionsForTest(sessions: SessionManager | null): void {
+  reaperSessionManager = sessions;
 }
 
 /** Pending cleanup timers per userId — cancelled if user reconnects */
@@ -108,7 +331,12 @@ export async function handleMcpRequest(
 
   if (sessionId && transports.has(sessionId)) {
     const transport = transports.get(sessionId);
-    if (transport) return transport.handleRequest(req);
+    if (transport) {
+      // Bump last-activity so the idle reaper does not consider this session
+      // abandoned. The reuse path is the hot path — every tool call hits this.
+      lastActivity.set(sessionId, Date.now());
+      return transport.handleRequest(req);
+    }
   }
 
   // User reconnected — cancel any pending cleanup
@@ -133,66 +361,10 @@ export async function handleMcpRequest(
   // process exit, idle TCP timeout, "Disconnect" buttons that just stop sending
   // requests) the SDK only deletes its internal `_streamMapping` entry — it
   // does NOT call `transport.close()`, so `transport.onclose` does not fire
-  // either. As a result, gauge state for those sessions persists until process
-  // restart. This is symmetric with pre-existing leak shape on `transports` /
-  // `activeSessionCount`. An idle-reaper (TTL-based) is the proper fix and is
-  // tracked as a follow-up; the metric `mcp.sessions.by_client` is documented
-  // as "initialized-and-not-yet-closed" rather than strictly live.
-  //
-  // We still wire `transport.onclose` because we MAY call `transport.close()`
-  // ourselves in future shutdown paths and want both close routes to drain
-  // the gauge — guarded by `sessionClient.has(sid)` for idempotency.
-  const teardownSession = (sid: string): void => {
-    if (!sessionClient.has(sid)) return; // already torn down via the other path
-    transports.delete(sid);
-    sessionOwners.delete(sid);
-
-    const cls = sessionClient.get(sid) ?? "other";
-    sessionClient.delete(sid);
-    const prev = activeSessionsByClient.get(cls) ?? 0;
-    if (prev > 1) {
-      activeSessionsByClient.set(cls, prev - 1);
-    } else {
-      activeSessionsByClient.delete(cls);
-    }
-
-    const remaining = (activeSessionCount.get(userId) ?? 1) - 1;
-    activeSessionCount.set(userId, remaining);
-    logger.info(`MCP session closed: ${sid}`, {
-      component: "cloud",
-      userId: logUser(userId),
-      event: "session.close",
-      sessionId: sid,
-      remaining,
-      clientClass: cls,
-    });
-
-    // Only disconnect Telegram when the LAST MCP session for this user closes
-    if (remaining > 0) return;
-    activeSessionCount.delete(userId);
-
-    // Immediately disconnect Telegram client to stop GramJS update loop (no more TIMEOUT spam)
-    // Session string is already saved in SQLite — reconnect will restore from it
-    sessions.disconnectUser(userId);
-
-    // Schedule full cleanup — if user doesn't reconnect within CLEANUP_DELAY_MS, destroy session
-    const timer = setTimeout(async () => {
-      cleanupTimers.delete(userId);
-      logger.info(`Cleanup timer fired, destroying session`, {
-        component: "cloud",
-        userId: logUser(userId),
-        event: "cleanup.fired",
-      });
-      await sessions.destroyUserSession(userId);
-    }, CLEANUP_DELAY_MS);
-
-    cleanupTimers.set(userId, timer);
-    logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, {
-      component: "cloud",
-      userId: logUser(userId),
-      event: "cleanup.scheduled",
-    });
-  };
+  // either. The idle reaper (`reapIdleSessions` + `startIdleReaper`) handles
+  // that case via TTL on `lastActivity`. Both DELETE and reaper feed the same
+  // `teardownSessionImpl` so accounting stays consistent.
+  const teardownSession = (sid: string): void => teardownSessionImpl(sid, userId, sessions);
 
   // New session — create MCP server + transport
   const transport = new WebStandardStreamableHTTPServerTransport({
@@ -203,6 +375,7 @@ export async function handleMcpRequest(
       activeSessionCount.set(userId, (activeSessionCount.get(userId) ?? 0) + 1);
       sessionClient.set(sid, clientClass);
       activeSessionsByClient.set(clientClass, (activeSessionsByClient.get(clientClass) ?? 0) + 1);
+      lastActivity.set(sid, Date.now());
       logger.info(`MCP session started: ${sid}`, {
         component: "cloud",
         userId: logUser(userId),

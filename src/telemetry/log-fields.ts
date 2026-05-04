@@ -117,6 +117,8 @@ export type LogFields = Partial<{
   durationMs: number;
   /** Generic millisecond delay. */
   delayMs: number;
+  /** Time since last activity (ms). Used by the idle MCP-session reaper. */
+  idleMs: number;
   /** Generic seconds delay. */
   seconds: number;
   /** Bytes uploaded / file size. */

@@ -8,7 +8,7 @@ import { Subscribers } from "./bot/subscribers.js";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { DestructiveGuard } from "./destructive-guard.js";
 import { logger } from "./logger.js";
-import { getActiveSessionsByClient } from "./mcp-handler.js";
+import { getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mcp-handler.js";
 import { accessLog } from "./middleware/access-log.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { OAuthProvider } from "./oauth.js";
@@ -254,6 +254,7 @@ registerGauge(
 );
 
 startMetricsFlush();
+startIdleReaper(sessions);
 
 logger.info(`${config.brandName} starting on port ${config.port}`, {
   component: "cloud",
@@ -267,6 +268,7 @@ for (const sig of ["SIGTERM", "SIGINT"] as const) {
     logger.info(`Received ${sig}, shutting down`, { component: "cloud", event: "server.stop" });
     stopMetricsFlush();
     stopTraceFlush();
+    stopIdleReaper();
     // Drain in-flight HTTP first so any spans started by requests still
     // resolving land in `exportQueue` BEFORE we await the final flush.
     // Without this, the SIGTERM tick can race with `accessLog`'s `await

@@ -5,7 +5,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
 **Last updated:** 2026-05-04
-**Current version:** 2.20.0 (cloud — `client` label on active MCP sessions gauge) / [`@overpod/mcp-telegram` 1.36.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.21.0 (cloud — idle MCP-session reaper closes the abandoned-session leak) / [`@overpod/mcp-telegram` 1.36.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -36,18 +36,6 @@ Things actively being worked on or about to ship.
 ## Next (planned, not started)
 
 Ordered by current intent. Subject to change as decisions are locked.
-
-- **Idle MCP-session reaper** — TTL-based teardown for abandoned MCP transports
-  (network drop, process exit). Currently `mcp.sessions.by_client` and the
-  related `transports`/`activeSessionCount` maps leak until container restart
-  because the MCP SDK does not call `transport.close()` on stream cancellation.
-  Fix: track `lastActivity` per session, reap entries older than ~5min idle.
-  Trigger: when SigNoz shows persistent count drift between session start/close
-  events, OR after first observed cumulative drift > 50. Bundles with: an
-  integration test driving real `WebStandardStreamableHTTPServerTransport`
-  lifecycle (DELETE, manual close, stream cancel) — current tests use
-  test-only helpers and cannot detect SDK-shape regressions; this gap is
-  what enabled the v2.20.0 over-claim caught in pre-deploy review.
 
 - **Per-user burst rate limit** (Layer 3) —
   trigger: ≥10 daily active users sustained 7 days. Currently
@@ -124,6 +112,24 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-04** — **Idle MCP-session reaper** (cloud v2.21.0).
+  Closes the abandoned-session leak documented as KNOWN LIMITATION in v2.20.1.
+  SigNoz observation triggered the fix: chatgpt bucket on `mcp.sessions.by_client`
+  reached 12 vs 1 real session, claude bucket 5 vs 2 real, drift growing ~1
+  every 1.5 min. Fix: track `lastActivity: Map<sid, number>` updated on every
+  request reuse + on init; periodic timer (`MCP_IDLE_REAP_INTERVAL_MS`,
+  default 60s) sweeps `transports` and reaps entries older than
+  `MCP_IDLE_REAP_MS` (default 10min). Reaper drives `teardownSessionImpl`
+  directly (covers SDK silent-stream-cancel) AND calls `transport.close()`
+  (idempotent via `sessionClient.has(sid)` guard). Module-level
+  `teardownSessionImpl` extracted from former closure so the reaper and the
+  request-handler share accounting. New 7-test suite drives reaper through
+  fresh/stale isolation, threshold=0 disables, sync-throw + async-reject
+  survival, idempotent second sweep. /sc:analyze APPROVE-FOR-SHIP with
+  2 MEDIUM follow-ups (async-reject test gap + cleanupTimers reset gap),
+  both fixed inline. /sc:cleanup NO-OP with per-candidate rationale.
+  458/458 tests, parity 178/3/0 unchanged.
 
 - **2026-05-04** — **`client` label on MCP sessions gauge** (cloud v2.20.0).
   New metric `mcp.sessions.by_client` (gauge, label `client` ∈ `{claude, chatgpt, browser, bot, script, empty, other}`)
