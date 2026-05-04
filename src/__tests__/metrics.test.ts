@@ -12,6 +12,7 @@ const {
   TOOL_DURATION,
   OAUTH_FLOW,
   RATE_LIMIT_HITS,
+  classifyExportError,
   incr,
   observe,
   registerGauge,
@@ -317,6 +318,122 @@ describe("metrics — OTLP gating (H1)", () => {
       stopMetricsFlush();
       await flushMetrics();
       assert.equal(posts, 1, "shutdown must POST exactly once after stopMetricsFlush()");
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+      (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
+    }
+  });
+});
+
+describe("metrics — classifyExportError (cardinality-bounded reasons)", () => {
+  it("maps 401/403 → auth_failed", () => {
+    assert.equal(classifyExportError(new Response("", { status: 401 })), "auth_failed");
+    assert.equal(classifyExportError(new Response("", { status: 403 })), "auth_failed");
+  });
+
+  it("maps 5xx → server_error", () => {
+    assert.equal(classifyExportError(new Response("", { status: 500 })), "server_error");
+    assert.equal(classifyExportError(new Response("", { status: 503 })), "server_error");
+  });
+
+  it("maps non-auth 4xx → client_error", () => {
+    assert.equal(classifyExportError(new Response("", { status: 400 })), "client_error");
+    assert.equal(classifyExportError(new Response("", { status: 404 })), "client_error");
+  });
+
+  it("maps AbortError/TimeoutError/TypeError throws → network", () => {
+    const ab = new Error("aborted");
+    ab.name = "AbortError";
+    assert.equal(classifyExportError(ab), "network");
+    const to = new Error("timeout");
+    to.name = "TimeoutError";
+    assert.equal(classifyExportError(to), "network");
+    const t = new TypeError("fetch failed");
+    assert.equal(classifyExportError(t), "network");
+  });
+
+  it("maps unknown shapes → unknown", () => {
+    // Anything that isn't a Response or a recognized Error.name falls through.
+    assert.equal(classifyExportError("string error"), "unknown");
+    assert.equal(classifyExportError(undefined), "unknown");
+    assert.equal(classifyExportError({ message: "raw object" }), "unknown");
+    // Generic Error (no AbortError/TimeoutError/TypeError name) also unknown.
+    assert.equal(classifyExportError(new Error("generic")), "unknown");
+  });
+});
+
+describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)", () => {
+  afterEach(() => {
+    _resetMetricsForTest();
+    delete process.env.MCP_TELEGRAM_TELEMETRY;
+    delete process.env.SIGNOZ_ENDPOINT;
+  });
+
+  it("flushMetrics() increments counter with reason=auth_failed when SigNoz returns 401", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origEndpoint = cfg.signozEndpoint;
+    (cfg as { telemetryMode: string }).telemetryMode = "on";
+    (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
+    incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response("Unauthorized", { status: 401 });
+    try {
+      await flushMetrics();
+      const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
+      assert.ok(errs, "telemetry.export.errors counter exists in snapshot");
+      const auth = errs.points.find((p) => p.labels.signal === "metrics" && p.labels.reason === "auth_failed");
+      assert.ok(auth, "auth_failed point exists for signal=metrics");
+      assert.equal(auth.value, 1);
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+      (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
+    }
+  });
+
+  it("flushMetrics() increments counter with reason=network when fetch rejects (timeout)", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origEndpoint = cfg.signozEndpoint;
+    (cfg as { telemetryMode: string }).telemetryMode = "on";
+    (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
+    incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      const e = new Error("aborted");
+      e.name = "AbortError";
+      throw e;
+    };
+    try {
+      await flushMetrics();
+      const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
+      const net = errs?.points.find((p) => p.labels.signal === "metrics" && p.labels.reason === "network");
+      assert.ok(net, "network point exists for signal=metrics");
+      assert.equal(net.value, 1);
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+      (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
+    }
+  });
+
+  it("flushMetrics() does NOT increment counter on 200 OK (success path stays clean)", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origEndpoint = cfg.signozEndpoint;
+    (cfg as { telemetryMode: string }).telemetryMode = "on";
+    (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
+    incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response("", { status: 200 });
+    try {
+      await flushMetrics();
+      const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
+      // Counter is declared so it's in the catalog, but with no points (or all values=0).
+      const total = errs?.points.reduce((s, p) => s + p.value, 0) ?? 0;
+      assert.equal(total, 0, "no errors recorded on success");
     } finally {
       globalThis.fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;

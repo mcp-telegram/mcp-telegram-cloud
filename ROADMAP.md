@@ -113,6 +113,16 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 ## Done (recent highlights)
 
+- **2026-05-04** — **Telemetry export error visibility** (cloud v2.17.2).
+  New `telemetry.export.errors` counter with labels `signal` ∈ `{logs, metrics}` ×
+  `reason` ∈ `{auth_failed, server_error, client_error, network, unknown}` surfaces
+  previously-silent OTLP fetch catches in `/api/observability`. Closes the v2.17.1
+  diagnostic gap where prod `/health` returned 200 but zero data reached SigNoz.
+  Both `logger.ts:flush()` and `metrics.ts:doFlush()` now check `response.ok` AND
+  catch throws; `classifyExportError(Response | unknown)` returns one of the 5
+  bounded reason buckets (no raw status codes / error messages → no label
+  cardinality blow-up). 8 new tests (5 classifyExportError + 3 metrics flow + 2 logger flow).
+
 - **2026-05-04** — **SigNoz HTTP Basic auth support** (cloud v2.17.1).
   New `SIGNOZ_AUTH="user:password"` env var attaches an `Authorization: Basic`
   header to every OTLP `POST /v1/logs` and `/v1/metrics`, so the exporter can

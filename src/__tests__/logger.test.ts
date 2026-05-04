@@ -54,3 +54,48 @@ describe("logger — OTLP auth header (mirrors metrics.ts auth tests)", () => {
     }
   });
 });
+
+describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
+  it("flush() increments counter with signal=logs reason=auth_failed when SigNoz returns 401", async () => {
+    const { TELEMETRY_EXPORT_ERRORS, snapshot, _resetMetricsForTest } = await import("../telemetry/metrics.js");
+    _resetMetricsForTest();
+    logger.info("seed", { component: "test" });
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response("Unauthorized", { status: 401 });
+    try {
+      await logger.flush();
+      const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
+      assert.ok(errs, "counter declared");
+      const auth = errs.points.find((p) => p.labels.signal === "logs" && p.labels.reason === "auth_failed");
+      assert.ok(auth, "auth_failed point exists for signal=logs");
+      assert.equal(auth.value, 1);
+      // Reference TELEMETRY_EXPORT_ERRORS to keep its definition reachable in tests.
+      assert.equal(TELEMETRY_EXPORT_ERRORS.name, "telemetry.export.errors");
+    } finally {
+      globalThis.fetch = origFetch;
+      _resetMetricsForTest();
+    }
+  });
+
+  it("flush() increments counter with signal=logs reason=network when fetch throws", async () => {
+    const { snapshot, _resetMetricsForTest } = await import("../telemetry/metrics.js");
+    _resetMetricsForTest();
+    logger.info("seed", { component: "test" });
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      const e = new Error("aborted");
+      e.name = "AbortError";
+      throw e;
+    };
+    try {
+      await logger.flush();
+      const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
+      const net = errs?.points.find((p) => p.labels.signal === "logs" && p.labels.reason === "network");
+      assert.ok(net, "network point exists for signal=logs");
+      assert.equal(net.value, 1);
+    } finally {
+      globalThis.fetch = origFetch;
+      _resetMetricsForTest();
+    }
+  });
+});

@@ -12,6 +12,7 @@
 import { createHmac } from "node:crypto";
 import { config } from "./config.js";
 import { recordError } from "./telemetry/error-buffer.js";
+import { classifyExportError, incr, TELEMETRY_EXPORT_ERRORS } from "./telemetry/metrics.js";
 
 const OTLP_ENDPOINT = config.signozEndpoint;
 const SERVICE_NAME = config.logServiceName;
@@ -95,14 +96,19 @@ async function flush() {
   }
 
   try {
-    await fetch(`${OTLP_ENDPOINT}/v1/logs`, {
+    const res = await fetch(`${OTLP_ENDPOINT}/v1/logs`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    // Silent fail — don't crash app if SigNoz is down
+    if (!res.ok) {
+      incr(TELEMETRY_EXPORT_ERRORS, { signal: "logs", reason: classifyExportError(res) });
+    }
+  } catch (err) {
+    // Don't crash app if SigNoz is down — counter surfaces the failure to
+    // /api/observability so operators don't have to grep deploy logs.
+    incr(TELEMETRY_EXPORT_ERRORS, { signal: "logs", reason: classifyExportError(err) });
   }
 }
 

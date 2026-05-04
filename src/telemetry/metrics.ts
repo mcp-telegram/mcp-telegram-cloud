@@ -124,6 +124,32 @@ export const TOOL_CALLS = counter("mcp.tool.calls", "MCP tool calls (post-handle
 export const TOOL_DURATION = histogram("mcp.tool.duration", "MCP tool handler duration", TOOL_BUCKETS_MS, "ms");
 export const OAUTH_FLOW = counter("oauth.flow", "OAuth flow step outcomes", "1");
 export const RATE_LIMIT_HITS = counter("rate_limit.hits", "Rate-limit denials by tier", "1");
+/** Outbound OTLP export failures, by signal and classified reason. Surfaces silent
+ * fetch errors that previously left operators with `/health` 200 but zero data in
+ * SigNoz (root cause of v2.17.1 first-deploy debugging round). */
+export const TELEMETRY_EXPORT_ERRORS = counter(
+  "telemetry.export.errors",
+  "OTLP export failures by signal+reason (operator visibility into silent fetch catches)",
+  "1",
+);
+
+/** Map a `Response` (when fetch resolves) or thrown error (when it rejects) to a
+ * coarse reason label. Cardinality bounded to 5 buckets — never bleed raw status
+ * codes or error messages (would explode label space). */
+export function classifyExportError(input: Response | unknown): string {
+  if (input instanceof Response) {
+    if (input.status === 401 || input.status === 403) return "auth_failed";
+    if (input.status >= 500) return "server_error";
+    if (input.status >= 400) return "client_error";
+    return "unknown"; // 3xx without redirect-follow, etc — should be rare
+  }
+  // Thrown by fetch: AbortError (timeout), TypeError (network/DNS), etc.
+  if (input instanceof Error) {
+    if (input.name === "AbortError" || input.name === "TimeoutError") return "network";
+    if (input.name === "TypeError") return "network";
+  }
+  return "unknown";
+}
 
 export function incr(def: CounterDef, labels: Labels = {}, by: number = 1): void {
   const key = labelKey(labels);
@@ -348,15 +374,20 @@ async function doFlush(): Promise<void> {
     headers.Authorization = `Basic ${Buffer.from(config.signozAuth).toString("base64")}`;
   }
   try {
-    await fetch(`${config.signozEndpoint}/v1/metrics`, {
+    const res = await fetch(`${config.signozEndpoint}/v1/metrics`, {
       method: "POST",
       headers,
       body: JSON.stringify(buildOtlpPayload()),
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    // Silent fail — don't crash app if SigNoz is down. Cumulative state preserved
-    // so next flush re-sends the latest values; backend dedupes via timestamp.
+    if (!res.ok) {
+      incr(TELEMETRY_EXPORT_ERRORS, { signal: "metrics", reason: classifyExportError(res) });
+    }
+  } catch (err) {
+    // Don't crash app if SigNoz is down. Cumulative state preserved so next flush
+    // re-sends the latest values; backend dedupes via timestamp. Counter exposes
+    // the failure to /api/observability so operators don't have to grep CI logs.
+    incr(TELEMETRY_EXPORT_ERRORS, { signal: "metrics", reason: classifyExportError(err) });
   }
 }
 
@@ -407,12 +438,14 @@ export function _resetMetricsForTest(): void {
   counters.set(TOOL_CALLS.name, TOOL_CALLS);
   counters.set(OAUTH_FLOW.name, OAUTH_FLOW);
   counters.set(RATE_LIMIT_HITS.name, RATE_LIMIT_HITS);
+  counters.set(TELEMETRY_EXPORT_ERRORS.name, TELEMETRY_EXPORT_ERRORS);
   histograms.set(HTTP_DURATION.name, HTTP_DURATION);
   histograms.set(TOOL_DURATION.name, TOOL_DURATION);
   HTTP_REQUESTS.data.clear();
   TOOL_CALLS.data.clear();
   OAUTH_FLOW.data.clear();
   RATE_LIMIT_HITS.data.clear();
+  TELEMETRY_EXPORT_ERRORS.data.clear();
   HTTP_DURATION.data.clear();
   TOOL_DURATION.data.clear();
   cardinalityWarned.clear();

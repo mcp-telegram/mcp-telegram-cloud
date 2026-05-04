@@ -196,6 +196,7 @@ with `service.name=$LOG_SERVICE_NAME`:
 | `rate_limit.hits` | counter | `tier`, `tool` | `tier` ∈ `{free, destructive}` |
 | `mcp.sessions.active` | gauge | — | Live MTProto session count in pool |
 | `uploads.pending.bytes` | gauge | — | Sum of unexpired pending upload bytes (all users) |
+| `telemetry.export.errors` | counter | `signal`, `reason` | `signal` ∈ `{logs, metrics}`, `reason` ∈ `{auth_failed, server_error, client_error, network, unknown}`. Surfaces silent OTLP fetch failures in `/api/observability` so operators don't need to grep CI logs. |
 
 ### `LOG_SERVICE_NAME`
 
