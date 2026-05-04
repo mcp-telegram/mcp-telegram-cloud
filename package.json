@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.19.1",
+  "version": "2.19.2",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
   "dependencies": {
     "@hono/node-server": "^2.0.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@overpod/mcp-telegram": "^1.36.0",
+    "@overpod/mcp-telegram": "^1.36.1",
     "better-sqlite3": "^12.9.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.16",
