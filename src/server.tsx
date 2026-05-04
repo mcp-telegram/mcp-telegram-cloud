@@ -20,6 +20,7 @@ import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
 import { flushMetrics, registerGauge, startMetricsFlush, stopMetricsFlush } from "./telemetry/metrics.js";
+import { flushTraces, runDetached, stopTraceFlush } from "./telemetry/tracer.js";
 import { purgeUrlFetchOrphans } from "./tools/uploads.js";
 import { UploadStore } from "./upload-store.js";
 import { UsageTracker } from "./usage.js";
@@ -75,36 +76,47 @@ const botEnabled = botSetCount === 3;
 const subscribers = botEnabled ? new Subscribers(sessions.getDb()) : null;
 const botClient = botEnabled ? new BotClient(config.botToken) : null;
 
-// Periodic cleanup of expired OAuth codes/tokens
-setInterval(() => oauth.cleanup(), 3600_000);
+// Periodic cleanup of expired OAuth codes/tokens. Wrapped in `runDetached`
+// for symmetry with the other purge timers — `oauth.cleanup()` is currently
+// log-free, but a future maintainer adding a `logger.info("Pruned N codes")`
+// call wouldn't have to re-discover the trace-pollution gotcha.
+setInterval(() => runDetached(() => oauth.cleanup()), 3600_000);
 
-// Periodic purge of old usage_log rows (retention policy)
+// Periodic purge of old usage_log rows (retention policy).
+// `runDetached` clears the AsyncLocalStorage span context so logger calls
+// inside this timer don't inherit whatever request happened to be in flight
+// when the timer fired (would otherwise tag purge logs with an unrelated
+// trace_id in SigNoz).
 if (config.usageLogRetentionDays > 0) {
   setInterval(() => {
-    const removed = usage.purgeOldLogs(config.usageLogRetentionDays);
-    if (removed > 0) {
-      logger.info(`Purged ${removed} old usage_log rows`, {
-        component: "usage",
-        event: "retention.purge",
-        removed,
-        retentionDays: config.usageLogRetentionDays,
-      });
-    }
+    runDetached(() => {
+      const removed = usage.purgeOldLogs(config.usageLogRetentionDays);
+      if (removed > 0) {
+        logger.info(`Purged ${removed} old usage_log rows`, {
+          component: "usage",
+          event: "retention.purge",
+          removed,
+          retentionDays: config.usageLogRetentionDays,
+        });
+      }
+    });
   }, 24 * 3600_000);
 }
 
 // Periodic purge of old destructive_audit rows (retention policy)
 if (config.destructiveAuditRetentionDays > 0) {
   setInterval(() => {
-    const removed = destructive.purgeOldRows(config.destructiveAuditRetentionDays);
-    if (removed > 0) {
-      logger.info(`Purged ${removed} old destructive_audit rows`, {
-        component: "destructive",
-        event: "retention.purge",
-        removed,
-        retentionDays: config.destructiveAuditRetentionDays,
-      });
-    }
+    runDetached(() => {
+      const removed = destructive.purgeOldRows(config.destructiveAuditRetentionDays);
+      if (removed > 0) {
+        logger.info(`Purged ${removed} old destructive_audit rows`, {
+          component: "destructive",
+          event: "retention.purge",
+          removed,
+          retentionDays: config.destructiveAuditRetentionDays,
+        });
+      }
+    });
   }, 24 * 3600_000);
 }
 
@@ -134,30 +146,36 @@ purgeUrlFetchOrphans(0)
     });
   });
 
-setInterval(async () => {
-  try {
-    const removedPending = await uploads.purgeExpired();
-    if (removedPending > 0) {
-      logger.info(`Purged ${removedPending} expired pending uploads`, {
+setInterval(() => {
+  // Detach so background purge logs don't pollute whatever HTTP trace was
+  // active when the timer fired. `runDetached` returns the inner promise
+  // unchanged, but we don't await it here — the original code didn't either,
+  // and an unhandled rejection inside the inner async lambda is caught below.
+  runDetached(async () => {
+    try {
+      const removedPending = await uploads.purgeExpired();
+      if (removedPending > 0) {
+        logger.info(`Purged ${removedPending} expired pending uploads`, {
+          component: "uploads",
+          event: "uploads.purge",
+          removed: removedPending,
+        });
+      }
+      const removedOrphans = await purgeUrlFetchOrphans(URL_FETCH_ORPHAN_MAX_AGE_MS);
+      if (removedOrphans > 0) {
+        logger.info(`Purged ${removedOrphans} URL-fetch orphans`, {
+          component: "uploads",
+          event: "uploads.urlfetch_purge",
+          removed: removedOrphans,
+        });
+      }
+    } catch (e) {
+      logger.warn(`Upload purge failed: ${(e as Error).message}`, {
         component: "uploads",
-        event: "uploads.purge",
-        removed: removedPending,
+        event: "uploads.purge_failed",
       });
     }
-    const removedOrphans = await purgeUrlFetchOrphans(URL_FETCH_ORPHAN_MAX_AGE_MS);
-    if (removedOrphans > 0) {
-      logger.info(`Purged ${removedOrphans} URL-fetch orphans`, {
-        component: "uploads",
-        event: "uploads.urlfetch_purge",
-        removed: removedOrphans,
-      });
-    }
-  } catch (e) {
-    logger.warn(`Upload purge failed: ${(e as Error).message}`, {
-      component: "uploads",
-      event: "uploads.purge_failed",
-    });
-  }
+  });
 }, uploadPurgeIntervalMs);
 
 // strict: false makes Hono treat `/mcp` and `/mcp/` as the same route
@@ -203,16 +221,23 @@ logger.info(`${config.brandName} starting on port ${config.port}`, {
   event: "server.start",
   issuer: config.issuer,
 });
-serve({ fetch: app.fetch, port: config.port });
+const httpServer = serve({ fetch: app.fetch, port: config.port });
 
 for (const sig of ["SIGTERM", "SIGINT"] as const) {
   process.on(sig, async () => {
     logger.info(`Received ${sig}, shutting down`, { component: "cloud", event: "server.stop" });
     stopMetricsFlush();
-    // Final drain of accumulated counters/histograms/gauges before the process
-    // exits — without this, ~15s of post-last-tick data is lost on every
-    // graceful restart / deploy. No-op when telemetryMode != "on".
+    stopTraceFlush();
+    // Drain in-flight HTTP first so any spans started by requests still
+    // resolving land in `exportQueue` BEFORE we await the final flush.
+    // Without this, the SIGTERM tick can race with `accessLog`'s `await
+    // next()` resolution and ship the trace minus its tail spans.
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+    // Final drain of accumulated counters/histograms/gauges + finished spans
+    // before the process exits — without this, ~5–15s of post-last-tick data
+    // is lost on every graceful restart / deploy. No-op when telemetryMode != "on".
     await flushMetrics();
+    await flushTraces();
     await logger.flush();
     process.exit(0);
   });

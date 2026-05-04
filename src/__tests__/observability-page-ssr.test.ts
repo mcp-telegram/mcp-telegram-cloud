@@ -35,6 +35,7 @@ describe("ObservabilityPage SSR", () => {
       topUsers: [{ userId: "u:abc1234567", totalCalls: 5 }],
       recentErrors: [{ timestamp: "2026-05-03T05:00:00Z", message: "test", attrs: { component: "x" } }],
       metrics: emptyMetrics,
+      spans: [],
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(html.length > 1000, `expected non-trivial HTML, got ${html.length} bytes`);
@@ -53,6 +54,7 @@ describe("ObservabilityPage SSR", () => {
       topUsers: [],
       recentErrors: [],
       metrics: emptyMetrics,
+      spans: [],
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(html.includes("No usage recorded yet."));
@@ -71,6 +73,7 @@ describe("ObservabilityPage SSR", () => {
       topUsers: [],
       recentErrors: [],
       metrics: emptyMetrics,
+      spans: [],
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(!html.includes("SIGNOZ_ENDPOINT not set"));
@@ -86,6 +89,7 @@ describe("ObservabilityPage SSR", () => {
       topUsers: [],
       recentErrors: [],
       metrics: emptyMetrics,
+      spans: [],
     });
     const html = await (node as unknown as { toString(): Promise<string> }).toString();
     assert.ok(html.includes("SIGNOZ_ENDPOINT not set"));

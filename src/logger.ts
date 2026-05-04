@@ -14,6 +14,7 @@ import { config } from "./config.js";
 import { recordError } from "./telemetry/error-buffer.js";
 import { type LogFields, MAX_ATTR_VALUE_LEN } from "./telemetry/log-fields.js";
 import { classifyExportError, incr, TELEMETRY_EXPORT_ERRORS } from "./telemetry/metrics.js";
+import { getActiveSpanContext } from "./telemetry/tracer.js";
 
 export type { LogFields } from "./telemetry/log-fields.js";
 
@@ -53,6 +54,12 @@ interface LogRecord {
   severityText: string;
   body: { stringValue: string };
   attributes: { key: string; value: { stringValue: string } }[];
+  /** OTLP top-level fields (lowercase hex). Present only when an active
+   * span context exists at log time — propagated via AsyncLocalStorage from
+   * the surrounding `withSpan(...)` call. SigNoz uses these to render the
+   * "View related logs" / "View related traces" cross-link on each entry. */
+  traceId?: string;
+  spanId?: string;
 }
 
 const batch: LogRecord[] = [];
@@ -148,12 +155,14 @@ function log(severity: Severity, message: string, attrs: LogFields = {}) {
   // Skip OTLP batching when exporter is inactive
   if (!OTLP_ACTIVE) return;
 
+  const ctx = getActiveSpanContext();
   batch.push({
     timeUnixNano: String(Date.now() * 1_000_000),
     severityNumber: SEVERITY_NUMBER[severity],
     severityText: severity,
     body: { stringValue: message },
     attributes: toAttributes(attrs),
+    ...(ctx && { traceId: ctx.traceId, spanId: ctx.spanId }),
   });
 
   if (batch.length >= MAX_BATCH_SIZE) {

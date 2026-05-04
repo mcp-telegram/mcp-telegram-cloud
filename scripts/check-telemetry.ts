@@ -26,6 +26,12 @@ import { type Finding, scanText } from "../src/telemetry/check-telemetry-core.js
 const ROOT = join(import.meta.dirname, "..", "src");
 const EXTS = new Set([".ts", ".tsx"]);
 const SKIP_DIRS = new Set(["__tests__", "node_modules", "dist"]);
+/** Files that DEFINE the telemetry API (logger/tracer/error-buffer). They contain
+ * type annotations like `setAttributes(attrs: SpanAttrs): void;` that the grep
+ * heuristic mistakes for runtime callsites with attrs object literals. The
+ * compile-time `LogFields` / `SpanAttrs` whitelists already guard the surface;
+ * this skip avoids a self-referential false positive. */
+const SKIP_FILES = new Set(["telemetry/tracer.ts", "telemetry/log-fields.ts"]);
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
@@ -35,6 +41,8 @@ function* walk(dir: string): Generator<string> {
     if (st.isDirectory()) {
       yield* walk(full);
     } else if (EXTS.has(full.slice(full.lastIndexOf(".")))) {
+      const rel = full.slice(ROOT.length + 1);
+      if (SKIP_FILES.has(rel)) continue;
       yield full;
     }
   }

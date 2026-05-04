@@ -4,6 +4,7 @@ import type { TelemetryMode } from "../config.js";
 import { card, subtitle, tg, title } from "../styles.js";
 import type { ErrorEntry } from "../telemetry/error-buffer.js";
 import type { snapshot } from "../telemetry/metrics.js";
+import type { FinishedSpan } from "../telemetry/tracer.js";
 import { Layout } from "./Layout.js";
 
 type MetricsSnapshot = ReturnType<typeof snapshot>;
@@ -17,6 +18,7 @@ interface ObservabilityPageProps {
   topUsers: { userId: string; totalCalls: number }[];
   recentErrors: ErrorEntry[];
   metrics: MetricsSnapshot;
+  spans: FinishedSpan[];
 }
 
 const wide = css`
@@ -123,6 +125,7 @@ export const ObservabilityPage: FC<ObservabilityPageProps> = ({
   topUsers,
   recentErrors,
   metrics,
+  spans,
 }) => {
   const c = modeColors[telemetryMode];
   const badgeStyle = `background:${c.bg};color:${c.fg};`;
@@ -245,6 +248,54 @@ export const ObservabilityPage: FC<ObservabilityPageProps> = ({
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section style="margin-top:24px;">
+          <h2 style="font-size:16px;margin:0 0 8px 0;">Recent traces ({spans.length})</h2>
+          <p style="color:#888;font-size:12px;margin:0 0 8px 0;">
+            Last {spans.length} finished spans (in-memory, lost on restart). Newest at top. Same spans exported to
+            SigNoz when <code style="font-size:11px;">MCP_TELEGRAM_TELEMETRY=on</code>; sampling 100%.
+          </p>
+          {spans.length === 0 ? (
+            <div class={empty}>No spans recorded yet.</div>
+          ) : (
+            <table class={tbl}>
+              <thead>
+                <tr>
+                  <th>Span</th>
+                  <th>Trace ID</th>
+                  <th style="text-align:right;">Duration (ms)</th>
+                  <th>Status</th>
+                  <th>Attributes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {spans
+                  .slice()
+                  .reverse()
+                  .slice(0, 50)
+                  .map((s) => {
+                    const durationMs = Number((s.endTimeNs - s.startTimeNs) / 1_000_000n);
+                    const flatAttrs = Object.fromEntries(Object.entries(s.attributes).map(([k, v]) => [k, String(v)]));
+                    const statusLabel = s.status.code === 2 ? "ERROR" : s.status.code === 1 ? "OK" : "—";
+                    const statusColor = s.status.code === 2 ? tg.destructive : tg.hint;
+                    return (
+                      <tr>
+                        <td style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;">
+                          {s.name}
+                        </td>
+                        <td style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">
+                          {s.context.traceId.slice(0, 16)}…
+                        </td>
+                        <td class="num">{durationMs}</td>
+                        <td style={`color:${statusColor};font-size:12px;`}>{statusLabel}</td>
+                        <td class={errAttrs}>{fmtAttrs(flatAttrs)}</td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           )}

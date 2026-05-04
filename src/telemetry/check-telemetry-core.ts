@@ -51,6 +51,8 @@ export interface Finding {
 
 /**
  * Match logger.<level>( | logger[<level>]( | logger["<level>"]( | recordError(
+ * | span.setAttributes(  | <ident>.setAttributes(  (tracer attrs object)
+ * | withSpan(name, { attributes: {...} })  — caught by the `attributes:` shape
  *
  * The bracket form (`logger[level](...)`) is used in `src/middleware/access-log.ts`
  * to pick a severity from a runtime variable. Without this branch the grep
@@ -58,9 +60,14 @@ export interface Finding {
  *
  * The `(?<!\.)` lookbehind on the bracket branch rejects `obj.logger[x](`
  * — only the bare `logger` identifier (matching the import) is in scope.
+ *
+ * `setAttributes(` covers the tracer's bulk-set path. The single-attr form
+ * `setAttribute(key, value)` is two positional arguments, not an attrs literal,
+ * so the same grep wouldn't catch it; the compile-time `SpanAttrs` whitelist
+ * blocks it instead.
  */
 const CALL_OPENER =
-  /\b(?:logger\.(?:error|warn|info|debug)|(?<!\.)\blogger\s*\[\s*['"]?[a-zA-Z_]+['"]?\s*\]|recordError)\s*\(/;
+  /\b(?:logger\.(?:error|warn|info|debug)|(?<!\.)\blogger\s*\[\s*['"]?[a-zA-Z_]+['"]?\s*\]|recordError|setAttributes)\s*\(/;
 
 /** Scan one file's text for blacklisted keys inside logger/recordError attrs.
  * `path` is recorded verbatim in findings; pass whatever label is meaningful. */

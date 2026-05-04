@@ -80,4 +80,13 @@ logger.warn("multi", {
     const findings = scanText(`deps.logger[level]("msg", { userId });`, "f.ts");
     assert.equal(findings.length, 0);
   });
+
+  it("flags PII in span.setAttributes(...) — Phase C tracer guard", () => {
+    // The span.setAttributes(attrs) bulk-set form takes an object literal,
+    // mirroring logger.<level>(msg, attrs). Without grep coverage the runtime
+    // guard would only catch logger callsites.
+    const findings = scanText(`span.setAttributes({ component: "http", userId: "raw" });`, "f.ts");
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0].key, "userId");
+  });
 });

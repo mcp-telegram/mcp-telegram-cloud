@@ -7,6 +7,7 @@ import { ObservabilityPage } from "../pages/ObservabilityPage.js";
 import type { SessionManager } from "../session-manager.js";
 import { getRecentErrors } from "../telemetry/error-buffer.js";
 import { snapshot } from "../telemetry/metrics.js";
+import { recentSpans } from "../telemetry/tracer.js";
 import type { UsageTracker } from "../usage.js";
 
 export interface AdminRoutesDeps {
@@ -51,6 +52,7 @@ export function createAdminRoutes({ oauth, sessions, usage }: AdminRoutesDeps): 
         topUsers={topUsersRaw.slice(0, 10).map((u) => ({ userId: logUser(u.userId), totalCalls: u.totalCalls }))}
         recentErrors={getRecentErrors(50)}
         metrics={snapshot()}
+        spans={recentSpans()}
       />,
     );
   });

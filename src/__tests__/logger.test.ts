@@ -98,4 +98,32 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
       _resetMetricsForTest();
     }
   });
+
+  it("flush() attaches traceId/spanId from active span to LogRecord (Phase C correlation)", async () => {
+    const { withSpan, _resetTracerForTest } = await import("../telemetry/tracer.js");
+    _resetTracerForTest();
+    const captured: { records: Array<{ traceId?: string; spanId?: string }> } = { records: [] };
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse((init as RequestInit).body as string);
+      captured.records = body.resourceLogs[0].scopeLogs[0].logRecords;
+      return new Response("");
+    };
+    try {
+      await withSpan("fixture-span", {}, async () => {
+        logger.info("inside-span", { component: "test" });
+      });
+      // Log AFTER the span ended — must carry no trace context.
+      logger.info("outside-span", { component: "test" });
+      await logger.flush();
+      assert.equal(captured.records.length, 2);
+      assert.match(captured.records[0].traceId ?? "", /^[0-9a-f]{32}$/, "in-span log carries traceId");
+      assert.match(captured.records[0].spanId ?? "", /^[0-9a-f]{16}$/, "in-span log carries spanId");
+      assert.equal(captured.records[1].traceId, undefined, "out-of-span log has no traceId");
+      assert.equal(captured.records[1].spanId, undefined, "out-of-span log has no spanId");
+    } finally {
+      globalThis.fetch = origFetch;
+      _resetTracerForTest();
+    }
+  });
 });
