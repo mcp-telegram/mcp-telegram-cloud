@@ -266,12 +266,22 @@ let reaperSessionManager: SessionManager | null = null;
  * Start the idle reaper timer. Idempotent — safe to call once at boot.
  * Captures a reference to `SessionManager` for the duration of the process
  * so reaped last-of-user sessions also drop the Telegram pool entry.
+ *
+ * Disables itself if EITHER the TTL or the sweep interval is non-positive
+ * (operator footgun: `MCP_IDLE_REAP_INTERVAL_MS=0` would otherwise create
+ * a hot-looping `setInterval` and burn CPU on an empty `transports` Map).
  */
 export function startIdleReaper(sessions: SessionManager): void {
   reaperSessionManager = sessions;
   if (reaperTimer) return;
-  if (config.mcpIdleReapMs <= 0) return; // disabled via env
   const intervalMs = config.mcpIdleReapIntervalMs;
+  if (config.mcpIdleReapMs <= 0 || intervalMs <= 0) {
+    logger.info("Idle reaper disabled (non-positive TTL or interval)", {
+      component: "cloud",
+      event: "session.reap.disabled",
+    });
+    return;
+  }
   reaperTimer = setInterval(() => {
     try {
       const n = reapIdleSessions();
