@@ -64,4 +64,20 @@ logger.warn("multi", {
     const findings = scanText(`logger.info("ok", { userIdHash: "x", peerCount: 5 });`, "f.ts");
     assert.equal(findings.length, 0);
   });
+
+  it("flags PII inside dynamic logger[level](...) bracket form", () => {
+    // src/middleware/access-log.ts uses `logger[level](...)`; without bracket
+    // support the grep gate is silent on that single callsite.
+    const findings = scanText(`logger[level]("req", { component: "http", userId });`, "f.ts");
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0].key, "userId");
+  });
+
+  it("does not match obj.logger[x](...) — only the bare logger identifier", () => {
+    // The negative lookbehind ensures we don't scan `deps.logger[level](...)`
+    // or `something.logger[x](...)` — the codebase always imports `logger`
+    // as a bare top-level binding.
+    const findings = scanText(`deps.logger[level]("msg", { userId });`, "f.ts");
+    assert.equal(findings.length, 0);
+  });
 });

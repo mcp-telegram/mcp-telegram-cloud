@@ -113,6 +113,24 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 ## Done (recent highlights)
 
+- **2026-05-04** — **Phase A.2: compile-time PII whitelist for log attributes** (cloud v2.17.3).
+  New `LogFields` type (`src/telemetry/log-fields.ts`) closes the unknown-key gap
+  in structured logging: `logger.{error,warn,info,debug}` and `recordError` now
+  accept only a closed list of allow-listed attribute keys (e.g. `component`,
+  `event`, `userId`, `tool`, `count`, `error`, …). Any new caller passing a
+  PII-shaped key (`emailHash`, `ipAddr`, …) fails `pnpm typecheck` — the
+  runtime grep guard (`pnpm check-telemetry`) is preserved as the second
+  layer (catches blacklisted keys behind `// telemetry-allow` escape hatches).
+  Two-layer defence symmetric with the SECURITY.md "Privacy contract" prose.
+  Plus: 256-char value cap at the logger boundary (defense-in-depth on
+  `error`/`context` strings carrying upstream-encoded payloads), single source
+  of truth for `MAX_ATTR_VALUE_LEN`, `clientClass` enum split from raw OAuth
+  `client_name` (avoids same-key collision in SigNoz aggregations), and
+  `(?<!\.)\blogger` lookbehind on the runtime grep regex closes a latent
+  false-positive on `obj.logger[x](...)`. 7 new tests (`log-fields.test.ts`
+  for `// @ts-expect-error` regression coverage + truncation cap test +
+  bracket-form regex tests). 386/386 tests, two review passes APPROVED.
+
 - **2026-05-04** — **Telemetry export error visibility** (cloud v2.17.2).
   New `telemetry.export.errors` counter with labels `signal` ∈ `{logs, metrics}` ×
   `reason` ∈ `{auth_failed, server_error, client_error, network, unknown}` surfaces

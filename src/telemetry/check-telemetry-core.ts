@@ -2,6 +2,11 @@
  * Pure scan logic extracted from `scripts/check-telemetry.ts` so it can be
  * unit-tested without spawning a subprocess. The script wraps this with file
  * walking, CLI flags, and the exit-code contract.
+ *
+ * This is the runtime-grep half of a two-layer PII guard. The compile-time
+ * half lives in `src/telemetry/log-fields.ts` (the `LogFields` whitelist
+ * type). Both run in CI; the type stops new PII-shaped keys, the grep
+ * catches BLACKLIST keys behind `// telemetry-allow` escape hatches.
  */
 
 /** Blacklisted attribute keys: raw PII, secrets, credentials, payload bodies. */
@@ -44,8 +49,18 @@ export interface Finding {
   snippet: string;
 }
 
-/** Match logger.error(, logger.warn(, logger.info(, logger.debug(, recordError( */
-const CALL_OPENER = /\b(?:logger\.(?:error|warn|info|debug)|recordError)\s*\(/;
+/**
+ * Match logger.<level>( | logger[<level>]( | logger["<level>"]( | recordError(
+ *
+ * The bracket form (`logger[level](...)`) is used in `src/middleware/access-log.ts`
+ * to pick a severity from a runtime variable. Without this branch the grep
+ * gate would silently miss any blacklisted attribute passed to that callsite.
+ *
+ * The `(?<!\.)` lookbehind on the bracket branch rejects `obj.logger[x](`
+ * — only the bare `logger` identifier (matching the import) is in scope.
+ */
+const CALL_OPENER =
+  /\b(?:logger\.(?:error|warn|info|debug)|(?<!\.)\blogger\s*\[\s*['"]?[a-zA-Z_]+['"]?\s*\]|recordError)\s*\(/;
 
 /** Scan one file's text for blacklisted keys inside logger/recordError attrs.
  * `path` is recorded verbatim in findings; pass whatever label is meaningful. */

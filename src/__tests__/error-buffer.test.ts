@@ -13,18 +13,20 @@ describe("error-buffer", () => {
   });
 
   it("captures message + attrs", () => {
-    recordError("boom", { component: "test", code: 42 });
+    recordError("boom", { component: "test", count: 42 });
     const recent = getRecentErrors();
     assert.equal(recent.length, 1);
     assert.equal(recent[0].message, "boom");
-    assert.deepEqual(recent[0].attrs, { component: "test", code: "42" });
+    assert.deepEqual(recent[0].attrs, { component: "test", count: "42" });
     assert.match(recent[0].timestamp, /^\d{4}-\d{2}-\d{2}T/);
   });
 
   it("drops undefined attrs (so callsite shape doesn't pollute the dashboard)", () => {
-    recordError("partial", { component: "x", missing: undefined, present: "yes" });
+    // `client: undefined` is the realistic shape — optional fields end up
+    // undefined when conditionally populated; the buffer must drop them.
+    recordError("partial", { component: "x", client: undefined, reason: "yes" });
     const [entry] = getRecentErrors();
-    assert.deepEqual(entry.attrs, { component: "x", present: "yes" });
+    assert.deepEqual(entry.attrs, { component: "x", reason: "yes" });
   });
 
   it("returns most-recent-first", () => {
@@ -46,6 +48,21 @@ describe("error-buffer", () => {
       top3.map((e) => e.message),
       ["msg9", "msg8", "msg7"],
     );
+  });
+
+  it("truncates attribute values beyond MAX_ATTR_VALUE_LEN with ellipsis", () => {
+    // Defense-in-depth boundary cap: free-form keys (`error`, `context`)
+    // can carry upstream-encoded strings; capping here bounds the leakage
+    // shape regardless of caller-side truncation discipline.
+    const long = "x".repeat(1000);
+    recordError("boom", { component: "test", error: long });
+    const [entry] = getRecentErrors();
+    // Expect 256 truncation-chars + 1 ellipsis char
+    assert.equal(entry.attrs.error.length, 257);
+    assert.ok(entry.attrs.error.endsWith("…"));
+    assert.equal(entry.attrs.error.slice(0, 256), "x".repeat(256));
+    // Short values pass through unchanged
+    assert.equal(entry.attrs.component, "test");
   });
 
   it("evicts oldest beyond capacity", () => {

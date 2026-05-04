@@ -6,12 +6,14 @@
  * persistence would need a separate store and isn't worth the complexity at
  * current scale.
  *
- * Privacy: stores whatever the caller passed to `logger.error(...)`. PII
- * scrubbing is the caller's responsibility — `scripts/check-telemetry.ts`
- * grep-checks call sites for blacklisted identifiers.
+ * Privacy: callers pass `LogFields` (compile-time whitelist of attribute
+ * keys). The runtime grep guard in `scripts/check-telemetry.ts` is the
+ * second layer that catches blacklisted keys behind escape hatches.
  *
  * Concurrency: single-process Node, no locks needed.
  */
+
+import { type LogFields, MAX_ATTR_VALUE_LEN } from "./log-fields.js";
 
 const CAPACITY = 500;
 
@@ -25,11 +27,12 @@ export interface ErrorEntry {
 
 const ring: ErrorEntry[] = [];
 
-export function recordError(message: string, attrs: Record<string, string | number | undefined> = {}): void {
+export function recordError(message: string, attrs: LogFields = {}): void {
   const stringified: Record<string, string> = {};
   for (const [k, v] of Object.entries(attrs)) {
     if (v === undefined) continue;
-    stringified[k] = String(v);
+    const s = String(v);
+    stringified[k] = s.length > MAX_ATTR_VALUE_LEN ? `${s.slice(0, MAX_ATTR_VALUE_LEN)}…` : s;
   }
   ring.push({
     timestamp: new Date().toISOString(),

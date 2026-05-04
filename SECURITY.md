@@ -82,7 +82,21 @@ Outbound telemetry (logs/metrics/traces to SigNoz) is gated by the
 - HMAC-hashed user id (10-hex-char prefix; HMAC key `LOG_HASH_SALT`)
 - Aggregate counts (DAU, calls/day)
 
-**Never recorded** (CI gate: `pnpm check-telemetry` runs in `.github/workflows/build.yml` on every push and blocks the build on any finding):
+**Never recorded** (two-layer guard — compile-time + runtime — both run in CI):
+
+- **Compile-time** (`src/telemetry/log-fields.ts`): `LogFields` is a closed
+  whitelist of allowed attribute keys. Any `logger.*` or `recordError(...)`
+  call that passes a key not on this list is a TypeScript error and fails
+  `pnpm typecheck`. This stops PII categories that haven't been blacklisted
+  yet (e.g. a fresh `emailHash`, `ipAddr`, etc.).
+- **Runtime** (`pnpm check-telemetry` in `.github/workflows/build.yml`):
+  greps the source tree for the BLACKLIST of known-bad keys (`userId`,
+  `peer`, `messageText`, …) inside `logger`/`recordError` attrs blocks.
+  Catches escape hatches (`// telemetry-allow`) and any future caller that
+  bypasses the type system.
+
+What is blocked:
+
 
 - Raw Telegram user id, peer id, chat id, message id, message text
 - Phone, email, first/last name, username

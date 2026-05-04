@@ -110,7 +110,7 @@ export class OAuthProvider {
       component: "oauth",
       event: "oauth.register",
       clientId,
-      clientName: body.client_name ?? "",
+      client: body.client_name ?? "",
     });
 
     return {

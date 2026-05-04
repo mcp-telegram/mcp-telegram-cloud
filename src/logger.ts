@@ -12,7 +12,10 @@
 import { createHmac } from "node:crypto";
 import { config } from "./config.js";
 import { recordError } from "./telemetry/error-buffer.js";
+import { type LogFields, MAX_ATTR_VALUE_LEN } from "./telemetry/log-fields.js";
 import { classifyExportError, incr, TELEMETRY_EXPORT_ERRORS } from "./telemetry/metrics.js";
+
+export type { LogFields } from "./telemetry/log-fields.js";
 
 const OTLP_ENDPOINT = config.signozEndpoint;
 const SERVICE_NAME = config.logServiceName;
@@ -55,12 +58,17 @@ interface LogRecord {
 const batch: LogRecord[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-function toAttributes(attrs: Record<string, string | number | undefined>) {
+function capValue(v: string | number): string {
+  const s = String(v);
+  return s.length > MAX_ATTR_VALUE_LEN ? `${s.slice(0, MAX_ATTR_VALUE_LEN)}…` : s;
+}
+
+function toAttributes(attrs: LogFields) {
   return Object.entries(attrs)
     .filter(([, v]) => v !== undefined)
     .map(([key, value]) => ({
       key,
-      value: { stringValue: String(value) },
+      value: { stringValue: capValue(value as string | number) },
     }));
 }
 
@@ -120,7 +128,7 @@ function scheduleFlush() {
   }, BATCH_INTERVAL_MS);
 }
 
-function log(severity: Severity, message: string, attrs: Record<string, string | number | undefined> = {}) {
+function log(severity: Severity, message: string, attrs: LogFields = {}) {
   // Always feed the in-memory ring buffer (used by /api/observability) for ERRORs,
   // regardless of telemetry mode — the buffer is local-only by definition.
   if (severity === "ERROR") {
@@ -156,10 +164,10 @@ function log(severity: Severity, message: string, attrs: Record<string, string |
 }
 
 export const logger = {
-  debug: (msg: string, attrs?: Record<string, string | number | undefined>) => log("DEBUG", msg, attrs),
-  info: (msg: string, attrs?: Record<string, string | number | undefined>) => log("INFO", msg, attrs),
-  warn: (msg: string, attrs?: Record<string, string | number | undefined>) => log("WARN", msg, attrs),
-  error: (msg: string, attrs?: Record<string, string | number | undefined>) => log("ERROR", msg, attrs),
+  debug: (msg: string, attrs?: LogFields) => log("DEBUG", msg, attrs),
+  info: (msg: string, attrs?: LogFields) => log("INFO", msg, attrs),
+  warn: (msg: string, attrs?: LogFields) => log("WARN", msg, attrs),
+  error: (msg: string, attrs?: LogFields) => log("ERROR", msg, attrs),
 
   /** Flush all pending logs (call before process exit) */
   flush,

@@ -20,6 +20,8 @@ export const accessLog: MiddlewareHandler = async (c, next) => {
   const duration = Date.now() - start;
   const status = c.res.status;
   const method = c.req.method;
+  // Hono's c.req.path is path-only (no query string) — verified empirically;
+  // logging it satisfies the "no query string" invariant in LogFields.
   const rawPath = c.req.path;
   const route = templatePath(rawPath);
   const cls = statusClass(status);
@@ -33,6 +35,9 @@ export const accessLog: MiddlewareHandler = async (c, next) => {
 
   if (rawPath === "/health" || rawPath === "/icon.svg") return;
 
+  // The HTTP layer can only classify by user-agent — `client` (raw OAuth
+  // client_name) is only known after MCP token validation, so this layer
+  // uses the bounded-enum `clientClass` to avoid a same-key collision.
   const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
   logger[level](`${method} ${rawPath} ${status} ${duration}ms [${client}]`, {
     component: "http",
@@ -42,6 +47,6 @@ export const accessLog: MiddlewareHandler = async (c, next) => {
     route,
     status: String(status),
     durationMs: duration,
-    client,
+    clientClass: client,
   });
 };
