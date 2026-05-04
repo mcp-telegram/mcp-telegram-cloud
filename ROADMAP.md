@@ -43,7 +43,11 @@ Ordered by current intent. Subject to change as decisions are locked.
   because the MCP SDK does not call `transport.close()` on stream cancellation.
   Fix: track `lastActivity` per session, reap entries older than ~5min idle.
   Trigger: when SigNoz shows persistent count drift between session start/close
-  events, OR after first observed cumulative drift > 50.
+  events, OR after first observed cumulative drift > 50. Bundles with: an
+  integration test driving real `WebStandardStreamableHTTPServerTransport`
+  lifecycle (DELETE, manual close, stream cancel) — current tests use
+  test-only helpers and cannot detect SDK-shape regressions; this gap is
+  what enabled the v2.20.0 over-claim caught in pre-deploy review.
 
 - **Per-user burst rate limit** (Layer 3) —
   trigger: ≥10 daily active users sustained 7 days. Currently
