@@ -44,9 +44,13 @@ const intOr = (value: string | undefined, fallback: number): number => {
 };
 
 /** Telemetry pipeline mode. Master kill-switch for outbound observability data.
- * - `local-only` (default): writes SQLite usage_log + console logs + in-memory error ring buffer for /api/observability. **Zero outbound** to SigNoz.
- * - `on`: same as local-only PLUS OTLP HTTP exporter to SigNoz (logs, metrics, traces in later phases).
- * - `off`: suppresses everything except SQLite usage_log (truly silent). */
+ * - `local-only` (default): writes SQLite usage_log + console logs + in-memory snapshots for /api/observability. **Zero outbound** to SigNoz.
+ * - `on`: same as local-only PLUS OTLP HTTP exporter to SigNoz (logs, metrics, traces — all three signals share the same gate).
+ * - `off`: suppresses everything except SQLite usage_log (truly silent — no console, no OTLP, no in-memory egress).
+ *
+ * Read dynamically by `logger.ts:otlpActive`/`consoleActive`, `metrics.ts:otlpActive`,
+ * `tracer.ts:otlpActive` — not snapshotted at module load, so changing the env (or
+ * mutating `config.telemetryMode` in tests) takes effect on the next flush/log call. */
 export type TelemetryMode = "on" | "off" | "local-only";
 /** Exported for unit tests; not for runtime use outside config.ts. */
 export const parseTelemetryMode = (raw: string | undefined): TelemetryMode => {

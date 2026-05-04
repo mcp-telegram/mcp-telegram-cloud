@@ -7,6 +7,12 @@
  * - `off`       → ring buffer only (no console, no OTLP — silent for embedded/test use)
  *
  * Zero external dependencies — uses Node.js built-in fetch.
+ *
+ * Privacy kill-switch is re-evaluated on every log call and every flush —
+ * never frozen at module load. Mirrors `metrics.ts` and `tracer.ts` so all
+ * three signals share the same `MCP_TELEGRAM_TELEMETRY` contract: changing
+ * the env (or, in tests, mutating `config.telemetryMode`) takes effect
+ * without a process restart.
  */
 
 import { createHmac } from "node:crypto";
@@ -18,14 +24,23 @@ import { getActiveSpanContext } from "./telemetry/tracer.js";
 
 export type { LogFields } from "./telemetry/log-fields.js";
 
-const OTLP_ENDPOINT = config.signozEndpoint;
 const SERVICE_NAME = config.logServiceName;
 const BATCH_INTERVAL_MS = 5_000;
 const MAX_BATCH_SIZE = 50;
-/** Outbound OTLP active only when telemetry is fully on AND endpoint is configured. */
-const OTLP_ACTIVE = config.telemetryMode === "on" && OTLP_ENDPOINT !== "";
-/** Console output is suppressed only in `off` mode (used for embedded/tests where the host swallows stdout). */
-const CONSOLE_ACTIVE = config.telemetryMode !== "off";
+
+/** Outbound OTLP active only when telemetry is fully on AND endpoint is
+ * configured. Read dynamically so privacy kill-switch responds to the current
+ * `config`, not a snapshot from boot. Mirrors `metrics.ts:otlpActive`. */
+function otlpActive(): boolean {
+  return config.telemetryMode === "on" && config.signozEndpoint !== "";
+}
+
+/** Console output is suppressed only in `off` mode (used for embedded/tests
+ * where the host swallows stdout). Read dynamically — same rationale as
+ * `otlpActive`. */
+function consoleActive(): boolean {
+  return config.telemetryMode !== "off";
+}
 
 /**
  * Return a user identifier safe for logs. When LOG_USER_IDS=false, returns
@@ -81,7 +96,7 @@ function toAttributes(attrs: LogFields) {
 
 async function flush() {
   if (batch.length === 0) return;
-  if (!OTLP_ACTIVE) {
+  if (!otlpActive()) {
     batch.length = 0; // drain — exporter inactive (telemetryMode != "on" or no endpoint)
     return;
   }
@@ -111,7 +126,7 @@ async function flush() {
   }
 
   try {
-    const res = await fetch(`${OTLP_ENDPOINT}/v1/logs`, {
+    const res = await fetch(`${config.signozEndpoint}/v1/logs`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
@@ -143,7 +158,7 @@ function log(severity: Severity, message: string, attrs: LogFields = {}) {
   }
 
   // Console output (keeps docker logs working). Suppressed only in `off` mode.
-  if (CONSOLE_ACTIVE) {
+  if (consoleActive()) {
     const prefix = attrs.component ? `[${attrs.component}]` : "";
     if (severity === "ERROR") {
       console.error(`${prefix} ${message}`);
@@ -152,8 +167,9 @@ function log(severity: Severity, message: string, attrs: LogFields = {}) {
     }
   }
 
-  // Skip OTLP batching when exporter is inactive
-  if (!OTLP_ACTIVE) return;
+  // Skip OTLP batching when exporter is inactive — re-evaluated per-call so a
+  // runtime kill-switch toggle stops accumulation immediately.
+  if (!otlpActive()) return;
 
   const ctx = getActiveSpanContext();
   batch.push({

@@ -5,7 +5,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
 **Last updated:** 2026-05-04
-**Current version:** 2.21.0 (cloud — idle MCP-session reaper closes the abandoned-session leak) / [`@overpod/mcp-telegram` 1.36.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.21.1 (cloud — telemetry kill-switch symmetry across logger/metrics/tracer) / [`@overpod/mcp-telegram` 1.36.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -112,6 +112,24 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-04** — **Telemetry kill-switch symmetry across logger/metrics/tracer** (cloud v2.21.1).
+  Pure refactor surfaced by /sc:analyze: logger.ts read `MCP_TELEGRAM_TELEMETRY` at
+  module load (`OTLP_ACTIVE`/`CONSOLE_ACTIVE` constants) while metrics.ts and
+  tracer.ts re-read on every flush via `otlpActive()` functions. Inconsistent
+  contract — runtime kill-switch toggle would have stopped metrics + tracer
+  egress but kept logger emitting. Privacy-correct in production (kill-switch
+  via env at boot still works) but not symmetric. v2.21.1 replaces both
+  constants with `otlpActive()` / `consoleActive()` functions reading `config`
+  dynamically. 4 new tests cover runtime telemetryMode flips: off → no fetch,
+  off → no console, local-only → no fetch, on → console emits. Doc drift in
+  config.ts TelemetryMode type also fixed (referenced "later phases" for
+  metrics/traces — both shipped weeks ago). 462/462 tests, parity 178/3/0
+  unchanged. /sc:cleanup NO-OP — extracting `otlpActive()` to shared module
+  was the obvious candidate but rejected: 9 LOC saved against weakening
+  defense-in-depth on the most security-sensitive predicate in the codebase
+  (Phase 0 PII leak history). Three independent gates with cross-reference
+  docstrings is the property; folding to one helper would invert it.
 
 - **2026-05-04** — **Idle MCP-session reaper** (cloud v2.21.0).
   Closes the abandoned-session leak documented as KNOWN LIMITATION in v2.20.1.

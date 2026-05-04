@@ -4,8 +4,9 @@ import { describe, it } from "node:test";
 process.env.TELEGRAM_API_ID ??= "1";
 process.env.TELEGRAM_API_HASH ??= "test";
 process.env.ISSUER ??= "https://example.com";
-// logger.ts caches OTLP_ENDPOINT and OTLP_ACTIVE at module load — set both before
-// importing so flush() actually attempts the fetch we want to inspect.
+// Set telemetry on at boot so the auth-header tests below see flush() take
+// the egress path. The kill-switch is now re-read per call (v2.21.1), so
+// individual tests can also override `config.telemetryMode` at runtime.
 process.env.MCP_TELEGRAM_TELEMETRY = "on";
 process.env.SIGNOZ_ENDPOINT = "https://signoz.test";
 
@@ -124,6 +125,97 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
     } finally {
       globalThis.fetch = origFetch;
       _resetTracerForTest();
+    }
+  });
+});
+
+describe("logger — runtime kill-switch (v2.21.1: dynamic telemetryMode read)", () => {
+  it("flush() does NOT fetch when telemetryMode flips to 'local-only' at runtime", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    let fetchCalls = 0;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      fetchCalls += 1;
+      return new Response("");
+    };
+    try {
+      // Flip kill-switch AFTER module load — pre-v2.21.1 logger cached at boot
+      // and would still fetch. Since v2.21.1, otlpActive() reads `config` per
+      // call, so the queued log must drain silently.
+      (cfg as { telemetryMode: string }).telemetryMode = "local-only";
+      logger.info("seed in local-only", { component: "test" });
+      await logger.flush();
+      assert.equal(fetchCalls, 0, "must not fetch when telemetryMode='local-only'");
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+    }
+  });
+
+  it("flush() does NOT fetch when telemetryMode flips to 'off' at runtime", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    let fetchCalls = 0;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      fetchCalls += 1;
+      return new Response("");
+    };
+    try {
+      (cfg as { telemetryMode: string }).telemetryMode = "off";
+      logger.info("seed in off", { component: "test" });
+      await logger.flush();
+      assert.equal(fetchCalls, 0, "must not fetch when telemetryMode='off'");
+    } finally {
+      globalThis.fetch = origFetch;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+    }
+  });
+
+  it("log() suppresses console output when telemetryMode='off'", async () => {
+    // Capture stdout/stderr by replacing console methods. Mirrors the
+    // assert pattern in `metrics.test.ts` for runtime config flips.
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origLog = console.log;
+    const origErr = console.error;
+    let stdoutCalls = 0;
+    let stderrCalls = 0;
+    console.log = () => {
+      stdoutCalls += 1;
+    };
+    console.error = () => {
+      stderrCalls += 1;
+    };
+    try {
+      (cfg as { telemetryMode: string }).telemetryMode = "off";
+      logger.info("silent info", { component: "test" });
+      logger.error("silent error", { component: "test" });
+      assert.equal(stdoutCalls, 0, "console.log must be suppressed in off mode");
+      assert.equal(stderrCalls, 0, "console.error must be suppressed in off mode");
+    } finally {
+      console.log = origLog;
+      console.error = origErr;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
+    }
+  });
+
+  it("log() emits to console when telemetryMode flips back to 'on'", async () => {
+    const { config: cfg } = await import("../config.js");
+    const origMode = cfg.telemetryMode;
+    const origLog = console.log;
+    let stdoutCalls = 0;
+    console.log = () => {
+      stdoutCalls += 1;
+    };
+    try {
+      (cfg as { telemetryMode: string }).telemetryMode = "on";
+      logger.info("audible", { component: "test" });
+      assert.ok(stdoutCalls >= 1, "console.log must be active in on mode");
+    } finally {
+      console.log = origLog;
+      (cfg as { telemetryMode: string }).telemetryMode = origMode;
     }
   });
 });
