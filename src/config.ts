@@ -129,6 +129,12 @@ export const config = {
   botUsername: optional(process.env.BOT_USERNAME, "").replace(/^@/, ""),
   /** Random secret in webhook URL path — Telegram echoes only to /bot/webhook/<secret>. */
   botWebhookSecret: optional(process.env.BOT_WEBHOOK_SECRET, ""),
+
+  /** Shared secret SigNoz sends in `X-Webhook-Secret` to `/api/alerts/signoz`.
+   * Empty disables the alert-bridge route entirely. */
+  alertWebhookSecret: optional(process.env.ALERT_WEBHOOK_SECRET, ""),
+  /** Numeric Telegram chat that receives forwarded SigNoz alerts. 0 disables. */
+  alertChatId: intOr(process.env.ALERT_CHAT_ID, 0),
 };
 
 export const iconUrl = `${config.issuer}/icon.svg`;

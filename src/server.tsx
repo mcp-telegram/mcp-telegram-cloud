@@ -12,6 +12,7 @@ import { accessLog } from "./middleware/access-log.js";
 import { OAuthProvider } from "./oauth.js";
 import { installRateLimiterEventListener } from "./rate-limiter-events.js";
 import { createAdminRoutes } from "./routes/admin.js";
+import { createAlertRoutes } from "./routes/alerts.js";
 import { createBotWebhookRoutes, createBroadcastRoute } from "./routes/bot.js";
 import { createLoginRoutes } from "./routes/login.js";
 import { registerMcpRoutes } from "./routes/mcp.js";
@@ -201,6 +202,22 @@ if (botEnabled && botClient && subscribers) {
     event: "bot.mount",
     username: config.botUsername, // telemetry-allow: public bot handle, not user PII
   });
+}
+
+// SigNoz → Telegram alert bridge. Independent from broadcast routes — alerts
+// flow to a single admin chat, not to opt-in subscribers, so we don't gate on
+// botEnabled (subscribers infra). Requires only botClient + a shared secret +
+// chat id; if any are missing the route is silently skipped.
+if (botClient && config.alertWebhookSecret && config.alertChatId !== 0) {
+  app.route(
+    "/api",
+    createAlertRoutes({
+      client: botClient,
+      webhookSecret: config.alertWebhookSecret,
+      alertChatId: config.alertChatId,
+    }),
+  );
+  logger.info("Alert webhook bridge mounted", { component: "alerts", event: "alerts.mount" });
 }
 
 // Register process-wide gauges before flush starts so the first OTLP push
