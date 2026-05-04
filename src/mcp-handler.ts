@@ -121,14 +121,20 @@ export async function handleMcpRequest(
   // which bucket to decrement — `sessionClient` carries this across the lifetime.
   const clientClass = classifyClient(req.headers.get("user-agent") ?? "");
 
-  // The MCP SDK fires `_onsessionclosed` ONLY from `handleDeleteRequest`
-  // (DELETE /mcp). Real clients frequently abandon sessions without sending
-  // DELETE — process exit, network drop, idle TCP timeout, "Disconnect" buttons
-  // that just stop sending requests. `transport.close()` (via SDK or our own
-  // shutdown) fires `transport.onclose` instead. To keep the gauge accurate, we
-  // run the same teardown from BOTH callbacks, guarded for idempotency by
-  // checking whether `sid` is still present in `sessionClient`. Whichever
-  // callback fires first wins; the other becomes a no-op.
+  // KNOWN LIMITATION: The MCP SDK fires `_onsessionclosed` ONLY from
+  // `handleDeleteRequest` (DELETE /mcp). For abandoned sessions (network drop,
+  // process exit, idle TCP timeout, "Disconnect" buttons that just stop sending
+  // requests) the SDK only deletes its internal `_streamMapping` entry — it
+  // does NOT call `transport.close()`, so `transport.onclose` does not fire
+  // either. As a result, gauge state for those sessions persists until process
+  // restart. This is symmetric with pre-existing leak shape on `transports` /
+  // `activeSessionCount`. An idle-reaper (TTL-based) is the proper fix and is
+  // tracked as a follow-up; the metric `mcp.sessions.by_client` is documented
+  // as "initialized-and-not-yet-closed" rather than strictly live.
+  //
+  // We still wire `transport.onclose` because we MAY call `transport.close()`
+  // ourselves in future shutdown paths and want both close routes to drain
+  // the gauge — guarded by `sessionClient.has(sid)` for idempotency.
   const teardownSession = (sid: string): void => {
     if (!sessionClient.has(sid)) return; // already torn down via the other path
     transports.delete(sid);
@@ -202,9 +208,12 @@ export async function handleMcpRequest(
     onsessionclosed: teardownSession,
   });
 
-  // Catch the abandoned-session path: SDK fires `onclose` from `transport.close()`
-  // but NOT `_onsessionclosed`. Without this, ungraceful disconnects leak
-  // gauge state until container restart.
+  // Wire `onclose` for any future explicit `transport.close()` callsite (our
+  // own shutdown path, manual revocation, etc). NOTE: SDK does NOT call
+  // `transport.close()` on client-side abort/network-drop — only the internal
+  // `_streamMapping` is cleaned up. So this hook does NOT close the abandoned-
+  // session leak; see `teardownSession` rationale block above. Idempotent via
+  // `sessionClient.has(sid)` guard inside teardown.
   transport.onclose = () => {
     if (transport.sessionId) teardownSession(transport.sessionId);
   };

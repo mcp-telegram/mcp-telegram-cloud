@@ -37,6 +37,14 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
+- **Idle MCP-session reaper** — TTL-based teardown for abandoned MCP transports
+  (network drop, process exit). Currently `mcp.sessions.by_client` and the
+  related `transports`/`activeSessionCount` maps leak until container restart
+  because the MCP SDK does not call `transport.close()` on stream cancellation.
+  Fix: track `lastActivity` per session, reap entries older than ~5min idle.
+  Trigger: when SigNoz shows persistent count drift between session start/close
+  events, OR after first observed cumulative drift > 50.
+
 - **Per-user burst rate limit** (Layer 3) —
   trigger: ≥10 daily active users sustained 7 days. Currently
   Layer 1 (per-IP HTTP rate-limit on `/oauth/*`, 30 req/min) and Layer 2
@@ -113,18 +121,20 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 ## Done (recent highlights)
 
-- **2026-05-04** — **`client` label on active MCP sessions gauge** (cloud v2.20.0).
+- **2026-05-04** — **`client` label on MCP sessions gauge** (cloud v2.20.0).
   New metric `mcp.sessions.by_client` (gauge, label `client` ∈ `{claude, chatgpt, browser, bot, script, empty, other}`)
-  exposes per-client live MCP transport sessions to SigNoz. Captured at session-init from
+  exposes per-client MCP transport sessions to SigNoz. Captured at session-init from
   the request UA via `classifyClient()` (now extracted to `src/middleware/classify-client.ts`
   as the single source of truth for the bounded `CLIENT_CLASSES` const). Distinct from
   pre-existing `mcp.sessions.active` which reflects the Telegram pool size; both ship.
-  Teardown also wired to `transport.onclose` (not just SDK's `_onsessionclosed`, which
-  fires only on DELETE) — abandoned sessions (network drop, process exit) now decrement
-  correctly instead of leaking gauge state until container restart. Idempotent guard so
-  whichever path closes first wins. 7 gauge providers registered upfront so the legend
-  stays stable across deploys, even for quiet buckets. 451/451 tests, parity 178/3/0
-  unchanged. /sc:analyze 1 HIGH (H1 abandoned-session leak) fixed inline; /sc:cleanup NO-OP.
+  7 gauge providers registered upfront so the legend stays stable across deploys, even
+  for quiet buckets. **Known limitation**: SDK fires `_onsessionclosed` only on DELETE /mcp;
+  abandoned sessions (network drop, process exit) leak gauge state until container
+  restart — symmetric with pre-existing leak on `transports`/`activeSessionCount`. Metric
+  honestly described as "initialized-and-not-yet-closed". `transport.onclose` wired for
+  future explicit-close paths with idempotent guard. Idle-reaper TTL is the proper fix;
+  tracked as follow-up. 451/451 tests, parity 178/3/0 unchanged. Two-pass review (/sc:analyze + Copilot CLI)
+  caught and corrected an over-claim in the initial commit before deploy.
 
 - **2026-05-04** — **Phase A.2: compile-time PII whitelist for log attributes** (cloud v2.17.3).
   New `LogFields` type (`src/telemetry/log-fields.ts`) closes the unknown-key gap

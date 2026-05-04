@@ -227,13 +227,19 @@ if (botClient && config.alertWebhookSecret && config.alertChatId !== 0) {
 registerGauge("mcp.sessions.active", "Active Telegram sessions in pool", () => sessions.getActiveCount(), {}, "1");
 // `mcp.sessions.by_client`: same shape as `http.requests{client}` so the
 // dashboard can stack them. Distinct from `mcp.sessions.active` (Telegram
-// pool size) — counts open MCP transport sessions classified by UA. One
-// provider per `CLIENT_CLASSES` value so SigNoz sees zero-points for
-// quiet buckets and the legend stays stable across deploys.
+// pool size) — counts MCP transport sessions classified by UA. One provider
+// per `CLIENT_CLASSES` value so SigNoz sees zero-points for quiet buckets
+// and the legend stays stable across deploys.
+//
+// Caveat: counts "initialized-and-not-yet-closed" sessions, not strictly live
+// ones. The MCP SDK fires its close callback only on DELETE /mcp; abandoned
+// sessions (network drop, process exit) leak gauge state until container
+// restart. See `mcp-handler.ts:teardownSession` for full rationale and the
+// idle-reaper follow-up note.
 for (const cls of CLIENT_CLASSES) {
   registerGauge(
     "mcp.sessions.by_client",
-    "Active MCP transport sessions by UA-classified client",
+    "MCP transport sessions initialized-and-not-yet-closed, by UA-classified client",
     () => getActiveSessionsByClient(cls),
     { client: cls },
     "1",
