@@ -60,12 +60,9 @@ export function getActiveSessionsByClient(client: ClientClass): number {
  * second init for the same transport is unreachable; a test that double-tracks
  * is almost certainly a typo.
  *
- * KNOWN TEST-DESIGN GAP: these helpers do NOT exercise the real
- * `WebStandardStreamableHTTPServerTransport` lifecycle (DELETE handler,
- * stream cancellation, manual `close()`). The first v2.20.0 commit
- * over-claimed a leak fix that the helper-only tests could not have caught.
- * An integration test using a real or stubbed transport is on the follow-up
- * list — see ROADMAP "Next" / idle-reaper item.
+ * Note: these helpers cover the gauge-only counts. The full transport
+ * iteration path (the surface the v2.20.0 over-claim couldn't catch) is
+ * exercised by the reaper tests via `_trackFullSessionForTest`.
  * @internal
  */
 export function _trackSessionForTest(sid: string, client: ClientClass): void {
