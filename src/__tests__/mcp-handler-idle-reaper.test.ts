@@ -13,6 +13,7 @@ const {
   _setReaperSessionsForTest,
 } = await import("../mcp-handler.js");
 const { config } = await import("../config.js");
+type SessionManager = import("../session-manager.js").SessionManager;
 
 interface MockTransport {
   closeCalls: number;
@@ -159,7 +160,7 @@ describe("mcp-handler — idle reaper", () => {
     // any other client (Claude/ChatGPT) sharing the same userId.
     const now = 6_000_000_000;
     const calls: string[] = [];
-    const fakeSessions = {
+    const fakeSessions: Pick<SessionManager, "disconnectUser" | "destroyUserSession"> = {
       disconnectUser(uid: string) {
         calls.push(`disconnectUser:${uid}`);
       },
@@ -168,8 +169,7 @@ describe("mcp-handler — idle reaper", () => {
         return Promise.resolve({ loggedOut: true });
       },
     };
-    // biome-ignore lint/suspicious/noExplicitAny: minimal duck-typed SessionManager for this test
-    _setReaperSessionsForTest(fakeSessions as any);
+    _setReaperSessionsForTest(fakeSessions as SessionManager);
 
     const transport = makeTransport();
     _trackFullSessionForTest("sid-last", "chatgpt", "user-shared", transport, now - config.mcpIdleReapMs - 1);
@@ -177,5 +177,41 @@ describe("mcp-handler — idle reaper", () => {
     const reaped = reapIdleSessions(now);
     assert.equal(reaped, 1);
     assert.deepEqual(calls, ["disconnectUser:user-shared"]);
+  });
+
+  it("reaping a non-last session for a user calls NEITHER disconnectUser NOR destroyUserSession", () => {
+    // Multi-session branch: when one MCP session for a user is reaped but
+    // others remain, the Telegram pool entry must stay live (no
+    // disconnectUser, no destroyUserSession). This guards the
+    // `remaining > 0` early-return at teardownSessionImpl — flipping it
+    // would still pass the single-session test above.
+    const now = 7_000_000_000;
+    const calls: string[] = [];
+    const fakeSessions: Pick<SessionManager, "disconnectUser" | "destroyUserSession"> = {
+      disconnectUser(uid: string) {
+        calls.push(`disconnectUser:${uid}`);
+      },
+      destroyUserSession(uid: string) {
+        calls.push(`destroyUserSession:${uid}`);
+        return Promise.resolve({ loggedOut: true });
+      },
+    };
+    _setReaperSessionsForTest(fakeSessions as SessionManager);
+
+    const stale = makeTransport();
+    const fresh = makeTransport();
+    _trackFullSessionForTest("sid-stale", "chatgpt", "user-multi", stale, now - config.mcpIdleReapMs - 1);
+    _trackFullSessionForTest("sid-fresh", "claude", "user-multi", fresh, now - 30_000);
+
+    // Sweep #1: only stale gets reaped, but `remaining` is still 1 → no SessionManager call.
+    const firstReap = reapIdleSessions(now);
+    assert.equal(firstReap, 1);
+    assert.deepEqual(calls, [], "non-last reap must NOT touch SessionManager");
+
+    // Sweep #2 after the fresh one ages out: now it's the last → disconnectUser fires.
+    const later = now + config.mcpIdleReapMs + 1;
+    const secondReap = reapIdleSessions(later);
+    assert.equal(secondReap, 1);
+    assert.deepEqual(calls, ["disconnectUser:user-multi"]);
   });
 });
