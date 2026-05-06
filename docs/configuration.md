@@ -35,7 +35,6 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `DATABASE_PATH` | | `./data/cloud.db` | SQLite file path |
 | `USAGE_LOG_RETENTION_DAYS` | | `90` | Daily purge of `usage_log`. `0` = keep forever |
 | `FREE_TIER_LIMIT` | | `100` | Per-user daily tool-call quota. `0` = unlimited |
-| `SESSION_CLEANUP_DELAY_MINUTES` | | `5` | Idle delay before destroying Telegram session |
 | `OAUTH_RATE_LIMIT` | | `30` | Requests per IP per window on `/oauth/*`. `0` disables |
 | `OAUTH_RATE_WINDOW_MS` | | `60000` | Window duration in milliseconds |
 | `BOT_TOKEN` | | empty | Telegram bot token for broadcasts |
@@ -266,13 +265,6 @@ list).
 When exceeded, the MCP response returns a structured error with a
 self-host CTA pointing at `SOURCE_REPO_URL` — there is no paid tier;
 unlimited usage means running the server yourself.
-
-### `SESSION_CLEANUP_DELAY_MINUTES`
-
-After the last MCP client disconnects, the worker keeps the Telegram
-session alive for this many minutes before tearing it down. Trade-off:
-shorter = lower memory, more reconnect churn; longer = faster reuse,
-more idle workers. Default `5`.
 
 ### `OAUTH_RATE_LIMIT` / `OAUTH_RATE_WINDOW_MS`
 

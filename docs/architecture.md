@@ -87,8 +87,12 @@ Single Node.js process. Inside it:
   child process** holding the MTProto socket. The master talks to it via
   IPC. This isolates GramJS event loops from the HTTP server and lets
   one stuck Telegram call not block other users.
-- Idle workers are torn down `SESSION_CLEANUP_DELAY_MINUTES` after the
-  last MCP client disconnects.
+- Idle workers are released from memory by the MCP-session reaper
+  (`MCP_IDLE_REAP_MS`, default 10 min). The persisted `session_string` in
+  SQLite stays — the next tool call from any client resurrects the worker
+  via `getOrCreateSession` without a forced QR re-login. Full destruction
+  (logOut + DELETE) happens only on explicit OAuth revoke or Telegram-side
+  session revocation.
 
 There is no horizontal scaling story today — see
 [Known limitations](./self-hosting.md#known-limitations).

@@ -152,4 +152,30 @@ describe("mcp-handler — idle reaper", () => {
     assert.equal(second, 0);
     assert.equal(getActiveSessionsByClient("claude"), 0);
   });
+
+  it("reaping the last MCP session for a user calls disconnectUser, NEVER destroyUserSession", () => {
+    // Regression for the cross-client logout footgun: idle eviction must NOT
+    // logOut() the Telegram session — that would invalidate the auth_key for
+    // any other client (Claude/ChatGPT) sharing the same userId.
+    const now = 6_000_000_000;
+    const calls: string[] = [];
+    const fakeSessions = {
+      disconnectUser(uid: string) {
+        calls.push(`disconnectUser:${uid}`);
+      },
+      destroyUserSession(uid: string) {
+        calls.push(`destroyUserSession:${uid}`);
+        return Promise.resolve({ loggedOut: true });
+      },
+    };
+    // biome-ignore lint/suspicious/noExplicitAny: minimal duck-typed SessionManager for this test
+    _setReaperSessionsForTest(fakeSessions as any);
+
+    const transport = makeTransport();
+    _trackFullSessionForTest("sid-last", "chatgpt", "user-shared", transport, now - config.mcpIdleReapMs - 1);
+
+    const reaped = reapIdleSessions(now);
+    assert.equal(reaped, 1);
+    assert.deepEqual(calls, ["disconnectUser:user-shared"]);
+  });
 });

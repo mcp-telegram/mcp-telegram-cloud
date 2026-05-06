@@ -117,11 +117,6 @@ export function _untrackSessionForTest(sid: string): void {
 
 /** @internal */
 export function _resetSessionTrackingForTest(): void {
-  // Clear cleanupTimers FIRST so any test that triggered the last-session
-  // path (which schedules a 5-min setTimeout) doesn't leave a timer handle
-  // pinning the event loop after `node --test` finishes the suite.
-  for (const t of cleanupTimers.values()) clearTimeout(t);
-  cleanupTimers.clear();
   activeSessionsByClient.clear();
   sessionClient.clear();
   lastActivity.clear();
@@ -138,8 +133,15 @@ export function _resetSessionTrackingForTest(): void {
  * Module-level teardown shared by the request-handler `onsessionclosed` /
  * `transport.onclose` callbacks AND the idle reaper. Decrements the
  * `mcp.sessions.by_client` gauge buckets, drops the transport from `transports`,
- * fires Telegram-disconnect + cleanup timer when this was the last live MCP
- * session for the user.
+ * fires Telegram-disconnect (NOT logOut/destroy) when this was the last live MCP
+ * session for the user — session_string stays in SQLite so the next tool call
+ * from any client (Claude, ChatGPT, …) resumes via `getOrCreateSession` without
+ * a forced QR re-login.
+ *
+ * `destroyUserSession` (logOut + DELETE) is reserved for explicit OAuth revoke
+ * (`/oauth/revoke`) and Telegram-side session revocation (`onSessionRevoked`).
+ * The previous cleanup-timer path conflated idle-eviction with explicit
+ * disconnect and cross-killed all clients sharing a userId after 15 min idle.
  *
  * Idempotent — second call for same sid is a no-op (guard via `sessionClient.has`).
  *
@@ -181,24 +183,9 @@ function teardownSessionImpl(sid: string, userId: string, sessions: SessionManag
   // which were registered through a request handler that knows `sessions`).
   if (!sessions) return;
 
+  // Releases the GramJS instance from memory; session_string is preserved in
+  // SQLite so any subsequent client request resurrects via `getOrCreateSession`.
   sessions.disconnectUser(userId);
-
-  const timer = setTimeout(async () => {
-    cleanupTimers.delete(userId);
-    logger.info(`Cleanup timer fired, destroying session`, {
-      component: "cloud",
-      userId: logUser(userId),
-      event: "cleanup.fired",
-    });
-    await sessions.destroyUserSession(userId);
-  }, CLEANUP_DELAY_MS);
-
-  cleanupTimers.set(userId, timer);
-  logger.info(`Cleanup timer set (${CLEANUP_DELAY_MS / 60000}m)`, {
-    component: "cloud",
-    userId: logUser(userId),
-    event: "cleanup.scheduled",
-  });
 }
 
 /**
@@ -316,12 +303,6 @@ export function _setReaperSessionsForTest(sessions: SessionManager | null): void
   reaperSessionManager = sessions;
 }
 
-/** Pending cleanup timers per userId — cancelled if user reconnects */
-const cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-/** How long to wait after last MCP session closes before destroying Telegram session */
-const CLEANUP_DELAY_MS = config.sessionCleanupDelayMinutes * 60 * 1000;
-
 /**
  * Create or retrieve an MCP transport for the given request.
  * Each MCP session gets its own McpServer + Transport pair wired to the user's TelegramService.
@@ -347,18 +328,6 @@ export async function handleMcpRequest(
       lastActivity.set(sessionId, Date.now());
       return transport.handleRequest(req);
     }
-  }
-
-  // User reconnected — cancel any pending cleanup
-  const pendingCleanup = cleanupTimers.get(userId);
-  if (pendingCleanup) {
-    clearTimeout(pendingCleanup);
-    cleanupTimers.delete(userId);
-    logger.info(`Cleanup timer cancelled (reconnected)`, {
-      component: "cloud",
-      userId: logUser(userId),
-      event: "cleanup.cancelled",
-    });
   }
 
   // Capture UA-derived client class at session-creation time. The close handler

@@ -112,8 +112,6 @@ export const config = {
   destructiveDailyLimit: intOr(process.env.DESTRUCTIVE_DAILY_LIMIT, 20),
   /** Retention for `destructive_audit` rows. 0 = keep forever. */
   destructiveAuditRetentionDays: intOr(process.env.DESTRUCTIVE_AUDIT_RETENTION_DAYS, 90),
-  sessionCleanupDelayMinutes: intOr(process.env.SESSION_CLEANUP_DELAY_MINUTES, 5),
-
   /** Idle reaper TTL (ms). MCP transport sessions whose `lastActivity` is older
    * than this get torn down by the periodic reaper, decrementing the
    * `mcp.sessions.by_client` gauge. Default 10 min — long enough that normal
