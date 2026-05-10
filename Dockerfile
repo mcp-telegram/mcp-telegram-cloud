@@ -1,35 +1,31 @@
 # Stage 1: Build mcp-telegram from source (with declarations)
+# Kept on node:22-alpine — upstream mcp-telegram is an npm project (not Bun),
+# and its build emits .d.ts for the cloud's typecheck.
 FROM node:22-alpine AS telegram-lib
-# python3/make/g++ needed when transitive native modules (e.g. utf-8-validate)
-# fall back to source build on architectures without prebuilt binaries (arm64).
 RUN apk add --no-cache git python3 make g++
 RUN git clone --depth 1 https://github.com/mcp-telegram/mcp-telegram.git /telegram
 WORKDIR /telegram
-# Upstream `mcp-telegram` is an npm project (not pnpm); use npm ci here.
-# Stage 2 below uses pnpm, which is what the cloud project itself uses.
 RUN npm ci && npm run build
 
-# Stage 2: Build cloud app
+# Stage 2: Install cloud deps via npm (Bun's lockfile resolver hits sporadic
+# IntegrityCheckFailed on Alpine — track in spike notes). npm reads
+# package.json deterministically; Bun runtime in Stage 3 reads node_modules
+# unchanged. `--ignore-scripts` skips native compilation for `utf-8-validate`
+# and `bufferutil` (optional speedups for `ws`); the JS fallback is identical.
 FROM node:22-alpine AS builder
-RUN apk add --no-cache python3 make g++
-RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-# pnpm v10+ blocks postinstall scripts by default; better-sqlite3 is
-# allow-listed in package.json#pnpm.onlyBuiltDependencies so its
-# native binding gets compiled here.
-RUN pnpm install --frozen-lockfile
-# Replace npm registry version with source-built version (includes .d.ts)
+COPY package.json ./
+RUN npm install --no-audit --no-fund --omit=dev --ignore-scripts
 COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
-COPY . .
-RUN pnpm run build
 
-# Stage 3: Production
-FROM node:22-alpine
+# Stage 3: Production runtime — Bun runs .ts directly, no build step
+FROM oven/bun:1.3.13-alpine
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
+COPY src ./src
+COPY scripts ./scripts
+COPY tsconfig.json ./
 RUN mkdir -p /app/data
 ENV NODE_ENV=production
 # Cloud distribution policy: opt-in upstream tools that are read-only and zero-cost
@@ -41,4 +37,4 @@ ENV MCP_TELEGRAM_ENABLE_GROUP_CALLS=1
 ENV MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1
 EXPOSE 3000
 VOLUME ["/app/data"]
-CMD ["node", "dist/server.js"]
+CMD ["bun", "src/server.tsx"]
