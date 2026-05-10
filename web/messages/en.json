@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "siteTitle": "MCP Telegram — Your Telegram in Claude AI & ChatGPT",
+    "siteDescription": "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI with one click."
+  },
+  "nav": {
+    "features": "Features",
+    "howItWorks": "How it works",
+    "choice": "Hosted or self-host",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "Quickstart",
+    "examples": "Examples"
+  },
+  "hero": {
+    "titleStart": "Your Telegram in",
+    "titleClaude": "Claude AI",
+    "titleAnd": "&",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Read messages, search chats, track contacts and download media — all from Claude.ai or ChatGPT. Connect in 30 seconds with a QR code.",
+    "ctaPrimary": "Connect Telegram",
+    "ctaSecondary": "Self-host",
+    "ctaQuickstart": "Get started in 30 seconds"
+  },
+  "features": {
+    "heading": "What you can do",
+    "subheading": "Read-only tools — safe, private, no messages sent on your behalf",
+    "readMessagesTitle": "Read messages",
+    "readMessagesDesc": "Browse messages from any chat with date filtering and pagination",
+    "searchTitle": "Search everything",
+    "searchDesc": "Full-text search across chats, messages, contacts and channels",
+    "analyticsTitle": "Chat analytics",
+    "analyticsDesc": "Get chat info, member lists, unread counts and detailed metadata",
+    "mediaTitle": "View media",
+    "mediaDesc": "Download and view photos inline directly in AI conversations",
+    "contactsTitle": "Contacts & members",
+    "contactsDesc": "Access your contacts list and group/channel member lists",
+    "secureTitle": "Read-only & secure",
+    "secureDesc": "Cannot send, edit or delete messages. Your account is safe"
+  },
+  "examples": {
+    "heading": "What people ask",
+    "subheading": "Real prompts you can use right after connecting",
+    "morningTitle": "Morning briefing",
+    "morningPrompt": "Summarize my unread messages and highlight anything urgent",
+    "findTitle": "Find anything",
+    "findPrompt": "Find messages about the project deadline in our work chat",
+    "extractTitle": "Extract data",
+    "extractPrompt": "List all links shared in the design channel this week",
+    "peopleTitle": "People lookup",
+    "peoplePrompt": "Who are the most active members in our community group?",
+    "overviewTitle": "Chat overview",
+    "overviewPrompt": "Give me a summary of what happened in the team chat today",
+    "mediaTitle": "Media review",
+    "mediaPrompt": "Show me the photos sent in the family chat yesterday",
+    "ctaSeeAll": "See all examples"
+  },
+  "howItWorks": {
+    "heading": "How it works",
+    "subheading": "Three steps, 30 seconds, no API keys needed",
+    "step1Title": "Add connector",
+    "step1Desc": "Click \"Connect\" in Claude.ai or add as app in ChatGPT",
+    "step2Title": "Scan QR code",
+    "step2Desc": "Open Telegram → Settings → Devices → Link Desktop Device → Scan",
+    "step3Title": "Start asking",
+    "step3Desc": "Ask AI to read your chats, search messages, or summarize conversations",
+    "ctaFullGuide": "Read the full guide"
+  },
+  "choice": {
+    "heading": "Hosted or self-host",
+    "subheading": "Open source under MIT. Use the hosted instance, or run your own.",
+    "hostedTitle": "Hosted",
+    "hostedTagline": "One-click connect, maintained by the project.",
+    "hostedFeature1": "QR code login — no API keys to manage",
+    "hostedFeature2": "Read-only tool set, safe by design",
+    "hostedFeature3": "Daily fair-use cap to keep service healthy",
+    "hostedFeature4": "Service status updates via Telegram bot",
+    "hostedCta": "Connect now",
+    "selfHostTitle": "Self-host",
+    "selfHostTagline": "Full control, your machine, your data.",
+    "selfHostFeature1": "All tools — read and write",
+    "selfHostFeature2": "No daily limits",
+    "selfHostFeature3": "Your data never leaves your server",
+    "selfHostFeature4": "Docker Compose + .env, ~10 minutes setup",
+    "selfHostCta": "View on GitHub",
+    "footnote": "No tracking. No ads. Maintained by one person in spare time — please be patient with issues and PRs."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "Common questions about security and privacy",
+    "safeQ": "Is it safe to connect my Telegram?",
+    "safeA": "Yes. The hosted version is strictly read-only — it cannot send, edit, or delete any messages. Your account is used the same way as logging into Telegram Web or Desktop. You can disconnect at any time from Telegram's \"Devices\" settings.",
+    "readQ": "Can you read my messages on the server?",
+    "readAStart": "We don't store your messages. Each tool call fetches data directly from Telegram's API and returns it to the AI assistant. Your Telegram session key is stored on our server so the connector can keep working between requests, and is deleted whenever your session ends (see the next answer for the exact timing). Storage details and hardening guidance are in our",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": ".",
+    "protocolQ": "How does it connect without the Bot API?",
+    "protocolA": "It uses MTProto — the same protocol Telegram's official apps use. You authenticate via QR code, just like linking a new device. From Telegram's perspective, it's another logged-in client.",
+    "disconnectQ": "What happens when I disconnect?",
+    "disconnectA": "If you explicitly remove the connector in Claude.ai or ChatGPT, the server logs the Telegram session out and deletes the session key right away. If you just close the AI app without revoking, the in-memory client is dropped immediately and the stored session key is kept briefly so you can resume seamlessly; if you don't reconnect within a short idle window (a few minutes), the server logs out and deletes the key automatically. You can also force a full revoke at any time from Telegram → Settings → Devices.",
+    "chatgptQ": "Does it work with ChatGPT?",
+    "chatgptAStart": "Yes. Add it as an app in ChatGPT Settings → Apps (Developer Mode). Use the URL",
+    "chatgptAEnd": "with OAuth authentication. Works on Plus, Pro, Team, and Enterprise plans.",
+    "openSourceQ": "Is the source code open?",
+    "openSourceAStart": "The server is fully open-source (MIT license) at",
+    "openSourceAEnd": ". You can self-host it for free with full read+write access.",
+    "botQ": "How will I know about service updates?",
+    "botAStart": "Subscribe to",
+    "botAEnd": "to get notified about service status, breaking changes and new releases. Send /stop any time to unsubscribe."
+  },
+  "footer": {
+    "mit": "MIT licensed",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "tagline": "Read-only Telegram access for Claude AI & ChatGPT."
+  },
+  "language": {
+    "switcherLabel": "Language",
+    "helpTranslate": "Help translate"
+  },
+  "common": {
+    "translationOutdated": "This translation may be outdated.",
+    "machineTranslated": "Machine-translated — improve this translation",
+    "fallbackToEnglish": "This page is not yet translated. Showing English."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated"
+  }
+}

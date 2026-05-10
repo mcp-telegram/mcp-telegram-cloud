@@ -2,7 +2,17 @@
   "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
   "root": false,
   "files": {
-    "includes": ["app/**", "components/**", "lib/**", "!**/.next/**", "!**/node_modules/**"]
+    "includes": [
+      "app/**",
+      "components/**",
+      "lib/**",
+      "i18n/**",
+      "proxy.ts",
+      "global.d.ts",
+      "messages/**",
+      "!**/.next/**",
+      "!**/node_modules/**"
+    ]
   },
   "formatter": {
     "enabled": true,

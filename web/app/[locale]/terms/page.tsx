@@ -1,20 +1,30 @@
 import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { config } from "@/lib/config";
-import s from "../legal.module.css";
+import { canonicalForLocale, languageAlternates } from "@/lib/seo";
+import s from "../../legal.module.css";
+
+type PageProps = { params: Promise<{ locale: string }> };
 
 const TITLE = `Terms of Service — ${config.brandName}`;
 const DESCRIPTION = `Terms of service for ${config.brandName} hosted Telegram MCP connector.`;
-const URL = `${config.issuer}/terms`;
 
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: URL },
-  openGraph: { url: URL, title: TITLE, description: DESCRIPTION },
-  twitter: { title: TITLE, description: DESCRIPTION },
-};
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const canonical = canonicalForLocale(locale, "/terms");
+  return {
+    title: TITLE,
+    description: DESCRIPTION,
+    alternates: { canonical, languages: languageAlternates("/terms") },
+    openGraph: { url: canonical, title: TITLE, description: DESCRIPTION },
+    twitter: { title: TITLE, description: DESCRIPTION },
+  };
+}
 
-export default function TermsPage() {
+export default async function TermsPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   const hostLabel = config.issuer.replace(/^https?:\/\//, "");
   const repoLabel = config.sourceRepoUrl.replace(/^https?:\/\//, "");
 

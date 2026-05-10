@@ -1,20 +1,31 @@
 import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { config } from "@/lib/config";
-import s from "./landing.module.css";
+import { canonicalForLocale, languageAlternates } from "@/lib/seo";
+import s from "../landing.module.css";
 
-const TITLE = `${config.brandName} — Your Telegram in Claude AI & ChatGPT`;
+type PageProps = { params: Promise<{ locale: string }> };
+
 const DESCRIPTION =
   "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI with one click.";
 
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: config.issuer },
-  openGraph: { url: config.issuer, title: TITLE, description: DESCRIPTION },
-  twitter: { title: TITLE, description: DESCRIPTION },
-};
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const canonical = canonicalForLocale(locale, "/");
+  const title = `${config.brandName} — Your Telegram in Claude AI & ChatGPT`;
+  return {
+    title,
+    description: DESCRIPTION,
+    alternates: { canonical, languages: languageAlternates("/") },
+    openGraph: { url: canonical, title, description: DESCRIPTION },
+    twitter: { title, description: DESCRIPTION },
+  };
+}
 
-export default function HomePage() {
+export default async function HomePage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   // Escape `<` so a malicious BRAND_NAME/ISSUER cannot break out of the
   // <script> tag via `</script>`. Same guard as the Hono implementation.
   const jsonLd = JSON.stringify({
