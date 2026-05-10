@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.23.0",
+  "version": "2.23.1",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -24,7 +24,7 @@
     "@overpod/mcp-telegram": "^1.36.1",
     "better-sqlite3": "^12.9.0",
     "dotenv": "^17.4.2",
-    "hono": "^4.12.16",
+    "hono": "^4.12.18",
     "undici": "^8.2.0",
     "zod": "^4.4.3"
   },
@@ -46,6 +46,10 @@
     "onlyBuiltDependencies": [
       "better-sqlite3",
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "fast-uri@<3.1.2": ">=3.1.2",
+      "ip-address@<10.2.0": ">=10.2.0"
+    }
   }
 }
