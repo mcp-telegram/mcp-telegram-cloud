@@ -6,11 +6,14 @@
     "dev": "next dev --turbopack -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "lint": "biome check app components lib",
-    "typecheck": "tsc --noEmit"
+    "lint": "biome check app components lib i18n proxy.ts global.d.ts scripts",
+    "typecheck": "tsc --noEmit",
+    "validate-translations": "bun scripts/validate-translations.ts",
+    "translate": "bun scripts/translate.ts"
   },
   "dependencies": {
     "next": "16.2.2",
+    "next-intl": "^4.11.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
