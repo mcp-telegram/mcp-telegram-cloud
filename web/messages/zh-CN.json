@@ -122,13 +122,7 @@
     "tagline": "面向 Claude AI 和 ChatGPT 的只读 Telegram 访问。"
   },
   "language": {
-    "switcherLabel": "语言",
-    "helpTranslate": "帮助翻译"
-  },
-  "common": {
-    "translationOutdated": "此翻译可能已过时。",
-    "machineTranslated": "机器翻译——欢迎改进此翻译",
-    "fallbackToEnglish": "此页面尚未翻译,显示英文版本。"
+    "switcherLabel": "语言"
   },
   "privacy": {
     "title": "隐私政策",

@@ -115,13 +115,7 @@
     "tagline": "Read-only Telegram access for Claude AI & ChatGPT."
   },
   "language": {
-    "switcherLabel": "Language",
-    "helpTranslate": "Help translate"
-  },
-  "common": {
-    "translationOutdated": "This translation may be outdated.",
-    "machineTranslated": "Machine-translated — improve this translation",
-    "fallbackToEnglish": "This page is not yet translated. Showing English."
+    "switcherLabel": "Language"
   },
   "privacy": {
     "title": "Privacy Policy",

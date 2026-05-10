@@ -122,13 +122,7 @@
     "tagline": "Claude AI ve ChatGPT için salt okunur Telegram erişimi."
   },
   "language": {
-    "switcherLabel": "Dil",
-    "helpTranslate": "Çeviriye yardım et"
-  },
-  "common": {
-    "translationOutdated": "Bu çeviri güncel olmayabilir.",
-    "machineTranslated": "Makine çevirisi — bu çeviriyi geliştirin",
-    "fallbackToEnglish": "Bu sayfa henüz çevrilmedi. İngilizce gösteriliyor."
+    "switcherLabel": "Dil"
   },
   "privacy": {
     "title": "Gizlilik Politikası",

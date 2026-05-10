@@ -129,15 +129,14 @@ export const tier3Locales = locales.filter((l) => l.tier === 3).map((l) => l.cod
 /** Locales we expose to search engines and language pickers.
  *
  * Tier 1 (en, ru) is hand-curated; Tier 2 (18 locales) is machine-translated
- * with a community-review hook. Both have (or will have, post-Phase 5)
- * locale-specific content worth advertising as separate language alternates.
+ * inline by Claude. Both have locale-specific content worth advertising as
+ * separate language alternates.
  *
  * Tier 3 locales are intentionally NOT in this list because they fall back
  * to English content at runtime (see `i18n/request.ts`) and we don't want
  * Google to index `/sw/` or `/fa/` as Swahili/Persian when the body is
  * actually English — that's a clear SEO red flag and bad UX. Tier 3 stays
- * reachable via direct URL or Accept-Language detection (the
- * `TranslationBanner` then explains the fallback). */
+ * reachable via direct URL or Accept-Language detection. */
 export const indexableLocales = locales.filter((l) => l.tier <= 2);
 
 /** LangSwitcher shows the indexable set, plus the active locale even if it

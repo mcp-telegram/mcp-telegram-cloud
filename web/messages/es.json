@@ -122,13 +122,7 @@
     "tagline": "Acceso de solo lectura a Telegram para Claude AI y ChatGPT."
   },
   "language": {
-    "switcherLabel": "Idioma",
-    "helpTranslate": "Ayude a traducir"
-  },
-  "common": {
-    "translationOutdated": "Esta traducción puede estar desactualizada.",
-    "machineTranslated": "Traducción automática — mejore esta traducción",
-    "fallbackToEnglish": "Esta página todavía no está traducida. Se muestra en inglés."
+    "switcherLabel": "Idioma"
   },
   "privacy": {
     "title": "Política de privacidad",

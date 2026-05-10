@@ -122,13 +122,7 @@
     "tagline": "Dostęp tylko do odczytu do Telegrama dla Claude AI i ChatGPT."
   },
   "language": {
-    "switcherLabel": "Język",
-    "helpTranslate": "Pomóż w tłumaczeniu"
-  },
-  "common": {
-    "translationOutdated": "To tłumaczenie może być nieaktualne.",
-    "machineTranslated": "Tłumaczenie maszynowe — popraw to tłumaczenie",
-    "fallbackToEnglish": "Ta strona nie jest jeszcze przetłumaczona. Wyświetlanie po angielsku."
+    "switcherLabel": "Język"
   },
   "privacy": {
     "title": "Polityka prywatności",
