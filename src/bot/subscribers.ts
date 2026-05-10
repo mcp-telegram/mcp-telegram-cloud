@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { Database } from "bun:sqlite";
 
 /**
  * Subscribers of the in-product Telegram broadcast bot (Phase 0.1).
@@ -8,9 +8,9 @@ import type Database from "better-sqlite3";
  * subsequent /start re-subscribes them without losing original join time.
  */
 export class Subscribers {
-  private db: Database.Database;
+  private db: Database;
 
-  constructor(db: Database.Database) {
+  constructor(db: Database) {
     this.db = db;
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS bot_subscribers (

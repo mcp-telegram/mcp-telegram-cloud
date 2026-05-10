@@ -1,17 +1,17 @@
+import { Database } from "bun:sqlite";
 import assert from "node:assert/strict";
 import { mkdtempSync, readdirSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import Database from "better-sqlite3";
 import { UploadStore } from "../upload-store.js";
 
 const FILE_MAX = 1024;
 const QUOTA = 4096;
 const TTL_MS = 60_000;
 
-function freshDb(): Database.Database {
+function freshDb(): Database {
   return new Database(":memory:");
 }
 

@@ -1,11 +1,11 @@
-import type Database from "better-sqlite3";
+import type { Database, Statement } from "bun:sqlite";
 
 /** Lightweight usage tracking — logs every MCP tool call for analytics & future rate limiting */
 export class UsageTracker {
-  private db: Database.Database;
-  private insertStmt: Database.Statement;
+  private db: Database;
+  private insertStmt: Statement;
 
-  constructor(db: Database.Database) {
+  constructor(db: Database) {
     this.db = db;
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS usage_log (

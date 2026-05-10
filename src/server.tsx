@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025-2026 overpod
 import "dotenv/config";
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { BotClient } from "./bot/api.js";
 import { Subscribers } from "./bot/subscribers.js";
@@ -261,7 +260,7 @@ logger.info(`${config.brandName} starting on port ${config.port}`, {
   event: "server.start",
   issuer: config.issuer,
 });
-const httpServer = serve({ fetch: app.fetch, port: config.port });
+const httpServer = Bun.serve({ fetch: app.fetch, port: config.port });
 
 for (const sig of ["SIGTERM", "SIGINT"] as const) {
   process.on(sig, async () => {
@@ -273,7 +272,7 @@ for (const sig of ["SIGTERM", "SIGINT"] as const) {
     // resolving land in `exportQueue` BEFORE we await the final flush.
     // Without this, the SIGTERM tick can race with `accessLog`'s `await
     // next()` resolution and ship the trace minus its tail spans.
-    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+    await httpServer.stop();
     // Final drain of accumulated counters/histograms/gauges + finished spans
     // before the process exits — without this, ~5–15s of post-last-tick data
     // is lost on every graceful restart / deploy. No-op when telemetryMode != "on".

@@ -1,5 +1,5 @@
+import type { Database } from "bun:sqlite";
 import { createHash, randomBytes } from "node:crypto";
-import type Database from "better-sqlite3";
 import { logger, logUser } from "./logger.js";
 
 /** OAuth 2.0 Authorization Server for MCP (RFC 8414, RFC 7591, RFC 7636) */
@@ -21,7 +21,7 @@ function fingerprint(token: string): string {
 
 export interface OAuthConfig {
   issuer: string; // public base URL (e.g. "https://your-host.example")
-  db: Database.Database;
+  db: Database;
 }
 
 interface RegisteredClient {
@@ -49,7 +49,7 @@ interface AccessToken {
 }
 
 export class OAuthProvider {
-  private db: Database.Database;
+  private db: Database;
   private issuer: string;
 
   constructor(config: OAuthConfig) {

@@ -1,8 +1,8 @@
+import type { Database, Statement } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type Database from "better-sqlite3";
 
 /**
  * Per-user pending uploads for FS-bound Telegram tools (Phase X).
@@ -51,20 +51,20 @@ export interface UploadDenied {
 }
 
 export class UploadStore {
-  private db: Database.Database;
+  private db: Database;
   private uploadDir: string;
   private fileMaxBytes: number;
   private quotaBytes: number;
   private ttlMs: number;
 
-  private getStmt: Database.Statement;
-  private listStmt: Database.Statement;
-  private insertStmt: Database.Statement;
-  private deleteStmt: Database.Statement;
-  private quotaSumStmt: Database.Statement;
-  private quotaSumGlobalStmt: Database.Statement;
-  private expiredStmt: Database.Statement;
-  private bumpExpiryStmt: Database.Statement;
+  private getStmt: Statement;
+  private listStmt: Statement;
+  private insertStmt: Statement;
+  private deleteStmt: Statement;
+  private quotaSumStmt: Statement;
+  private quotaSumGlobalStmt: Statement;
+  private expiredStmt: Statement;
+  private bumpExpiryStmt: Statement;
 
   /** Minimum remaining lifetime to guarantee an in-flight `resolve → upstream upload`
    * doesn't get purged mid-flight. 5 min covers a 50 MB upload over a slow ~140 KB/s link. */
@@ -79,7 +79,7 @@ export class UploadStore {
    * @param ttlMs        time before an unconsumed upload is eligible for purge.
    * @param uploadDir    optional override (tests use a per-suite tmpdir to avoid collisions).
    */
-  constructor(db: Database.Database, fileMaxBytes: number, quotaBytes: number, ttlMs: number, uploadDir?: string) {
+  constructor(db: Database, fileMaxBytes: number, quotaBytes: number, ttlMs: number, uploadDir?: string) {
     this.db = db;
     this.fileMaxBytes = fileMaxBytes;
     this.quotaBytes = quotaBytes;
@@ -202,7 +202,7 @@ export class UploadStore {
 
     const expiresAt = new Date(Date.now() + this.ttlMs);
     const expiresStr = isoUtc(expiresAt);
-    // SQLite better-sqlite3 transactions are synchronous + serialized in this process,
+    // SQLite bun:sqlite transactions are synchronous + serialized in this process,
     // so the SUM read + INSERT happen atomically with respect to other put() calls
     // sharing this DB handle. Two parallel async calls now race only on async work
     // OUTSIDE the transaction (the file write); the SUM-then-insert is linearized.

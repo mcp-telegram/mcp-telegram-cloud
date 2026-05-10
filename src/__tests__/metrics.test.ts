@@ -139,7 +139,7 @@ describe("metrics — OTLP gating (H1)", () => {
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     let fetchCalls = 0;
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       fetchCalls += 1;
       return new Response("");
     };
@@ -148,7 +148,7 @@ describe("metrics — OTLP gating (H1)", () => {
       await flushMetrics();
       assert.equal(fetchCalls, 0, "must not fetch when telemetryMode='local-only'");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
     }
   });
 
@@ -162,7 +162,7 @@ describe("metrics — OTLP gating (H1)", () => {
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     let fetchCalls = 0;
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       fetchCalls += 1;
       return new Response("");
     };
@@ -170,7 +170,7 @@ describe("metrics — OTLP gating (H1)", () => {
       await flushMetrics();
       assert.equal(fetchCalls, 0, "must not fetch when endpoint is empty");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }
@@ -185,7 +185,7 @@ describe("metrics — OTLP gating (H1)", () => {
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     const captured: { url: string; body: string } = { url: "", body: "" };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async (url, init) => {
+    (globalThis as { fetch: unknown }).fetch = async (url: string | URL | Request, init: RequestInit | undefined) => {
       captured.url = String(url);
       captured.body = String((init as RequestInit).body);
       return new Response("");
@@ -195,7 +195,7 @@ describe("metrics — OTLP gating (H1)", () => {
       assert.equal(captured.url, "https://signoz.test/v1/metrics");
       assert.ok(captured.body.includes("http.requests"));
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }
@@ -212,7 +212,7 @@ describe("metrics — OTLP gating (H1)", () => {
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     const captured: { headers: Record<string, string> } = { headers: {} };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async (_url, init) => {
+    (globalThis as { fetch: unknown }).fetch = async (_url: string | URL | Request, init: RequestInit | undefined) => {
       captured.headers = (init as RequestInit).headers as Record<string, string>;
       return new Response("");
     };
@@ -221,7 +221,7 @@ describe("metrics — OTLP gating (H1)", () => {
       assert.equal(captured.headers["Content-Type"], "application/json");
       assert.equal(captured.headers.Authorization, undefined, "no Authorization when auth empty");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
       (cfg as { signozAuth: string }).signozAuth = origAuth;
@@ -239,7 +239,7 @@ describe("metrics — OTLP gating (H1)", () => {
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     const captured: { headers: Record<string, string> } = { headers: {} };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async (_url, init) => {
+    (globalThis as { fetch: unknown }).fetch = async (_url: string | URL | Request, init: RequestInit | undefined) => {
       captured.headers = (init as RequestInit).headers as Record<string, string>;
       return new Response("");
     };
@@ -248,7 +248,7 @@ describe("metrics — OTLP gating (H1)", () => {
       const expected = `Basic ${Buffer.from("ingest-user:s3cret-pw").toString("base64")}`;
       assert.equal(captured.headers.Authorization, expected);
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
       (cfg as { signozAuth: string }).signozAuth = origAuth;
@@ -273,7 +273,7 @@ describe("metrics — OTLP gating (H1)", () => {
       resolveFetch = r;
     });
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       posts += 1;
       await fetchPromise; // simulate slow SigNoz
       return new Response("");
@@ -287,7 +287,7 @@ describe("metrics — OTLP gating (H1)", () => {
       await Promise.all([a, b]);
       assert.equal(posts, 1, "exactly one POST — second caller awaited the same in-flight promise");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }
@@ -308,7 +308,7 @@ describe("metrics — OTLP gating (H1)", () => {
     incr(TOOL_CALLS, { tool: "telegram-status", outcome: "ok" });
     let posts = 0;
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       posts += 1;
       return new Response("");
     };
@@ -319,7 +319,7 @@ describe("metrics — OTLP gating (H1)", () => {
       await flushMetrics();
       assert.equal(posts, 1, "shutdown must POST exactly once after stopMetricsFlush()");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }
@@ -378,7 +378,7 @@ describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)",
     (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response("Unauthorized", { status: 401 });
+    (globalThis as { fetch: unknown }).fetch = async () => new Response("Unauthorized", { status: 401 });
     try {
       await flushMetrics();
       const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
@@ -387,7 +387,7 @@ describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)",
       assert.ok(auth, "auth_failed point exists for signal=metrics");
       assert.equal(auth.value, 1);
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }
@@ -401,7 +401,7 @@ describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)",
     (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       const e = new Error("aborted");
       e.name = "AbortError";
       throw e;
@@ -413,7 +413,7 @@ describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)",
       assert.ok(net, "network point exists for signal=metrics");
       assert.equal(net.value, 1);
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }
@@ -427,7 +427,7 @@ describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)",
     (cfg as { signozEndpoint: string }).signozEndpoint = "https://signoz.test";
     incr(HTTP_REQUESTS, { route: "/health", method: "GET", status_class: "2xx", client: "browser" });
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response("", { status: 200 });
+    (globalThis as { fetch: unknown }).fetch = async () => new Response("", { status: 200 });
     try {
       await flushMetrics();
       const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
@@ -435,7 +435,7 @@ describe("metrics — TELEMETRY_EXPORT_ERRORS counter (silent-fail visibility)",
       const total = errs?.points.reduce((s, p) => s + p.value, 0) ?? 0;
       assert.equal(total, 0, "no errors recorded on success");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
       (cfg as { signozEndpoint: string }).signozEndpoint = origEndpoint;
     }

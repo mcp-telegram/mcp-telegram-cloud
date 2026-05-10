@@ -1,7 +1,7 @@
+import type { Database as DatabaseType } from "bun:sqlite";
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { describe, it } from "node:test";
-import type DatabaseType from "better-sqlite3";
 import type { OAuthProvider as OAuthProviderType } from "../oauth.js";
 
 // `oauth.ts` → `logger.ts` → `config.ts` requires several env vars. Set defaults BEFORE
@@ -12,18 +12,18 @@ process.env.TELEGRAM_API_HASH ??= "test";
 process.env.ISSUER ??= "https://test.invalid";
 process.env.MCP_TELEGRAM_TELEMETRY ??= "off";
 
-const Database = (await import("better-sqlite3")).default;
+const { Database } = await import("bun:sqlite");
 const { OAuthProvider } = await import("../oauth.js");
 
 const ISSUER = "https://mcp-telegram.com";
 
-function freshDb(): DatabaseType.Database {
+function freshDb(): DatabaseType {
   return new Database(":memory:");
 }
 
 function setupProviderWithClient(): {
   oauth: OAuthProviderType;
-  db: DatabaseType.Database;
+  db: DatabaseType;
   clientId: string;
 } {
   const db = freshDb();
