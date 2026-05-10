@@ -3,10 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "echo 'Next.js not scaffolded yet — Phase 2'",
-    "build": "echo 'Next.js not scaffolded yet — Phase 2'",
-    "start": "echo 'Next.js not scaffolded yet — Phase 2'",
-    "lint": "echo 'Next.js not scaffolded yet — Phase 2'",
-    "typecheck": "echo 'Next.js not scaffolded yet — Phase 2'"
+    "dev": "next dev --turbopack -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "biome check app components lib",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.2.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.15",
+    "@types/node": "^22.10.5",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.3"
   }
 }

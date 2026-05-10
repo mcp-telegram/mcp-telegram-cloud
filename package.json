@@ -7,7 +7,9 @@
   "engines": {
     "bun": ">=1.3.13"
   },
-  "workspaces": ["web"],
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
     "dev": "bun --hot src/server.tsx",
     "start": "bun src/server.tsx",
