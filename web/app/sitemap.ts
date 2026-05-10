@@ -1,14 +1,16 @@
 import type { MetadataRoute } from "next";
-import { defaultLocale, locales } from "@/lib/locales";
+import { defaultLocale, indexableLocales } from "@/lib/locales";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 
-/** Sitemap with hreflang alternates for every locale × every page.
+/** Sitemap with hreflang alternates for every indexable locale × every page.
  *
- * Pages currently shipped: /, /privacy, /terms.
- * Phase 3-4 add: /docs/quickstart{,/claude,/chatgpt}, /examples.
+ * Tier 3 locales are excluded — they serve EN content at runtime via
+ * `i18n/request.ts` fallback, so listing them with hreflang alternates would
+ * mislead crawlers. They remain reachable via direct URL.
  *
- * Output is ~70 locales × ~3 paths = ~210 entries. Default locale (en) is at
- * the un-prefixed URL (`/`), other locales at `/<locale>/...`. */
+ * Output is 20 indexable locales (Tier 1 + Tier 2) × 7 paths = 140 entries
+ * once the Tier 2 batch translation lands. Default locale (en) is at the
+ * un-prefixed URL (`/`), others at `/<locale>/...`. */
 
 const PAGES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "/", changeFrequency: "monthly", priority: 1 },
@@ -26,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   for (const page of PAGES) {
     const alternates = languageAlternates(page.path);
-    for (const locale of locales) {
+    for (const locale of indexableLocales) {
       entries.push({
         url: canonicalForLocale(locale.code, page.path),
         lastModified: now,

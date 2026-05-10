@@ -9,7 +9,7 @@
  * canonical recommendation for international sites. */
 
 import { config } from "./config";
-import { defaultLocale, locales } from "./locales";
+import { defaultLocale, indexableLocales } from "./locales";
 
 function joinPath(path: string): string {
   if (path === "/" || path === "") return "";
@@ -23,13 +23,18 @@ export function canonicalForLocale(locale: string, path: string): string {
   return `${config.issuer}${localePart}${suffix}`;
 }
 
-/** Map of `{ hreflang -> URL }` for every supported locale on a given path,
- * suitable for Next.js Metadata `alternates.languages`. Uses `hreflang` from
- * locale meta (handles zh-CN → zh-Hans mapping). Includes `x-default`
- * pointing at the EN URL. */
+/** Map of `{ hreflang -> URL }` for every locale we index (Tier 1 + Tier 2).
+ *
+ * Tier 3 locales are deliberately excluded — they serve EN content at
+ * runtime, so emitting them as hreflang alternates would mislead crawlers
+ * and risk being treated as duplicate or low-quality pages. They remain
+ * reachable via direct URL but are not advertised.
+ *
+ * Uses `hreflang` from locale meta (handles zh-CN → zh-Hans mapping).
+ * Includes `x-default` pointing at the EN URL. */
 export function languageAlternates(path: string): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const l of locales) {
+  for (const l of indexableLocales) {
     out[l.hreflang] = canonicalForLocale(l.code, path);
   }
   out["x-default"] = canonicalForLocale(defaultLocale, path);

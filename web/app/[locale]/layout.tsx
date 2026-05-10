@@ -30,6 +30,12 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   if (!hasLocale(routing.locales, locale)) notFound();
 
   const t = await getTranslations({ locale, namespace: "metadata" });
+  const localeMeta = getLocale(locale);
+
+  // Tier 3 locales fall back to English content at runtime — tell crawlers
+  // not to index those URLs so we don't pollute search with EN-content pages
+  // claiming to be Swahili/Persian/etc.
+  const noindex = localeMeta?.tier === 3;
 
   return {
     metadataBase: new URL(config.issuer),
@@ -42,6 +48,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
       images: [{ url: iconUrl }],
     },
     twitter: { card: "summary", images: [iconUrl] },
+    robots: noindex ? { index: false, follow: true } : undefined,
   };
 }
 
@@ -58,7 +65,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
   return (
     <html lang={locale} dir={dir}>
       <body>
-        <NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale}>
           <TranslationBanner />
           {children}
         </NextIntlClientProvider>

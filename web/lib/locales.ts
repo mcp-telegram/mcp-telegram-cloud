@@ -126,10 +126,23 @@ export const tier1Locales = locales.filter((l) => l.tier === 1).map((l) => l.cod
 export const tier2Locales = locales.filter((l) => l.tier === 2).map((l) => l.code);
 export const tier3Locales = locales.filter((l) => l.tier === 3).map((l) => l.code);
 
-/** Locales that have human-reviewed content (Tier 1 + Tier 2). LangSwitcher
- * shows only these by default; Tier 3 are reachable via Accept-Language or
- * direct URL. */
-export const switchableLocales = locales.filter((l) => l.tier <= 2);
+/** Locales we expose to search engines and language pickers.
+ *
+ * Tier 1 (en, ru) is hand-curated; Tier 2 (18 locales) is machine-translated
+ * with a community-review hook. Both have (or will have, post-Phase 5)
+ * locale-specific content worth advertising as separate language alternates.
+ *
+ * Tier 3 locales are intentionally NOT in this list because they fall back
+ * to English content at runtime (see `i18n/request.ts`) and we don't want
+ * Google to index `/sw/` or `/fa/` as Swahili/Persian when the body is
+ * actually English — that's a clear SEO red flag and bad UX. Tier 3 stays
+ * reachable via direct URL or Accept-Language detection (the
+ * `TranslationBanner` then explains the fallback). */
+export const indexableLocales = locales.filter((l) => l.tier <= 2);
+
+/** LangSwitcher shows the indexable set, plus the active locale even if it
+ * is Tier 3 — keeps the `<select>` from rendering an unmatched value. */
+export const switchableLocales = indexableLocales;
 
 const localeByCode = new Map<string, Locale>(locales.map((l) => [l.code, l] as const));
 
