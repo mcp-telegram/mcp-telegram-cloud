@@ -1,30 +1,45 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+import { useTranslations } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { LangSwitcher } from "@/components/LangSwitcher";
+import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 import s from "../landing.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-const DESCRIPTION =
-  "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI with one click.";
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const canonical = canonicalForLocale(locale, "/");
-  const title = `${config.brandName} — Your Telegram in Claude AI & ChatGPT`;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  const title = t("siteTitle");
+  const description = t("siteDescription");
   return {
     title,
-    description: DESCRIPTION,
+    description,
     alternates: { canonical, languages: languageAlternates("/") },
-    openGraph: { url: canonical, title, description: DESCRIPTION },
-    twitter: { title, description: DESCRIPTION },
+    openGraph: { url: canonical, title, description },
+    twitter: { title, description },
   };
 }
 
 export default async function HomePage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  return <HomePageContent />;
+}
+
+function HomePageContent() {
+  const tNav = useTranslations("nav");
+  const tHero = useTranslations("hero");
+  const tFeat = useTranslations("features");
+  const tEx = useTranslations("examples");
+  const tHow = useTranslations("howItWorks");
+  const tChoice = useTranslations("choice");
+  const tFaq = useTranslations("faq");
+  const tFooter = useTranslations("footer");
+  const tMeta = useTranslations("metadata");
 
   // Escape `<` so a malicious BRAND_NAME/ISSUER cannot break out of the
   // <script> tag via `</script>`. Same guard as the Hono implementation.
@@ -32,8 +47,7 @@ export default async function HomePage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: config.brandName,
-    description:
-      "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, get contacts — all from AI.",
+    description: tMeta("siteDescription"),
     url: config.issuer,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Any",
@@ -54,28 +68,27 @@ export default async function HomePage({ params }: PageProps) {
           {config.brandName}
         </div>
         <nav className={s.nav}>
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How it works</a>
-          <a href="#choice">Hosted or self-host</a>
-          <a href="#faq">FAQ</a>
-          <a href={config.sourceRepoUrl}>GitHub</a>
+          <a href="#features">{tNav("features")}</a>
+          <a href="#how-it-works">{tNav("howItWorks")}</a>
+          <a href="#choice">{tNav("choice")}</a>
+          <a href="#faq">{tNav("faq")}</a>
+          <a href={config.sourceRepoUrl}>{tNav("github")}</a>
+          <LangSwitcher />
         </nav>
       </header>
 
       <section className={s.hero}>
         <h1 className={s.heroTitle}>
-          Your Telegram in <span>Claude AI</span> &amp; <span>ChatGPT</span>
+          {tHero("titleStart")} <span>{tHero("titleClaude")}</span> {tHero("titleAnd")}{" "}
+          <span>{tHero("titleChatGPT")}</span>
         </h1>
-        <p className={s.heroSubtitle}>
-          Read messages, search chats, track contacts and download media — all from Claude.ai or ChatGPT. Connect in 30
-          seconds with a QR code.
-        </p>
+        <p className={s.heroSubtitle}>{tHero("subtitle")}</p>
         <div>
           <a className={s.cta} href="#how-it-works">
-            Connect Telegram
+            {tHero("ctaPrimary")}
           </a>
           <a className={s.ctaSecondary} href={config.sourceRepoUrl}>
-            Self-host
+            {tHero("ctaSecondary")}
           </a>
         </div>
       </section>
@@ -83,39 +96,39 @@ export default async function HomePage({ params }: PageProps) {
       <hr className={s.divider} />
 
       <section className={s.section} id="features">
-        <h2 className={s.sectionTitle}>What you can do</h2>
-        <p className={s.sectionSubtitle}>Read-only tools — safe, private, no messages sent on your behalf</p>
+        <h2 className={s.sectionTitle}>{tFeat("heading")}</h2>
+        <p className={s.sectionSubtitle}>{tFeat("subheading")}</p>
 
         <div className={s.featureGrid}>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>💬</div>
-            <h3>Read messages</h3>
-            <p>Browse messages from any chat with date filtering and pagination</p>
+            <h3>{tFeat("readMessagesTitle")}</h3>
+            <p>{tFeat("readMessagesDesc")}</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>🔍</div>
-            <h3>Search everything</h3>
-            <p>Full-text search across chats, messages, contacts and channels</p>
+            <h3>{tFeat("searchTitle")}</h3>
+            <p>{tFeat("searchDesc")}</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>📊</div>
-            <h3>Chat analytics</h3>
-            <p>Get chat info, member lists, unread counts and detailed metadata</p>
+            <h3>{tFeat("analyticsTitle")}</h3>
+            <p>{tFeat("analyticsDesc")}</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>📷</div>
-            <h3>View media</h3>
-            <p>Download and view photos inline directly in AI conversations</p>
+            <h3>{tFeat("mediaTitle")}</h3>
+            <p>{tFeat("mediaDesc")}</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>👥</div>
-            <h3>Contacts &amp; members</h3>
-            <p>Access your contacts list and group/channel member lists</p>
+            <h3>{tFeat("contactsTitle")}</h3>
+            <p>{tFeat("contactsDesc")}</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>🔒</div>
-            <h3>Read-only &amp; secure</h3>
-            <p>Cannot send, edit or delete messages. Your account is safe</p>
+            <h3>{tFeat("secureTitle")}</h3>
+            <p>{tFeat("secureDesc")}</p>
           </div>
         </div>
       </section>
@@ -123,39 +136,39 @@ export default async function HomePage({ params }: PageProps) {
       <hr className={s.divider} />
 
       <section className={s.section}>
-        <h2 className={s.sectionTitle}>What people ask</h2>
-        <p className={s.sectionSubtitle}>Real prompts you can use right after connecting</p>
+        <h2 className={s.sectionTitle}>{tEx("heading")}</h2>
+        <p className={s.sectionSubtitle}>{tEx("subheading")}</p>
 
         <div className={s.featureGrid}>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>☀️</div>
-            <h3>Morning briefing</h3>
-            <p>"Summarize my unread messages and highlight anything urgent"</p>
+            <h3>{tEx("morningTitle")}</h3>
+            <p>"{tEx("morningPrompt")}"</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>🔎</div>
-            <h3>Find anything</h3>
-            <p>"Find messages about the project deadline in our work chat"</p>
+            <h3>{tEx("findTitle")}</h3>
+            <p>"{tEx("findPrompt")}"</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>📋</div>
-            <h3>Extract data</h3>
-            <p>"List all links shared in the design channel this week"</p>
+            <h3>{tEx("extractTitle")}</h3>
+            <p>"{tEx("extractPrompt")}"</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>👤</div>
-            <h3>People lookup</h3>
-            <p>"Who are the most active members in our community group?"</p>
+            <h3>{tEx("peopleTitle")}</h3>
+            <p>"{tEx("peoplePrompt")}"</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>📊</div>
-            <h3>Chat overview</h3>
-            <p>"Give me a summary of what happened in the team chat today"</p>
+            <h3>{tEx("overviewTitle")}</h3>
+            <p>"{tEx("overviewPrompt")}"</p>
           </div>
           <div className={s.featureCard}>
             <div className={s.featureIcon}>🖼️</div>
-            <h3>Media review</h3>
-            <p>"Show me the photos sent in the family chat yesterday"</p>
+            <h3>{tEx("mediaTitle")}</h3>
+            <p>"{tEx("mediaPrompt")}"</p>
           </div>
         </div>
       </section>
@@ -163,21 +176,21 @@ export default async function HomePage({ params }: PageProps) {
       <hr className={s.divider} />
 
       <section className={s.section} id="how-it-works">
-        <h2 className={s.sectionTitle}>How it works</h2>
-        <p className={s.sectionSubtitle}>Three steps, 30 seconds, no API keys needed</p>
+        <h2 className={s.sectionTitle}>{tHow("heading")}</h2>
+        <p className={s.sectionSubtitle}>{tHow("subheading")}</p>
 
         <div className={s.stepsRow}>
           <div className={s.stepCard}>
-            <h3>Add connector</h3>
-            <p>Click "Connect" in Claude.ai or add as app in ChatGPT</p>
+            <h3>{tHow("step1Title")}</h3>
+            <p>{tHow("step1Desc")}</p>
           </div>
           <div className={s.stepCard}>
-            <h3>Scan QR code</h3>
-            <p>Open Telegram → Settings → Devices → Link Desktop Device → Scan</p>
+            <h3>{tHow("step2Title")}</h3>
+            <p>{tHow("step2Desc")}</p>
           </div>
           <div className={s.stepCard}>
-            <h3>Start asking</h3>
-            <p>Ask AI to read your chats, search messages, or summarize conversations</p>
+            <h3>{tHow("step3Title")}</h3>
+            <p>{tHow("step3Desc")}</p>
           </div>
         </div>
       </section>
@@ -185,117 +198,96 @@ export default async function HomePage({ params }: PageProps) {
       <hr className={s.divider} />
 
       <section className={s.section} id="choice">
-        <h2 className={s.sectionTitle}>Hosted or self-host</h2>
-        <p className={s.sectionSubtitle}>Open source under MIT. Use the hosted instance, or run your own.</p>
+        <h2 className={s.sectionTitle}>{tChoice("heading")}</h2>
+        <p className={s.sectionSubtitle}>{tChoice("subheading")}</p>
 
         <div className={s.choiceGrid}>
           <div className={s.choiceCard}>
-            <h3>Hosted</h3>
-            <p className={s.choiceTagline}>One-click connect, maintained by the project.</p>
+            <h3>{tChoice("hostedTitle")}</h3>
+            <p className={s.choiceTagline}>{tChoice("hostedTagline")}</p>
             <ul className={s.choiceFeatures}>
-              <li>QR code login — no API keys to manage</li>
-              <li>Read-only tool set, safe by design</li>
-              <li>Daily fair-use cap to keep service healthy</li>
-              <li>Service status updates via Telegram bot</li>
+              <li>{tChoice("hostedFeature1")}</li>
+              <li>{tChoice("hostedFeature2")}</li>
+              <li>{tChoice("hostedFeature3")}</li>
+              <li>{tChoice("hostedFeature4")}</li>
             </ul>
             <a className={s.choiceCta} href="#how-it-works">
-              Connect now
+              {tChoice("hostedCta")}
             </a>
           </div>
 
           <div className={s.choiceCard}>
-            <h3>Self-host</h3>
-            <p className={s.choiceTagline}>Full control, your machine, your data.</p>
+            <h3>{tChoice("selfHostTitle")}</h3>
+            <p className={s.choiceTagline}>{tChoice("selfHostTagline")}</p>
             <ul className={s.choiceFeatures}>
-              <li>All tools — read and write</li>
-              <li>No daily limits</li>
-              <li>Your data never leaves your server</li>
-              <li>Docker Compose + .env, ~10 minutes setup</li>
+              <li>{tChoice("selfHostFeature1")}</li>
+              <li>{tChoice("selfHostFeature2")}</li>
+              <li>{tChoice("selfHostFeature3")}</li>
+              <li>{tChoice("selfHostFeature4")}</li>
             </ul>
             <a className={s.choiceCta} href={config.sourceRepoUrl}>
-              View on GitHub
+              {tChoice("selfHostCta")}
             </a>
           </div>
         </div>
 
-        <p className={s.subtleNote}>
-          No tracking. No ads. Maintained by one person in spare time — please be patient with issues and PRs.
-        </p>
+        <p className={s.subtleNote}>{tChoice("footnote")}</p>
       </section>
 
       <hr className={s.divider} />
 
       <section className={s.section} id="faq">
-        <h2 className={s.sectionTitle}>FAQ</h2>
-        <p className={s.sectionSubtitle}>Common questions about security and privacy</p>
+        <h2 className={s.sectionTitle}>{tFaq("heading")}</h2>
+        <p className={s.sectionSubtitle}>{tFaq("subheading")}</p>
 
         <div className={s.faqList}>
           <div className={s.faqItem}>
-            <h3>Is it safe to connect my Telegram?</h3>
-            <p>
-              Yes. The hosted version is strictly read-only — it cannot send, edit, or delete any messages. Your account
-              is used the same way as logging into Telegram Web or Desktop. You can disconnect at any time from
-              Telegram's "Devices" settings.
-            </p>
+            <h3>{tFaq("safeQ")}</h3>
+            <p>{tFaq("safeA")}</p>
           </div>
           <div className={s.faqItem}>
-            <h3>Can you read my messages on the server?</h3>
+            <h3>{tFaq("readQ")}</h3>
             <p>
-              We don't store your messages. Each tool call fetches data directly from Telegram's API and returns it to
-              the AI assistant. Your Telegram session key is stored on our server so the connector can keep working
-              between requests, and is deleted whenever your session ends (see the next answer for the exact timing).
-              Storage details and hardening guidance are in our{" "}
+              {tFaq("readAStart")}{" "}
               <a href={`${config.sourceRepoUrl}/blob/main/SECURITY.md`} className={s.faqLink}>
-                SECURITY.md
+                {tFaq("readALinkLabel")}
               </a>
-              .
+              {tFaq("readAEnd")}
             </p>
           </div>
           <div className={s.faqItem}>
-            <h3>How does it connect without the Bot API?</h3>
+            <h3>{tFaq("protocolQ")}</h3>
+            <p>{tFaq("protocolA")}</p>
+          </div>
+          <div className={s.faqItem}>
+            <h3>{tFaq("disconnectQ")}</h3>
+            <p>{tFaq("disconnectA")}</p>
+          </div>
+          <div className={s.faqItem}>
+            <h3>{tFaq("chatgptQ")}</h3>
             <p>
-              It uses MTProto — the same protocol Telegram's official apps use. You authenticate via QR code, just like
-              linking a new device. From Telegram's perspective, it's another logged-in client.
+              {tFaq("chatgptAStart")} <code className={s.faqCode}>{config.issuer}/mcp</code> {tFaq("chatgptAEnd")}
             </p>
           </div>
           <div className={s.faqItem}>
-            <h3>What happens when I disconnect?</h3>
+            <h3>{tFaq("openSourceQ")}</h3>
             <p>
-              If you explicitly remove the connector in Claude.ai or ChatGPT, the server logs the Telegram session out
-              and deletes the session key right away. If you just close the AI app without revoking, the in-memory
-              client is dropped immediately and the stored session key is kept briefly so you can resume seamlessly; if
-              you don't reconnect within a short idle window (a few minutes), the server logs out and deletes the key
-              automatically. You can also force a full revoke at any time from Telegram → Settings → Devices.
-            </p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>Does it work with ChatGPT?</h3>
-            <p>
-              Yes. Add it as an app in ChatGPT Settings → Apps (Developer Mode). Use the URL{" "}
-              <code className={s.faqCode}>{config.issuer}/mcp</code> with OAuth authentication. Works on Plus, Pro,
-              Team, and Enterprise plans.
-            </p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>Is the source code open?</h3>
-            <p>
-              The server is fully open-source (MIT license) at{" "}
+              {tFaq("openSourceAStart")}{" "}
               <a href={config.sourceRepoUrl} className={s.faqLink}>
                 {repoLabel}
               </a>
-              . You can self-host it for free with full read+write access.
+              {tFaq("openSourceAEnd")}
             </p>
           </div>
           {config.botUsername ? (
             <div className={s.faqItem}>
-              <h3>How will I know about service updates?</h3>
+              <h3>{tFaq("botQ")}</h3>
               <p>
-                Subscribe to{" "}
+                {tFaq("botAStart")}{" "}
                 <a href={`https://t.me/${config.botUsername}?start=subscribe`} className={s.faqLink}>
                   @{config.botUsername}
                 </a>{" "}
-                to get notified about service status, breaking changes and new releases. Send /stop any time to
-                unsubscribe.
+                {tFaq("botAEnd")}
               </p>
             </div>
           ) : null}
@@ -306,12 +298,12 @@ export default async function HomePage({ params }: PageProps) {
 
       <footer className={s.footer}>
         <p>
-          {config.brandName} &mdash; <a href={config.sourceRepoUrl}>GitHub</a> &middot; MIT licensed &middot;{" "}
-          <a href={config.issuesUrl}>{config.issuesLabel}</a> &middot; <a href="/privacy">Privacy</a> &middot;{" "}
-          <a href="/terms">Terms</a>
+          {config.brandName} &mdash; <a href={config.sourceRepoUrl}>{tNav("github")}</a> &middot; {tFooter("mit")}{" "}
+          &middot; <a href={config.issuesUrl}>{config.issuesLabel}</a> &middot;{" "}
+          <Link href="/privacy">{tFooter("privacy")}</Link> &middot; <Link href="/terms">{tFooter("terms")}</Link>
         </p>
         <p className={s.footerSecond}>
-          &copy; {new Date().getFullYear()} {config.brandName}. Read-only Telegram access for Claude AI &amp; ChatGPT.
+          &copy; {new Date().getFullYear()} {config.brandName}. {tFooter("tagline")}
         </p>
       </footer>
     </>

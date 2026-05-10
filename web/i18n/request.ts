@@ -7,9 +7,12 @@
 
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
+import type messagesEn from "../messages/en.json";
 import { routing } from "./routing";
 
-async function loadMessages(locale: string): Promise<IntlMessages> {
+type Messages = typeof messagesEn;
+
+async function loadMessages(locale: string): Promise<Messages> {
   try {
     return (await import(`../messages/${locale}.json`)).default;
   } catch {
