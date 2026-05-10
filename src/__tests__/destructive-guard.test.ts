@@ -1,11 +1,11 @@
+import { Database } from "bun:sqlite";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import Database from "better-sqlite3";
 import { DestructiveGuard, summarizeArgs } from "../destructive-guard.js";
 
 const SETTINGS_URL = "https://example.invalid/my/settings";
 
-function freshDb(): Database.Database {
+function freshDb(): Database {
   // `:memory:` keeps each test isolated — no shared SQLite file across cases.
   return new Database(":memory:");
 }

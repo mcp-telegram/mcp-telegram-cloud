@@ -23,7 +23,7 @@ function mockFetch(handler: () => Response | Promise<Response>): {
 } {
   const captures: CapturedRequest[] = [];
   const orig = globalThis.fetch;
-  globalThis.fetch = async (url, init) => {
+  (globalThis as { fetch: unknown }).fetch = async (url: string | URL | Request, init: RequestInit | undefined) => {
     captures.push({
       url: String(url),
       headers: ((init as RequestInit).headers ?? {}) as Record<string, string>,
@@ -112,7 +112,7 @@ describe("tracer — OTLP export success path", () => {
     const { snapshot, _resetMetricsForTest } = await import("../telemetry/metrics.js");
     _resetMetricsForTest();
     const orig = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       const e = new Error("timed out");
       e.name = "AbortError";
       throw e;
@@ -144,11 +144,11 @@ describe("tracer — OTLP export success path", () => {
       // promise that we can resolve after queueing s2.
       let resolveFirstFetch: (r: Response) => void = () => {};
       const orig = globalThis.fetch;
-      globalThis.fetch = (() => {
+      (globalThis as { fetch: unknown }).fetch = () => {
         return new Promise<Response>((resolve) => {
           resolveFirstFetch = resolve;
         });
-      }) as typeof fetch;
+      };
       const flushP = flushTraces();
       // While first flush is suspended, push a 2nd span.
       await withSpan("s2", {}, async () => {});

@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { Database, Statement } from "bun:sqlite";
 
 /**
  * Per-user toggle + per-day quota + audit log for destructive tools (Phase 2.1).
@@ -57,17 +57,17 @@ export function summarizeArgs(args: unknown): string {
 }
 
 export class DestructiveGuard {
-  private db: Database.Database;
+  private db: Database;
   private dailyLimit: number;
   private settingsUrl: string;
 
-  private getPrefStmt: Database.Statement;
-  private setPrefStmt: Database.Statement;
-  private todayCountStmt: Database.Statement;
-  private insertAuditStmt: Database.Statement;
-  private listAuditStmt: Database.Statement;
+  private getPrefStmt: Statement;
+  private setPrefStmt: Statement;
+  private todayCountStmt: Statement;
+  private insertAuditStmt: Statement;
+  private listAuditStmt: Statement;
 
-  constructor(db: Database.Database, dailyLimit: number, settingsUrl: string) {
+  constructor(db: Database, dailyLimit: number, settingsUrl: string) {
     this.db = db;
     this.dailyLimit = dailyLimit;
     this.settingsUrl = settingsUrl;

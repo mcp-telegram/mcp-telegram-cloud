@@ -20,7 +20,7 @@ describe("logger — OTLP auth header (mirrors metrics.ts auth tests)", () => {
     logger.info("seed", { component: "test" });
     const captured: { headers: Record<string, string> } = { headers: {} };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async (_url, init) => {
+    (globalThis as { fetch: unknown }).fetch = async (_url: string | URL | Request, init: RequestInit | undefined) => {
       captured.headers = (init as RequestInit).headers as Record<string, string>;
       return new Response("");
     };
@@ -29,7 +29,7 @@ describe("logger — OTLP auth header (mirrors metrics.ts auth tests)", () => {
       assert.equal(captured.headers["Content-Type"], "application/json");
       assert.equal(captured.headers.Authorization, undefined, "no Authorization when auth empty");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { signozAuth: string }).signozAuth = origAuth;
     }
   });
@@ -41,7 +41,7 @@ describe("logger — OTLP auth header (mirrors metrics.ts auth tests)", () => {
     logger.info("seed", { component: "test" });
     const captured: { headers: Record<string, string> } = { headers: {} };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async (_url, init) => {
+    (globalThis as { fetch: unknown }).fetch = async (_url: string | URL | Request, init: RequestInit | undefined) => {
       captured.headers = (init as RequestInit).headers as Record<string, string>;
       return new Response("");
     };
@@ -50,7 +50,7 @@ describe("logger — OTLP auth header (mirrors metrics.ts auth tests)", () => {
       const expected = `Basic ${Buffer.from("ingest-user:s3cret-pw").toString("base64")}`;
       assert.equal(captured.headers.Authorization, expected);
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { signozAuth: string }).signozAuth = origAuth;
     }
   });
@@ -62,7 +62,7 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
     _resetMetricsForTest();
     logger.info("seed", { component: "test" });
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response("Unauthorized", { status: 401 });
+    (globalThis as { fetch: unknown }).fetch = async () => new Response("Unauthorized", { status: 401 });
     try {
       await logger.flush();
       const errs = snapshot().counters.find((c) => c.name === "telemetry.export.errors");
@@ -73,7 +73,7 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
       // Reference TELEMETRY_EXPORT_ERRORS to keep its definition reachable in tests.
       assert.equal(TELEMETRY_EXPORT_ERRORS.name, "telemetry.export.errors");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       _resetMetricsForTest();
     }
   });
@@ -83,7 +83,7 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
     _resetMetricsForTest();
     logger.info("seed", { component: "test" });
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       const e = new Error("aborted");
       e.name = "AbortError";
       throw e;
@@ -95,7 +95,7 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
       assert.ok(net, "network point exists for signal=logs");
       assert.equal(net.value, 1);
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       _resetMetricsForTest();
     }
   });
@@ -105,7 +105,7 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
     _resetTracerForTest();
     const captured: { records: Array<{ traceId?: string; spanId?: string }> } = { records: [] };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async (_url, init) => {
+    (globalThis as { fetch: unknown }).fetch = async (_url: string | URL | Request, init: RequestInit | undefined) => {
       const body = JSON.parse((init as RequestInit).body as string);
       captured.records = body.resourceLogs[0].scopeLogs[0].logRecords;
       return new Response("");
@@ -123,7 +123,7 @@ describe("logger — TELEMETRY_EXPORT_ERRORS on bad status / throw", () => {
       assert.equal(captured.records[1].traceId, undefined, "out-of-span log has no traceId");
       assert.equal(captured.records[1].spanId, undefined, "out-of-span log has no spanId");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       _resetTracerForTest();
     }
   });
@@ -135,7 +135,7 @@ describe("logger — runtime kill-switch (v2.21.1: dynamic telemetryMode read)",
     const origMode = cfg.telemetryMode;
     let fetchCalls = 0;
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       fetchCalls += 1;
       return new Response("");
     };
@@ -148,7 +148,7 @@ describe("logger — runtime kill-switch (v2.21.1: dynamic telemetryMode read)",
       await logger.flush();
       assert.equal(fetchCalls, 0, "must not fetch when telemetryMode='local-only'");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
     }
   });
@@ -158,7 +158,7 @@ describe("logger — runtime kill-switch (v2.21.1: dynamic telemetryMode read)",
     const origMode = cfg.telemetryMode;
     let fetchCalls = 0;
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
+    (globalThis as { fetch: unknown }).fetch = async () => {
       fetchCalls += 1;
       return new Response("");
     };
@@ -168,7 +168,7 @@ describe("logger — runtime kill-switch (v2.21.1: dynamic telemetryMode read)",
       await logger.flush();
       assert.equal(fetchCalls, 0, "must not fetch when telemetryMode='off'");
     } finally {
-      globalThis.fetch = origFetch;
+      (globalThis as { fetch: unknown }).fetch = origFetch;
       (cfg as { telemetryMode: string }).telemetryMode = origMode;
     }
   });

@@ -31,7 +31,7 @@ const buildApp = (bot: FakeBot) =>
     alertChatId: CHAT,
   });
 
-const post = async (app: ReturnType<typeof buildApp>, body: unknown, headers: HeadersInit = {}) =>
+const post = async (app: ReturnType<typeof buildApp>, body: unknown, headers: Record<string, string> = {}) =>
   await app.request("/alerts/signoz", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },

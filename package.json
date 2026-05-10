@@ -1,28 +1,28 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.23.2",
+  "version": "2.24.0",
   "private": true,
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "bun": ">=1.3.13"
+  },
   "scripts": {
-    "dev": "tsx watch src/server.tsx",
-    "start": "node dist/server.js",
-    "build": "tsc",
+    "dev": "bun --hot src/server.tsx",
+    "start": "bun src/server.tsx",
+    "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/__tests__/*.test.ts",
-    "check-parity": "tsx scripts/check-parity.ts",
-    "check-telemetry": "tsx scripts/check-telemetry.ts",
+    "test": "bun test --parallel src/__tests__/",
+    "check-parity": "bun scripts/check-parity.ts",
+    "check-telemetry": "bun scripts/check-telemetry.ts",
     "lint": "biome check src/ scripts/",
     "lint:fix": "biome check --write src/ scripts/",
     "format": "biome format --write src/ scripts/",
     "prepare": "husky"
   },
   "dependencies": {
-    "@hono/node-server": "^2.0.2",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@overpod/mcp-telegram": "^1.36.2",
-    "better-sqlite3": "^12.9.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.18",
     "undici": "^8.2.0",
@@ -30,20 +30,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^25.6.2",
+    "@types/bun": "^1.3.13",
     "husky": "^9.1.7",
-    "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3",
-      "esbuild"
-    ],
-    "overrides": {
-      "fast-uri@<3.1.2": ">=3.1.2",
-      "ip-address@<10.2.0": ">=10.2.0"
-    }
+  "overrides": {
+    "fast-uri@<3.1.2": ">=3.1.2",
+    "ip-address@<10.2.0": ">=10.2.0"
   }
 }

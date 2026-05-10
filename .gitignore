@@ -61,3 +61,6 @@ coverage/
 # Ralphex (autonomous execution loop) — local only
 .ralphex/
 .review-context/
+
+# Bun migration spike artifacts (local-only, decision doc lives in claudedocs/)
+spike/

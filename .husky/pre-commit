@@ -15,4 +15,4 @@ else
 fi
 
 # 2. Lint + format staged files via biome
-pnpm exec biome check --staged --write --no-errors-on-unmatched src/ scripts/
+bunx biome check --staged --write --no-errors-on-unmatched src/ scripts/

@@ -1,5 +1,5 @@
+import { Database } from "bun:sqlite";
 import { TelegramService } from "@overpod/mcp-telegram/service";
-import Database from "better-sqlite3";
 import { config } from "./config.js";
 import { logUser } from "./logger.js";
 
@@ -35,7 +35,7 @@ export class SessionManager {
    * `withLock`'s finally block so the Map does not grow unboundedly.
    */
   private locks = new Map<string, Promise<void>>();
-  private db: Database.Database;
+  private db: Database;
 
   private readonly apiId = config.telegramApiId;
   private readonly apiHash = config.telegramApiHash;
@@ -51,7 +51,7 @@ export class SessionManager {
       new TelegramService(apiId, apiHash),
   ) {
     this.db = new Database(dbPath);
-    this.db.pragma("journal_mode = WAL");
+    this.db.exec("PRAGMA journal_mode = WAL");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_sessions (
         user_id TEXT PRIMARY KEY,
@@ -350,7 +350,7 @@ export class SessionManager {
   }
 
   /** Expose the database for shared use (e.g. OAuth tables) */
-  getDb(): Database.Database {
+  getDb(): Database {
     return this.db;
   }
 
