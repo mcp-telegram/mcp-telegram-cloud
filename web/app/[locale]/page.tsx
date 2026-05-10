@@ -72,7 +72,9 @@ function HomePageContent() {
           <Link href="/docs/quickstart">{tNav("quickstart")}</Link>
           <Link href="/examples">{tNav("examples")}</Link>
           <a href="#faq">{tNav("faq")}</a>
-          <a href={config.sourceRepoUrl}>{tNav("github")}</a>
+          <a href={config.sourceRepoUrl} className={s.navHideMobile}>
+            {tNav("github")}
+          </a>
           <LangSwitcher />
         </nav>
       </header>

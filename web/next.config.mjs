@@ -18,12 +18,16 @@ const nextConfig = {
   // `next/package.json` because it's not under web/ directly.
   turbopack: { root: resolve(__dirname, "..") },
   async headers() {
+    // React's dev runtime needs eval() for hot reload + better stack traces.
+    // Production builds never use eval, so we only relax script-src in dev.
+    const isDev = process.env.NODE_ENV !== "production";
+    const scriptSrc = isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
     const securityHeaders = [
       {
         key: "Content-Security-Policy",
         value: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline'",
+          `script-src ${scriptSrc}`,
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: https:",
           "font-src 'self' data:",

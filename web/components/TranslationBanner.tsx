@@ -23,17 +23,17 @@ export function TranslationBanner() {
     <div
       style={{
         padding: "10px 16px",
-        background: "rgba(42, 171, 238, 0.1)",
-        borderBottom: "1px solid rgba(42, 171, 238, 0.2)",
+        background: "rgba(0, 122, 255, 0.06)",
+        borderBottom: "1px solid rgba(0, 122, 255, 0.18)",
         textAlign: "center",
         fontSize: 13,
-        color: "#bfd9ec",
+        color: "var(--tg-text)",
       }}
     >
       <span>{t(labelKey)}</span>{" "}
       <a
         href={HELP_TRANSLATE_URL}
-        style={{ color: "#2aabee", textDecoration: "underline" }}
+        style={{ color: "var(--tg-link)", textDecoration: "underline" }}
         target="_blank"
         rel="noreferrer noopener"
       >

@@ -3,16 +3,17 @@
   grid-template-columns: 56px 1fr;
   gap: 18px;
   padding: 24px 28px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--tg-outline);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--tg-card-bg);
+  box-shadow: var(--tg-shadow);
   margin-bottom: 16px;
 }
 
 .num {
   font-size: 32px;
   font-weight: 700;
-  color: #2aabee;
+  color: var(--tg-link);
   line-height: 1;
   font-feature-settings: "tnum";
 }
@@ -27,19 +28,20 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0;
+  color: var(--tg-text);
 }
 
 .desc {
   font-size: 15px;
   line-height: 1.55;
   margin: 0;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--tg-hint);
 }
 
 .image {
   margin-top: 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--tg-outline);
   display: block;
   width: 100%;
   max-width: 720px;
@@ -49,10 +51,10 @@
 .imagePlaceholder {
   margin-top: 12px;
   padding: 24px 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border: 1px dashed var(--tg-divider);
   border-radius: 8px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--tg-secondary-hint);
   text-align: center;
   font-style: italic;
 }

@@ -11,37 +11,41 @@
   gap: 12px;
   padding: 28px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--tg-outline);
+  background: var(--tg-card-bg);
+  box-shadow: var(--tg-shadow);
   text-decoration: none;
-  color: inherit;
+  color: var(--tg-text);
   transition:
     border-color 0.15s ease,
-    transform 0.15s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .tab:hover {
-  border-color: #2aabee;
+  border-color: var(--tg-link);
   transform: translateY(-2px);
+  box-shadow: var(--tg-card-shadow);
 }
 
 .title {
   font-size: 20px;
   font-weight: 600;
   margin: 0;
+  color: var(--tg-text);
 }
 
 .desc {
   font-size: 14px;
   line-height: 1.5;
   margin: 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--tg-hint);
 }
 
 .cta {
   margin-top: auto;
   font-weight: 500;
-  color: #2aabee;
+  color: var(--tg-link);
   font-size: 15px;
 }
 

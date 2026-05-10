@@ -3,7 +3,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 18px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--tg-outline);
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -14,10 +14,10 @@
   gap: 10px;
   font-weight: 600;
   font-size: 15px;
-  color: #e6edf3;
+  color: var(--tg-text);
   text-decoration: none;
 }
 
 .brand:hover {
-  color: #2aabee;
+  color: var(--tg-link);
 }

@@ -15,7 +15,7 @@ export function CopyExample({ text, copyLabel, copiedLabel }: Props) {
         background: "transparent",
         border: "1px solid currentColor",
         borderRadius: 6,
-        color: copied ? "#6dd3a4" : "#2aabee",
+        color: copied ? "var(--tg-green)" : "var(--tg-link)",
         cursor: "pointer",
         fontSize: 13,
         fontWeight: 500,

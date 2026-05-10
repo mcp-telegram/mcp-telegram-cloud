@@ -35,7 +35,19 @@ export function LangSwitcher() {
         opacity: 0.85,
       }}
     >
-      <span className="visually-hidden" style={{ position: "absolute", left: "-9999px" }}>
+      <span
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          margin: -1,
+          padding: 0,
+          overflow: "hidden",
+          clip: "rect(0, 0, 0, 0)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
         {t("switcherLabel")}
       </span>
       <select
@@ -44,11 +56,12 @@ export function LangSwitcher() {
         style={{
           background: "transparent",
           color: "inherit",
-          border: "1px solid currentColor",
+          border: "1px solid var(--tg-divider, currentColor)",
           borderRadius: 6,
-          padding: "4px 8px",
-          fontSize: 13,
+          padding: "3px 6px",
+          fontSize: 12,
           cursor: "pointer",
+          maxWidth: 92,
         }}
       >
         {options.map((l) => (

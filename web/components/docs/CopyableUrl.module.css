@@ -3,10 +3,11 @@
   align-items: stretch;
   gap: 0;
   margin: 14px 0 22px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--tg-divider);
   border-radius: 10px;
   overflow: hidden;
   max-width: 560px;
+  background: var(--tg-tertiary-bg);
 }
 
 .label {
@@ -22,11 +23,11 @@
 
 .url {
   flex: 1 1 auto;
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
   padding: 12px 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 14px;
-  color: #e6edf3;
+  color: var(--tg-text);
   border: none;
   outline: none;
   user-select: all;
@@ -35,10 +36,10 @@
 .btn {
   flex: 0 0 auto;
   padding: 0 16px;
-  background: rgba(42, 171, 238, 0.12);
+  background: rgba(0, 122, 255, 0.08);
   border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
-  color: #2aabee;
+  border-left: 1px solid var(--tg-divider);
+  color: var(--tg-link);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -47,10 +48,10 @@
 }
 
 .btn:hover {
-  background: rgba(42, 171, 238, 0.2);
+  background: rgba(0, 122, 255, 0.14);
 }
 
 .btn[data-copied="true"] {
-  color: #6dd3a4;
-  background: rgba(109, 211, 164, 0.14);
+  color: var(--tg-green);
+  background: rgba(49, 209, 88, 0.12);
 }

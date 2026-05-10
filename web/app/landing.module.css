@@ -27,6 +27,7 @@
 
 .nav {
   display: flex;
+  align-items: center;
   gap: 24px;
   font-size: 15px;
   color: var(--tg-hint);
@@ -38,6 +39,25 @@
 
 .nav a:hover {
   color: var(--tg-link);
+}
+
+/* On narrow screens, the in-page anchor links (Features/FAQ) collapse. The
+ * cross-page links (Quickstart/Examples/GitHub) and LangSwitcher stay so the
+ * header remains useful. */
+@media (max-width: 700px) {
+  .header {
+    padding: 16px 20px;
+  }
+  .nav {
+    gap: 14px;
+    font-size: 14px;
+  }
+  .nav a[href^="#"] {
+    display: none;
+  }
+  .navHideMobile {
+    display: none;
+  }
 }
 
 .hero {
