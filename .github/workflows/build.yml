@@ -15,6 +15,14 @@ on:
       - LICENSE
       - "docs/**"
       - "claudedocs/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "*.md"
+      - LICENSE
+      - "docs/**"
+      - "claudedocs/**"
+  workflow_dispatch: {}
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
@@ -43,6 +51,7 @@ jobs:
 
   build:
     needs: check
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       packages: write
