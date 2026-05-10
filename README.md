@@ -154,8 +154,8 @@ pnpm lint         # biome
 pnpm build        # tsc → dist/
 ```
 
-The pre-commit hook (`husky` + `lint-staged`) runs Biome on staged
-files and `gitleaks protect --staged` if Gitleaks is installed locally
+The pre-commit hook (`husky` + `biome check --staged`) runs Biome on
+staged files and `gitleaks protect --staged` if Gitleaks is installed locally
 (`brew install gitleaks`). The same scan plus TruffleHog runs in CI on
 every PR.
 

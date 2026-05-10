@@ -42,8 +42,8 @@ account** for development. The session DB stores plaintext MTProto sessions.
 ## Code style and conventions
 
 - **Linter / formatter**: [Biome](https://biomejs.dev). Run `pnpm lint:fix`
-  before committing. The pre-commit hook (`husky` + `lint-staged`) will format
-  staged files automatically.
+  before committing. The pre-commit hook (`husky` + `biome check --staged`)
+  will format staged files automatically.
 - **Pre-commit secrets scan**: if [`gitleaks`](https://github.com/gitleaks/gitleaks)
   is installed locally (`brew install gitleaks`), the pre-commit hook blocks
   any commit that contains a token, API hash, or session string. The same
