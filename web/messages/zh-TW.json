@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — 在 Claude AI 與 ChatGPT 中使用您的 Telegram",
+    "siteDescription": "將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、取得聯絡人 — 全部一鍵在 AI 中完成。"
+  },
+  "nav": {
+    "features": "功能",
+    "howItWorks": "運作方式",
+    "choice": "雲端代管或自行部署",
+    "faq": "常見問題",
+    "github": "GitHub",
+    "quickstart": "快速入門",
+    "examples": "範例"
+  },
+  "hero": {
+    "titleStart": "您的 Telegram 在",
+    "titleClaude": "Claude AI",
+    "titleAnd": "與",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "讀取訊息、搜尋聊天、追蹤聯絡人並下載媒體 — 全部直接在 Claude.ai 或 ChatGPT 中完成。透過 QR 碼 30 秒即可連接。",
+    "ctaPrimary": "連接 Telegram",
+    "ctaSecondary": "自行部署",
+    "ctaQuickstart": "30 秒內開始使用"
+  },
+  "features": {
+    "heading": "您可以做什麼",
+    "subheading": "唯讀工具 — 安全、私密,不會以您的名義發送任何訊息",
+    "readMessagesTitle": "讀取訊息",
+    "readMessagesDesc": "瀏覽任何聊天的訊息,支援日期篩選與分頁",
+    "searchTitle": "全方位搜尋",
+    "searchDesc": "在聊天、訊息、聯絡人與頻道中進行全文搜尋",
+    "analyticsTitle": "聊天分析",
+    "analyticsDesc": "取得聊天資訊、成員清單、未讀數量及詳細中繼資料",
+    "mediaTitle": "檢視媒體",
+    "mediaDesc": "直接在 AI 對話中下載並檢視相片",
+    "contactsTitle": "聯絡人與成員",
+    "contactsDesc": "存取您的聯絡人清單以及群組/頻道成員清單",
+    "secureTitle": "唯讀且安全",
+    "secureDesc": "無法發送、編輯或刪除訊息。您的帳號安全無虞"
+  },
+  "examples": {
+    "heading": "大家都問什麼",
+    "subheading": "連接後立即可用的真實提示詞",
+    "morningTitle": "晨間簡報",
+    "morningPrompt": "彙整我的未讀訊息,並標示出任何緊急事項",
+    "findTitle": "找到任何訊息",
+    "findPrompt": "在我們的工作聊天中尋找關於專案截止日期的訊息",
+    "extractTitle": "擷取資料",
+    "extractPrompt": "列出本週設計頻道中分享的所有連結",
+    "peopleTitle": "查找人員",
+    "peoplePrompt": "我們社群群組中最活躍的成員有哪些?",
+    "overviewTitle": "聊天概覽",
+    "overviewPrompt": "幫我總結今天團隊聊天裡發生的事情",
+    "mediaTitle": "媒體檢視",
+    "mediaPrompt": "顯示昨天家庭聊天中傳送的相片",
+    "ctaSeeAll": "查看所有範例"
+  },
+  "howItWorks": {
+    "heading": "運作方式",
+    "subheading": "三個步驟,30 秒完成,無需 API 金鑰",
+    "step1Title": "新增連接器",
+    "step1Desc": "在 Claude.ai 中點選「Connect」,或在 ChatGPT 中新增為應用程式",
+    "step2Title": "掃描 QR 碼",
+    "step2Desc": "開啟 Telegram → 設定 → 已連線的裝置 → 連結桌面裝置 → 掃描",
+    "step3Title": "開始提問",
+    "step3Desc": "請 AI 讀取您的聊天、搜尋訊息或為對話摘要",
+    "ctaFullGuide": "閱讀完整指南"
+  },
+  "choice": {
+    "heading": "雲端代管或自行部署",
+    "subheading": "以 MIT 授權開源。使用我們的代管服務,或自行架設。",
+    "hostedTitle": "雲端代管",
+    "hostedTagline": "一鍵連接,由專案維護。",
+    "hostedFeature1": "QR 碼登入 — 無需管理 API 金鑰",
+    "hostedFeature2": "唯讀工具集,設計上即安全",
+    "hostedFeature3": "每日合理使用上限,維持服務穩定",
+    "hostedFeature4": "透過 Telegram 機器人取得服務狀態更新",
+    "hostedCta": "立即連接",
+    "selfHostTitle": "自行部署",
+    "selfHostTagline": "完全掌控,您的伺服器,您的資料。",
+    "selfHostFeature1": "所有工具 — 讀取與寫入",
+    "selfHostFeature2": "無每日使用限制",
+    "selfHostFeature3": "您的資料絕不離開您的伺服器",
+    "selfHostFeature4": "Docker Compose + .env,大約 10 分鐘完成安裝",
+    "selfHostCta": "在 GitHub 上查看",
+    "footnote": "無追蹤。無廣告。由一個人在業餘時間維護 — 對於 issues 與 PR 請耐心等候。"
+  },
+  "faq": {
+    "heading": "常見問題",
+    "subheading": "關於安全與隱私的常見問題",
+    "safeQ": "連接我的 Telegram 安全嗎?",
+    "safeA": "是的。代管版本嚴格唯讀 — 無法發送、編輯或刪除任何訊息。您的帳號的使用方式與登入 Telegram 網頁版或桌面版相同。您可以隨時從 Telegram 的「已連線的裝置」設定中中斷連線。",
+    "readQ": "您會在伺服器上讀取我的訊息嗎?",
+    "readAStart": "我們不儲存您的訊息。每次工具呼叫都直接從 Telegram API 取得資料並回傳給 AI 助理。您的 Telegram 工作階段金鑰儲存在我們的伺服器上,以便連接器能在請求之間持續運作,並在工作階段結束時刪除(精確時機請參考下一個答案)。儲存細節與強化指南請見我們的",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": "。",
+    "protocolQ": "不使用 Bot API 是如何連接的?",
+    "protocolA": "它使用 MTProto — 與 Telegram 官方應用程式相同的協定。您透過 QR 碼進行驗證,就像連結新裝置一樣。從 Telegram 的角度來看,這只是另一個已登入的用戶端。",
+    "disconnectQ": "中斷連接時會發生什麼?",
+    "disconnectA": "如果您在 Claude.ai 或 ChatGPT 中明確移除連接器,伺服器會立即登出 Telegram 工作階段並刪除金鑰。如果您只是關閉 AI 應用程式而未撤銷授權,記憶體中的用戶端會立即釋放,而儲存的工作階段金鑰會短暫保留以便您無縫繼續使用;若在短暫的閒置時間(數分鐘內)未重新連接,伺服器會自動登出並刪除金鑰。您也可以隨時從 Telegram → 設定 → 已連線的裝置強制完整撤銷。",
+    "chatgptQ": "可以與 ChatGPT 搭配使用嗎?",
+    "chatgptAStart": "可以。在 ChatGPT 設定 → Apps(開發者模式)中將它新增為應用程式。使用以下 URL",
+    "chatgptAEnd": "並透過 OAuth 驗證。可在 Plus、Pro、Team 和 Enterprise 方案上使用。",
+    "openSourceQ": "原始碼是開放的嗎?",
+    "openSourceAStart": "伺服器完全開源(MIT 授權),位於",
+    "openSourceAEnd": "。您可以免費自行部署,享有完整的讀寫權限。",
+    "botQ": "我如何得知服務的更新?",
+    "botAStart": "訂閱",
+    "botAEnd": "以接收服務狀態、重大變更與新版本發布的通知。隨時發送 /stop 即可取消訂閱。"
+  },
+  "footer": {
+    "mit": "MIT 授權",
+    "privacy": "隱私",
+    "terms": "條款",
+    "tagline": "為 Claude AI 與 ChatGPT 提供唯讀的 Telegram 存取。"
+  },
+  "language": {
+    "switcherLabel": "語言",
+    "helpTranslate": "協助翻譯"
+  },
+  "common": {
+    "translationOutdated": "此翻譯可能已過時。",
+    "machineTranslated": "機器翻譯 — 協助改善此翻譯",
+    "fallbackToEnglish": "此頁面尚未翻譯。顯示英文版。"
+  },
+  "privacy": {
+    "title": "隱私權政策",
+    "lastUpdated": "最後更新"
+  },
+  "terms": {
+    "title": "服務條款",
+    "lastUpdated": "最後更新"
+  },
+  "examplesPage": {
+    "metaTitle": "範例 — 大家如何在 Claude AI 與 ChatGPT 中詢問 Telegram",
+    "metaDescription": "12 個即用型提示詞,讓 Claude AI 與 ChatGPT 讀取您的 Telegram 聊天:晨間簡報、尋找訊息、擷取資料、查找人員等。",
+    "heading": "真實案例",
+    "subheading": "十二個可直接貼上使用的提示詞。每一個都能在透過快速入門連接 Telegram 後立即運作。",
+    "categoryLabel": "分類",
+    "cat_briefing": "簡報",
+    "cat_search": "搜尋",
+    "cat_analytics": "分析",
+    "cat_extract": "擷取",
+    "cat_people": "人員",
+    "cat_media": "媒體",
+    "tryThis": "試用這個提示詞",
+    "items": {
+      "morning": {
+        "title": "晨間簡報",
+        "description": "未讀聊天的每日摘要,緊急事項會被置頂。",
+        "prompt": "彙整我過去 12 小時內未讀的 Telegram 訊息。依聊天分組,標示任何提到「urgent」、「deadline」或未來 48 小時內日期的內容,並列出任何直接向我提出的問題。",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "繁忙頻道的週報",
+        "description": "不必滾動數百則貼文也能掌握喧鬧頻道的動態。",
+        "prompt": "查看我「AI News」Telegram 頻道過去 7 天的訊息。給我 5 個討論最熱烈主題的要點,每個主題附上一個範例連結。",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "找到那則截止日期訊息",
+        "description": "不必記得確切字句也能定位過去的特定訊息。",
+        "prompt": "在我們的工作聊天中找到某人提到專案截止日期的訊息。顯示日期、發送者,以及前後各 2 則訊息的上下文。",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "尋找共享的文件",
+        "description": "列出某段日期範圍內聊天中分享的每個檔案。",
+        "prompt": "顯示過去 30 天內在「Design Team」Telegram 聊天中分享的所有 PDF 和 DOCX 附件,依最新優先排序,附上檔名與發送者。",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "本週分享的所有連結",
+        "description": "從您社群分享的連結建立閱讀清單。",
+        "prompt": "列出本週在「Reading Group」Telegram 頻道中分享的每一個 URL。去除重複,依網域分組,並為每個連結加上訊息時間戳記。",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "擷取待辦事項",
+        "description": "把非正式的聊天串轉換為 TODO 清單。",
+        "prompt": "閱讀我團隊聊天中最近 50 則訊息,並擷取任何待辦事項。每項動作請包含負責人、截止日期(若有提及)以及一句話的描述。",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "最活躍的社群成員",
+        "description": "找出社群群組中的協助者與領袖。",
+        "prompt": "在我們的社群 Telegram 群組中,列出過去 30 天最活躍的 10 位成員。每位成員顯示其發送的訊息數量,以及一則具代表性的近期訊息。",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "誰提到了我",
+        "description": "找出直接點名您的訊息。",
+        "prompt": "顯示過去 7 天內,有人透過 @username 提及我或直接回覆我訊息的所有訊息。依聊天分組。",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "聊天活動隨時間變化",
+        "description": "了解聊天何時繁忙、何時安靜。",
+        "prompt": "針對我的「Engineering Team」聊天,顯示過去 14 天每天的訊息數量。告訴我哪幾天出現異常的高峰或沉寂。",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "依聊天分類的未讀",
+        "description": "用一個提示詞分類處理您的收件匣。",
+        "prompt": "列出目前有未讀訊息的所有 Telegram 聊天,依未讀數量遞減排序。每個聊天顯示聊天名稱以及前 3 則未讀訊息。",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "近期的家庭照片",
+        "description": "拉取近期分享的相片並直接在對話中檢視。",
+        "prompt": "顯示過去 3 天在「Family」Telegram 聊天中傳送的相片。直接在對話中顯示,並附上日期和每張相片的發送者。",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "語音訊息的逐字稿",
+        "description": "把冗長的語音訊息以文字方式快速瀏覽。",
+        "prompt": "找出本週在我的「Coworking」群組聊天中發送的所有語音訊息。將每則轉錄為文字,並以時間順序列出,附上發送者與時間戳記。",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "快速入門 — 將 Telegram 連接至 Claude AI 或 ChatGPT",
+    "metaDescription": "在 30 秒內將您的 Telegram 帳號連接到 Claude AI 或 ChatGPT 的逐步指南。QR 碼登入,無需 API 金鑰。",
+    "heading": "快速入門",
+    "subheading": "不到一分鐘即可連接您的 Telegram。請在下方選擇您的 AI 助理。",
+    "tabClaudeTitle": "適用於 Claude AI",
+    "tabClaudeDesc": "在 claude.ai 中新增連接器 · 5 個步驟 · 約 30 秒",
+    "tabClaudeCta": "開啟 Claude 指南",
+    "tabChatGPTTitle": "適用於 ChatGPT",
+    "tabChatGPTDesc": "在 ChatGPT 中新增為應用程式 · 3 個步驟 · Plus、Pro、Team、Enterprise",
+    "tabChatGPTCta": "開啟 ChatGPT 指南",
+    "needAccount": "您需要在手機上擁有 Telegram 帳號,並使用較新的 Telegram 用戶端(這樣才能使用 QR 登入功能)。",
+    "claudeMetaTitle": "Claude AI 快速入門 — 連接 Telegram",
+    "claudeMetaDescription": "透過 Connectors 選單,以 5 個步驟將 Telegram 連接到 Claude.ai。讀取訊息、搜尋聊天、取得聯絡人。",
+    "claudeHeading": "將 Telegram 連接到 Claude AI",
+    "claudeIntro": "五個步驟。約三十秒。無需 API 金鑰。",
+    "claudeStep1Title": "開啟 Claude.ai 設定",
+    "claudeStep1Desc": "登入 claude.ai 並開啟 Settings。Free、Pro、Max 和 Team 方案都支援連接器。",
+    "claudeStep2Title": "前往 Connectors",
+    "claudeStep2Desc": "在 Settings 中找到 Connectors 區段,並點選「Add custom connector」。",
+    "claudeStep3Title": "貼上 MCP URL",
+    "claudeStep3Desc": "在連接器對話框中輸入下方 URL,然後點選 Connect。",
+    "claudeStep4Title": "核准 OAuth + 掃描 QR",
+    "claudeStep4Desc": "Claude.ai 會重新導向至我們的 OAuth 同意畫面。點選 Approve,接著會出現 QR 碼。開啟 Telegram → 設定 → 已連線的裝置 → 連結桌面裝置 → 掃描 QR。",
+    "claudeStep5Title": "開始提問",
+    "claudeStep5Desc": "Claude.ai 會將您導回;您會看到綠色的「Connected」狀態。請它讀取您的聊天:「彙整我的未讀訊息」是不錯的第一個提示詞。",
+    "claudeTroubleshootHeading": "疑難排解",
+    "claudeTroubleshootQRTitle": "QR 碼已過期或未掃描成功",
+    "claudeTroubleshootQRDesc": "QR 碼有效時間約 30 秒。請重新整理連接器對話框並再試一次。掃描時請確保手機有網路連線。",
+    "claudeTroubleshootDisconnectedTitle": "連接器顯示「disconnected」",
+    "claudeTroubleshootDisconnectedDesc": "在 Claude.ai 中開啟連接器並點選 Reconnect — 您將取得新的 QR。也可以從 Telegram → 設定 → 已連線的裝置中撤銷工作階段。",
+    "claudeTroubleshootChatsTitle": "聊天清單是空的",
+    "claudeTroubleshootChatsDesc": "如果 Claude 說您沒有聊天,可能是您的 Telegram 工作階段需要重新啟用。請在 claude.ai → Settings → Connectors 中中斷連線並重新連接。",
+    "chatgptMetaTitle": "ChatGPT 快速入門 — 連接 Telegram",
+    "chatgptMetaDescription": "透過 Apps Directory,以 3 個步驟將 Telegram 連接到 ChatGPT。支援 Plus、Pro、Team 和 Enterprise 方案。",
+    "chatgptHeading": "將 Telegram 連接到 ChatGPT",
+    "chatgptIntro": "三個步驟。需要 ChatGPT Plus、Pro、Team 或 Enterprise(Apps 功能)。",
+    "chatgptStep1Title": "啟用開發者模式",
+    "chatgptStep1Desc": "在 ChatGPT 設定 → Connectors → Advanced 中,開啟開發者模式。這可讓您新增自訂的 MCP 應用程式。",
+    "chatgptStep2Title": "新增應用程式 URL",
+    "chatgptStep2Desc": "在 Settings → Connectors → Create 中,選擇 I trust this application,貼上下方 URL,然後點選 Create。",
+    "chatgptStep3Title": "OAuth + QR 掃描",
+    "chatgptStep3Desc": "ChatGPT 會重新導向至我們的 OAuth 畫面。核准後,使用 Telegram → 設定 → 已連線的裝置 → 連結桌面裝置 掃描 QR。ChatGPT 會將您導回,應用程式即可使用。",
+    "chatgptTroubleshootHeading": "疑難排解",
+    "chatgptTroubleshootDoubleQRTitle": "出現了兩個 QR 碼",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT 有時會在初次連接時開啟兩個並行的 OAuth 流程。掃描其中任一 QR — 第二個流程會自動重新導向到第一個工作階段。關閉重複的分頁沒有問題。",
+    "chatgptTroubleshootLinkNotFoundTitle": "重啟後出現「Link not found」",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT 在伺服器重啟後不會自動重新連接。請在 ChatGPT 設定 → Apps 中中斷並重新連接應用程式,以重新建立 SSE 串流。",
+    "urlLabel": "連接器 URL",
+    "copyLabel": "複製",
+    "copiedLabel": "已複製!",
+    "backToOverview": "回到快速入門"
+  }
+}

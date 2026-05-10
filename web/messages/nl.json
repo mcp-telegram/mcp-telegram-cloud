@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Uw Telegram in Claude AI en ChatGPT",
+    "siteDescription": "Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats en haal contacten op — allemaal vanuit AI met één klik."
+  },
+  "nav": {
+    "features": "Functies",
+    "howItWorks": "Hoe het werkt",
+    "choice": "Hosted of zelf-hosten",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "Snelstart",
+    "examples": "Voorbeelden"
+  },
+  "hero": {
+    "titleStart": "Uw Telegram in",
+    "titleClaude": "Claude AI",
+    "titleAnd": "&",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Lees berichten, doorzoek chats, volg contacten en download media — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
+    "ctaPrimary": "Telegram verbinden",
+    "ctaSecondary": "Zelf hosten",
+    "ctaQuickstart": "Begin in 30 seconden"
+  },
+  "features": {
+    "heading": "Wat u kunt doen",
+    "subheading": "Alleen-lezen tools — veilig, privé, geen berichten namens u verzonden",
+    "readMessagesTitle": "Berichten lezen",
+    "readMessagesDesc": "Bekijk berichten uit elke chat met datumfilter en paginering",
+    "searchTitle": "Doorzoek alles",
+    "searchDesc": "Volledige tekstzoekfunctie in chats, berichten, contacten en kanalen",
+    "analyticsTitle": "Chatanalyses",
+    "analyticsDesc": "Ontvang chatinformatie, ledenlijsten, aantallen ongelezen berichten en gedetailleerde metadata",
+    "mediaTitle": "Media bekijken",
+    "mediaDesc": "Download en bekijk foto's direct in AI-gesprekken",
+    "contactsTitle": "Contacten en leden",
+    "contactsDesc": "Toegang tot uw contactenlijst en ledenlijsten van groepen/kanalen",
+    "secureTitle": "Alleen-lezen en veilig",
+    "secureDesc": "Kan geen berichten versturen, bewerken of verwijderen. Uw account is veilig"
+  },
+  "examples": {
+    "heading": "Wat mensen vragen",
+    "subheading": "Echte prompts die u direct na verbinden kunt gebruiken",
+    "morningTitle": "Ochtendbriefing",
+    "morningPrompt": "Vat mijn ongelezen berichten samen en markeer wat urgent is",
+    "findTitle": "Vind alles",
+    "findPrompt": "Vind berichten over de projectdeadline in onze werkchat",
+    "extractTitle": "Gegevens extraheren",
+    "extractPrompt": "Geef alle links weer die deze week in het designkanaal zijn gedeeld",
+    "peopleTitle": "Mensen zoeken",
+    "peoplePrompt": "Wie zijn de meest actieve leden van onze communitygroep?",
+    "overviewTitle": "Chatoverzicht",
+    "overviewPrompt": "Geef me een samenvatting van wat er vandaag in de teamchat is gebeurd",
+    "mediaTitle": "Media-overzicht",
+    "mediaPrompt": "Laat me de foto's zien die gisteren in de familiechat zijn verstuurd",
+    "ctaSeeAll": "Bekijk alle voorbeelden"
+  },
+  "howItWorks": {
+    "heading": "Hoe het werkt",
+    "subheading": "Drie stappen, 30 seconden, geen API-sleutels nodig",
+    "step1Title": "Connector toevoegen",
+    "step1Desc": "Klik op \"Connect\" in Claude.ai of voeg toe als app in ChatGPT",
+    "step2Title": "Scan de QR-code",
+    "step2Desc": "Open Telegram → Instellingen → Apparaten → Desktopapparaat koppelen → Scannen",
+    "step3Title": "Begin met vragen",
+    "step3Desc": "Vraag AI om uw chats te lezen, berichten te doorzoeken of gesprekken samen te vatten",
+    "ctaFullGuide": "Lees de volledige gids"
+  },
+  "choice": {
+    "heading": "Hosted of zelf-hosten",
+    "subheading": "Open source onder MIT. Gebruik onze gehoste instantie of draai uw eigen versie.",
+    "hostedTitle": "Hosted",
+    "hostedTagline": "Verbinden met één klik, onderhouden door het project.",
+    "hostedFeature1": "Inloggen met QR-code — geen API-sleutels om te beheren",
+    "hostedFeature2": "Alleen-lezen toolset, veilig door ontwerp",
+    "hostedFeature3": "Dagelijkse fair-use-limiet om de service gezond te houden",
+    "hostedFeature4": "Updates over de servicestatus via een Telegram-bot",
+    "hostedCta": "Nu verbinden",
+    "selfHostTitle": "Zelf hosten",
+    "selfHostTagline": "Volledige controle, uw machine, uw gegevens.",
+    "selfHostFeature1": "Alle tools — lezen en schrijven",
+    "selfHostFeature2": "Geen dagelijkse limieten",
+    "selfHostFeature3": "Uw gegevens verlaten uw server nooit",
+    "selfHostFeature4": "Docker Compose + .env, ~10 minuten installatie",
+    "selfHostCta": "Bekijk op GitHub",
+    "footnote": "Geen tracking. Geen advertenties. Onderhouden door één persoon in zijn vrije tijd — heb geduld met issues en PR's."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "Veelgestelde vragen over beveiliging en privacy",
+    "safeQ": "Is het veilig om mijn Telegram te verbinden?",
+    "safeA": "Ja. De gehoste versie is strikt alleen-lezen — er kunnen geen berichten worden verzonden, bewerkt of verwijderd. Uw account wordt op dezelfde manier gebruikt als wanneer u inlogt op Telegram Web of Desktop. U kunt op elk moment de verbinding verbreken via Telegrams \"Apparaten\"-instellingen.",
+    "readQ": "Kunt u mijn berichten op de server lezen?",
+    "readAStart": "Wij slaan uw berichten niet op. Elke toolaanroep haalt gegevens rechtstreeks op uit de API van Telegram en geeft die door aan de AI-assistent. Uw Telegram-sessiesleutel wordt op onze server bewaard zodat de connector tussen verzoeken door kan blijven werken, en wordt verwijderd zodra uw sessie eindigt (zie het volgende antwoord voor de exacte timing). Details over opslag en hardening vindt u in onze",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": ".",
+    "protocolQ": "Hoe verbindt het zonder de Bot API?",
+    "protocolA": "Het gebruikt MTProto — hetzelfde protocol dat de officiële Telegram-apps gebruiken. U authenticeert via een QR-code, net als wanneer u een nieuw apparaat koppelt. Vanuit Telegrams perspectief is het gewoon een andere ingelogde client.",
+    "disconnectQ": "Wat gebeurt er als ik de verbinding verbreek?",
+    "disconnectA": "Als u de connector expliciet verwijdert in Claude.ai of ChatGPT, logt de server de Telegram-sessie uit en verwijdert de sessiesleutel onmiddellijk. Als u alleen de AI-app sluit zonder de toegang in te trekken, wordt de in-memory-client direct vrijgegeven en wordt de opgeslagen sessiesleutel kort bewaard zodat u naadloos kunt hervatten; als u binnen een korte inactiviteitsperiode (enkele minuten) niet opnieuw verbindt, logt de server automatisch uit en verwijdert de sleutel. U kunt ook op elk moment een volledige intrekking afdwingen via Telegram → Instellingen → Apparaten.",
+    "chatgptQ": "Werkt het met ChatGPT?",
+    "chatgptAStart": "Ja. Voeg het toe als app in ChatGPT Instellingen → Apps (ontwikkelaarsmodus). Gebruik de URL",
+    "chatgptAEnd": "met OAuth-authenticatie. Werkt op de Plus-, Pro-, Team- en Enterprise-abonnementen.",
+    "openSourceQ": "Is de broncode open?",
+    "openSourceAStart": "De server is volledig open source (MIT-licentie) op",
+    "openSourceAEnd": ". U kunt deze gratis zelf hosten met volledige lees- en schrijftoegang.",
+    "botQ": "Hoe blijf ik op de hoogte van service-updates?",
+    "botAStart": "Abonneer u op",
+    "botAEnd": "om op de hoogte te blijven van servicestatus, breaking changes en nieuwe releases. Stuur op elk moment /stop om u uit te schrijven."
+  },
+  "footer": {
+    "mit": "MIT-gelicentieerd",
+    "privacy": "Privacy",
+    "terms": "Voorwaarden",
+    "tagline": "Alleen-lezen Telegram-toegang voor Claude AI en ChatGPT."
+  },
+  "language": {
+    "switcherLabel": "Taal",
+    "helpTranslate": "Help met vertalen"
+  },
+  "common": {
+    "translationOutdated": "Deze vertaling is mogelijk verouderd.",
+    "machineTranslated": "Automatisch vertaald — verbeter deze vertaling",
+    "fallbackToEnglish": "Deze pagina is nog niet vertaald. Engelse versie wordt weergegeven."
+  },
+  "privacy": {
+    "title": "Privacybeleid",
+    "lastUpdated": "Laatst bijgewerkt"
+  },
+  "terms": {
+    "title": "Servicevoorwaarden",
+    "lastUpdated": "Laatst bijgewerkt"
+  },
+  "examplesPage": {
+    "metaTitle": "Voorbeelden — Wat mensen Claude AI en ChatGPT vragen over Telegram",
+    "metaDescription": "12 kant-en-klare prompts voor Claude AI en ChatGPT om uw Telegram-chats te lezen: ochtendbriefings, berichten vinden, gegevens extraheren, mensen zoeken en meer.",
+    "heading": "Praktijkvoorbeelden",
+    "subheading": "Twaalf kant-en-klare prompts om te plakken. Elk werkt nadat u Telegram via Snelstart heeft verbonden.",
+    "categoryLabel": "Categorie",
+    "cat_briefing": "Briefing",
+    "cat_search": "Zoeken",
+    "cat_analytics": "Analytics",
+    "cat_extract": "Extractie",
+    "cat_people": "Mensen",
+    "cat_media": "Media",
+    "tryThis": "Probeer deze prompt",
+    "items": {
+      "morning": {
+        "title": "Ochtendbriefing",
+        "description": "Een dagelijkse samenvatting van ongelezen chats, met urgente zaken bovenaan.",
+        "prompt": "Vat mijn ongelezen Telegram-berichten van de afgelopen 12 uur samen. Groepeer ze per chat, markeer alles waarin \"urgent\", \"deadline\" of een datum in de komende 48 uur wordt genoemd, en lijst alle directe vragen aan mij op.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Weekoverzicht van een druk kanaal",
+        "description": "Loop bij op een druk kanaal zonder door honderden berichten te scrollen.",
+        "prompt": "Bekijk de berichten van de afgelopen 7 dagen in mijn \"AI News\" Telegram-kanaal. Geef me 5 bullets met de meest besproken onderwerpen, met per onderwerp één voorbeeldlink.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Vind dat ene deadlinebericht",
+        "description": "Vind een specifiek eerder bericht zonder de exacte woorden te onthouden.",
+        "prompt": "Vind het bericht in onze werkchat waarin iemand de projectdeadline noemde. Toon me de datum, wie het stuurde en 2 berichten context ervoor en erna.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Vind gedeelde documenten",
+        "description": "Lijst elk bestand op dat iemand in een chat over een bepaalde periode heeft gedeeld.",
+        "prompt": "Toon me alle PDF- en DOCX-bijlagen die de afgelopen 30 dagen in de Telegram-chat \"Design Team\" zijn gedeeld, gesorteerd van nieuw naar oud, met de bestandsnaam en wie het verstuurde.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "Alle deze week gedeelde links",
+        "description": "Stel een leeslijst samen van links die uw community deelde.",
+        "prompt": "Lijst elke URL op die deze week is gedeeld in het Telegram-kanaal \"Reading Group\". Verwijder duplicaten, groepeer per domein en voeg de tijdstempel van het bericht aan elk toe.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Actiepunten extraheren",
+        "description": "Maak van een informele chatthread een TODO-lijst.",
+        "prompt": "Lees de laatste 50 berichten in mijn teamchat en extraheer alle actiepunten. Vermeld bij elke actie de verantwoordelijke, de deadline indien genoemd en een omschrijving van één regel.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "Meest actieve communityleden",
+        "description": "Spot helpers en leiders in een communitygroep.",
+        "prompt": "Lijst in onze Telegram-communitygroep de top 10 meest actieve leden van de afgelopen 30 dagen op. Toon voor elk hoeveel berichten ze hebben gestuurd en één representatief recent bericht.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Wie heeft mij genoemd",
+        "description": "Vind berichten die u rechtstreeks aanspraken.",
+        "prompt": "Toon me alle berichten van de afgelopen 7 dagen waarin iemand mij heeft genoemd via @username of direct heeft gereageerd op een van mijn berichten. Groepeer per chat.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Chatactiviteit door de tijd",
+        "description": "Zie wanneer een chat druk is en wanneer rustig.",
+        "prompt": "Toon voor mijn \"Engineering Team\"-chat het aantal berichten per dag voor de afgelopen 14 dagen. Vertel me welke dagen ongebruikelijke pieken of stiltes hadden.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Ongelezen per chat",
+        "description": "Triëer uw inbox met één prompt.",
+        "prompt": "Lijst al mijn Telegram-chats op die op dit moment ongelezen berichten hebben, gesorteerd op aflopend aantal ongelezen berichten. Toon voor elk de chatnaam en de eerste 3 ongelezen berichten.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Recente familiefoto's",
+        "description": "Haal recent gedeelde foto's op en bekijk ze direct in het gesprek.",
+        "prompt": "Toon me de foto's die de afgelopen 3 dagen in de Telegram-chat \"Familie\" zijn gestuurd. Geef ze inline weer met de datum en wie elke foto heeft gestuurd.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Transcripties van spraakberichten",
+        "description": "Scan lange spraaknotities door ze als tekst te lezen.",
+        "prompt": "Vind alle spraakberichten die deze week in mijn \"Coworking\"-groepschat zijn verstuurd. Transcribeer elk bericht en presenteer ze als een chronologische lijst met afzender en tijdstempel.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Snelstart — Verbind Telegram met Claude AI of ChatGPT",
+    "metaDescription": "Stap-voor-stapgids om uw Telegram-account in 30 seconden met Claude AI of ChatGPT te verbinden. Inloggen met QR-code, geen API-sleutels.",
+    "heading": "Snelstart",
+    "subheading": "Verbind uw Telegram in minder dan een minuut. Kies hieronder uw AI-assistent.",
+    "tabClaudeTitle": "Voor Claude AI",
+    "tabClaudeDesc": "Voeg de connector toe in claude.ai · 5 stappen · ~30 seconden",
+    "tabClaudeCta": "Open Claude-gids",
+    "tabChatGPTTitle": "Voor ChatGPT",
+    "tabChatGPTDesc": "Voeg toe als app in ChatGPT · 3 stappen · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "Open ChatGPT-gids",
+    "needAccount": "U heeft een Telegram-account op uw telefoon nodig met een recente Telegram-client (zodat de QR-login-optie beschikbaar is).",
+    "claudeMetaTitle": "Claude AI Snelstart — Telegram verbinden",
+    "claudeMetaDescription": "Verbind Telegram in 5 stappen met Claude.ai via het Connectors-menu. Lees berichten, doorzoek chats, haal contacten op.",
+    "claudeHeading": "Telegram met Claude AI verbinden",
+    "claudeIntro": "Vijf stappen. Ongeveer dertig seconden. Geen API-sleutels.",
+    "claudeStep1Title": "Open de Claude.ai-instellingen",
+    "claudeStep1Desc": "Log in op claude.ai en open Instellingen. De Free-, Pro-, Max- en Team-abonnementen ondersteunen allemaal connectors.",
+    "claudeStep2Title": "Ga naar Connectors",
+    "claudeStep2Desc": "Zoek in Instellingen het Connectors-gedeelte en klik op \"Add custom connector\".",
+    "claudeStep3Title": "Plak de MCP-URL",
+    "claudeStep3Desc": "Voer de onderstaande URL in het connectorvenster in en klik op Connect.",
+    "claudeStep4Title": "OAuth goedkeuren + QR scannen",
+    "claudeStep4Desc": "Claude.ai stuurt u door naar ons OAuth-toestemmingsscherm. Klik op Approve en er verschijnt een QR-code. Open Telegram → Instellingen → Apparaten → Desktopapparaat koppelen → scan de QR.",
+    "claudeStep5Title": "Begin met vragen",
+    "claudeStep5Desc": "Claude.ai stuurt u terug; u ziet een groene \"Connected\"-status. Vraag het uw chats te lezen: \"Vat mijn ongelezen berichten samen\" is een goede eerste prompt.",
+    "claudeTroubleshootHeading": "Probleemoplossing",
+    "claudeTroubleshootQRTitle": "QR-code verlopen of niet gescand",
+    "claudeTroubleshootQRDesc": "QR-codes zijn ongeveer 30 seconden geldig. Ververs het connectorvenster en probeer opnieuw. Zorg dat uw telefoon internettoegang heeft tijdens het scannen.",
+    "claudeTroubleshootDisconnectedTitle": "Connector toont \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "Open de connector in Claude.ai en klik op Reconnect — u krijgt een nieuwe QR. Sessies kunnen ook worden ingetrokken via Telegram → Instellingen → Apparaten.",
+    "claudeTroubleshootChatsTitle": "Lege chatlijst",
+    "claudeTroubleshootChatsDesc": "Als Claude zegt dat u geen chats heeft, moet uw Telegram-sessie waarschijnlijk opnieuw geactiveerd worden. Verbreek de verbinding en verbind opnieuw via claude.ai → Instellingen → Connectors.",
+    "chatgptMetaTitle": "ChatGPT Snelstart — Telegram verbinden",
+    "chatgptMetaDescription": "Verbind Telegram in 3 stappen met ChatGPT via Apps Directory. Plus-, Pro-, Team- en Enterprise-abonnementen worden ondersteund.",
+    "chatgptHeading": "Telegram met ChatGPT verbinden",
+    "chatgptIntro": "Drie stappen. ChatGPT Plus, Pro, Team of Enterprise vereist (Apps-functie).",
+    "chatgptStep1Title": "Schakel Ontwikkelaarsmodus in",
+    "chatgptStep1Desc": "Schakel in ChatGPT Instellingen → Connectors → Advanced de Developer Mode in. Hiermee kunt u eigen MCP-apps toevoegen.",
+    "chatgptStep2Title": "Voeg de app-URL toe",
+    "chatgptStep2Desc": "Kies in Instellingen → Connectors → Create de optie I trust this application, plak de onderstaande URL en klik op Create.",
+    "chatgptStep3Title": "OAuth + QR scannen",
+    "chatgptStep3Desc": "ChatGPT stuurt u door naar ons OAuth-scherm. Keur goed en scan vervolgens de QR met Telegram → Instellingen → Apparaten → Desktopapparaat koppelen. ChatGPT stuurt u terug en de app is klaar voor gebruik.",
+    "chatgptTroubleshootHeading": "Probleemoplossing",
+    "chatgptTroubleshootDoubleQRTitle": "Er verschenen twee QR-codes",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT opent bij de eerste verbinding soms twee parallelle OAuth-flows. Scan een van beide QR's — de tweede flow leidt automatisch terug naar de eerste sessie. Het dubbele tabblad sluiten is geen probleem.",
+    "chatgptTroubleshootLinkNotFoundTitle": "\"Link not found\" na herstart",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT herverbindt niet automatisch na een serverherstart. Verbreek de app en verbind hem opnieuw in ChatGPT Instellingen → Apps om de SSE-stream te herstellen.",
+    "urlLabel": "Connector-URL",
+    "copyLabel": "Kopiëren",
+    "copiedLabel": "Gekopieerd!",
+    "backToOverview": "Terug naar Snelstart"
+  }
+}

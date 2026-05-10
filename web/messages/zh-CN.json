@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — 在 Claude AI 和 ChatGPT 中使用您的 Telegram",
+    "siteDescription": "将您的 Telegram 连接到 Claude AI 或 ChatGPT。一键即可在 AI 中阅读消息、搜索聊天、获取联系人。"
+  },
+  "nav": {
+    "features": "功能",
+    "howItWorks": "工作原理",
+    "choice": "托管或自托管",
+    "faq": "常见问题",
+    "github": "GitHub",
+    "quickstart": "快速开始",
+    "examples": "示例"
+  },
+  "hero": {
+    "titleStart": "您的 Telegram 接入",
+    "titleClaude": "Claude AI",
+    "titleAnd": "和",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "在 Claude.ai 或 ChatGPT 中阅读消息、搜索聊天、追踪联系人、下载媒体——一站式完成。通过二维码 30 秒即可连接。",
+    "ctaPrimary": "连接 Telegram",
+    "ctaSecondary": "自托管",
+    "ctaQuickstart": "30 秒上手"
+  },
+  "features": {
+    "heading": "您可以做什么",
+    "subheading": "只读工具——安全、私密,不会以您的名义发送任何消息",
+    "readMessagesTitle": "阅读消息",
+    "readMessagesDesc": "通过日期筛选和分页浏览任意聊天的消息",
+    "searchTitle": "全面搜索",
+    "searchDesc": "在聊天、消息、联系人和频道中进行全文搜索",
+    "analyticsTitle": "聊天分析",
+    "analyticsDesc": "获取聊天信息、成员列表、未读消息数和详细元数据",
+    "mediaTitle": "查看媒体",
+    "mediaDesc": "直接在 AI 对话中下载并查看图片",
+    "contactsTitle": "联系人与成员",
+    "contactsDesc": "访问您的联系人列表以及群组/频道的成员名单",
+    "secureTitle": "只读且安全",
+    "secureDesc": "无法发送、编辑或删除消息。您的账号是安全的"
+  },
+  "examples": {
+    "heading": "大家都在问什么",
+    "subheading": "连接后即可使用的真实提示词",
+    "morningTitle": "晨间简报",
+    "morningPrompt": "总结我的未读消息,突出任何紧急内容",
+    "findTitle": "查找一切",
+    "findPrompt": "在工作群聊中查找关于项目截止日期的消息",
+    "extractTitle": "提取数据",
+    "extractPrompt": "列出本周设计频道中分享的所有链接",
+    "peopleTitle": "查找人员",
+    "peoplePrompt": "我们社区群组中最活跃的成员是谁?",
+    "overviewTitle": "聊天概览",
+    "overviewPrompt": "给我一份今天团队群聊中发生事情的总结",
+    "mediaTitle": "媒体回顾",
+    "mediaPrompt": "给我看看昨天家庭群聊中发送的照片",
+    "ctaSeeAll": "查看所有示例"
+  },
+  "howItWorks": {
+    "heading": "工作原理",
+    "subheading": "三步、30 秒、无需 API 密钥",
+    "step1Title": "添加连接器",
+    "step1Desc": "在 Claude.ai 中点击「Connect」,或在 ChatGPT 中添加为应用",
+    "step2Title": "扫描二维码",
+    "step2Desc": "打开 Telegram → 设置 → 设备 → 连接桌面设备 → 扫描",
+    "step3Title": "开始提问",
+    "step3Desc": "让 AI 帮您阅读聊天、搜索消息或总结对话",
+    "ctaFullGuide": "阅读完整指南"
+  },
+  "choice": {
+    "heading": "托管或自托管",
+    "subheading": "采用 MIT 协议开源。可使用我们的托管实例,或自行部署。",
+    "hostedTitle": "托管",
+    "hostedTagline": "一键连接,由项目维护。",
+    "hostedFeature1": "二维码登录——无需管理 API 密钥",
+    "hostedFeature2": "只读工具集,设计上即安全",
+    "hostedFeature3": "每日合理使用上限以保障服务稳定",
+    "hostedFeature4": "通过 Telegram 机器人推送服务状态更新",
+    "hostedCta": "立即连接",
+    "selfHostTitle": "自托管",
+    "selfHostTagline": "完全掌控,您的机器,您的数据。",
+    "selfHostFeature1": "全部工具——读取和写入",
+    "selfHostFeature2": "无每日限制",
+    "selfHostFeature3": "您的数据永远不会离开您的服务器",
+    "selfHostFeature4": "Docker Compose + .env,约 10 分钟即可完成搭建",
+    "selfHostCta": "在 GitHub 查看",
+    "footnote": "无跟踪。无广告。由一人在业余时间维护——请耐心对待 issue 与 PR。"
+  },
+  "faq": {
+    "heading": "常见问题",
+    "subheading": "关于安全与隐私的常见疑问",
+    "safeQ": "连接 Telegram 安全吗?",
+    "safeA": "安全。托管版本严格只读——无法发送、编辑或删除任何消息。账号的使用方式与登录 Telegram Web 或桌面客户端相同。您可以随时在 Telegram 的「设备」设置中断开连接。",
+    "readQ": "你们能在服务器上读取我的消息吗?",
+    "readAStart": "我们不会存储您的消息。每次工具调用都直接从 Telegram API 获取数据并返回给 AI 助手。Telegram 会话密钥保存在我们的服务器上,以便连接器在多次请求之间持续工作,会话结束时即被删除(具体时机参见下一个回答)。存储细节和加固指南请查阅我们的",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": "。",
+    "protocolQ": "不使用 Bot API 时它是如何连接的?",
+    "protocolA": "它使用 MTProto——与 Telegram 官方应用所用协议相同。您通过二维码进行身份验证,就像连接一台新设备一样。从 Telegram 的角度来看,它只是另一个已登录的客户端。",
+    "disconnectQ": "断开连接后会发生什么?",
+    "disconnectA": "如果您在 Claude.ai 或 ChatGPT 中显式移除连接器,服务器会从 Telegram 会话登出并立即删除会话密钥。如果您只是关闭 AI 应用而未撤销授权,内存中的客户端会立即销毁,所存储的会话密钥会被短暂保留以便您无缝恢复;若在短时间(几分钟)内未重新连接,服务器会自动登出并删除该密钥。您也可以随时在 Telegram → 设置 → 设备中强制撤销。",
+    "chatgptQ": "它支持 ChatGPT 吗?",
+    "chatgptAStart": "支持。请在 ChatGPT 的 Settings → Apps(Developer Mode)中将其作为应用添加。使用以下 URL:",
+    "chatgptAEnd": "采用 OAuth 身份验证。Plus、Pro、Team 和 Enterprise 套餐均可使用。",
+    "openSourceQ": "源代码开源吗?",
+    "openSourceAStart": "服务端完全开源(MIT 协议),仓库位于",
+    "openSourceAEnd": "。您可以免费自托管,获得完整的读写权限。",
+    "botQ": "我如何了解服务更新?",
+    "botAStart": "订阅",
+    "botAEnd": "以获取服务状态、不兼容变更和新版本发布的通知。随时发送 /stop 即可取消订阅。"
+  },
+  "footer": {
+    "mit": "采用 MIT 许可",
+    "privacy": "隐私",
+    "terms": "条款",
+    "tagline": "面向 Claude AI 和 ChatGPT 的只读 Telegram 访问。"
+  },
+  "language": {
+    "switcherLabel": "语言",
+    "helpTranslate": "帮助翻译"
+  },
+  "common": {
+    "translationOutdated": "此翻译可能已过时。",
+    "machineTranslated": "机器翻译——欢迎改进此翻译",
+    "fallbackToEnglish": "此页面尚未翻译,显示英文版本。"
+  },
+  "privacy": {
+    "title": "隐私政策",
+    "lastUpdated": "最后更新"
+  },
+  "terms": {
+    "title": "服务条款",
+    "lastUpdated": "最后更新"
+  },
+  "examplesPage": {
+    "metaTitle": "示例 — 大家在 Claude AI 和 ChatGPT 中关于 Telegram 都问什么",
+    "metaDescription": "为 Claude AI 和 ChatGPT 阅读 Telegram 聊天准备的 12 个开箱即用提示词:晨间简报、查找消息、提取数据、查找人员等。",
+    "heading": "实战示例",
+    "subheading": "12 个可直接复制粘贴的提示词。通过快速开始连接 Telegram 后即可使用。",
+    "categoryLabel": "类别",
+    "cat_briefing": "简报",
+    "cat_search": "搜索",
+    "cat_analytics": "分析",
+    "cat_extract": "提取",
+    "cat_people": "人员",
+    "cat_media": "媒体",
+    "tryThis": "尝试此提示词",
+    "items": {
+      "morning": {
+        "title": "晨间简报",
+        "description": "未读聊天的每日摘要,紧急事项置顶。",
+        "prompt": "请总结过去 12 小时内我的未读 Telegram 消息。按聊天分组,突出所有提及 \"紧急\"、\"截止日期\" 或未来 48 小时内日期的内容,并列出所有直接向我提出的问题。",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "繁忙频道的每周摘要",
+        "description": "无需滚动数百条帖子即可了解嘈杂频道的动态。",
+        "prompt": "查看过去 7 天我的 \"AI News\" Telegram 频道中的消息。用 5 条要点列出讨论最多的话题,每条话题附上一个示例链接。",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "查找那条截止日期消息",
+        "description": "在不记得确切措辞的情况下定位某条历史消息。",
+        "prompt": "在我们的工作群聊中查找有人提到项目截止日期的消息。请显示日期、发送人,以及前后各 2 条上下文消息。",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "查找共享文档",
+        "description": "列出某段时间内某个聊天中分享的每一个文件。",
+        "prompt": "请显示过去 30 天内在 \"Design Team\" Telegram 聊天中分享的所有 PDF 和 DOCX 附件,按最新优先排序,并附上文件名和发送人。",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "本周分享的所有链接",
+        "description": "用社群中分享的链接搭建一份阅读清单。",
+        "prompt": "列出本周在 \"Reading Group\" Telegram 频道中分享的每一个 URL。请去重、按域名分组,并为每条添加消息的时间戳。",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "提取行动项",
+        "description": "将非正式的聊天线程整理成 TODO 列表。",
+        "prompt": "阅读我团队群聊中的最后 50 条消息,提取所有行动项。对于每个行动项,请包括负责人、(如果提到的)截止日期,以及一行说明。",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "最活跃的社群成员",
+        "description": "发现社群群组中的热心人和带头人。",
+        "prompt": "在我们的社区 Telegram 群组中,列出过去 30 天最活跃的 10 位成员。对每位成员,请显示其发送的消息数量,以及一条具有代表性的近期消息。",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "谁提到了我",
+        "description": "找出直接对您发出的消息。",
+        "prompt": "请显示过去 7 天内所有有人通过 @username 提到我,或直接回复了我消息的内容。按聊天分组。",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "聊天活跃度随时间变化",
+        "description": "了解某个聊天何时繁忙、何时安静。",
+        "prompt": "对于我的 \"Engineering Team\" 聊天,显示过去 14 天每天的消息数量。告诉我哪些日子出现了异常的高峰或沉寂。",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "按聊天分类的未读消息",
+        "description": "用一句提示词梳理收件箱。",
+        "prompt": "列出我当前所有有未读消息的 Telegram 聊天,按未读数量降序排序。对每个聊天,请显示聊天名称和前 3 条未读消息。",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "最近的家庭照片",
+        "description": "拉取最近分享的照片并在对话中直接查看。",
+        "prompt": "显示过去 3 天内在 \"Family\" Telegram 聊天中发送的照片。请在对话中内联显示,并附上每张照片的日期和发送人。",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "语音消息文字稿",
+        "description": "通过文字阅读快速浏览较长的语音笔记。",
+        "prompt": "查找本周在我 \"Coworking\" 群组聊天中发送的所有语音消息。将每条转录为文字,并以按时间排序的列表形式呈现,附上发送人和时间戳。",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "快速开始 — 将 Telegram 连接到 Claude AI 或 ChatGPT",
+    "metaDescription": "30 秒将您的 Telegram 账号连接到 Claude AI 或 ChatGPT 的分步指南。二维码登录,无需 API 密钥。",
+    "heading": "快速开始",
+    "subheading": "Telegram 连接不到一分钟即可完成。请在下方选择您的 AI 助手。",
+    "tabClaudeTitle": "面向 Claude AI",
+    "tabClaudeDesc": "在 claude.ai 添加连接器 · 5 步 · 约 30 秒",
+    "tabClaudeCta": "打开 Claude 指南",
+    "tabChatGPTTitle": "面向 ChatGPT",
+    "tabChatGPTDesc": "在 ChatGPT 中添加为应用 · 3 步 · Plus、Pro、Team、Enterprise",
+    "tabChatGPTCta": "打开 ChatGPT 指南",
+    "needAccount": "您需要在手机上拥有 Telegram 账号,并使用较新的 Telegram 客户端(以便有二维码登录选项)。",
+    "claudeMetaTitle": "Claude AI 快速开始 — 连接 Telegram",
+    "claudeMetaDescription": "通过 Connectors 菜单,在 5 步内将 Telegram 连接到 Claude.ai。阅读消息、搜索聊天、获取联系人。",
+    "claudeHeading": "将 Telegram 连接到 Claude AI",
+    "claudeIntro": "五步。约三十秒。无需 API 密钥。",
+    "claudeStep1Title": "打开 Claude.ai 设置",
+    "claudeStep1Desc": "登录 claude.ai 并打开 Settings。Free、Pro、Max 和 Team 套餐均支持连接器。",
+    "claudeStep2Title": "进入 Connectors",
+    "claudeStep2Desc": "在 Settings 中找到 Connectors 部分,点击 \"Add custom connector\"。",
+    "claudeStep3Title": "粘贴 MCP URL",
+    "claudeStep3Desc": "在连接器对话框中输入下面的 URL 并点击 Connect。",
+    "claudeStep4Title": "批准 OAuth + 扫描二维码",
+    "claudeStep4Desc": "Claude.ai 会跳转到我们的 OAuth 授权页面。点击 Approve 后会出现二维码。打开 Telegram → 设置 → 设备 → 连接桌面设备 → 扫描该二维码。",
+    "claudeStep5Title": "开始提问",
+    "claudeStep5Desc": "Claude.ai 会跳转回来,您会看到绿色的 \"Connected\" 状态。让它读取您的聊天:\"总结我的未读消息\" 是不错的首个提示词。",
+    "claudeTroubleshootHeading": "故障排查",
+    "claudeTroubleshootQRTitle": "二维码已过期或扫描失败",
+    "claudeTroubleshootQRDesc": "二维码大约有效 30 秒。请刷新连接器对话框后重试。扫描期间确保手机能够联网。",
+    "claudeTroubleshootDisconnectedTitle": "连接器显示 \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "在 Claude.ai 中打开连接器并点击 Reconnect——您会获得一个新的二维码。会话也可以从 Telegram → 设置 → 设备 中撤销。",
+    "claudeTroubleshootChatsTitle": "聊天列表为空",
+    "claudeTroubleshootChatsDesc": "如果 Claude 说您没有任何聊天,通常是 Telegram 会话需要重新激活。请在 claude.ai → Settings → Connectors 中断开后重新连接。",
+    "chatgptMetaTitle": "ChatGPT 快速开始 — 连接 Telegram",
+    "chatgptMetaDescription": "通过 Apps Directory,在 3 步内将 Telegram 连接到 ChatGPT。支持 Plus、Pro、Team 和 Enterprise 套餐。",
+    "chatgptHeading": "将 Telegram 连接到 ChatGPT",
+    "chatgptIntro": "三步。需要 ChatGPT Plus、Pro、Team 或 Enterprise 套餐(Apps 功能)。",
+    "chatgptStep1Title": "开启 Developer Mode",
+    "chatgptStep1Desc": "在 ChatGPT Settings → Connectors → Advanced 中开启 Developer Mode。这样您就可以添加自定义 MCP 应用。",
+    "chatgptStep2Title": "添加应用 URL",
+    "chatgptStep2Desc": "在 Settings → Connectors → Create 中勾选 I trust this application,粘贴下面的 URL,然后点击 Create。",
+    "chatgptStep3Title": "OAuth + 扫描二维码",
+    "chatgptStep3Desc": "ChatGPT 会跳转到我们的 OAuth 页面。批准后,在 Telegram → 设置 → 设备 → 连接桌面设备中扫描二维码。ChatGPT 跳转回来后,应用即可使用。",
+    "chatgptTroubleshootHeading": "故障排查",
+    "chatgptTroubleshootDoubleQRTitle": "出现了两个二维码",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT 在首次连接时有时会并行打开两个 OAuth 流程。扫描任意一个二维码即可——第二个流程会自动跳转到第一个会话。多出来的标签页可以直接关闭。",
+    "chatgptTroubleshootLinkNotFoundTitle": "重启后出现 \"Link not found\"",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT 在服务器重启后不会自动重新连接。请在 ChatGPT Settings → Apps 中断开并重新连接应用,以重建 SSE 连接。",
+    "urlLabel": "连接器 URL",
+    "copyLabel": "复制",
+    "copiedLabel": "已复制!",
+    "backToOverview": "返回快速开始"
+  }
+}

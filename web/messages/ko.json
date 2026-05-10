@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Claude AI와 ChatGPT에서 사용하는 당신의 Telegram",
+    "siteDescription": "Telegram을 Claude AI 또는 ChatGPT에 연결합니다. 메시지 읽기, 대화방 검색, 연락처 가져오기를 AI에서 클릭 한 번으로 수행할 수 있습니다."
+  },
+  "nav": {
+    "features": "기능",
+    "howItWorks": "작동 방식",
+    "choice": "호스팅 또는 셀프 호스팅",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "빠른 시작",
+    "examples": "예시"
+  },
+  "hero": {
+    "titleStart": "당신의 Telegram을",
+    "titleClaude": "Claude AI",
+    "titleAnd": "와",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "메시지 읽기, 대화방 검색, 연락처 추적, 미디어 다운로드를 Claude.ai 또는 ChatGPT에서 모두 수행할 수 있습니다. QR 코드로 30초 만에 연결할 수 있습니다.",
+    "ctaPrimary": "Telegram 연결",
+    "ctaSecondary": "셀프 호스팅",
+    "ctaQuickstart": "30초 만에 시작하기"
+  },
+  "features": {
+    "heading": "할 수 있는 일",
+    "subheading": "읽기 전용 도구 — 안전하고 비공개이며, 사용자를 대신해 메시지를 보내지 않습니다",
+    "readMessagesTitle": "메시지 읽기",
+    "readMessagesDesc": "날짜 필터와 페이지네이션으로 모든 대화방의 메시지를 탐색합니다",
+    "searchTitle": "전체 검색",
+    "searchDesc": "대화방, 메시지, 연락처, 채널을 아우르는 전문(全文) 검색",
+    "analyticsTitle": "대화방 분석",
+    "analyticsDesc": "대화방 정보, 멤버 목록, 안 읽은 메시지 수, 자세한 메타데이터를 가져옵니다",
+    "mediaTitle": "미디어 보기",
+    "mediaDesc": "AI 대화 안에서 사진을 직접 다운로드하고 인라인으로 볼 수 있습니다",
+    "contactsTitle": "연락처와 멤버",
+    "contactsDesc": "연락처 목록과 그룹/채널 멤버 목록에 접근할 수 있습니다",
+    "secureTitle": "읽기 전용 및 안전",
+    "secureDesc": "메시지를 보내거나 편집·삭제할 수 없습니다. 당신의 계정은 안전합니다"
+  },
+  "examples": {
+    "heading": "사람들이 묻는 것",
+    "subheading": "연결 직후 바로 사용할 수 있는 실제 프롬프트",
+    "morningTitle": "아침 브리핑",
+    "morningPrompt": "안 읽은 메시지를 요약하고 긴급한 내용을 강조해 주세요",
+    "findTitle": "무엇이든 찾기",
+    "findPrompt": "업무 대화방에서 프로젝트 마감일에 관한 메시지를 찾아 주세요",
+    "extractTitle": "데이터 추출",
+    "extractPrompt": "이번 주 디자인 채널에서 공유된 모든 링크를 나열해 주세요",
+    "peopleTitle": "사람 찾기",
+    "peoplePrompt": "우리 커뮤니티 그룹에서 가장 활발한 멤버는 누구인가요?",
+    "overviewTitle": "대화방 개요",
+    "overviewPrompt": "오늘 팀 대화방에서 일어난 일을 요약해 주세요",
+    "mediaTitle": "미디어 리뷰",
+    "mediaPrompt": "어제 가족 대화방에서 보낸 사진을 보여 주세요",
+    "ctaSeeAll": "모든 예시 보기"
+  },
+  "howItWorks": {
+    "heading": "작동 방식",
+    "subheading": "세 단계, 30초, API 키 불필요",
+    "step1Title": "커넥터 추가",
+    "step1Desc": "Claude.ai에서 \"Connect\"를 클릭하거나 ChatGPT에서 앱으로 추가합니다",
+    "step2Title": "QR 코드 스캔",
+    "step2Desc": "Telegram 열기 → 설정 → 기기 → 데스크톱 기기 연결 → 스캔",
+    "step3Title": "질문 시작",
+    "step3Desc": "AI에게 대화방 읽기, 메시지 검색, 대화 요약을 요청합니다",
+    "ctaFullGuide": "전체 가이드 읽기"
+  },
+  "choice": {
+    "heading": "호스팅 또는 셀프 호스팅",
+    "subheading": "MIT 라이선스 오픈소스입니다. 호스팅 인스턴스를 사용하거나 직접 운영할 수 있습니다.",
+    "hostedTitle": "호스팅",
+    "hostedTagline": "원클릭 연결, 프로젝트가 직접 운영합니다.",
+    "hostedFeature1": "QR 코드 로그인 — 관리할 API 키 없음",
+    "hostedFeature2": "읽기 전용 도구 세트, 설계상 안전",
+    "hostedFeature3": "서비스 안정성을 위한 일일 공정 사용 한도",
+    "hostedFeature4": "Telegram 봇을 통한 서비스 상태 업데이트",
+    "hostedCta": "지금 연결",
+    "selfHostTitle": "셀프 호스팅",
+    "selfHostTagline": "완전한 통제, 내 서버, 내 데이터.",
+    "selfHostFeature1": "모든 도구 — 읽기 및 쓰기",
+    "selfHostFeature2": "일일 제한 없음",
+    "selfHostFeature3": "데이터가 서버를 벗어나지 않습니다",
+    "selfHostFeature4": "Docker Compose + .env, 약 10분이면 설정 완료",
+    "selfHostCta": "GitHub에서 보기",
+    "footnote": "트래킹 없음. 광고 없음. 한 명이 여가 시간에 운영하고 있으니 이슈와 PR에는 너그러이 기다려 주시기 바랍니다."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "보안과 프라이버시에 관한 자주 묻는 질문",
+    "safeQ": "Telegram을 연결해도 안전한가요?",
+    "safeA": "예. 호스팅 버전은 엄격히 읽기 전용이며 메시지를 보내거나 편집·삭제할 수 없습니다. 사용자의 계정은 Telegram Web이나 Desktop에 로그인할 때와 동일한 방식으로 사용됩니다. Telegram의 \"기기\" 설정에서 언제든지 연결을 해제할 수 있습니다.",
+    "readQ": "서버에서 제 메시지를 읽을 수 있나요?",
+    "readAStart": "사용자의 메시지를 저장하지 않습니다. 각 도구 호출은 Telegram API에서 직접 데이터를 가져와 AI 어시스턴트에 반환합니다. Telegram 세션 키는 요청 간에 커넥터가 계속 작동할 수 있도록 서버에 저장되며, 세션이 종료될 때 삭제됩니다(정확한 시점은 다음 답변을 참조하세요). 저장에 관한 세부 사항과 하드닝 가이드는",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": "에 있습니다.",
+    "protocolQ": "Bot API 없이 어떻게 연결되나요?",
+    "protocolA": "MTProto를 사용합니다 — Telegram의 공식 앱이 사용하는 것과 동일한 프로토콜입니다. 새 기기를 연결할 때처럼 QR 코드로 인증합니다. Telegram의 관점에서는 또 하나의 로그인된 클라이언트일 뿐입니다.",
+    "disconnectQ": "연결을 해제하면 어떻게 되나요?",
+    "disconnectA": "Claude.ai나 ChatGPT에서 커넥터를 명시적으로 제거하면, 서버는 Telegram 세션을 로그아웃하고 세션 키를 즉시 삭제합니다. 권한 회수 없이 AI 앱을 그냥 닫으면, 메모리상의 클라이언트는 즉시 폐기되고 저장된 세션 키는 매끄러운 재개를 위해 잠시 보관됩니다. 짧은 유휴 시간(몇 분) 안에 다시 연결하지 않으면, 서버는 자동으로 로그아웃하고 키를 삭제합니다. Telegram → 설정 → 기기에서 언제든지 강제로 권한을 회수할 수도 있습니다.",
+    "chatgptQ": "ChatGPT에서도 작동하나요?",
+    "chatgptAStart": "예. ChatGPT 설정 → Apps(Developer Mode)에서 앱으로 추가하세요. URL은 다음을 사용합니다:",
+    "chatgptAEnd": "OAuth 인증을 사용합니다. Plus, Pro, Team, Enterprise 요금제에서 작동합니다.",
+    "openSourceQ": "소스 코드가 공개되어 있나요?",
+    "openSourceAStart": "서버는 완전히 오픈소스이며(MIT 라이선스), 위치는",
+    "openSourceAEnd": "입니다. 읽기+쓰기 전체 권한으로 무료로 셀프 호스팅할 수 있습니다.",
+    "botQ": "서비스 업데이트는 어떻게 알 수 있나요?",
+    "botAStart": "다음을 구독하세요:",
+    "botAEnd": "서비스 상태, 호환성 변경, 새 릴리스 알림을 받을 수 있습니다. 구독 해지는 언제든 /stop을 보내면 됩니다."
+  },
+  "footer": {
+    "mit": "MIT 라이선스",
+    "privacy": "개인정보",
+    "terms": "이용약관",
+    "tagline": "Claude AI와 ChatGPT를 위한 읽기 전용 Telegram 액세스."
+  },
+  "language": {
+    "switcherLabel": "언어",
+    "helpTranslate": "번역 돕기"
+  },
+  "common": {
+    "translationOutdated": "이 번역은 오래된 것일 수 있습니다.",
+    "machineTranslated": "기계 번역됨 — 이 번역을 개선해 주세요",
+    "fallbackToEnglish": "이 페이지는 아직 번역되지 않았습니다. 영어로 표시됩니다."
+  },
+  "privacy": {
+    "title": "개인정보 처리방침",
+    "lastUpdated": "최종 업데이트"
+  },
+  "terms": {
+    "title": "이용약관",
+    "lastUpdated": "최종 업데이트"
+  },
+  "examplesPage": {
+    "metaTitle": "예시 — 사람들이 Telegram에 관해 Claude AI와 ChatGPT에 묻는 것",
+    "metaDescription": "Claude AI와 ChatGPT로 Telegram 대화방을 읽기 위한 즉시 사용 가능한 12개 프롬프트: 아침 브리핑, 메시지 찾기, 데이터 추출, 사람 찾기 등.",
+    "heading": "실전 예시",
+    "subheading": "그대로 붙여 쓸 수 있는 12개의 프롬프트입니다. 각 프롬프트는 빠른 시작으로 Telegram을 연결한 후 바로 작동합니다.",
+    "categoryLabel": "카테고리",
+    "cat_briefing": "브리핑",
+    "cat_search": "검색",
+    "cat_analytics": "분석",
+    "cat_extract": "추출",
+    "cat_people": "사람",
+    "cat_media": "미디어",
+    "tryThis": "이 프롬프트 시도하기",
+    "items": {
+      "morning": {
+        "title": "아침 브리핑",
+        "description": "안 읽은 대화의 일일 요약. 긴급 항목을 맨 위로 가져옵니다.",
+        "prompt": "지난 12시간 동안의 안 읽은 Telegram 메시지를 요약해 주세요. 대화방별로 묶고, \"긴급\", \"마감\", 또는 향후 48시간 내의 날짜를 언급한 내용을 강조하며, 저에게 직접 향한 모든 질문을 나열해 주세요.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "분주한 채널의 주간 다이제스트",
+        "description": "수백 개의 게시물을 스크롤하지 않고도 소란스러운 채널의 흐름을 따라잡습니다.",
+        "prompt": "제 \"AI News\" Telegram 채널의 지난 7일간의 메시지를 살펴봐 주세요. 가장 많이 논의된 주제 5가지를 글머리표로 정리하고, 각 주제마다 대표 링크 한 개를 함께 제시해 주세요.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "그 마감일 메시지 찾기",
+        "description": "정확한 단어를 기억하지 못해도 특정 과거 메시지를 찾아냅니다.",
+        "prompt": "우리 업무 대화방에서 누군가가 프로젝트 마감일을 언급한 메시지를 찾아 주세요. 날짜, 보낸 사람, 그리고 앞뒤 2개의 컨텍스트 메시지를 보여 주세요.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "공유된 문서 찾기",
+        "description": "특정 기간 동안 대화방에서 공유된 모든 파일을 나열합니다.",
+        "prompt": "지난 30일 동안 \"Design Team\" Telegram 대화방에서 공유된 모든 PDF 및 DOCX 첨부 파일을 최신순으로, 파일명과 보낸 사람과 함께 보여 주세요.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "이번 주 공유된 모든 링크",
+        "description": "커뮤니티에서 공유한 링크로 독서 목록을 만듭니다.",
+        "prompt": "\"Reading Group\" Telegram 채널에서 이번 주에 공유된 모든 URL을 나열해 주세요. 중복을 제거하고 도메인별로 묶으며, 각 메시지의 타임스탬프를 추가해 주세요.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "액션 아이템 추출",
+        "description": "비공식적인 대화 스레드를 TODO 목록으로 변환합니다.",
+        "prompt": "제 팀 대화방의 마지막 50개 메시지를 읽고 모든 액션 아이템을 추출해 주세요. 각 액션마다 담당자, 언급된 경우 마감일, 그리고 한 줄 설명을 포함해 주세요.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "가장 활발한 커뮤니티 멤버",
+        "description": "커뮤니티 그룹에서 도움을 주는 사람과 리더 격 멤버를 찾아냅니다.",
+        "prompt": "우리 커뮤니티 Telegram 그룹에서 지난 30일간 가장 활발한 상위 10명의 멤버를 나열해 주세요. 각 멤버에 대해 보낸 메시지 수와 대표적인 최근 메시지 하나를 보여 주세요.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "누가 나를 언급했는가",
+        "description": "당신에게 직접 향한 메시지를 찾습니다.",
+        "prompt": "지난 7일 동안 누군가가 @username으로 저를 언급했거나 제 메시지 중 하나에 직접 답장한 모든 메시지를 보여 주세요. 대화방별로 묶어 주세요.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "시간에 따른 대화방 활동",
+        "description": "대화방이 분주할 때와 조용할 때를 한눈에 확인합니다.",
+        "prompt": "제 \"Engineering Team\" 대화방의 지난 14일 동안 일자별 메시지 수를 보여 주세요. 비정상적으로 급증하거나 조용했던 날을 알려 주세요.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "대화방별 안 읽은 메시지",
+        "description": "프롬프트 하나로 받은편지함을 분류합니다.",
+        "prompt": "현재 안 읽은 메시지가 있는 모든 Telegram 대화방을 안 읽은 수 내림차순으로 나열해 주세요. 각 대화방마다 이름과 처음 3개의 안 읽은 메시지를 보여 주세요.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "최근 가족 사진",
+        "description": "최근에 공유된 사진을 가져와 인라인으로 봅니다.",
+        "prompt": "지난 3일 동안 \"Family\" Telegram 대화방에서 보낸 사진을 보여 주세요. 각 사진의 날짜와 보낸 사람과 함께 인라인으로 표시해 주세요.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "음성 메시지 텍스트 변환",
+        "description": "긴 음성 메모를 텍스트로 읽어 빠르게 훑어봅니다.",
+        "prompt": "이번 주 제 \"Coworking\" 그룹 대화방에 전송된 모든 음성 메시지를 찾아 주세요. 각각을 받아쓰고, 보낸 사람과 타임스탬프를 포함한 시간순 목록으로 제시해 주세요.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "빠른 시작 — Telegram을 Claude AI 또는 ChatGPT에 연결",
+    "metaDescription": "Telegram 계정을 Claude AI 또는 ChatGPT에 30초 만에 연결하는 단계별 가이드. QR 코드 로그인, API 키 불필요.",
+    "heading": "빠른 시작",
+    "subheading": "Telegram 연결은 1분 이내에 끝납니다. 아래에서 AI 어시스턴트를 선택하세요.",
+    "tabClaudeTitle": "Claude AI용",
+    "tabClaudeDesc": "claude.ai에 커넥터 추가 · 5단계 · 약 30초",
+    "tabClaudeCta": "Claude 가이드 열기",
+    "tabChatGPTTitle": "ChatGPT용",
+    "tabChatGPTDesc": "ChatGPT에 앱으로 추가 · 3단계 · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "ChatGPT 가이드 열기",
+    "needAccount": "휴대폰에 Telegram 계정이 있고, QR 로그인 옵션을 사용할 수 있는 비교적 최신 Telegram 클라이언트가 필요합니다.",
+    "claudeMetaTitle": "Claude AI 빠른 시작 — Telegram 연결",
+    "claudeMetaDescription": "Connectors 메뉴를 통해 5단계로 Telegram을 Claude.ai에 연결합니다. 메시지 읽기, 대화방 검색, 연락처 가져오기.",
+    "claudeHeading": "Telegram을 Claude AI에 연결",
+    "claudeIntro": "다섯 단계. 약 30초. API 키 불필요.",
+    "claudeStep1Title": "Claude.ai 설정 열기",
+    "claudeStep1Desc": "claude.ai에 로그인하고 Settings을 엽니다. Free, Pro, Max, Team 요금제 모두 커넥터를 지원합니다.",
+    "claudeStep2Title": "Connectors로 이동",
+    "claudeStep2Desc": "Settings에서 Connectors 섹션을 찾아 \"Add custom connector\"를 클릭합니다.",
+    "claudeStep3Title": "MCP URL 붙여넣기",
+    "claudeStep3Desc": "커넥터 대화창에 아래 URL을 입력하고 Connect를 클릭합니다.",
+    "claudeStep4Title": "OAuth 승인 + QR 스캔",
+    "claudeStep4Desc": "Claude.ai가 OAuth 동의 화면으로 리디렉션합니다. Approve를 클릭하면 QR 코드가 나타납니다. Telegram → 설정 → 기기 → 데스크톱 기기 연결 → QR을 스캔하세요.",
+    "claudeStep5Title": "질문 시작",
+    "claudeStep5Desc": "Claude.ai가 다시 돌아오고, 녹색 \"Connected\" 상태가 표시됩니다. 대화방을 읽어 보라고 요청해 보세요: \"안 읽은 메시지를 요약해 줘\"가 첫 프롬프트로 좋습니다.",
+    "claudeTroubleshootHeading": "문제 해결",
+    "claudeTroubleshootQRTitle": "QR 코드가 만료됐거나 스캔되지 않음",
+    "claudeTroubleshootQRDesc": "QR 코드는 약 30초 동안 유효합니다. 커넥터 대화창을 새로 고치고 다시 시도하세요. 스캔하는 동안 휴대폰이 인터넷에 연결되어 있는지 확인하세요.",
+    "claudeTroubleshootDisconnectedTitle": "커넥터에 \"disconnected\"라고 표시됨",
+    "claudeTroubleshootDisconnectedDesc": "Claude.ai에서 커넥터를 열고 Reconnect를 클릭하면 새 QR을 받게 됩니다. 세션은 Telegram → 설정 → 기기에서도 해지할 수 있습니다.",
+    "claudeTroubleshootChatsTitle": "빈 대화방 목록",
+    "claudeTroubleshootChatsDesc": "Claude가 대화방이 없다고 한다면, Telegram 세션의 재활성화가 필요할 수 있습니다. claude.ai → Settings → Connectors에서 연결을 해제했다가 다시 연결하세요.",
+    "chatgptMetaTitle": "ChatGPT 빠른 시작 — Telegram 연결",
+    "chatgptMetaDescription": "Apps Directory를 통해 3단계로 Telegram을 ChatGPT에 연결합니다. Plus, Pro, Team, Enterprise 요금제를 지원합니다.",
+    "chatgptHeading": "Telegram을 ChatGPT에 연결",
+    "chatgptIntro": "세 단계. ChatGPT Plus, Pro, Team 또는 Enterprise가 필요합니다(Apps 기능).",
+    "chatgptStep1Title": "Developer Mode 활성화",
+    "chatgptStep1Desc": "ChatGPT Settings → Connectors → Advanced에서 Developer Mode를 켭니다. 이렇게 하면 커스텀 MCP 앱을 추가할 수 있습니다.",
+    "chatgptStep2Title": "앱 URL 추가",
+    "chatgptStep2Desc": "Settings → Connectors → Create에서 I trust this application을 선택하고 아래 URL을 붙여 넣은 다음 Create를 클릭합니다.",
+    "chatgptStep3Title": "OAuth + QR 스캔",
+    "chatgptStep3Desc": "ChatGPT가 OAuth 화면으로 리디렉션합니다. 승인한 다음 Telegram → 설정 → 기기 → 데스크톱 기기 연결로 QR을 스캔합니다. ChatGPT가 다시 돌아오면 앱 사용 준비가 끝납니다.",
+    "chatgptTroubleshootHeading": "문제 해결",
+    "chatgptTroubleshootDoubleQRTitle": "QR 코드가 두 개 나타남",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT는 첫 연결 시 두 개의 OAuth 플로우를 동시에 여는 경우가 있습니다. 둘 중 어느 QR이든 스캔하세요 — 두 번째 플로우는 자동으로 첫 번째 세션으로 리디렉션됩니다. 중복된 탭은 닫아도 됩니다.",
+    "chatgptTroubleshootLinkNotFoundTitle": "재시작 후 \"Link not found\"",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT는 서버 재시작 후 자동으로 다시 연결하지 않습니다. SSE 스트림을 다시 설정하려면 ChatGPT Settings → Apps에서 앱의 연결을 해제했다가 다시 연결하세요.",
+    "urlLabel": "커넥터 URL",
+    "copyLabel": "복사",
+    "copiedLabel": "복사됨!",
+    "backToOverview": "빠른 시작으로 돌아가기"
+  }
+}

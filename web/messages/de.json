@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Ihr Telegram in Claude AI & ChatGPT",
+    "siteDescription": "Verbinden Sie Ihr Telegram mit Claude AI oder ChatGPT. Nachrichten lesen, Chats durchsuchen, Kontakte abrufen — alles direkt aus der KI mit einem Klick."
+  },
+  "nav": {
+    "features": "Funktionen",
+    "howItWorks": "So funktioniert es",
+    "choice": "Gehostet oder selbst betrieben",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "Schnellstart",
+    "examples": "Beispiele"
+  },
+  "hero": {
+    "titleStart": "Ihr Telegram in",
+    "titleClaude": "Claude AI",
+    "titleAnd": "&",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Lesen Sie Nachrichten, durchsuchen Sie Chats, verfolgen Sie Kontakte und laden Sie Medien herunter — alles direkt aus Claude.ai oder ChatGPT. Verbindung in 30 Sekunden per QR-Code.",
+    "ctaPrimary": "Telegram verbinden",
+    "ctaSecondary": "Selbst hosten",
+    "ctaQuickstart": "In 30 Sekunden loslegen"
+  },
+  "features": {
+    "heading": "Was Sie tun können",
+    "subheading": "Schreibgeschützte Werkzeuge — sicher, privat, keine Nachrichten in Ihrem Namen",
+    "readMessagesTitle": "Nachrichten lesen",
+    "readMessagesDesc": "Nachrichten aus jedem Chat mit Datumsfilter und Seitennavigation durchstöbern",
+    "searchTitle": "Alles durchsuchen",
+    "searchDesc": "Volltextsuche über Chats, Nachrichten, Kontakte und Kanäle",
+    "analyticsTitle": "Chat-Analytics",
+    "analyticsDesc": "Chat-Informationen, Mitgliederlisten, Anzahl ungelesener Nachrichten und detaillierte Metadaten abrufen",
+    "mediaTitle": "Medien ansehen",
+    "mediaDesc": "Fotos herunterladen und direkt in KI-Konversationen anzeigen",
+    "contactsTitle": "Kontakte & Mitglieder",
+    "contactsDesc": "Zugriff auf Ihre Kontaktliste und auf Mitgliederlisten von Gruppen und Kanälen",
+    "secureTitle": "Schreibgeschützt & sicher",
+    "secureDesc": "Kann keine Nachrichten senden, bearbeiten oder löschen. Ihr Konto bleibt sicher"
+  },
+  "examples": {
+    "heading": "Was die Leute fragen",
+    "subheading": "Echte Prompts, die Sie direkt nach dem Verbinden nutzen können",
+    "morningTitle": "Morgendliches Briefing",
+    "morningPrompt": "Fasse meine ungelesenen Nachrichten zusammen und hebe alles Dringende hervor",
+    "findTitle": "Alles finden",
+    "findPrompt": "Finde Nachrichten zum Projekttermin in unserem Arbeitschat",
+    "extractTitle": "Daten extrahieren",
+    "extractPrompt": "Liste alle Links auf, die diese Woche im Design-Kanal geteilt wurden",
+    "peopleTitle": "Personen finden",
+    "peoplePrompt": "Wer sind die aktivsten Mitglieder in unserer Community-Gruppe?",
+    "overviewTitle": "Chat-Übersicht",
+    "overviewPrompt": "Gib mir eine Zusammenfassung dessen, was heute im Teamchat passiert ist",
+    "mediaTitle": "Medien durchsehen",
+    "mediaPrompt": "Zeige mir die Fotos, die gestern im Familienchat gesendet wurden",
+    "ctaSeeAll": "Alle Beispiele ansehen"
+  },
+  "howItWorks": {
+    "heading": "So funktioniert es",
+    "subheading": "Drei Schritte, 30 Sekunden, keine API-Schlüssel nötig",
+    "step1Title": "Connector hinzufügen",
+    "step1Desc": "Klicken Sie in Claude.ai auf \"Connect\" oder fügen Sie es in ChatGPT als App hinzu",
+    "step2Title": "QR-Code scannen",
+    "step2Desc": "Öffnen Sie Telegram → Einstellungen → Geräte → Desktop-Gerät verknüpfen → Scannen",
+    "step3Title": "Loslegen mit Fragen",
+    "step3Desc": "Bitten Sie die KI, Ihre Chats zu lesen, Nachrichten zu durchsuchen oder Unterhaltungen zusammenzufassen",
+    "ctaFullGuide": "Die vollständige Anleitung lesen"
+  },
+  "choice": {
+    "heading": "Gehostet oder selbst betrieben",
+    "subheading": "Open Source unter MIT-Lizenz. Nutzen Sie die gehostete Instanz oder betreiben Sie Ihre eigene.",
+    "hostedTitle": "Gehostet",
+    "hostedTagline": "Verbindung mit einem Klick, gepflegt vom Projekt.",
+    "hostedFeature1": "Login per QR-Code — keine API-Schlüssel zu verwalten",
+    "hostedFeature2": "Schreibgeschütztes Tool-Set, sicher per Design",
+    "hostedFeature3": "Tägliches Fair-Use-Limit, um den Dienst stabil zu halten",
+    "hostedFeature4": "Statusmeldungen zum Dienst über einen Telegram-Bot",
+    "hostedCta": "Jetzt verbinden",
+    "selfHostTitle": "Selbst hosten",
+    "selfHostTagline": "Volle Kontrolle, Ihr Rechner, Ihre Daten.",
+    "selfHostFeature1": "Alle Tools — Lesen und Schreiben",
+    "selfHostFeature2": "Keine täglichen Limits",
+    "selfHostFeature3": "Ihre Daten verlassen Ihren Server nie",
+    "selfHostFeature4": "Docker Compose + .env, etwa 10 Minuten Einrichtung",
+    "selfHostCta": "Auf GitHub ansehen",
+    "footnote": "Kein Tracking. Keine Werbung. Wird in der Freizeit von einer einzelnen Person gepflegt — bitte haben Sie Geduld mit Issues und PRs."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "Häufige Fragen zu Sicherheit und Datenschutz",
+    "safeQ": "Ist es sicher, mein Telegram zu verbinden?",
+    "safeA": "Ja. Die gehostete Version ist strikt schreibgeschützt — sie kann keine Nachrichten senden, bearbeiten oder löschen. Ihr Konto wird genauso verwendet wie beim Anmelden in Telegram Web oder Desktop. Sie können sich jederzeit über die \"Geräte\"-Einstellungen in Telegram trennen.",
+    "readQ": "Können Sie meine Nachrichten auf dem Server lesen?",
+    "readAStart": "Wir speichern Ihre Nachrichten nicht. Jeder Tool-Aufruf holt die Daten direkt aus der Telegram-API und gibt sie an den KI-Assistenten zurück. Ihr Telegram-Sitzungsschlüssel wird auf unserem Server gespeichert, damit der Connector zwischen Anfragen weiter funktioniert, und wird gelöscht, sobald Ihre Sitzung endet (genaue Zeitvorgaben siehe nächste Antwort). Details zur Speicherung und Hinweise zur Härtung finden Sie in unserer",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": ".",
+    "protocolQ": "Wie verbindet es sich ohne die Bot-API?",
+    "protocolA": "Es nutzt MTProto — dasselbe Protokoll, das auch die offiziellen Telegram-Apps verwenden. Sie authentifizieren sich per QR-Code, genau wie beim Verknüpfen eines neuen Geräts. Aus Sicht von Telegram ist es einfach ein weiterer angemeldeter Client.",
+    "disconnectQ": "Was passiert, wenn ich die Verbindung trenne?",
+    "disconnectA": "Wenn Sie den Connector in Claude.ai oder ChatGPT explizit entfernen, meldet der Server die Telegram-Sitzung ab und löscht den Sitzungsschlüssel sofort. Wenn Sie die KI-App einfach schließen, ohne zu widerrufen, wird der In-Memory-Client sofort verworfen und der gespeicherte Sitzungsschlüssel kurz aufbewahrt, damit Sie nahtlos fortfahren können; verbinden Sie sich nicht innerhalb eines kurzen Inaktivitätsfensters (wenige Minuten) wieder, meldet sich der Server automatisch ab und löscht den Schlüssel. Sie können einen vollständigen Widerruf außerdem jederzeit über Telegram → Einstellungen → Geräte erzwingen.",
+    "chatgptQ": "Funktioniert es mit ChatGPT?",
+    "chatgptAStart": "Ja. Fügen Sie es in ChatGPT unter Settings → Apps (Developer Mode) als App hinzu. Verwenden Sie die URL",
+    "chatgptAEnd": "mit OAuth-Authentifizierung. Funktioniert in den Plus-, Pro-, Team- und Enterprise-Plänen.",
+    "openSourceQ": "Ist der Quellcode offen?",
+    "openSourceAStart": "Der Server ist vollständig Open Source (MIT-Lizenz) auf",
+    "openSourceAEnd": ". Sie können ihn kostenlos selbst hosten — mit vollem Lese- und Schreibzugriff.",
+    "botQ": "Wie erfahre ich von Dienst-Updates?",
+    "botAStart": "Abonnieren Sie",
+    "botAEnd": "um über Dienststatus, Breaking Changes und neue Releases informiert zu werden. Senden Sie jederzeit /stop, um sich abzumelden."
+  },
+  "footer": {
+    "mit": "MIT-Lizenz",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen",
+    "tagline": "Schreibgeschützter Telegram-Zugriff für Claude AI & ChatGPT."
+  },
+  "language": {
+    "switcherLabel": "Sprache",
+    "helpTranslate": "Bei der Übersetzung helfen"
+  },
+  "common": {
+    "translationOutdated": "Diese Übersetzung ist möglicherweise veraltet.",
+    "machineTranslated": "Maschinell übersetzt — verbessern Sie diese Übersetzung",
+    "fallbackToEnglish": "Diese Seite ist noch nicht übersetzt. Die englische Version wird angezeigt."
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "lastUpdated": "Zuletzt aktualisiert"
+  },
+  "terms": {
+    "title": "Nutzungsbedingungen",
+    "lastUpdated": "Zuletzt aktualisiert"
+  },
+  "examplesPage": {
+    "metaTitle": "Beispiele — Was Leute Claude AI & ChatGPT zu Telegram fragen",
+    "metaDescription": "12 sofort einsetzbare Prompts für Claude AI und ChatGPT, um Ihre Telegram-Chats zu lesen: Morgen-Briefings, Nachrichten finden, Daten extrahieren, Personen suchen und mehr.",
+    "heading": "Beispiele aus der Praxis",
+    "subheading": "Zwölf einsatzbereite Prompts zum Einfügen. Jeder funktioniert, sobald Sie Telegram über den Schnellstart verbunden haben.",
+    "categoryLabel": "Kategorie",
+    "cat_briefing": "Briefing",
+    "cat_search": "Suche",
+    "cat_analytics": "Analytics",
+    "cat_extract": "Extraktion",
+    "cat_people": "Personen",
+    "cat_media": "Medien",
+    "tryThis": "Diesen Prompt ausprobieren",
+    "items": {
+      "morning": {
+        "title": "Morgendliches Briefing",
+        "description": "Eine tägliche Zusammenfassung ungelesener Chats, mit dringenden Punkten ganz oben.",
+        "prompt": "Fasse meine ungelesenen Telegram-Nachrichten der letzten 12 Stunden zusammen. Gruppiere sie nach Chat, hebe alles hervor, was \"dringend\", \"Frist\" oder ein Datum innerhalb der nächsten 48 Stunden enthält, und liste alle direkten Fragen an mich auf.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Wochen-Digest aus einem aktiven Kanal",
+        "description": "Holen Sie verpasste Inhalte aus einem lauten Kanal nach, ohne hunderte Beiträge zu durchblättern.",
+        "prompt": "Schau dir die Nachrichten der letzten 7 Tage in meinem Telegram-Kanal \"AI News\" an. Gib mir 5 Stichpunkte mit den meistdiskutierten Themen und je einem Beispiel-Link pro Thema.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Die Nachricht zur Deadline finden",
+        "description": "Eine bestimmte vergangene Nachricht finden, ohne den genauen Wortlaut zu erinnern.",
+        "prompt": "Finde in unserem Arbeitschat die Nachricht, in der jemand die Projektdeadline erwähnt hat. Zeige mir das Datum, den Absender und je 2 Nachrichten Kontext davor und danach.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Geteilte Dokumente finden",
+        "description": "Jede Datei auflisten, die in einem bestimmten Zeitraum in einem Chat geteilt wurde.",
+        "prompt": "Zeige mir alle PDF- und DOCX-Anhänge, die in den letzten 30 Tagen im Telegram-Chat \"Design Team\" geteilt wurden, sortiert nach neuesten zuerst, mit Dateiname und Absender.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "Alle in dieser Woche geteilten Links",
+        "description": "Bauen Sie sich aus den Links Ihrer Community eine Leseliste.",
+        "prompt": "Liste jede URL auf, die diese Woche im Telegram-Kanal \"Reading Group\" geteilt wurde. Entferne Duplikate, gruppiere nach Domain und füge für jede den Zeitstempel der Nachricht hinzu.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Aufgaben extrahieren",
+        "description": "Verwandeln Sie einen informellen Chatverlauf in eine TODO-Liste.",
+        "prompt": "Lies die letzten 50 Nachrichten in meinem Teamchat und extrahiere alle Aufgaben. Gib für jede Aufgabe den Verantwortlichen, gegebenenfalls die Frist und eine einzeilige Beschreibung an.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "Aktivste Community-Mitglieder",
+        "description": "Erkennen Sie Helfer und Wortführer in einer Community-Gruppe.",
+        "prompt": "Liste in unserer Telegram-Community-Gruppe die 10 aktivsten Mitglieder der letzten 30 Tage auf. Zeige für jedes Mitglied an, wie viele Nachrichten es gesendet hat, und gib eine repräsentative aktuelle Nachricht an.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Wer hat mich erwähnt",
+        "description": "Finden Sie Nachrichten, die direkt an Sie gerichtet waren.",
+        "prompt": "Zeige mir alle Nachrichten der letzten 7 Tage, in denen mich jemand per @username erwähnt oder direkt auf eine meiner Nachrichten geantwortet hat. Gruppiere nach Chat.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Chat-Aktivität im Zeitverlauf",
+        "description": "Erkennen Sie, wann ein Chat ruhig oder lebhaft ist.",
+        "prompt": "Zeige für meinen Chat \"Engineering Team\" die Anzahl der Nachrichten pro Tag in den letzten 14 Tagen. Sage mir, welche Tage ungewöhnliche Spitzen oder Funkstille hatten.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Ungelesene pro Chat",
+        "description": "Sortieren Sie Ihren Posteingang mit einem einzigen Prompt.",
+        "prompt": "Liste alle meine Telegram-Chats auf, die im Moment ungelesene Nachrichten haben, absteigend sortiert nach Anzahl der ungelesenen Nachrichten. Zeige für jeden Chat den Namen und die ersten 3 ungelesenen Nachrichten.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Aktuelle Familienfotos",
+        "description": "Holen Sie kürzlich geteilte Fotos heran und sehen Sie sie direkt im Chat.",
+        "prompt": "Zeige mir die Fotos, die in den letzten 3 Tagen im Telegram-Chat \"Family\" gesendet wurden. Zeige sie direkt mit Datum und Absender pro Foto an.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Transkripte von Sprachnachrichten",
+        "description": "Überfliegen Sie lange Sprachnachrichten, indem Sie sie als Text lesen.",
+        "prompt": "Finde alle Sprachnachrichten, die diese Woche in meinem Gruppen-Chat \"Coworking\" gesendet wurden. Transkribiere jede einzelne und präsentiere sie als chronologische Liste mit Absender und Zeitstempel.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Schnellstart — Telegram mit Claude AI oder ChatGPT verbinden",
+    "metaDescription": "Schritt-für-Schritt-Anleitung, um Ihr Telegram-Konto in 30 Sekunden mit Claude AI oder ChatGPT zu verbinden. Login per QR-Code, keine API-Schlüssel.",
+    "heading": "Schnellstart",
+    "subheading": "Verbinden Sie Ihr Telegram in unter einer Minute. Wählen Sie unten Ihren KI-Assistenten.",
+    "tabClaudeTitle": "Für Claude AI",
+    "tabClaudeDesc": "Connector in claude.ai hinzufügen · 5 Schritte · ~30 Sekunden",
+    "tabClaudeCta": "Claude-Anleitung öffnen",
+    "tabChatGPTTitle": "Für ChatGPT",
+    "tabChatGPTDesc": "Als App in ChatGPT hinzufügen · 3 Schritte · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "ChatGPT-Anleitung öffnen",
+    "needAccount": "Sie benötigen ein Telegram-Konto auf Ihrem Telefon mit einem aktuellen Telegram-Client (damit die QR-Login-Option verfügbar ist).",
+    "claudeMetaTitle": "Claude AI Schnellstart — Telegram verbinden",
+    "claudeMetaDescription": "Verbinden Sie Telegram in 5 Schritten über das Connectors-Menü mit Claude.ai. Nachrichten lesen, Chats durchsuchen, Kontakte abrufen.",
+    "claudeHeading": "Telegram mit Claude AI verbinden",
+    "claudeIntro": "Fünf Schritte. Etwa dreißig Sekunden. Keine API-Schlüssel.",
+    "claudeStep1Title": "Claude.ai-Einstellungen öffnen",
+    "claudeStep1Desc": "Melden Sie sich bei claude.ai an und öffnen Sie Settings. Die Pläne Free, Pro, Max und Team unterstützen alle Connectors.",
+    "claudeStep2Title": "Zu Connectors gehen",
+    "claudeStep2Desc": "Suchen Sie in Settings den Bereich Connectors und klicken Sie auf \"Add custom connector\".",
+    "claudeStep3Title": "MCP-URL einfügen",
+    "claudeStep3Desc": "Tragen Sie die untenstehende URL im Connector-Dialog ein und klicken Sie auf Connect.",
+    "claudeStep4Title": "OAuth genehmigen + QR scannen",
+    "claudeStep4Desc": "Claude.ai leitet Sie auf unseren OAuth-Zustimmungs-Bildschirm weiter. Klicken Sie auf Approve, dann erscheint ein QR-Code. Öffnen Sie Telegram → Einstellungen → Geräte → Desktop-Gerät verknüpfen → scannen Sie den QR.",
+    "claudeStep5Title": "Loslegen mit Fragen",
+    "claudeStep5Desc": "Claude.ai leitet Sie zurück; Sie sehen einen grünen Status \"Connected\". Bitten Sie es, Ihre Chats zu lesen: \"Fasse meine ungelesenen Nachrichten zusammen\" funktioniert gut als erster Prompt.",
+    "claudeTroubleshootHeading": "Fehlerbehebung",
+    "claudeTroubleshootQRTitle": "QR-Code abgelaufen oder nicht gescannt",
+    "claudeTroubleshootQRDesc": "QR-Codes sind ungefähr 30 Sekunden gültig. Aktualisieren Sie den Connector-Dialog und versuchen Sie es erneut. Achten Sie darauf, dass Ihr Telefon beim Scannen Internetzugang hat.",
+    "claudeTroubleshootDisconnectedTitle": "Connector zeigt \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "Öffnen Sie den Connector in Claude.ai und klicken Sie auf Reconnect — Sie erhalten einen neuen QR. Sitzungen können auch über Telegram → Einstellungen → Geräte widerrufen werden.",
+    "claudeTroubleshootChatsTitle": "Leere Chat-Liste",
+    "claudeTroubleshootChatsDesc": "Wenn Claude sagt, Sie hätten keine Chats, muss Ihre Telegram-Sitzung wahrscheinlich reaktiviert werden. Trennen Sie die Verbindung und verbinden Sie sich erneut über claude.ai → Settings → Connectors.",
+    "chatgptMetaTitle": "ChatGPT Schnellstart — Telegram verbinden",
+    "chatgptMetaDescription": "Verbinden Sie Telegram in 3 Schritten über das Apps Directory mit ChatGPT. Plus-, Pro-, Team- und Enterprise-Pläne werden unterstützt.",
+    "chatgptHeading": "Telegram mit ChatGPT verbinden",
+    "chatgptIntro": "Drei Schritte. ChatGPT Plus, Pro, Team oder Enterprise erforderlich (Apps-Funktion).",
+    "chatgptStep1Title": "Developer Mode aktivieren",
+    "chatgptStep1Desc": "Aktivieren Sie in ChatGPT Settings → Connectors → Advanced den Developer Mode. Dadurch können Sie eigene MCP-Apps hinzufügen.",
+    "chatgptStep2Title": "App-URL hinzufügen",
+    "chatgptStep2Desc": "Wählen Sie unter Settings → Connectors → Create die Option I trust this application, fügen Sie die untenstehende URL ein und klicken Sie auf Create.",
+    "chatgptStep3Title": "OAuth + QR-Scan",
+    "chatgptStep3Desc": "ChatGPT leitet Sie auf unseren OAuth-Bildschirm weiter. Bestätigen Sie und scannen Sie dann den QR mit Telegram → Einstellungen → Geräte → Desktop-Gerät verknüpfen. ChatGPT leitet Sie zurück und die App ist einsatzbereit.",
+    "chatgptTroubleshootHeading": "Fehlerbehebung",
+    "chatgptTroubleshootDoubleQRTitle": "Zwei QR-Codes erschienen",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT öffnet beim ersten Verbinden manchmal zwei parallele OAuth-Flows. Scannen Sie einen der beiden QR-Codes — der zweite Flow leitet automatisch auf die erste Sitzung um. Den doppelten Tab können Sie bedenkenlos schließen.",
+    "chatgptTroubleshootLinkNotFoundTitle": "\"Link not found\" nach Neustart",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT verbindet sich nach einem Server-Neustart nicht automatisch wieder. Trennen Sie die App und verbinden Sie sie unter ChatGPT Settings → Apps erneut, um den SSE-Stream wiederherzustellen.",
+    "urlLabel": "Connector-URL",
+    "copyLabel": "Kopieren",
+    "copiedLabel": "Kopiert!",
+    "backToOverview": "Zurück zum Schnellstart"
+  }
+}

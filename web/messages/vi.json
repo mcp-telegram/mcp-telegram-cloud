@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Telegram của bạn trong Claude AI & ChatGPT",
+    "siteDescription": "Kết nối Telegram của bạn với Claude AI hoặc ChatGPT. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, lấy danh bạ — tất cả từ AI chỉ với một cú nhấp chuột."
+  },
+  "nav": {
+    "features": "Tính năng",
+    "howItWorks": "Cách hoạt động",
+    "choice": "Hosted hoặc self-host",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "Bắt đầu nhanh",
+    "examples": "Ví dụ"
+  },
+  "hero": {
+    "titleStart": "Telegram của bạn trong",
+    "titleClaude": "Claude AI",
+    "titleAnd": "&",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Đọc tin nhắn, tìm kiếm cuộc trò chuyện, theo dõi danh bạ và tải xuống phương tiện — tất cả từ Claude.ai hoặc ChatGPT. Kết nối trong 30 giây bằng mã QR.",
+    "ctaPrimary": "Kết nối Telegram",
+    "ctaSecondary": "Self-host",
+    "ctaQuickstart": "Bắt đầu trong 30 giây"
+  },
+  "features": {
+    "heading": "Bạn có thể làm gì",
+    "subheading": "Công cụ chỉ đọc — an toàn, riêng tư, không có tin nhắn nào được gửi thay bạn",
+    "readMessagesTitle": "Đọc tin nhắn",
+    "readMessagesDesc": "Duyệt tin nhắn từ bất kỳ cuộc trò chuyện nào với bộ lọc ngày tháng và phân trang",
+    "searchTitle": "Tìm kiếm mọi thứ",
+    "searchDesc": "Tìm kiếm toàn văn trong các cuộc trò chuyện, tin nhắn, danh bạ và kênh",
+    "analyticsTitle": "Phân tích cuộc trò chuyện",
+    "analyticsDesc": "Lấy thông tin cuộc trò chuyện, danh sách thành viên, số lượng chưa đọc và siêu dữ liệu chi tiết",
+    "mediaTitle": "Xem phương tiện",
+    "mediaDesc": "Tải xuống và xem ảnh trực tiếp trong cuộc trò chuyện với AI",
+    "contactsTitle": "Danh bạ & thành viên",
+    "contactsDesc": "Truy cập danh sách liên hệ và danh sách thành viên nhóm/kênh của bạn",
+    "secureTitle": "Chỉ đọc & an toàn",
+    "secureDesc": "Không thể gửi, chỉnh sửa hoặc xóa tin nhắn. Tài khoản của bạn an toàn"
+  },
+  "examples": {
+    "heading": "Mọi người hỏi gì",
+    "subheading": "Các prompt thực tế bạn có thể sử dụng ngay sau khi kết nối",
+    "morningTitle": "Tóm tắt buổi sáng",
+    "morningPrompt": "Tóm tắt các tin nhắn chưa đọc của tôi và làm nổi bật những gì khẩn cấp",
+    "findTitle": "Tìm bất cứ điều gì",
+    "findPrompt": "Tìm tin nhắn về hạn chót dự án trong cuộc trò chuyện công việc của chúng tôi",
+    "extractTitle": "Trích xuất dữ liệu",
+    "extractPrompt": "Liệt kê tất cả các liên kết được chia sẻ trong kênh thiết kế tuần này",
+    "peopleTitle": "Tra cứu người",
+    "peoplePrompt": "Ai là thành viên tích cực nhất trong nhóm cộng đồng của chúng ta?",
+    "overviewTitle": "Tổng quan cuộc trò chuyện",
+    "overviewPrompt": "Cho tôi bản tóm tắt những gì đã xảy ra trong cuộc trò chuyện nhóm hôm nay",
+    "mediaTitle": "Xem lại phương tiện",
+    "mediaPrompt": "Cho tôi xem các bức ảnh được gửi trong cuộc trò chuyện gia đình hôm qua",
+    "ctaSeeAll": "Xem tất cả ví dụ"
+  },
+  "howItWorks": {
+    "heading": "Cách hoạt động",
+    "subheading": "Ba bước, 30 giây, không cần API key",
+    "step1Title": "Thêm trình kết nối",
+    "step1Desc": "Nhấp \"Connect\" trong Claude.ai hoặc thêm dưới dạng ứng dụng trong ChatGPT",
+    "step2Title": "Quét mã QR",
+    "step2Desc": "Mở Telegram → Cài đặt → Thiết bị → Liên kết Thiết bị Máy tính → Quét",
+    "step3Title": "Bắt đầu đặt câu hỏi",
+    "step3Desc": "Yêu cầu AI đọc cuộc trò chuyện, tìm kiếm tin nhắn hoặc tóm tắt các cuộc trò chuyện",
+    "ctaFullGuide": "Đọc hướng dẫn đầy đủ"
+  },
+  "choice": {
+    "heading": "Hosted hoặc self-host",
+    "subheading": "Mã nguồn mở theo giấy phép MIT. Sử dụng instance hosted, hoặc tự chạy của riêng bạn.",
+    "hostedTitle": "Hosted",
+    "hostedTagline": "Kết nối một cú nhấp, được duy trì bởi dự án.",
+    "hostedFeature1": "Đăng nhập bằng mã QR — không cần quản lý API key",
+    "hostedFeature2": "Bộ công cụ chỉ đọc, an toàn theo thiết kế",
+    "hostedFeature3": "Giới hạn sử dụng hợp lý hàng ngày để giữ dịch vụ ổn định",
+    "hostedFeature4": "Cập nhật trạng thái dịch vụ qua bot Telegram",
+    "hostedCta": "Kết nối ngay",
+    "selfHostTitle": "Self-host",
+    "selfHostTagline": "Toàn quyền kiểm soát, máy của bạn, dữ liệu của bạn.",
+    "selfHostFeature1": "Tất cả công cụ — đọc và ghi",
+    "selfHostFeature2": "Không có giới hạn hàng ngày",
+    "selfHostFeature3": "Dữ liệu của bạn không bao giờ rời khỏi máy chủ của bạn",
+    "selfHostFeature4": "Docker Compose + .env, thiết lập ~10 phút",
+    "selfHostCta": "Xem trên GitHub",
+    "footnote": "Không theo dõi. Không quảng cáo. Được duy trì bởi một người trong thời gian rảnh — vui lòng kiên nhẫn với các issues và PR."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "Câu hỏi thường gặp về bảo mật và quyền riêng tư",
+    "safeQ": "Việc kết nối Telegram của tôi có an toàn không?",
+    "safeA": "Có. Phiên bản hosted là chỉ đọc nghiêm ngặt — không thể gửi, chỉnh sửa hoặc xóa bất kỳ tin nhắn nào. Tài khoản của bạn được sử dụng giống như cách đăng nhập vào Telegram Web hoặc Desktop. Bạn có thể ngắt kết nối bất cứ lúc nào từ cài đặt \"Thiết bị\" của Telegram.",
+    "readQ": "Bạn có thể đọc tin nhắn của tôi trên máy chủ không?",
+    "readAStart": "Chúng tôi không lưu trữ tin nhắn của bạn. Mỗi lần gọi công cụ sẽ lấy dữ liệu trực tiếp từ API của Telegram và trả về cho trợ lý AI. Khóa phiên Telegram của bạn được lưu trữ trên máy chủ của chúng tôi để trình kết nối có thể tiếp tục hoạt động giữa các yêu cầu, và bị xóa khi phiên của bạn kết thúc (xem câu trả lời tiếp theo để biết thời điểm chính xác). Chi tiết lưu trữ và hướng dẫn tăng cường bảo mật có trong",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": " của chúng tôi.",
+    "protocolQ": "Nó kết nối như thế nào mà không cần Bot API?",
+    "protocolA": "Nó sử dụng MTProto — cùng giao thức mà các ứng dụng chính thức của Telegram sử dụng. Bạn xác thực qua mã QR, giống như liên kết một thiết bị mới. Từ góc nhìn của Telegram, đó là một máy khách đã đăng nhập khác.",
+    "disconnectQ": "Điều gì xảy ra khi tôi ngắt kết nối?",
+    "disconnectA": "Nếu bạn xóa rõ ràng trình kết nối trong Claude.ai hoặc ChatGPT, máy chủ sẽ đăng xuất phiên Telegram và xóa khóa phiên ngay lập tức. Nếu bạn chỉ đóng ứng dụng AI mà không thu hồi, máy khách trong bộ nhớ sẽ bị loại bỏ ngay, và khóa phiên được lưu trữ sẽ được giữ trong thời gian ngắn để bạn có thể tiếp tục liền mạch; nếu bạn không kết nối lại trong một khoảng thời gian rảnh ngắn (vài phút), máy chủ sẽ tự động đăng xuất và xóa khóa. Bạn cũng có thể buộc thu hồi hoàn toàn bất cứ lúc nào từ Telegram → Cài đặt → Thiết bị.",
+    "chatgptQ": "Nó có hoạt động với ChatGPT không?",
+    "chatgptAStart": "Có. Thêm nó dưới dạng ứng dụng trong ChatGPT Settings → Apps (Developer Mode). Sử dụng URL",
+    "chatgptAEnd": "với xác thực OAuth. Hoạt động trên các gói Plus, Pro, Team và Enterprise.",
+    "openSourceQ": "Mã nguồn có mở không?",
+    "openSourceAStart": "Máy chủ hoàn toàn mã nguồn mở (giấy phép MIT) tại",
+    "openSourceAEnd": ". Bạn có thể self-host miễn phí với quyền truy cập đọc+ghi đầy đủ.",
+    "botQ": "Làm thế nào để tôi biết về các bản cập nhật dịch vụ?",
+    "botAStart": "Đăng ký theo dõi",
+    "botAEnd": "để được thông báo về trạng thái dịch vụ, thay đổi đột phá và các bản phát hành mới. Gửi /stop bất cứ lúc nào để hủy đăng ký."
+  },
+  "footer": {
+    "mit": "Cấp phép MIT",
+    "privacy": "Quyền riêng tư",
+    "terms": "Điều khoản",
+    "tagline": "Truy cập Telegram chỉ đọc cho Claude AI & ChatGPT."
+  },
+  "language": {
+    "switcherLabel": "Ngôn ngữ",
+    "helpTranslate": "Giúp dịch thuật"
+  },
+  "common": {
+    "translationOutdated": "Bản dịch này có thể đã lỗi thời.",
+    "machineTranslated": "Dịch máy — hãy giúp cải thiện bản dịch này",
+    "fallbackToEnglish": "Trang này chưa được dịch. Hiển thị tiếng Anh."
+  },
+  "privacy": {
+    "title": "Chính sách bảo mật",
+    "lastUpdated": "Cập nhật lần cuối"
+  },
+  "terms": {
+    "title": "Điều khoản dịch vụ",
+    "lastUpdated": "Cập nhật lần cuối"
+  },
+  "examplesPage": {
+    "metaTitle": "Ví dụ — Mọi người hỏi gì với Claude AI & ChatGPT về Telegram",
+    "metaDescription": "12 prompt sẵn sàng sử dụng cho Claude AI và ChatGPT để đọc các cuộc trò chuyện Telegram của bạn: tóm tắt buổi sáng, tìm tin nhắn, trích xuất dữ liệu, tra cứu người và nhiều hơn nữa.",
+    "heading": "Ví dụ thực tế",
+    "subheading": "Mười hai prompt sẵn sàng dán. Mỗi cái hoạt động sau khi kết nối Telegram qua Quickstart.",
+    "categoryLabel": "Danh mục",
+    "cat_briefing": "Tóm tắt",
+    "cat_search": "Tìm kiếm",
+    "cat_analytics": "Phân tích",
+    "cat_extract": "Trích xuất",
+    "cat_people": "Người",
+    "cat_media": "Phương tiện",
+    "tryThis": "Thử prompt này",
+    "items": {
+      "morning": {
+        "title": "Tóm tắt buổi sáng",
+        "description": "Bản tóm tắt hàng ngày các cuộc trò chuyện chưa đọc, với các mục khẩn cấp được đưa lên đầu.",
+        "prompt": "Tóm tắt các tin nhắn Telegram chưa đọc của tôi trong 12 giờ qua. Nhóm chúng theo cuộc trò chuyện, làm nổi bật bất cứ điều gì đề cập đến \"urgent\", \"deadline\", hoặc một ngày trong 48 giờ tới, và liệt kê mọi câu hỏi trực tiếp gửi đến tôi.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Tóm tắt hàng tuần từ một kênh bận rộn",
+        "description": "Cập nhật một kênh ồn ào mà không cần cuộn qua hàng trăm bài đăng.",
+        "prompt": "Xem các tin nhắn 7 ngày qua trong kênh Telegram \"AI News\" của tôi. Cho tôi 5 gạch đầu dòng về các chủ đề được thảo luận nhiều nhất, với một liên kết ví dụ cho mỗi chủ đề.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Tìm tin nhắn về hạn chót",
+        "description": "Xác định một tin nhắn quá khứ cụ thể mà không cần nhớ chính xác từ ngữ.",
+        "prompt": "Tìm tin nhắn trong cuộc trò chuyện công việc của chúng tôi nơi ai đó đề cập đến hạn chót dự án. Cho tôi xem ngày tháng, ai đã gửi, và 2 tin nhắn ngữ cảnh trước và sau.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Tìm các tài liệu được chia sẻ",
+        "description": "Liệt kê mọi tệp ai đó đã chia sẻ trong cuộc trò chuyện trong một khoảng thời gian.",
+        "prompt": "Cho tôi xem tất cả các tệp đính kèm PDF và DOCX được chia sẻ trong cuộc trò chuyện Telegram \"Design Team\" trong 30 ngày qua, sắp xếp mới nhất trước, với tên tệp và người đã gửi.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "Tất cả các liên kết được chia sẻ tuần này",
+        "description": "Xây dựng danh sách đọc từ các liên kết cộng đồng của bạn đã chia sẻ.",
+        "prompt": "Liệt kê mọi URL được chia sẻ trong kênh Telegram \"Reading Group\" tuần này. Loại bỏ trùng lặp, nhóm theo tên miền, và thêm dấu thời gian tin nhắn cho mỗi cái.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Trích xuất các mục hành động",
+        "description": "Chuyển một chuỗi cuộc trò chuyện không chính thức thành danh sách TODO.",
+        "prompt": "Đọc 50 tin nhắn cuối cùng trong cuộc trò chuyện nhóm của tôi và trích xuất bất kỳ mục hành động nào. Đối với mỗi hành động, bao gồm người được giao, hạn chót nếu được đề cập, và mô tả một dòng.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "Thành viên cộng đồng tích cực nhất",
+        "description": "Phát hiện những người giúp đỡ và lãnh đạo trong một nhóm cộng đồng.",
+        "prompt": "Trong nhóm cộng đồng Telegram của chúng tôi, liệt kê 10 thành viên tích cực nhất trong 30 ngày qua. Đối với mỗi người, cho biết họ đã gửi bao nhiêu tin nhắn và một tin nhắn đại diện gần đây.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Ai đã đề cập đến tôi",
+        "description": "Tìm các tin nhắn được gửi trực tiếp đến bạn.",
+        "prompt": "Cho tôi xem tất cả các tin nhắn trong 7 ngày qua nơi ai đó đề cập đến tôi bằng @username hoặc trả lời trực tiếp một trong các tin nhắn của tôi. Nhóm theo cuộc trò chuyện.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Hoạt động trò chuyện theo thời gian",
+        "description": "Xem khi nào cuộc trò chuyện bận rộn và yên tĩnh.",
+        "prompt": "Đối với cuộc trò chuyện \"Engineering Team\" của tôi, cho xem số lượng tin nhắn mỗi ngày trong 14 ngày qua. Cho tôi biết những ngày nào có đột biến hoặc im lặng bất thường.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Chưa đọc theo cuộc trò chuyện",
+        "description": "Phân loại hộp thư đến của bạn bằng một prompt.",
+        "prompt": "Liệt kê tất cả các cuộc trò chuyện Telegram của tôi hiện có tin nhắn chưa đọc, sắp xếp theo số lượng chưa đọc giảm dần. Đối với mỗi cuộc, cho xem tên cuộc trò chuyện và 3 tin nhắn chưa đọc đầu tiên.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Ảnh gia đình gần đây",
+        "description": "Lấy các bức ảnh được chia sẻ gần đây và xem chúng trực tiếp.",
+        "prompt": "Cho tôi xem các bức ảnh được gửi trong cuộc trò chuyện Telegram \"Family\" trong 3 ngày qua. Hiển thị chúng inline với ngày tháng và người đã gửi mỗi bức ảnh.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Phiên âm tin nhắn thoại",
+        "description": "Lướt qua các ghi chú thoại dài bằng cách đọc chúng dưới dạng văn bản.",
+        "prompt": "Tìm tất cả các tin nhắn thoại được gửi trong cuộc trò chuyện nhóm \"Coworking\" của tôi tuần này. Phiên âm từng tin nhắn và trình bày chúng dưới dạng danh sách theo thứ tự thời gian với người gửi và dấu thời gian.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Quickstart — Kết nối Telegram với Claude AI hoặc ChatGPT",
+    "metaDescription": "Hướng dẫn từng bước để kết nối tài khoản Telegram của bạn với Claude AI hoặc ChatGPT trong 30 giây. Đăng nhập mã QR, không cần API key.",
+    "heading": "Quickstart",
+    "subheading": "Kết nối Telegram của bạn trong chưa đầy một phút. Chọn trợ lý AI của bạn bên dưới.",
+    "tabClaudeTitle": "Cho Claude AI",
+    "tabClaudeDesc": "Thêm trình kết nối trong claude.ai · 5 bước · ~30 giây",
+    "tabClaudeCta": "Mở hướng dẫn Claude",
+    "tabChatGPTTitle": "Cho ChatGPT",
+    "tabChatGPTDesc": "Thêm dưới dạng ứng dụng trong ChatGPT · 3 bước · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "Mở hướng dẫn ChatGPT",
+    "needAccount": "Bạn sẽ cần một tài khoản Telegram trên điện thoại với phiên bản Telegram gần đây (để có sẵn tùy chọn đăng nhập QR).",
+    "claudeMetaTitle": "Claude AI Quickstart — Kết nối Telegram",
+    "claudeMetaDescription": "Kết nối Telegram với Claude.ai trong 5 bước qua menu Connectors. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, lấy danh bạ.",
+    "claudeHeading": "Kết nối Telegram với Claude AI",
+    "claudeIntro": "Năm bước. Khoảng ba mươi giây. Không cần API key.",
+    "claudeStep1Title": "Mở cài đặt Claude.ai",
+    "claudeStep1Desc": "Đăng nhập vào claude.ai và mở Settings. Các gói Free, Pro, Max và Team đều hỗ trợ trình kết nối.",
+    "claudeStep2Title": "Đi tới Connectors",
+    "claudeStep2Desc": "Trong Settings, tìm phần Connectors và nhấp \"Add custom connector\".",
+    "claudeStep3Title": "Dán URL MCP",
+    "claudeStep3Desc": "Nhập URL bên dưới vào hộp thoại trình kết nối và nhấp Connect.",
+    "claudeStep4Title": "Phê duyệt OAuth + quét QR",
+    "claudeStep4Desc": "Claude.ai chuyển hướng đến màn hình đồng ý OAuth của chúng tôi. Nhấp Approve, sau đó mã QR xuất hiện. Mở Telegram → Cài đặt → Thiết bị → Liên kết Thiết bị Máy tính → quét mã QR.",
+    "claudeStep5Title": "Bắt đầu hỏi",
+    "claudeStep5Desc": "Claude.ai chuyển hướng trở lại; bạn sẽ thấy trạng thái \"Connected\" màu xanh lá. Yêu cầu nó đọc các cuộc trò chuyện của bạn: \"Tóm tắt tin nhắn chưa đọc của tôi\" hoạt động tốt như một prompt đầu tiên.",
+    "claudeTroubleshootHeading": "Xử lý sự cố",
+    "claudeTroubleshootQRTitle": "Mã QR đã hết hạn hoặc không quét được",
+    "claudeTroubleshootQRDesc": "Mã QR có hiệu lực ~30 giây. Làm mới hộp thoại trình kết nối và thử lại. Đảm bảo điện thoại của bạn có quyền truy cập internet khi quét.",
+    "claudeTroubleshootDisconnectedTitle": "Trình kết nối hiển thị \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "Mở trình kết nối trong Claude.ai và nhấp Reconnect — bạn sẽ nhận được mã QR mới. Các phiên cũng có thể bị thu hồi từ Telegram → Cài đặt → Thiết bị.",
+    "claudeTroubleshootChatsTitle": "Danh sách cuộc trò chuyện trống",
+    "claudeTroubleshootChatsDesc": "Nếu Claude nói rằng bạn không có cuộc trò chuyện nào, phiên Telegram của bạn có thể cần kích hoạt lại. Ngắt kết nối và kết nối lại từ claude.ai → Settings → Connectors.",
+    "chatgptMetaTitle": "ChatGPT Quickstart — Kết nối Telegram",
+    "chatgptMetaDescription": "Kết nối Telegram với ChatGPT trong 3 bước qua Apps Directory. Hỗ trợ các gói Plus, Pro, Team và Enterprise.",
+    "chatgptHeading": "Kết nối Telegram với ChatGPT",
+    "chatgptIntro": "Ba bước. Cần ChatGPT Plus, Pro, Team hoặc Enterprise (tính năng Apps).",
+    "chatgptStep1Title": "Bật Developer Mode",
+    "chatgptStep1Desc": "Trong ChatGPT Settings → Connectors → Advanced, bật Developer Mode. Điều này cho phép bạn thêm các ứng dụng MCP tùy chỉnh.",
+    "chatgptStep2Title": "Thêm URL ứng dụng",
+    "chatgptStep2Desc": "Trong Settings → Connectors → Create, chọn I trust this application, dán URL bên dưới, và nhấp Create.",
+    "chatgptStep3Title": "OAuth + quét QR",
+    "chatgptStep3Desc": "ChatGPT chuyển hướng đến màn hình OAuth của chúng tôi. Phê duyệt, sau đó quét QR với Telegram → Cài đặt → Thiết bị → Liên kết Thiết bị Máy tính. ChatGPT chuyển hướng trở lại và ứng dụng đã sẵn sàng.",
+    "chatgptTroubleshootHeading": "Xử lý sự cố",
+    "chatgptTroubleshootDoubleQRTitle": "Hai mã QR xuất hiện",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT đôi khi mở hai luồng OAuth song song khi kết nối lần đầu. Quét mã QR bất kỳ — luồng thứ hai tự động chuyển hướng đến phiên đầu tiên. Đóng tab trùng lặp không sao cả.",
+    "chatgptTroubleshootLinkNotFoundTitle": "\"Link not found\" sau khi khởi động lại",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT không tự động kết nối lại sau khi máy chủ khởi động lại. Ngắt kết nối và kết nối lại ứng dụng trong ChatGPT Settings → Apps để thiết lập lại luồng SSE.",
+    "urlLabel": "URL trình kết nối",
+    "copyLabel": "Sao chép",
+    "copiedLabel": "Đã sao chép!",
+    "backToOverview": "Quay lại Quickstart"
+  }
+}

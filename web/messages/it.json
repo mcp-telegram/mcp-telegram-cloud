@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Il tuo Telegram in Claude AI e ChatGPT",
+    "siteDescription": "Collega il tuo Telegram a Claude AI o ChatGPT. Leggi messaggi, cerca nelle chat, ottieni contatti — tutto dall'IA con un clic."
+  },
+  "nav": {
+    "features": "Funzionalità",
+    "howItWorks": "Come funziona",
+    "choice": "Hosted o self-host",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "Guida rapida",
+    "examples": "Esempi"
+  },
+  "hero": {
+    "titleStart": "Il tuo Telegram in",
+    "titleClaude": "Claude AI",
+    "titleAnd": "e",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Leggi messaggi, cerca nelle chat, tieni traccia dei contatti e scarica media — tutto da Claude.ai o ChatGPT. Collegati in 30 secondi con un codice QR.",
+    "ctaPrimary": "Collega Telegram",
+    "ctaSecondary": "Self-host",
+    "ctaQuickstart": "Inizia in 30 secondi"
+  },
+  "features": {
+    "heading": "Cosa puoi fare",
+    "subheading": "Strumenti di sola lettura — sicuri, privati, nessun messaggio inviato per tuo conto",
+    "readMessagesTitle": "Leggi i messaggi",
+    "readMessagesDesc": "Sfoglia i messaggi di qualsiasi chat con filtro per data e paginazione",
+    "searchTitle": "Cerca ovunque",
+    "searchDesc": "Ricerca a testo intero in chat, messaggi, contatti e canali",
+    "analyticsTitle": "Analisi delle chat",
+    "analyticsDesc": "Ottieni informazioni sulla chat, elenchi membri, conteggi dei non letti e metadati dettagliati",
+    "mediaTitle": "Visualizza i media",
+    "mediaDesc": "Scarica e visualizza le foto direttamente nelle conversazioni con l'IA",
+    "contactsTitle": "Contatti e membri",
+    "contactsDesc": "Accedi al tuo elenco contatti e agli elenchi membri di gruppi e canali",
+    "secureTitle": "Sola lettura e sicuro",
+    "secureDesc": "Non può inviare, modificare o eliminare messaggi. Il tuo account è al sicuro"
+  },
+  "examples": {
+    "heading": "Cosa chiedono le persone",
+    "subheading": "Prompt reali che puoi usare subito dopo la connessione",
+    "morningTitle": "Briefing mattutino",
+    "morningPrompt": "Riassumi i miei messaggi non letti ed evidenzia ciò che è urgente",
+    "findTitle": "Trova qualsiasi cosa",
+    "findPrompt": "Trova i messaggi sulla scadenza del progetto nella nostra chat di lavoro",
+    "extractTitle": "Estrai dati",
+    "extractPrompt": "Elenca tutti i link condivisi nel canale design questa settimana",
+    "peopleTitle": "Cerca persone",
+    "peoplePrompt": "Chi sono i membri più attivi nel nostro gruppo della community?",
+    "overviewTitle": "Panoramica della chat",
+    "overviewPrompt": "Dammi un riassunto di cosa è successo nella chat del team oggi",
+    "mediaTitle": "Rassegna media",
+    "mediaPrompt": "Mostrami le foto inviate nella chat di famiglia ieri",
+    "ctaSeeAll": "Vedi tutti gli esempi"
+  },
+  "howItWorks": {
+    "heading": "Come funziona",
+    "subheading": "Tre passaggi, 30 secondi, senza chiavi API",
+    "step1Title": "Aggiungi il connettore",
+    "step1Desc": "Clicca \"Connect\" in Claude.ai o aggiungi come app in ChatGPT",
+    "step2Title": "Scansiona il codice QR",
+    "step2Desc": "Apri Telegram → Impostazioni → Dispositivi → Collega Dispositivo Desktop → Scansiona",
+    "step3Title": "Inizia a chiedere",
+    "step3Desc": "Chiedi all'IA di leggere le tue chat, cercare messaggi o riassumere conversazioni",
+    "ctaFullGuide": "Leggi la guida completa"
+  },
+  "choice": {
+    "heading": "Hosted o self-host",
+    "subheading": "Open source con licenza MIT. Usa l'istanza hosted o avvia la tua.",
+    "hostedTitle": "Hosted",
+    "hostedTagline": "Connessione con un clic, mantenuto dal progetto.",
+    "hostedFeature1": "Login tramite codice QR — nessuna chiave API da gestire",
+    "hostedFeature2": "Set di strumenti di sola lettura, sicuro per design",
+    "hostedFeature3": "Limite giornaliero fair-use per mantenere il servizio sano",
+    "hostedFeature4": "Aggiornamenti sullo stato del servizio tramite bot Telegram",
+    "hostedCta": "Collegati ora",
+    "selfHostTitle": "Self-host",
+    "selfHostTagline": "Controllo totale, la tua macchina, i tuoi dati.",
+    "selfHostFeature1": "Tutti gli strumenti — lettura e scrittura",
+    "selfHostFeature2": "Nessun limite giornaliero",
+    "selfHostFeature3": "I tuoi dati non lasciano mai il tuo server",
+    "selfHostFeature4": "Docker Compose + .env, configurazione in ~10 minuti",
+    "selfHostCta": "Vedi su GitHub",
+    "footnote": "Nessun tracciamento. Nessuna pubblicità. Mantenuto da una sola persona nel tempo libero — sii paziente con issue e PR."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "Domande frequenti su sicurezza e privacy",
+    "safeQ": "È sicuro collegare il mio Telegram?",
+    "safeA": "Sì. La versione hosted è rigorosamente di sola lettura — non può inviare, modificare o eliminare messaggi. Il tuo account viene usato nello stesso modo in cui accedi a Telegram Web o Desktop. Puoi disconnetterti in qualsiasi momento dalle impostazioni \"Dispositivi\" di Telegram.",
+    "readQ": "Potete leggere i miei messaggi sul server?",
+    "readAStart": "Non memorizziamo i tuoi messaggi. Ogni chiamata di strumento recupera i dati direttamente dall'API di Telegram e li restituisce all'assistente IA. La chiave della tua sessione Telegram è memorizzata sul nostro server in modo che il connettore continui a funzionare tra le richieste, e viene eliminata ogni volta che la tua sessione termina (vedi la risposta successiva per le tempistiche esatte). Dettagli sulla memorizzazione e indicazioni per l'hardening sono nel nostro",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": ".",
+    "protocolQ": "Come si collega senza la Bot API?",
+    "protocolA": "Utilizza MTProto — lo stesso protocollo usato dalle app ufficiali di Telegram. Ti autentichi tramite codice QR, proprio come quando colleghi un nuovo dispositivo. Dal punto di vista di Telegram, è semplicemente un altro client connesso.",
+    "disconnectQ": "Cosa succede quando mi disconnetto?",
+    "disconnectA": "Se rimuovi esplicitamente il connettore in Claude.ai o ChatGPT, il server effettua il logout dalla sessione Telegram ed elimina subito la chiave di sessione. Se chiudi semplicemente l'app IA senza revocare, il client in memoria viene scartato immediatamente e la chiave memorizzata viene mantenuta per poco tempo in modo da poter riprendere senza interruzioni; se non ti ricolleghi entro una breve finestra di inattività (qualche minuto), il server effettua il logout ed elimina la chiave automaticamente. Puoi anche forzare una revoca completa in qualsiasi momento da Telegram → Impostazioni → Dispositivi.",
+    "chatgptQ": "Funziona con ChatGPT?",
+    "chatgptAStart": "Sì. Aggiungilo come app in ChatGPT Settings → Apps (Developer Mode). Usa l'URL",
+    "chatgptAEnd": "con autenticazione OAuth. Funziona sui piani Plus, Pro, Team ed Enterprise.",
+    "openSourceQ": "Il codice sorgente è aperto?",
+    "openSourceAStart": "Il server è completamente open-source (licenza MIT) su",
+    "openSourceAEnd": ". Puoi fare self-host gratuitamente con pieno accesso in lettura e scrittura.",
+    "botQ": "Come saprò degli aggiornamenti del servizio?",
+    "botAStart": "Iscriviti a",
+    "botAEnd": "per ricevere notifiche sullo stato del servizio, breaking change e nuove release. Invia /stop in qualsiasi momento per annullare l'iscrizione."
+  },
+  "footer": {
+    "mit": "Licenza MIT",
+    "privacy": "Privacy",
+    "terms": "Termini",
+    "tagline": "Accesso a Telegram in sola lettura per Claude AI e ChatGPT."
+  },
+  "language": {
+    "switcherLabel": "Lingua",
+    "helpTranslate": "Aiuta a tradurre"
+  },
+  "common": {
+    "translationOutdated": "Questa traduzione potrebbe essere obsoleta.",
+    "machineTranslated": "Tradotto automaticamente — aiutaci a migliorare questa traduzione",
+    "fallbackToEnglish": "Questa pagina non è ancora tradotta. Visualizzazione in inglese."
+  },
+  "privacy": {
+    "title": "Informativa sulla privacy",
+    "lastUpdated": "Ultimo aggiornamento"
+  },
+  "terms": {
+    "title": "Termini di servizio",
+    "lastUpdated": "Ultimo aggiornamento"
+  },
+  "examplesPage": {
+    "metaTitle": "Esempi — Cosa chiedono le persone a Claude AI e ChatGPT su Telegram",
+    "metaDescription": "12 prompt pronti all'uso per Claude AI e ChatGPT per leggere le tue chat Telegram: briefing mattutini, ricerca messaggi, estrazione dati, ricerca persone e altro.",
+    "heading": "Esempi reali",
+    "subheading": "Dodici prompt pronti da incollare. Ognuno funziona dopo aver collegato Telegram tramite la Guida rapida.",
+    "categoryLabel": "Categoria",
+    "cat_briefing": "Briefing",
+    "cat_search": "Ricerca",
+    "cat_analytics": "Analisi",
+    "cat_extract": "Estrazione",
+    "cat_people": "Persone",
+    "cat_media": "Media",
+    "tryThis": "Prova questo prompt",
+    "items": {
+      "morning": {
+        "title": "Briefing mattutino",
+        "description": "Un riassunto giornaliero delle chat non lette, con gli elementi urgenti in cima.",
+        "prompt": "Riassumi i miei messaggi Telegram non letti delle ultime 12 ore. Raggruppali per chat, evidenzia tutto ciò che menziona \"urgente\", \"scadenza\" o una data nelle prossime 48 ore, ed elenca tutte le domande dirette rivolte a me.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Digest settimanale da un canale affollato",
+        "description": "Mettiti in pari con un canale rumoroso senza scorrere centinaia di post.",
+        "prompt": "Guarda gli ultimi 7 giorni di messaggi nel mio canale Telegram \"AI News\". Dammi 5 punti elenco con gli argomenti più discussi, con un link di esempio per argomento.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Trova quel messaggio sulla scadenza",
+        "description": "Individua un messaggio passato specifico senza ricordare le parole esatte.",
+        "prompt": "Trova il messaggio nella nostra chat di lavoro dove qualcuno ha menzionato la scadenza del progetto. Mostrami la data, chi lo ha inviato e 2 messaggi di contesto prima e dopo.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Trova documenti condivisi",
+        "description": "Elenca ogni file condiviso da qualcuno in una chat in un determinato periodo.",
+        "prompt": "Mostrami tutti gli allegati PDF e DOCX condivisi nella chat Telegram \"Design Team\" negli ultimi 30 giorni, ordinati dal più recente, con il nome del file e chi lo ha inviato.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "Tutti i link condivisi questa settimana",
+        "description": "Crea una lista di lettura dai link condivisi dalla tua community.",
+        "prompt": "Elenca ogni URL condiviso nel canale Telegram \"Reading Group\" questa settimana. Rimuovi i duplicati, raggruppa per dominio e aggiungi il timestamp del messaggio per ciascuno.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Estrai le azioni da svolgere",
+        "description": "Trasforma una conversazione informale in una lista di TODO.",
+        "prompt": "Leggi gli ultimi 50 messaggi nella mia chat di team ed estrai tutte le azioni da svolgere. Per ogni azione, includi il responsabile, la scadenza se menzionata e una descrizione di una riga.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "Membri della community più attivi",
+        "description": "Individua chi aiuta e i leader in un gruppo community.",
+        "prompt": "Nel nostro gruppo Telegram della community, elenca i 10 membri più attivi degli ultimi 30 giorni. Per ciascuno, mostra quanti messaggi hanno inviato e un messaggio recente rappresentativo.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Chi mi ha menzionato",
+        "description": "Trova messaggi che ti hanno rivolto direttamente la parola.",
+        "prompt": "Mostrami tutti i messaggi degli ultimi 7 giorni in cui qualcuno mi ha menzionato per @username o ha risposto direttamente a uno dei miei messaggi. Raggruppa per chat.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Attività della chat nel tempo",
+        "description": "Vedi quando una chat è affollata o tranquilla.",
+        "prompt": "Per la mia chat \"Engineering Team\", mostrami il conteggio messaggi al giorno degli ultimi 14 giorni. Dimmi in quali giorni ci sono stati picchi insoliti o silenzi.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Non letti per chat",
+        "description": "Fai il triage della tua inbox con un solo prompt.",
+        "prompt": "Elenca tutte le mie chat Telegram che hanno messaggi non letti in questo momento, ordinate per numero di non letti decrescente. Per ciascuna, mostra il nome della chat e i primi 3 messaggi non letti.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Foto recenti della famiglia",
+        "description": "Recupera le foto condivise di recente e visualizzale nella chat.",
+        "prompt": "Mostrami le foto inviate nella chat Telegram \"Family\" negli ultimi 3 giorni. Visualizzale direttamente con la data e chi ha inviato ciascuna foto.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Trascrizioni dei messaggi vocali",
+        "description": "Sfoglia note vocali lunghe leggendole come testo.",
+        "prompt": "Trova tutti i messaggi vocali inviati nella mia chat di gruppo \"Coworking\" questa settimana. Trascrivi ciascuno e presentali come un elenco cronologico con mittente e timestamp.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Guida rapida — Collega Telegram a Claude AI o ChatGPT",
+    "metaDescription": "Guida passo-passo per collegare il tuo account Telegram a Claude AI o ChatGPT in 30 secondi. Login tramite codice QR, senza chiavi API.",
+    "heading": "Guida rapida",
+    "subheading": "Collega il tuo Telegram in meno di un minuto. Scegli il tuo assistente IA qui sotto.",
+    "tabClaudeTitle": "Per Claude AI",
+    "tabClaudeDesc": "Aggiungi il connettore in claude.ai · 5 passaggi · ~30 secondi",
+    "tabClaudeCta": "Apri la guida per Claude",
+    "tabChatGPTTitle": "Per ChatGPT",
+    "tabChatGPTDesc": "Aggiungi come app in ChatGPT · 3 passaggi · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "Apri la guida per ChatGPT",
+    "needAccount": "Ti servirà un account Telegram sul tuo telefono con un client Telegram recente (in modo che l'opzione di login tramite QR sia disponibile).",
+    "claudeMetaTitle": "Guida rapida Claude AI — Collega Telegram",
+    "claudeMetaDescription": "Collega Telegram a Claude.ai in 5 passaggi dal menu Connectors. Leggi messaggi, cerca nelle chat, ottieni contatti.",
+    "claudeHeading": "Collega Telegram a Claude AI",
+    "claudeIntro": "Cinque passaggi. Circa trenta secondi. Nessuna chiave API.",
+    "claudeStep1Title": "Apri le impostazioni di Claude.ai",
+    "claudeStep1Desc": "Accedi a claude.ai e apri Settings. I piani Free, Pro, Max e Team supportano tutti i connettori.",
+    "claudeStep2Title": "Vai su Connectors",
+    "claudeStep2Desc": "In Settings, trova la sezione Connectors e clicca \"Add custom connector\".",
+    "claudeStep3Title": "Incolla l'URL MCP",
+    "claudeStep3Desc": "Inserisci l'URL qui sotto nella finestra del connettore e clicca Connect.",
+    "claudeStep4Title": "Approva OAuth + scansiona il QR",
+    "claudeStep4Desc": "Claude.ai reindirizza alla nostra schermata di consenso OAuth. Clicca Approve, poi apparirà un codice QR. Apri Telegram → Impostazioni → Dispositivi → Collega Dispositivo Desktop → scansiona il QR.",
+    "claudeStep5Title": "Inizia a chiedere",
+    "claudeStep5Desc": "Claude.ai ti riporterà indietro; vedrai lo stato verde \"Connected\". Chiedigli di leggere le tue chat: \"Riassumi i miei messaggi non letti\" funziona come primo prompt.",
+    "claudeTroubleshootHeading": "Risoluzione dei problemi",
+    "claudeTroubleshootQRTitle": "Codice QR scaduto o non scansionato",
+    "claudeTroubleshootQRDesc": "I codici QR sono validi per ~30 secondi. Aggiorna la finestra del connettore e riprova. Assicurati che il tuo telefono abbia accesso a internet durante la scansione.",
+    "claudeTroubleshootDisconnectedTitle": "Il connettore dice \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "Apri il connettore in Claude.ai e clicca Reconnect — otterrai un nuovo QR. Le sessioni possono anche essere revocate da Telegram → Impostazioni → Dispositivi.",
+    "claudeTroubleshootChatsTitle": "Elenco chat vuoto",
+    "claudeTroubleshootChatsDesc": "Se Claude dice che non hai chat, la tua sessione Telegram probabilmente ha bisogno di essere riattivata. Disconnetti e ricollega da claude.ai → Settings → Connectors.",
+    "chatgptMetaTitle": "Guida rapida ChatGPT — Collega Telegram",
+    "chatgptMetaDescription": "Collega Telegram a ChatGPT in 3 passaggi tramite Apps Directory. Sono supportati i piani Plus, Pro, Team ed Enterprise.",
+    "chatgptHeading": "Collega Telegram a ChatGPT",
+    "chatgptIntro": "Tre passaggi. È richiesto ChatGPT Plus, Pro, Team o Enterprise (funzionalità Apps).",
+    "chatgptStep1Title": "Attiva il Developer Mode",
+    "chatgptStep1Desc": "In ChatGPT Settings → Connectors → Advanced, attiva il Developer Mode. Questo ti permette di aggiungere app MCP personalizzate.",
+    "chatgptStep2Title": "Aggiungi l'URL dell'app",
+    "chatgptStep2Desc": "In Settings → Connectors → Create, scegli I trust this application, incolla l'URL qui sotto e clicca Create.",
+    "chatgptStep3Title": "OAuth + scansione QR",
+    "chatgptStep3Desc": "ChatGPT reindirizza alla nostra schermata OAuth. Approva, poi scansiona il QR con Telegram → Impostazioni → Dispositivi → Collega Dispositivo Desktop. ChatGPT ti riporta indietro e l'app è pronta.",
+    "chatgptTroubleshootHeading": "Risoluzione dei problemi",
+    "chatgptTroubleshootDoubleQRTitle": "Sono comparsi due codici QR",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT a volte apre due flussi OAuth paralleli alla prima connessione. Scansiona uno qualsiasi dei QR — il secondo flusso si reindirizza automaticamente alla prima sessione. Chiudere la scheda duplicata va bene.",
+    "chatgptTroubleshootLinkNotFoundTitle": "\"Link not found\" dopo il riavvio",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT non si riconnette automaticamente dopo i riavvii del server. Disconnetti e ricollega l'app in ChatGPT Settings → Apps per ristabilire il flusso SSE.",
+    "urlLabel": "URL del connettore",
+    "copyLabel": "Copia",
+    "copiedLabel": "Copiato!",
+    "backToOverview": "Torna alla Guida rapida"
+  }
+}

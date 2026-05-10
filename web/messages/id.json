@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Telegram Anda di Claude AI & ChatGPT",
+    "siteDescription": "Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, dapatkan kontak — semua dari AI dengan satu klik."
+  },
+  "nav": {
+    "features": "Fitur",
+    "howItWorks": "Cara kerja",
+    "choice": "Hosted atau self-host",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "quickstart": "Mulai cepat",
+    "examples": "Contoh"
+  },
+  "hero": {
+    "titleStart": "Telegram Anda di",
+    "titleClaude": "Claude AI",
+    "titleAnd": "&",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Baca pesan, cari obrolan, pantau kontak, dan unduh media — semua dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
+    "ctaPrimary": "Hubungkan Telegram",
+    "ctaSecondary": "Self-host",
+    "ctaQuickstart": "Mulai dalam 30 detik"
+  },
+  "features": {
+    "heading": "Apa yang dapat Anda lakukan",
+    "subheading": "Alat hanya-baca — aman, privat, tidak ada pesan yang dikirim atas nama Anda",
+    "readMessagesTitle": "Baca pesan",
+    "readMessagesDesc": "Telusuri pesan dari obrolan mana pun dengan filter tanggal dan paginasi",
+    "searchTitle": "Cari semuanya",
+    "searchDesc": "Pencarian teks lengkap di obrolan, pesan, kontak, dan kanal",
+    "analyticsTitle": "Analitik obrolan",
+    "analyticsDesc": "Dapatkan info obrolan, daftar anggota, jumlah belum dibaca, dan metadata lengkap",
+    "mediaTitle": "Lihat media",
+    "mediaDesc": "Unduh dan lihat foto secara inline langsung di percakapan AI",
+    "contactsTitle": "Kontak & anggota",
+    "contactsDesc": "Akses daftar kontak Anda dan daftar anggota grup/kanal",
+    "secureTitle": "Hanya-baca & aman",
+    "secureDesc": "Tidak dapat mengirim, mengedit, atau menghapus pesan. Akun Anda aman"
+  },
+  "examples": {
+    "heading": "Apa yang ditanyakan orang",
+    "subheading": "Prompt nyata yang dapat Anda gunakan langsung setelah terhubung",
+    "morningTitle": "Briefing pagi",
+    "morningPrompt": "Ringkas pesan saya yang belum dibaca dan sorot apa pun yang mendesak",
+    "findTitle": "Temukan apa saja",
+    "findPrompt": "Cari pesan tentang tenggat proyek di obrolan kerja kami",
+    "extractTitle": "Ekstrak data",
+    "extractPrompt": "Daftarkan semua tautan yang dibagikan di kanal desain minggu ini",
+    "peopleTitle": "Cari orang",
+    "peoplePrompt": "Siapa anggota paling aktif di grup komunitas kami?",
+    "overviewTitle": "Ringkasan obrolan",
+    "overviewPrompt": "Berikan saya ringkasan tentang apa yang terjadi di obrolan tim hari ini",
+    "mediaTitle": "Tinjau media",
+    "mediaPrompt": "Tunjukkan foto yang dikirim di obrolan keluarga kemarin",
+    "ctaSeeAll": "Lihat semua contoh"
+  },
+  "howItWorks": {
+    "heading": "Cara kerja",
+    "subheading": "Tiga langkah, 30 detik, tanpa perlu API key",
+    "step1Title": "Tambahkan konektor",
+    "step1Desc": "Klik \"Connect\" di Claude.ai atau tambahkan sebagai aplikasi di ChatGPT",
+    "step2Title": "Pindai kode QR",
+    "step2Desc": "Buka Telegram → Pengaturan → Perangkat → Tautkan Perangkat Desktop → Pindai",
+    "step3Title": "Mulai bertanya",
+    "step3Desc": "Minta AI untuk membaca obrolan, mencari pesan, atau meringkas percakapan",
+    "ctaFullGuide": "Baca panduan lengkap"
+  },
+  "choice": {
+    "heading": "Hosted atau self-host",
+    "subheading": "Open source di bawah lisensi MIT. Gunakan instance hosted, atau jalankan sendiri.",
+    "hostedTitle": "Hosted",
+    "hostedTagline": "Hubungkan dengan satu klik, dipelihara oleh proyek.",
+    "hostedFeature1": "Login kode QR — tanpa API key untuk dikelola",
+    "hostedFeature2": "Set alat hanya-baca, aman sejak awal",
+    "hostedFeature3": "Batas penggunaan wajar harian untuk menjaga layanan tetap sehat",
+    "hostedFeature4": "Pembaruan status layanan via bot Telegram",
+    "hostedCta": "Hubungkan sekarang",
+    "selfHostTitle": "Self-host",
+    "selfHostTagline": "Kontrol penuh, mesin Anda, data Anda.",
+    "selfHostFeature1": "Semua alat — baca dan tulis",
+    "selfHostFeature2": "Tanpa batas harian",
+    "selfHostFeature3": "Data Anda tidak pernah meninggalkan server Anda",
+    "selfHostFeature4": "Docker Compose + .env, pengaturan ~10 menit",
+    "selfHostCta": "Lihat di GitHub",
+    "footnote": "Tanpa pelacakan. Tanpa iklan. Dipelihara oleh satu orang di waktu luang — mohon bersabar dengan issues dan PR."
+  },
+  "faq": {
+    "heading": "FAQ",
+    "subheading": "Pertanyaan umum tentang keamanan dan privasi",
+    "safeQ": "Apakah aman menghubungkan Telegram saya?",
+    "safeA": "Ya. Versi hosted bersifat hanya-baca secara ketat — tidak dapat mengirim, mengedit, atau menghapus pesan apa pun. Akun Anda digunakan dengan cara yang sama seperti login ke Telegram Web atau Desktop. Anda dapat memutuskan koneksi kapan saja dari pengaturan \"Perangkat\" di Telegram.",
+    "readQ": "Apakah Anda dapat membaca pesan saya di server?",
+    "readAStart": "Kami tidak menyimpan pesan Anda. Setiap panggilan alat mengambil data langsung dari API Telegram dan mengembalikannya ke asisten AI. Kunci sesi Telegram Anda disimpan di server kami agar konektor dapat terus bekerja antar permintaan, dan dihapus ketika sesi Anda berakhir (lihat jawaban berikutnya untuk waktu yang tepat). Detail penyimpanan dan panduan hardening ada di",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": " kami.",
+    "protocolQ": "Bagaimana cara terhubung tanpa Bot API?",
+    "protocolA": "Menggunakan MTProto — protokol yang sama yang digunakan aplikasi resmi Telegram. Anda autentikasi via kode QR, sama seperti menautkan perangkat baru. Dari perspektif Telegram, ini adalah klien lain yang sedang login.",
+    "disconnectQ": "Apa yang terjadi saat saya memutuskan koneksi?",
+    "disconnectA": "Jika Anda secara eksplisit menghapus konektor di Claude.ai atau ChatGPT, server akan logout dari sesi Telegram dan langsung menghapus kunci sesi. Jika Anda hanya menutup aplikasi AI tanpa mencabut, klien di memori dijatuhkan segera dan kunci sesi yang tersimpan disimpan sebentar agar Anda dapat melanjutkan dengan mulus; jika Anda tidak terhubung kembali dalam waktu idle singkat (beberapa menit), server akan logout dan menghapus kunci secara otomatis. Anda juga dapat memaksa pencabutan penuh kapan saja dari Telegram → Pengaturan → Perangkat.",
+    "chatgptQ": "Apakah bekerja dengan ChatGPT?",
+    "chatgptAStart": "Ya. Tambahkan sebagai aplikasi di ChatGPT Settings → Apps (Developer Mode). Gunakan URL",
+    "chatgptAEnd": "dengan autentikasi OAuth. Bekerja pada paket Plus, Pro, Team, dan Enterprise.",
+    "openSourceQ": "Apakah kode sumbernya terbuka?",
+    "openSourceAStart": "Server sepenuhnya open-source (lisensi MIT) di",
+    "openSourceAEnd": ". Anda dapat melakukan self-host secara gratis dengan akses baca+tulis penuh.",
+    "botQ": "Bagaimana cara mengetahui pembaruan layanan?",
+    "botAStart": "Berlangganan ke",
+    "botAEnd": "untuk diberi tahu tentang status layanan, perubahan yang merusak, dan rilis baru. Kirim /stop kapan saja untuk berhenti berlangganan."
+  },
+  "footer": {
+    "mit": "Berlisensi MIT",
+    "privacy": "Privasi",
+    "terms": "Ketentuan",
+    "tagline": "Akses Telegram hanya-baca untuk Claude AI & ChatGPT."
+  },
+  "language": {
+    "switcherLabel": "Bahasa",
+    "helpTranslate": "Bantu terjemahkan"
+  },
+  "common": {
+    "translationOutdated": "Terjemahan ini mungkin sudah usang.",
+    "machineTranslated": "Diterjemahkan mesin — bantu sempurnakan terjemahan ini",
+    "fallbackToEnglish": "Halaman ini belum diterjemahkan. Menampilkan bahasa Inggris."
+  },
+  "privacy": {
+    "title": "Kebijakan Privasi",
+    "lastUpdated": "Terakhir diperbarui"
+  },
+  "terms": {
+    "title": "Ketentuan Layanan",
+    "lastUpdated": "Terakhir diperbarui"
+  },
+  "examplesPage": {
+    "metaTitle": "Contoh — Apa yang ditanyakan orang ke Claude AI & ChatGPT tentang Telegram",
+    "metaDescription": "12 prompt siap pakai untuk Claude AI dan ChatGPT untuk membaca obrolan Telegram Anda: briefing pagi, mencari pesan, mengekstrak data, mencari orang, dan banyak lagi.",
+    "heading": "Contoh dunia nyata",
+    "subheading": "Dua belas prompt yang siap ditempel. Setiap prompt bekerja setelah menghubungkan Telegram via Quickstart.",
+    "categoryLabel": "Kategori",
+    "cat_briefing": "Briefing",
+    "cat_search": "Pencarian",
+    "cat_analytics": "Analitik",
+    "cat_extract": "Ekstraksi",
+    "cat_people": "Orang",
+    "cat_media": "Media",
+    "tryThis": "Coba prompt ini",
+    "items": {
+      "morning": {
+        "title": "Briefing pagi",
+        "description": "Ringkasan harian obrolan yang belum dibaca, dengan item mendesak ditarik ke atas.",
+        "prompt": "Ringkas pesan Telegram saya yang belum dibaca dari 12 jam terakhir. Kelompokkan berdasarkan obrolan, sorot apa pun yang menyebutkan \"urgent\", \"deadline\", atau tanggal dalam 48 jam ke depan, dan daftarkan setiap pertanyaan langsung yang ditujukan kepada saya.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Ringkasan mingguan dari kanal sibuk",
+        "description": "Mengejar ketertinggalan dari kanal ramai tanpa menggulir ratusan posting.",
+        "prompt": "Lihat 7 hari pesan terakhir di kanal Telegram \"AI News\" saya. Berikan saya 5 poin tentang topik yang paling banyak dibahas, dengan satu contoh tautan per topik.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Temukan pesan tenggat itu",
+        "description": "Temukan pesan lalu tertentu tanpa mengingat kata-katanya secara persis.",
+        "prompt": "Temukan pesan di obrolan kerja kami di mana seseorang menyebutkan tenggat proyek. Tunjukkan tanggalnya, siapa yang mengirimnya, dan 2 pesan konteks sebelum dan sesudahnya.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Temukan dokumen yang dibagikan",
+        "description": "Daftarkan setiap file yang dibagikan seseorang di obrolan dalam rentang tanggal.",
+        "prompt": "Tunjukkan saya semua lampiran PDF dan DOCX yang dibagikan di obrolan Telegram \"Design Team\" dalam 30 hari terakhir, diurutkan terbaru lebih dulu, dengan nama file dan siapa yang mengirimnya.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "Semua tautan yang dibagikan minggu ini",
+        "description": "Buat daftar bacaan dari tautan yang dibagikan komunitas Anda.",
+        "prompt": "Daftarkan setiap URL yang dibagikan di kanal Telegram \"Reading Group\" minggu ini. Hilangkan duplikat, kelompokkan berdasarkan domain, dan tambahkan timestamp pesan untuk masing-masing.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Ekstrak item tindakan",
+        "description": "Ubah utas obrolan informal menjadi daftar TODO.",
+        "prompt": "Baca 50 pesan terakhir di obrolan tim saya dan ekstrak setiap item tindakan. Untuk setiap tindakan, sertakan penanggung jawab, tenggat jika disebutkan, dan deskripsi satu baris.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "Anggota komunitas paling aktif",
+        "description": "Temukan penolong dan pemimpin di grup komunitas.",
+        "prompt": "Di grup komunitas Telegram kami, daftarkan 10 anggota paling aktif dalam 30 hari terakhir. Untuk masing-masing, tunjukkan berapa banyak pesan yang mereka kirim dan satu pesan terbaru yang representatif.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Siapa yang menyebut saya",
+        "description": "Temukan pesan yang ditujukan langsung kepada Anda.",
+        "prompt": "Tunjukkan semua pesan dari 7 hari terakhir di mana seseorang menyebut saya dengan @username atau membalas langsung salah satu pesan saya. Kelompokkan berdasarkan obrolan.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Aktivitas obrolan dari waktu ke waktu",
+        "description": "Lihat kapan obrolan sibuk dan tenang.",
+        "prompt": "Untuk obrolan \"Engineering Team\" saya, tunjukkan jumlah pesan per hari selama 14 hari terakhir. Beri tahu saya hari-hari mana yang memiliki lonjakan atau keheningan tidak biasa.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Belum dibaca per obrolan",
+        "description": "Triase kotak masuk Anda dengan satu prompt.",
+        "prompt": "Daftarkan semua obrolan Telegram saya yang memiliki pesan belum dibaca saat ini, diurutkan berdasarkan jumlah belum dibaca menurun. Untuk masing-masing, tunjukkan nama obrolan dan 3 pesan pertama yang belum dibaca.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Foto keluarga terbaru",
+        "description": "Tarik foto-foto bersama terbaru dan lihat secara inline.",
+        "prompt": "Tunjukkan foto-foto yang dikirim di obrolan Telegram \"Family\" dalam 3 hari terakhir. Tampilkan secara inline dengan tanggal dan siapa yang mengirim setiap foto.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Transkrip pesan suara",
+        "description": "Skim catatan suara panjang dengan membacanya sebagai teks.",
+        "prompt": "Temukan semua pesan suara yang dikirim di obrolan grup \"Coworking\" saya minggu ini. Transkripsikan masing-masing dan sajikan sebagai daftar kronologis dengan pengirim dan timestamp.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Quickstart — Hubungkan Telegram ke Claude AI atau ChatGPT",
+    "metaDescription": "Panduan langkah demi langkah untuk menghubungkan akun Telegram Anda ke Claude AI atau ChatGPT dalam 30 detik. Login kode QR, tanpa API key.",
+    "heading": "Quickstart",
+    "subheading": "Hubungkan Telegram Anda dalam waktu kurang dari satu menit. Pilih asisten AI Anda di bawah.",
+    "tabClaudeTitle": "Untuk Claude AI",
+    "tabClaudeDesc": "Tambahkan konektor di claude.ai · 5 langkah · ~30 detik",
+    "tabClaudeCta": "Buka panduan Claude",
+    "tabChatGPTTitle": "Untuk ChatGPT",
+    "tabChatGPTDesc": "Tambahkan sebagai aplikasi di ChatGPT · 3 langkah · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "Buka panduan ChatGPT",
+    "needAccount": "Anda memerlukan akun Telegram di ponsel dengan klien Telegram yang cukup baru (agar opsi login QR tersedia).",
+    "claudeMetaTitle": "Quickstart Claude AI — Hubungkan Telegram",
+    "claudeMetaDescription": "Hubungkan Telegram ke Claude.ai dalam 5 langkah via menu Connectors. Baca pesan, cari obrolan, dapatkan kontak.",
+    "claudeHeading": "Hubungkan Telegram ke Claude AI",
+    "claudeIntro": "Lima langkah. Sekitar tiga puluh detik. Tanpa API key.",
+    "claudeStep1Title": "Buka pengaturan Claude.ai",
+    "claudeStep1Desc": "Masuk ke claude.ai dan buka Settings. Paket Free, Pro, Max, dan Team semuanya mendukung konektor.",
+    "claudeStep2Title": "Pergi ke Connectors",
+    "claudeStep2Desc": "Di Settings, temukan bagian Connectors dan klik \"Add custom connector\".",
+    "claudeStep3Title": "Tempel URL MCP",
+    "claudeStep3Desc": "Masukkan URL di bawah ini di dialog konektor dan klik Connect.",
+    "claudeStep4Title": "Setujui OAuth + pindai QR",
+    "claudeStep4Desc": "Claude.ai mengalihkan ke layar persetujuan OAuth kami. Klik Approve, lalu kode QR muncul. Buka Telegram → Pengaturan → Perangkat → Tautkan Perangkat Desktop → pindai kode QR.",
+    "claudeStep5Title": "Mulai bertanya",
+    "claudeStep5Desc": "Claude.ai mengalihkan kembali; Anda akan melihat status \"Connected\" berwarna hijau. Minta untuk membaca obrolan Anda: \"Ringkas pesan saya yang belum dibaca\" cocok sebagai prompt pertama.",
+    "claudeTroubleshootHeading": "Pemecahan masalah",
+    "claudeTroubleshootQRTitle": "Kode QR kedaluwarsa atau tidak terpindai",
+    "claudeTroubleshootQRDesc": "Kode QR berlaku ~30 detik. Segarkan dialog konektor dan coba lagi. Pastikan ponsel Anda memiliki akses internet saat memindai.",
+    "claudeTroubleshootDisconnectedTitle": "Konektor menampilkan \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "Buka konektor di Claude.ai dan klik Reconnect — Anda akan mendapatkan kode QR baru. Sesi juga dapat dicabut dari Telegram → Pengaturan → Perangkat.",
+    "claudeTroubleshootChatsTitle": "Daftar obrolan kosong",
+    "claudeTroubleshootChatsDesc": "Jika Claude mengatakan Anda tidak memiliki obrolan, sesi Telegram Anda kemungkinan perlu diaktifkan kembali. Putuskan dan hubungkan kembali dari claude.ai → Settings → Connectors.",
+    "chatgptMetaTitle": "Quickstart ChatGPT — Hubungkan Telegram",
+    "chatgptMetaDescription": "Hubungkan Telegram ke ChatGPT dalam 3 langkah via Apps Directory. Mendukung paket Plus, Pro, Team, dan Enterprise.",
+    "chatgptHeading": "Hubungkan Telegram ke ChatGPT",
+    "chatgptIntro": "Tiga langkah. ChatGPT Plus, Pro, Team, atau Enterprise diperlukan (fitur Apps).",
+    "chatgptStep1Title": "Aktifkan Developer Mode",
+    "chatgptStep1Desc": "Di ChatGPT Settings → Connectors → Advanced, aktifkan Developer Mode. Ini memungkinkan Anda menambahkan aplikasi MCP kustom.",
+    "chatgptStep2Title": "Tambahkan URL aplikasi",
+    "chatgptStep2Desc": "Di Settings → Connectors → Create, pilih I trust this application, tempel URL di bawah ini, dan klik Create.",
+    "chatgptStep3Title": "OAuth + pemindaian QR",
+    "chatgptStep3Desc": "ChatGPT mengalihkan ke layar OAuth kami. Setujui, lalu pindai QR dengan Telegram → Pengaturan → Perangkat → Tautkan Perangkat Desktop. ChatGPT mengalihkan kembali dan aplikasi siap digunakan.",
+    "chatgptTroubleshootHeading": "Pemecahan masalah",
+    "chatgptTroubleshootDoubleQRTitle": "Muncul dua kode QR",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT terkadang membuka dua alur OAuth paralel pada koneksi pertama. Pindai kode QR mana pun — alur kedua otomatis mengalihkan ke sesi pertama. Menutup tab duplikat tidak masalah.",
+    "chatgptTroubleshootLinkNotFoundTitle": "\"Link not found\" setelah restart",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT tidak terhubung kembali secara otomatis setelah server restart. Putuskan dan hubungkan kembali aplikasi di ChatGPT Settings → Apps untuk membangun ulang stream SSE.",
+    "urlLabel": "URL konektor",
+    "copyLabel": "Salin",
+    "copiedLabel": "Tersalin!",
+    "backToOverview": "Kembali ke Quickstart"
+  }
+}

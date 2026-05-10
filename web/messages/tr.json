@@ -1,0 +1,282 @@
+{
+  "_meta": {
+    "sourceSha": "cdd0404618d6f81a",
+    "sourceFile": "en.json",
+    "translatedAt": "2026-05-10T22:35:00Z",
+    "model": "claude-opus-4-7-inline",
+    "autoTranslated": true
+  },
+  "metadata": {
+    "siteTitle": "MCP Telegram — Claude AI ve ChatGPT'de Telegram'ınız",
+    "siteDescription": "Telegram hesabınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, kişilere ulaşın — hepsi tek tıkla yapay zekâdan."
+  },
+  "nav": {
+    "features": "Özellikler",
+    "howItWorks": "Nasıl çalışır",
+    "choice": "Barındırılan veya kendi sunucunuz",
+    "faq": "SSS",
+    "github": "GitHub",
+    "quickstart": "Hızlı başlangıç",
+    "examples": "Örnekler"
+  },
+  "hero": {
+    "titleStart": "Telegram'ınız",
+    "titleClaude": "Claude AI",
+    "titleAnd": "ve",
+    "titleChatGPT": "ChatGPT",
+    "subtitle": "Mesajları okuyun, sohbetlerde arama yapın, kişileri takip edin ve medya indirin — hepsi Claude.ai veya ChatGPT içinden. QR kodu ile 30 saniyede bağlanın.",
+    "ctaPrimary": "Telegram'ı bağla",
+    "ctaSecondary": "Kendi sunucunuzda",
+    "ctaQuickstart": "30 saniyede başlayın"
+  },
+  "features": {
+    "heading": "Neler yapabilirsiniz",
+    "subheading": "Salt okunur araçlar — güvenli, gizli, sizin adınıza mesaj gönderilmez",
+    "readMessagesTitle": "Mesajları okuyun",
+    "readMessagesDesc": "Tarih filtresi ve sayfalama ile her sohbetteki mesajlara göz atın",
+    "searchTitle": "Her şeyde arayın",
+    "searchDesc": "Sohbetler, mesajlar, kişiler ve kanallarda tam metin araması",
+    "analyticsTitle": "Sohbet analitiği",
+    "analyticsDesc": "Sohbet bilgileri, üye listeleri, okunmamış sayıları ve ayrıntılı üst veriler",
+    "mediaTitle": "Medyayı görüntüleyin",
+    "mediaDesc": "Fotoğrafları yapay zekâ sohbeti içinde doğrudan indirip görüntüleyin",
+    "contactsTitle": "Kişiler ve üyeler",
+    "contactsDesc": "Kişi listenize ve grup/kanal üye listelerine erişin",
+    "secureTitle": "Salt okunur ve güvenli",
+    "secureDesc": "Mesaj gönderemez, düzenleyemez veya silemez. Hesabınız güvendedir"
+  },
+  "examples": {
+    "heading": "İnsanlar neler soruyor",
+    "subheading": "Bağlandıktan hemen sonra kullanabileceğiniz gerçek istemler",
+    "morningTitle": "Sabah brifingi",
+    "morningPrompt": "Okunmamış mesajlarımı özetle ve acil olanları öne çıkar",
+    "findTitle": "Her şeyi bulun",
+    "findPrompt": "İş sohbetimizdeki proje son teslim tarihiyle ilgili mesajları bul",
+    "extractTitle": "Veriyi çıkarın",
+    "extractPrompt": "Bu hafta tasarım kanalında paylaşılan tüm bağlantıları listele",
+    "peopleTitle": "Kişi araması",
+    "peoplePrompt": "Topluluk grubumuzdaki en aktif üyeler kimler?",
+    "overviewTitle": "Sohbet özeti",
+    "overviewPrompt": "Bugün ekip sohbetinde olanların bir özetini ver",
+    "mediaTitle": "Medya incelemesi",
+    "mediaPrompt": "Aile sohbetinde dün gönderilen fotoğrafları göster",
+    "ctaSeeAll": "Tüm örnekleri gör"
+  },
+  "howItWorks": {
+    "heading": "Nasıl çalışır",
+    "subheading": "Üç adım, 30 saniye, API anahtarı gerektirmez",
+    "step1Title": "Bağlayıcıyı ekleyin",
+    "step1Desc": "Claude.ai'de \"Connect\" düğmesine tıklayın veya ChatGPT'ye uygulama olarak ekleyin",
+    "step2Title": "QR kodunu tarayın",
+    "step2Desc": "Telegram'ı açın → Ayarlar → Cihazlar → Masaüstü Cihaza Bağla → Tara",
+    "step3Title": "Sorular sormaya başlayın",
+    "step3Desc": "Yapay zekâdan sohbetlerinizi okumasını, mesajları aramasını veya konuşmaları özetlemesini isteyin",
+    "ctaFullGuide": "Tam kılavuzu oku"
+  },
+  "choice": {
+    "heading": "Barındırılan veya kendi sunucunuz",
+    "subheading": "MIT lisansı altında açık kaynak. Barındırılan örneği kullanın veya kendi kopyanızı çalıştırın.",
+    "hostedTitle": "Barındırılan",
+    "hostedTagline": "Tek tıkla bağlantı, proje tarafından bakımı yapılır.",
+    "hostedFeature1": "QR kodu ile giriş — yönetilecek API anahtarı yok",
+    "hostedFeature2": "Salt okunur araç seti, tasarımı gereği güvenli",
+    "hostedFeature3": "Servisin sağlığı için günlük adil kullanım sınırı",
+    "hostedFeature4": "Telegram botu üzerinden servis durumu güncellemeleri",
+    "hostedCta": "Şimdi bağlanın",
+    "selfHostTitle": "Kendi sunucunuzda",
+    "selfHostTagline": "Tam kontrol, sizin makineniz, sizin verileriniz.",
+    "selfHostFeature1": "Tüm araçlar — okuma ve yazma",
+    "selfHostFeature2": "Günlük sınır yok",
+    "selfHostFeature3": "Verileriniz sunucunuzdan asla çıkmaz",
+    "selfHostFeature4": "Docker Compose + .env, ~10 dakikada kurulum",
+    "selfHostCta": "GitHub'da görüntüle",
+    "footnote": "İzleme yok. Reklam yok. Tek kişi tarafından boş zamanlarda sürdürülür — issue'lar ve PR'lar için lütfen sabırlı olun."
+  },
+  "faq": {
+    "heading": "SSS",
+    "subheading": "Güvenlik ve gizlilik hakkında sık sorulan sorular",
+    "safeQ": "Telegram'ımı bağlamak güvenli mi?",
+    "safeA": "Evet. Barındırılan sürüm kesinlikle salt okunurdur — hiçbir mesaj gönderemez, düzenleyemez veya silemez. Hesabınız, Telegram Web veya Desktop'a giriş yapmakla aynı şekilde kullanılır. Telegram'ın \"Cihazlar\" ayarlarından istediğiniz zaman bağlantıyı kesebilirsiniz.",
+    "readQ": "Mesajlarımı sunucuda okuyabilir misiniz?",
+    "readAStart": "Mesajlarınızı saklamıyoruz. Her araç çağrısı verileri doğrudan Telegram'ın API'sinden alır ve yapay zekâ asistanına döndürür. Telegram oturum anahtarınız, bağlayıcının istekler arasında çalışmaya devam edebilmesi için sunucumuzda saklanır ve oturumunuz sona erdiğinde silinir (tam zamanlama için bir sonraki yanıta bakın). Saklama ayrıntıları ve sıkılaştırma rehberi şu belgemizde:",
+    "readALinkLabel": "SECURITY.md",
+    "readAEnd": ".",
+    "protocolQ": "Bot API olmadan nasıl bağlanıyor?",
+    "protocolA": "MTProto kullanır — Telegram'ın resmi uygulamalarının kullandığı protokolün aynısı. Yeni bir cihaz bağlar gibi QR kodu ile kimlik doğrulaması yaparsınız. Telegram açısından bu da oturum açmış başka bir istemcidir.",
+    "disconnectQ": "Bağlantıyı kesince ne oluyor?",
+    "disconnectA": "Bağlayıcıyı Claude.ai veya ChatGPT'den açıkça kaldırırsanız, sunucu Telegram oturumunu kapatır ve oturum anahtarını hemen siler. Yapay zekâ uygulamasını iptal etmeden kapatırsanız, bellekteki istemci anında bırakılır ve sorunsuz devam edebilmeniz için saklanan oturum anahtarı kısa bir süre tutulur; kısa bir boşta kalma süresi (birkaç dakika) içinde tekrar bağlanmazsanız, sunucu otomatik olarak çıkış yapar ve anahtarı siler. Ayrıca istediğiniz zaman Telegram → Ayarlar → Cihazlar üzerinden tam iptal işlemi gerçekleştirebilirsiniz.",
+    "chatgptQ": "ChatGPT ile çalışıyor mu?",
+    "chatgptAStart": "Evet. ChatGPT Ayarlar → Uygulamalar (Geliştirici Modu) üzerinden uygulama olarak ekleyin. Şu URL'yi kullanın:",
+    "chatgptAEnd": "OAuth kimlik doğrulamasıyla. Plus, Pro, Team ve Enterprise planlarında çalışır.",
+    "openSourceQ": "Kaynak kodu açık mı?",
+    "openSourceAStart": "Sunucu tamamen açık kaynaktır (MIT lisansı) ve şurada bulunabilir:",
+    "openSourceAEnd": ". Tam okuma+yazma erişimiyle ücretsiz olarak kendi sunucunuzda barındırabilirsiniz.",
+    "botQ": "Servis güncellemelerini nasıl öğreneceğim?",
+    "botAStart": "Şuna abone olun:",
+    "botAEnd": "servis durumu, kırıcı değişiklikler ve yeni sürümler hakkında bilgilendirilmek için. Aboneliği iptal etmek için istediğiniz zaman /stop gönderin."
+  },
+  "footer": {
+    "mit": "MIT lisanslı",
+    "privacy": "Gizlilik",
+    "terms": "Şartlar",
+    "tagline": "Claude AI ve ChatGPT için salt okunur Telegram erişimi."
+  },
+  "language": {
+    "switcherLabel": "Dil",
+    "helpTranslate": "Çeviriye yardım et"
+  },
+  "common": {
+    "translationOutdated": "Bu çeviri güncel olmayabilir.",
+    "machineTranslated": "Makine çevirisi — bu çeviriyi geliştirin",
+    "fallbackToEnglish": "Bu sayfa henüz çevrilmedi. İngilizce gösteriliyor."
+  },
+  "privacy": {
+    "title": "Gizlilik Politikası",
+    "lastUpdated": "Son güncelleme"
+  },
+  "terms": {
+    "title": "Hizmet Şartları",
+    "lastUpdated": "Son güncelleme"
+  },
+  "examplesPage": {
+    "metaTitle": "Örnekler — İnsanlar Claude AI ve ChatGPT'ye Telegram hakkında neler soruyor",
+    "metaDescription": "Claude AI ve ChatGPT için Telegram sohbetlerinizi okuyacak 12 hazır istem: sabah brifingleri, mesaj bulma, veri çıkarma, kişi araması ve daha fazlası.",
+    "heading": "Gerçek hayattan örnekler",
+    "subheading": "On iki yapıştırmaya hazır istem. Her biri, Hızlı Başlangıç ile Telegram'ı bağladıktan sonra çalışır.",
+    "categoryLabel": "Kategori",
+    "cat_briefing": "Brifing",
+    "cat_search": "Arama",
+    "cat_analytics": "Analitik",
+    "cat_extract": "Çıkarma",
+    "cat_people": "Kişiler",
+    "cat_media": "Medya",
+    "tryThis": "Bu istemi dene",
+    "items": {
+      "morning": {
+        "title": "Sabah brifingi",
+        "description": "Okunmamış sohbetlerin günlük özeti, acil olanlar en üste alınır.",
+        "prompt": "Son 12 saatteki okunmamış Telegram mesajlarımı özetle. Sohbete göre grupla, \"acil\", \"son tarih\" veya önümüzdeki 48 saat içindeki bir tarihten bahseden her şeyi öne çıkar ve bana yöneltilmiş tüm doğrudan soruları listele.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Yoğun bir kanaldan haftalık özet",
+        "description": "Yüzlerce gönderiyi kaydırmadan gürültülü bir kanalı yakalayın.",
+        "prompt": "\"AI News\" Telegram kanalımdaki son 7 günün mesajlarına bak. En çok tartışılan konular hakkında, her konu için bir örnek bağlantı ile birlikte 5 maddelik bir özet ver.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Şu son tarih mesajını bul",
+        "description": "Tam sözcükleri hatırlamadan belirli bir geçmiş mesajı bulun.",
+        "prompt": "İş sohbetimizde birinin proje son tarihinden bahsettiği mesajı bul. Tarihi, kimin gönderdiğini ve öncesindeki ve sonrasındaki 2'şer mesajlık bağlamı göster.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Paylaşılan belgeleri bul",
+        "description": "Bir sohbette bir tarih aralığında paylaşılan tüm dosyaları listeleyin.",
+        "prompt": "Son 30 günde \"Design Team\" Telegram sohbetinde paylaşılan tüm PDF ve DOCX eklerini, en yeniden başlayarak, dosya adı ve gönderici bilgisiyle birlikte göster.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "Bu hafta paylaşılan tüm bağlantılar",
+        "description": "Topluluğunuzun paylaştığı bağlantılardan okuma listesi oluşturun.",
+        "prompt": "\"Reading Group\" Telegram kanalında bu hafta paylaşılan her URL'yi listele. Yinelenenleri kaldır, alan adına göre grupla ve her birine mesaj zaman damgasını ekle.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Eylem maddelerini çıkar",
+        "description": "Resmi olmayan bir sohbet konusunu TODO listesine dönüştürün.",
+        "prompt": "Ekip sohbetimdeki son 50 mesajı oku ve tüm eylem maddelerini çıkar. Her eylem için sorumlu kişiyi, varsa son tarihi ve tek satırlık bir açıklamayı ekle.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "En aktif topluluk üyeleri",
+        "description": "Bir topluluk grubunda yardımcıları ve liderleri tespit edin.",
+        "prompt": "Topluluk Telegram grubumuzda son 30 günün en aktif 10 üyesini listele. Her biri için kaç mesaj gönderdiğini ve son zamanlardan temsili bir mesajı göster.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Beni kim bahsetti",
+        "description": "Size doğrudan hitap eden mesajları bulun.",
+        "prompt": "Son 7 günde birinin beni @username ile bahsettiği veya mesajlarımdan birine doğrudan yanıt verdiği tüm mesajları göster. Sohbete göre grupla.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Zaman içinde sohbet etkinliği",
+        "description": "Bir sohbetin ne zaman yoğun, ne zaman sakin olduğunu görün.",
+        "prompt": "\"Engineering Team\" sohbetim için son 14 günde günlük mesaj sayılarını göster. Hangi günlerde olağandışı artışlar veya sessizlikler olduğunu söyle.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Sohbet bazında okunmamış",
+        "description": "Tek bir istemle gelen kutunuzu önceliklendirin.",
+        "prompt": "Şu anda okunmamış mesajları olan tüm Telegram sohbetlerimi, okunmamış sayısına göre azalan sırada listele. Her biri için sohbet adını ve ilk 3 okunmamış mesajı göster.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Son aile fotoğrafları",
+        "description": "Son paylaşılan fotoğrafları çekip yerinde görüntüleyin.",
+        "prompt": "Son 3 günde \"Aile\" Telegram sohbetinde gönderilen fotoğrafları göster. Her fotoğrafın tarihi ve gönderenle birlikte sohbet içinde göster.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Sesli mesaj transkriptleri",
+        "description": "Uzun ses notlarını metin olarak okuyarak göz gezdirin.",
+        "prompt": "\"Coworking\" grup sohbetimde bu hafta gönderilen tüm sesli mesajları bul. Her birini transkribe et ve gönderen ile zaman damgasıyla birlikte kronolojik bir liste olarak sun.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Hızlı başlangıç — Telegram'ı Claude AI veya ChatGPT'ye bağlayın",
+    "metaDescription": "Telegram hesabınızı 30 saniyede Claude AI veya ChatGPT'ye bağlamak için adım adım kılavuz. QR kodu ile giriş, API anahtarı gerekmez.",
+    "heading": "Hızlı başlangıç",
+    "subheading": "Telegram'ı bir dakikadan kısa sürede bağlayın. Aşağıdan yapay zekâ asistanınızı seçin.",
+    "tabClaudeTitle": "Claude AI için",
+    "tabClaudeDesc": "claude.ai'de bağlayıcıyı ekleyin · 5 adım · ~30 saniye",
+    "tabClaudeCta": "Claude kılavuzunu aç",
+    "tabChatGPTTitle": "ChatGPT için",
+    "tabChatGPTDesc": "ChatGPT'de uygulama olarak ekleyin · 3 adım · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "ChatGPT kılavuzunu aç",
+    "needAccount": "Telefonunuzda güncel bir Telegram istemcisi olan bir Telegram hesabına ihtiyacınız olacak (böylece QR ile giriş seçeneği kullanılabilir olur).",
+    "claudeMetaTitle": "Claude AI Hızlı başlangıç — Telegram'ı bağlayın",
+    "claudeMetaDescription": "Connectors menüsü üzerinden 5 adımda Telegram'ı Claude.ai'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, kişilere ulaşın.",
+    "claudeHeading": "Telegram'ı Claude AI'ye bağlayın",
+    "claudeIntro": "Beş adım. Yaklaşık otuz saniye. API anahtarı yok.",
+    "claudeStep1Title": "Claude.ai ayarlarını açın",
+    "claudeStep1Desc": "claude.ai'ye giriş yapın ve Ayarlar'ı açın. Free, Pro, Max ve Team planlarının tümü bağlayıcıları destekler.",
+    "claudeStep2Title": "Connectors bölümüne gidin",
+    "claudeStep2Desc": "Ayarlar'da Connectors bölümünü bulun ve \"Add custom connector\" düğmesine tıklayın.",
+    "claudeStep3Title": "MCP URL'sini yapıştırın",
+    "claudeStep3Desc": "Bağlayıcı iletişim kutusuna aşağıdaki URL'yi girin ve Connect'e tıklayın.",
+    "claudeStep4Title": "OAuth onayı + QR taraması",
+    "claudeStep4Desc": "Claude.ai, OAuth onay ekranımıza yönlendirir. Approve'a tıklayın, ardından bir QR kodu görünür. Telegram'ı açın → Ayarlar → Cihazlar → Masaüstü Cihaza Bağla → QR'ı tarayın.",
+    "claudeStep5Title": "Sorular sormaya başlayın",
+    "claudeStep5Desc": "Claude.ai sizi geri yönlendirir; yeşil bir \"Connected\" durumu göreceksiniz. Sohbetlerinizi okumasını isteyin: \"Okunmamış mesajlarımı özetle\" iyi bir ilk istemdir.",
+    "claudeTroubleshootHeading": "Sorun giderme",
+    "claudeTroubleshootQRTitle": "QR kodu süresi doldu veya taranmadı",
+    "claudeTroubleshootQRDesc": "QR kodları ~30 saniye geçerlidir. Bağlayıcı iletişim kutusunu yenileyip tekrar deneyin. Tarama sırasında telefonunuzda internet erişimi olduğundan emin olun.",
+    "claudeTroubleshootDisconnectedTitle": "Bağlayıcı \"disconnected\" diyor",
+    "claudeTroubleshootDisconnectedDesc": "Claude.ai'de bağlayıcıyı açın ve Reconnect'e tıklayın — yeni bir QR alacaksınız. Oturumlar Telegram → Ayarlar → Cihazlar üzerinden de iptal edilebilir.",
+    "claudeTroubleshootChatsTitle": "Boş sohbet listesi",
+    "claudeTroubleshootChatsDesc": "Claude size hiç sohbetiniz olmadığını söylüyorsa, Telegram oturumunuzun büyük ihtimalle yeniden etkinleştirilmesi gerekiyor. claude.ai → Ayarlar → Connectors üzerinden bağlantıyı kesip yeniden bağlanın.",
+    "chatgptMetaTitle": "ChatGPT Hızlı başlangıç — Telegram'ı bağlayın",
+    "chatgptMetaDescription": "Apps Directory üzerinden 3 adımda Telegram'ı ChatGPT'ye bağlayın. Plus, Pro, Team ve Enterprise planları desteklenir.",
+    "chatgptHeading": "Telegram'ı ChatGPT'ye bağlayın",
+    "chatgptIntro": "Üç adım. ChatGPT Plus, Pro, Team veya Enterprise gereklidir (Apps özelliği).",
+    "chatgptStep1Title": "Geliştirici Modunu etkinleştirin",
+    "chatgptStep1Desc": "ChatGPT Ayarlar → Connectors → Advanced üzerinden Developer Mode'u açın. Bu, özel MCP uygulamaları eklemenizi sağlar.",
+    "chatgptStep2Title": "Uygulama URL'sini ekleyin",
+    "chatgptStep2Desc": "Ayarlar → Connectors → Create üzerinden I trust this application'ı seçin, aşağıdaki URL'yi yapıştırın ve Create'e tıklayın.",
+    "chatgptStep3Title": "OAuth + QR taraması",
+    "chatgptStep3Desc": "ChatGPT, OAuth ekranımıza yönlendirir. Onaylayın, ardından Telegram → Ayarlar → Cihazlar → Masaüstü Cihaza Bağla ile QR'ı tarayın. ChatGPT sizi geri yönlendirir ve uygulama hazır olur.",
+    "chatgptTroubleshootHeading": "Sorun giderme",
+    "chatgptTroubleshootDoubleQRTitle": "İki QR kodu göründü",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT, ilk bağlantıda bazen iki paralel OAuth akışı açar. Herhangi bir QR'ı tarayın — ikinci akış otomatik olarak ilk oturuma yönlendirir. Yinelenen sekmeyi kapatmanız sorun değildir.",
+    "chatgptTroubleshootLinkNotFoundTitle": "Yeniden başlatma sonrası \"Link not found\"",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT, sunucu yeniden başlatıldıktan sonra otomatik olarak yeniden bağlanmaz. SSE akışını yeniden kurmak için ChatGPT Ayarlar → Apps üzerinden uygulamayı bağlantıdan çıkarıp yeniden bağlayın.",
+    "urlLabel": "Bağlayıcı URL'si",
+    "copyLabel": "Kopyala",
+    "copiedLabel": "Kopyalandı!",
+    "backToOverview": "Hızlı başlangıca dön"
+  }
+}
