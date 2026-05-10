@@ -4,26 +4,31 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-05-04
-**Current version:** 2.21.1 (cloud — telemetry kill-switch symmetry across logger/metrics/tracer) / [`@overpod/mcp-telegram` 1.36.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-05-10
+**Current version:** 2.28.0 (cloud — landing fact-check + drop self-host marketing references) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
 ## Goal
 
-**Full 1:1 parity with upstream `@overpod/mcp-telegram` — 181/181 tools.**
+**Full 1:1 parity with upstream `@overpod/mcp-telegram` — achieved.**
 
-As of v2.14.0 the cloud whitelist covers **172 of 181 upstream tools (~95%)** —
-**100% of what is achievable on a shared HTTP server**. The remaining 9 are
-all `EXPLICIT_EXCLUDED`: 6 filesystem-bound send tools (Phase X — needs an
-upload-path design), and 3 auth-lifecycle tools that conflict with cloud's
+As of v2.15.0 the cloud whitelist covers **178 of 181 upstream tools** —
+**100% of what is achievable on a shared HTTP server**. The remaining 3 are
+permanently `EXPLICIT_EXCLUDED` auth-lifecycle tools that conflict with cloud's
 OAuth/QR flow (`telegram-login`, `telegram-logout`, `telegram-terminate-session`).
-The 11 destructive tools shipped in v2.14.0 behind a per-user opt-in toggle
-(server-default OFF) at `/my/settings`, with an `/my/audit` history view and
-a separate `DESTRUCTIVE_DAILY_LIMIT` quota independent of `FREE_TIER_LIMIT`.
+Phase X filesystem-upload path shipped in v2.15.0 — 6 FS-bound media tools
+(`telegram-send-file`/`-voice`/`-video-note`/`-album`/`-story` + `telegram-set-profile-photo`)
+now flow via cookie-authenticated multipart upload to `/my/upload` or SSRF-protected
+https:// URL fetch; no filesystem path crosses the LLM tool boundary.
+
+The 11 destructive tools (`delete-message`, `edit-message`, `kick-user`,
+`ban-user`, `clear-drafts` etc.) shipped in v2.14.0 behind a per-user opt-in
+toggle (server-default OFF) at `/my/settings`, with an `/my/audit` history view
+and a separate `DESTRUCTIVE_DAILY_LIMIT` quota independent of `FREE_TIER_LIMIT`.
 Stars parity is complete in opt-in form (`MCP_TELEGRAM_ENABLE_STARS=1`).
 Tracked in [`scripts/parity-baseline.json`](scripts/parity-baseline.json) —
-`pending` is now `[]` — and gated in CI by `pnpm check-parity`.
+`pending` is now `[]` — and gated in CI by `bun check-parity`.
 
 ## Now (in flight)
 
@@ -48,15 +53,6 @@ Ordered by current intent. Subject to change as decisions are locked.
 
 Direction is set, but timing depends on usage signals or external events.
 
-- **Phase X — Filesystem upload path**. Unblocks the last 5 currently
-  excluded tools (`telegram-send-file`, `-send-voice`, `-send-video-note`,
-  `-send-album`, `-send-story`). They require an absolute path on the
-  cloud container's filesystem, which the user does not control. Needs a
-  design call: presigned upload URL vs. multipart `/upload` endpoint vs.
-  HTTPS-fetch from a user-supplied URL; ephemeral container disk vs.
-  object storage; per-user upload quota. Deferred until non-FS parity is
-  closed (Wave 2.3 → 2.7 + Phase 2.1) — at that point only these 5 tools
-  are gated on it.
 - **`MCP_TELEGRAM_ENABLE_STARS=0` in default cloud image**. Stars
   remains opt-in via env flag for self-hosters; the hosted
   `mcp-telegram.com` image does not register Stars tools by default
@@ -70,9 +66,6 @@ Direction is set, but timing depends on usage signals or external events.
   first as an IPC / single-flight bug, not as a proxy-pool trigger.
   Shortlisted infrastructure: datacenter VPS pool (~$20-40/mo, 5 IPs across
   3 regions) → residential proxies (~$50-200/mo) only on escalation.
-- **Settings page + audit log UI** (`/settings`, `/my/audit`) for
-  destructive-tools opt-in and history visibility. Required by Group C/E
-  expansion.
 - **Per-method adaptive rate limiter** — only if real flood statistics
   show it's needed. Reactive strategy is currently sufficient
   (FLOOD_WAIT auto-retry).
@@ -84,6 +77,14 @@ Direction is set, but timing depends on usage signals or external events.
 - **Status page** at `mcp-telegram.com/status` — current service health
   (ok / maintenance / incident) with in-response banner middleware for
   active incidents.
+- **Tier 3 locale translation** — 49 locales currently fall back to EN
+  content (noindex) — Tier 2's 18 are fully translated as of v2.27.0.
+  Tier 3 retranslate is mechanical (same inline-subagent pipeline) but
+  requires removing `noindex` per locale once content lands and verifying
+  duplicate-content risk per language.
+- **`<StepCard image>` real screenshots** for `/docs/quickstart/{claude,chatgpt}`
+  — UX win for 100% of users; component already accepts optional image
+  prop.
 
 ## Not planned (out of scope)
 
@@ -112,6 +113,121 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-10** — **Landing fact-check + drop self-host marketing references** (cloud v2.28.0).
+  Three-way audit: (a) all "self-host" mentions removed from the marketing site
+  content — `nav.choice`, `hero.ctaSecondary`, the entire `choice` landing
+  section (Hosted vs Self-host card grid + 12 keys), and the
+  `faq.openSourceA*` self-host pitch. Self-hosters discover the project via
+  GitHub README; the landing now focuses on the hosted experience.
+  (b) Four landing claims falsely advertised "strictly read-only" while the
+  cloud backend actually exposes three permission tiers (read-only +
+  default-on write tools for send/react/draft + opt-in destructive with
+  daily quota and audit log). All four rewritten honestly:
+  `features.subheading`, `features.secureTitle/Desc` (swapped for a
+  `writeTitle/Desc` card), `faq.safeA`, and `footer.tagline`.
+  (c) 20 locale files synced: en + ru hand-curated, 18 Tier 2 retranslated
+  via 3 parallel subagents (Edit-based delta on 9 changed strings per
+  locale). `_meta.sourceSha` bumped to `3817d448db82af6c`, retranslatedAt
+  timestamps added. -799 / +257 LOC (more deleted than added — hygiene win).
+  502/502 prerendered pages, sitemap unchanged at 140 × 21 hreflang.
+
+- **2026-05-10** — **Drop TranslationBanner** (cloud v2.27.1).
+  After v2.27.0 shipped real Tier 2 translations via Claude inline (not raw
+  machine translation), the "Machine-translated — improve this translation"
+  banner read as undeserved self-deprecation. Both banner variants (Tier 2
+  disclaimer + Tier 3 fallback "Help translate") removed end-to-end:
+  deleted `components/TranslationBanner.tsx` + import in
+  `app/[locale]/layout.tsx`, dropped 4 unused i18n keys from all 20
+  messages files (`common.translationOutdated`, `common.machineTranslated`,
+  `common.fallbackToEnglish`, `language.helpTranslate` — `common.*`
+  block now empty and dropped entirely). 35 files lint-clean (was 36),
+  502/502 prerendered.
+
+- **2026-05-10** — **Tier 2 batch translation** (cloud v2.27.0).
+  Closes Phase 5 of `workflow_content_expansion_i18n.md` — the last open
+  item from the v2.26.0 i18n workflow. 18 Tier 2 locales (es, de, fr,
+  pt-BR, it, pl, tr, nl, uk, ja, ko, zh-CN, zh-TW, ar, hi, id, vi, th)
+  now serve fully translated content (217 leaves per locale + `_meta`
+  with sourceSha + autoTranslated flag). Original plan was Anthropic SDK
+  ~$2-5; actually shipped at **$0 cost** via 6 parallel `general-purpose`
+  subagents (3 locales each), Edit-based against ru.json as style reference
+  + locale-specific register/vocab rules + brand-preservation list.
+  Ukrainian verified non-Russian (пошук/налаштування/повідомлення).
+  Telegram menu strings matched to official Telegram localizations per
+  locale. `bun scripts/validate-translations.ts` ✓ All 19 match keyspace;
+  build went from 140 to 502 prerendered pages.
+
+- **2026-05-10** — **Next.js content site PART C — i18n + Quickstart + Examples**
+  (cloud v2.26.0 + v2.26.1).
+  All 9 phases of `workflow_content_expansion_i18n.md` shipped end-to-end.
+  next-intl 4.11 + `localePrefix: 'as-needed'` for 70 Telegram-supported
+  locales (Tier 1 EN/RU manual, Tier 2 18 indexable, Tier 3 49 EN-fallback
+  with noindex). New routes: `/docs/quickstart{,/claude,/chatgpt}` (HowTo
+  JSON-LD) + `/examples` (12 prompts × 6 categories) + LangSwitcher.
+  3 client islands total; everything else RSC. Sitemap: 140 entries × 21
+  hreflang langs (zh-CN→zh-Hans, zh-TW→zh-Hant, x-default→en).
+  Phase 1.5 NO-GO for `@telegram-apps/telegram-ui` — AppRoot mandatory
+  client wrapper would kill RSC + ~150KB CSS busts +60KB budget.
+  v2.26.1 hotfix repaired 4 design-review bugs Playwright caught on the
+  live site: HIGH light-theme tokens replacing hardcoded dark hex on
+  `/docs/*` + `/examples` (every page rendered ~invisible white-on-white
+  before fix); HIGH RTL `left:-9999px` overflow extending scrollWidth to
+  ~11400px on `/ar /he /fa /ur` (replaced with `clip:rect(0,0,0,0)`);
+  MEDIUM mobile nav overflow @ 390px viewport; MEDIUM CSP `unsafe-eval`
+  blocking React dev. Bonus: Next 16.2.2 → 16.2.6 closing dependabot #9.
+
+- **2026-05-10** — **Next.js content site PART B — `mcp-telegram-web` container + Traefik split**
+  (cloud v2.25.0).
+  Monorepo Bun workspace `web/` + Next.js 16.2.2 RSC ports of landing /
+  privacy / terms with CSS Modules + `tg-*` design tokens via CSS custom
+  properties. Two containers now: `mcp-telegram-cloud` (Hono backend on
+  Bun 1.3.13) for `/mcp /oauth /authorize /login /health /api /my /bot
+  /admin /.well-known` (priority=100 prefix-list router); `mcp-telegram-web`
+  (Next.js standalone on Bun 1.3.13, 144MB image) for everything else
+  (priority=1 catchall). Hono pages cleanup -945 LOC. 11 phases across
+  4 PRs + infra Traefik route-split (`infra@3e3c433`) + healthcheck
+  IPv6 fix (`infra@83c3633` — Bun-alpine busybox `localhost` prefers
+  IPv6 ::1 but Next.js binds IPv4 only; use `127.0.0.1` literal).
+
+- **2026-05-10** — **Bun migration PART A** (cloud v2.24.0 → v2.23.2 deps wave).
+  Node 22 + pnpm + tsx + better-sqlite3 + @hono/node-server → **Bun 1.3.13**
+  + bun:sqlite + Bun.serve. Single runtime now. GramJS MTProto round-trip
+  validated post-deploy via `/login/qr` SSE smoke (real QR PNG from
+  Telegram). 479/479 tests green. Same session also shipped v2.23.2
+  patch wave (biome 2.4.15, hono/node-server, lint-staged → native
+  `biome check --staged` since biome 2.4 has built-in `--staged`).
+
+- **2026-05-10** — **Eternal refresh_token + rotation with replay detection**
+  (cloud v2.23.0 + v2.23.1).
+  Eliminates "reconnect required" UX after 30+ days idle. Refresh_token
+  now sliding-by-use (`expires_at = 0` sentinel) instead of fixed 30-day
+  TTL. New columns `chain_id` / `revoked` / `replaced_by` / `revoked_at`
+  on `oauth_refresh_tokens`; rotation rewritten as atomic
+  `BEGIN IMMEDIATE` + `UPDATE … WHERE refresh_token=? AND revoked=0 RETURNING …`
+  (CAS). Replay beyond a 10-second window revokes the entire chain and
+  emits `oauth.token.replay_detected` with forensics fields (chainId,
+  tokenFingerprint sha256-16, ageSeconds, wasMidChain). Legacy v2.22
+  tokens auto-upgrade on first refresh. Public OAuthProvider API
+  unchanged. 6 dependabot patch closures (v2.23.1): HIGH fast-uri × 2,
+  MEDIUM ip-address, MEDIUM/LOW hono × 3 — via pnpm `overrides` for
+  transitives, direct semver bumps for hono.
+
+- **2026-05-06** — **Idle reaper no longer logs out the Telegram session**
+  (cloud v2.22.0).
+  SigNoz forensic on a personal QR re-login surfaced the bug: idle MCP
+  reaper closed last session → 5-min timer → `telegram.logOut()` +
+  `DELETE FROM user_sessions` → next tool call from ANY OTHER client
+  sharing the same userId required QR. Cross-client kill confirmed in
+  logs (`u:9fcdce580e` cleanup.fired @ 06:13 → 25 min later both Claude
+  and ChatGPT got "No Telegram session"). Fix: `teardownSessionImpl`
+  now calls only `disconnectUser` (memory release, session_string
+  preserved in SQLite). `destroyUserSession` (logOut + DELETE) reserved
+  for explicit `/oauth/revoke` and Telegram-side `onSessionRevoked`
+  handler. Removed `cleanupTimers` Map + `SESSION_CLEANUP_DELAY_MINUTES`
+  env + `cleanup.{scheduled,fired,cancelled}` events. 464/464 tests
+  (+2). Lesson: idle eviction ≠ explicit disconnect; the two lifecycle
+  contracts must remain orthogonal.
 
 - **2026-05-04** — **Telemetry kill-switch symmetry across logger/metrics/tracer** (cloud v2.21.1).
   Pure refactor surfaced by /sc:analyze: logger.ts read `MCP_TELEGRAM_TELEMETRY` at
