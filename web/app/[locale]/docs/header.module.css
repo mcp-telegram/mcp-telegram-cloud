@@ -1,0 +1,23 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #e6edf3;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: #2aabee;
+}

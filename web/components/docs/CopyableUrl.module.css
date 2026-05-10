@@ -1,0 +1,56 @@
+.wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 14px 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 560px;
+}
+
+.label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.url {
+  flex: 1 1 auto;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 12px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  color: #e6edf3;
+  border: none;
+  outline: none;
+  user-select: all;
+}
+
+.btn {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  background: rgba(42, 171, 238, 0.12);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  color: #2aabee;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 96px;
+  transition: background 0.15s ease;
+}
+
+.btn:hover {
+  background: rgba(42, 171, 238, 0.2);
+}
+
+.btn[data-copied="true"] {
+  color: #6dd3a4;
+  background: rgba(109, 211, 164, 0.14);
+}

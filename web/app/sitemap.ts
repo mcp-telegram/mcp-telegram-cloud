@@ -12,6 +12,10 @@ import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 
 const PAGES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "/", changeFrequency: "monthly", priority: 1 },
+  { path: "/docs/quickstart", changeFrequency: "monthly", priority: 0.9 },
+  { path: "/docs/quickstart/claude", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/docs/quickstart/chatgpt", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/examples", changeFrequency: "monthly", priority: 0.85 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];

@@ -130,5 +130,146 @@
   "terms": {
     "title": "Terms of Service",
     "lastUpdated": "Last updated"
+  },
+  "examplesPage": {
+    "metaTitle": "Examples — What people ask Claude AI & ChatGPT about Telegram",
+    "metaDescription": "12 ready-to-use prompts for Claude AI and ChatGPT to read your Telegram chats: morning briefings, finding messages, extracting data, people lookup, and more.",
+    "heading": "Real-world examples",
+    "subheading": "Twelve ready-to-paste prompts. Each one works after connecting Telegram via Quickstart.",
+    "categoryLabel": "Category",
+    "cat_briefing": "Briefing",
+    "cat_search": "Search",
+    "cat_analytics": "Analytics",
+    "cat_extract": "Extract",
+    "cat_people": "People",
+    "cat_media": "Media",
+    "tryThis": "Try this prompt",
+    "items": {
+      "morning": {
+        "title": "Morning briefing",
+        "description": "A daily summary of unread chats, with urgent items pulled to the top.",
+        "prompt": "Summarize my unread Telegram messages from the last 12 hours. Group them by chat, highlight anything that mentions \"urgent\", \"deadline\", or a date in the next 48 hours, and list any direct questions addressed to me.",
+        "category": "briefing"
+      },
+      "weeklyDigest": {
+        "title": "Weekly digest from a busy channel",
+        "description": "Catch up on a noisy channel without scrolling through hundreds of posts.",
+        "prompt": "Look at the last 7 days of messages in my \"AI News\" Telegram channel. Give me 5 bullet points of the most-discussed topics, with one example link per topic.",
+        "category": "briefing"
+      },
+      "findDeadline": {
+        "title": "Find that deadline message",
+        "description": "Locate a specific past message without remembering the exact words.",
+        "prompt": "Find the message in our work chat where someone mentioned the project deadline. Show me the date, who sent it, and 2 messages of context before and after.",
+        "category": "search"
+      },
+      "findFiles": {
+        "title": "Find shared documents",
+        "description": "List every file someone shared in a chat over a date range.",
+        "prompt": "Show me all PDF and DOCX attachments shared in the \"Design Team\" Telegram chat in the last 30 days, sorted newest first, with the file name and who sent it.",
+        "category": "search"
+      },
+      "linksThisWeek": {
+        "title": "All links shared this week",
+        "description": "Build a reading list from links your community shared.",
+        "prompt": "List every URL shared in the \"Reading Group\" Telegram channel this week. Deduplicate, group by domain, and add the message timestamp for each.",
+        "category": "extract"
+      },
+      "extractActions": {
+        "title": "Extract action items",
+        "description": "Turn an informal chat thread into a TODO list.",
+        "prompt": "Read the last 50 messages in my team chat and extract any action items. For each action, include the assignee, the deadline if mentioned, and a one-line description.",
+        "category": "extract"
+      },
+      "topMembers": {
+        "title": "Most active community members",
+        "description": "Spot helpers and leaders in a community group.",
+        "prompt": "In our community Telegram group, list the top 10 most active members of the last 30 days. For each, show how many messages they sent and one representative recent message.",
+        "category": "people"
+      },
+      "whoMentioned": {
+        "title": "Who mentioned me",
+        "description": "Find messages that addressed you directly.",
+        "prompt": "Show me all messages from the last 7 days where someone mentioned me by @username or replied directly to one of my messages. Group by chat.",
+        "category": "people"
+      },
+      "chatActivity": {
+        "title": "Chat activity over time",
+        "description": "See when a chat is busy and quiet.",
+        "prompt": "For my \"Engineering Team\" chat, show message counts per day for the last 14 days. Tell me which days had unusual spikes or silences.",
+        "category": "analytics"
+      },
+      "unreadByChat": {
+        "title": "Unread by chat",
+        "description": "Triage your inbox with one prompt.",
+        "prompt": "List all my Telegram chats that have unread messages right now, sorted by unread count descending. For each, show the chat name and the first 3 unread messages.",
+        "category": "analytics"
+      },
+      "photosFamily": {
+        "title": "Recent family photos",
+        "description": "Pull recent shared photos and view them inline.",
+        "prompt": "Show me the photos sent in the \"Family\" Telegram chat in the last 3 days. Display them inline with the date and who sent each photo.",
+        "category": "media"
+      },
+      "voiceTranscripts": {
+        "title": "Transcripts of voice messages",
+        "description": "Skim long voice notes by reading them as text.",
+        "prompt": "Find all voice messages sent in my \"Coworking\" group chat this week. Transcribe each one and present them as a chronological list with sender and timestamp.",
+        "category": "media"
+      }
+    }
+  },
+  "quickstart": {
+    "metaTitle": "Quickstart — Connect Telegram to Claude AI or ChatGPT",
+    "metaDescription": "Step-by-step guide to connect your Telegram account to Claude AI or ChatGPT in 30 seconds. QR-code login, no API keys.",
+    "heading": "Quickstart",
+    "subheading": "Connect your Telegram in under a minute. Pick your AI assistant below.",
+    "tabClaudeTitle": "For Claude AI",
+    "tabClaudeDesc": "Add the connector in claude.ai · 5 steps · ~30 seconds",
+    "tabClaudeCta": "Open Claude guide",
+    "tabChatGPTTitle": "For ChatGPT",
+    "tabChatGPTDesc": "Add as an app in ChatGPT · 3 steps · Plus, Pro, Team, Enterprise",
+    "tabChatGPTCta": "Open ChatGPT guide",
+    "needAccount": "You'll need a Telegram account on your phone with a recent Telegram client (so the QR-login option is available).",
+    "claudeMetaTitle": "Claude AI Quickstart — Connect Telegram",
+    "claudeMetaDescription": "Connect Telegram to Claude.ai in 5 steps via the Connectors menu. Read messages, search chats, get contacts.",
+    "claudeHeading": "Connect Telegram to Claude AI",
+    "claudeIntro": "Five steps. About thirty seconds. No API keys.",
+    "claudeStep1Title": "Open Claude.ai settings",
+    "claudeStep1Desc": "Sign in to claude.ai and open Settings. Free, Pro, Max, and Team plans all support connectors.",
+    "claudeStep2Title": "Go to Connectors",
+    "claudeStep2Desc": "In Settings, find the Connectors section and click \"Add custom connector\".",
+    "claudeStep3Title": "Paste the MCP URL",
+    "claudeStep3Desc": "Enter the URL below in the connector dialog and click Connect.",
+    "claudeStep4Title": "Approve OAuth + scan QR",
+    "claudeStep4Desc": "Claude.ai redirects to our OAuth consent screen. Click Approve, then a QR code appears. Open Telegram → Settings → Devices → Link Desktop Device → scan the QR.",
+    "claudeStep5Title": "Start asking",
+    "claudeStep5Desc": "Claude.ai redirects back; you'll see a green \"Connected\" status. Ask it to read your chats: \"Summarize my unread messages\" works as a first prompt.",
+    "claudeTroubleshootHeading": "Troubleshooting",
+    "claudeTroubleshootQRTitle": "QR code expired or didn't scan",
+    "claudeTroubleshootQRDesc": "QR codes are valid for ~30 seconds. Refresh the connector dialog and try again. Make sure your phone has internet access while scanning.",
+    "claudeTroubleshootDisconnectedTitle": "Connector says \"disconnected\"",
+    "claudeTroubleshootDisconnectedDesc": "Open the connector in Claude.ai and click Reconnect — you'll get a new QR. Sessions can also be revoked from Telegram → Settings → Devices.",
+    "claudeTroubleshootChatsTitle": "Empty chat list",
+    "claudeTroubleshootChatsDesc": "If Claude says you have no chats, your Telegram session likely needs reactivation. Disconnect and reconnect from claude.ai → Settings → Connectors.",
+    "chatgptMetaTitle": "ChatGPT Quickstart — Connect Telegram",
+    "chatgptMetaDescription": "Connect Telegram to ChatGPT in 3 steps via Apps Directory. Plus, Pro, Team, and Enterprise plans supported.",
+    "chatgptHeading": "Connect Telegram to ChatGPT",
+    "chatgptIntro": "Three steps. ChatGPT Plus, Pro, Team, or Enterprise required (Apps feature).",
+    "chatgptStep1Title": "Enable Developer Mode",
+    "chatgptStep1Desc": "In ChatGPT Settings → Connectors → Advanced, toggle on Developer Mode. This lets you add custom MCP apps.",
+    "chatgptStep2Title": "Add the app URL",
+    "chatgptStep2Desc": "In Settings → Connectors → Create, choose I trust this application, paste the URL below, and click Create.",
+    "chatgptStep3Title": "OAuth + QR scan",
+    "chatgptStep3Desc": "ChatGPT redirects to our OAuth screen. Approve, then scan the QR with Telegram → Settings → Devices → Link Desktop Device. ChatGPT redirects back and the app is ready.",
+    "chatgptTroubleshootHeading": "Troubleshooting",
+    "chatgptTroubleshootDoubleQRTitle": "Two QR codes appeared",
+    "chatgptTroubleshootDoubleQRDesc": "ChatGPT sometimes opens two parallel OAuth flows on first connect. Scan either QR — the second flow auto-redirects to the first session. Closing the duplicate tab is fine.",
+    "chatgptTroubleshootLinkNotFoundTitle": "\"Link not found\" after restart",
+    "chatgptTroubleshootLinkNotFoundDesc": "ChatGPT doesn't auto-reconnect after server restarts. Disconnect and reconnect the app in ChatGPT Settings → Apps to re-establish the SSE stream.",
+    "urlLabel": "Connector URL",
+    "copyLabel": "Copy",
+    "copiedLabel": "Copied!",
+    "backToOverview": "Back to Quickstart"
   }
 }
