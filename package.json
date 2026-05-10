@@ -7,6 +7,7 @@
   "engines": {
     "bun": ">=1.3.13"
   },
+  "workspaces": ["web"],
   "scripts": {
     "dev": "bun --hot src/server.tsx",
     "start": "bun src/server.tsx",
@@ -18,7 +19,12 @@
     "lint": "biome check src/ scripts/",
     "lint:fix": "biome check --write src/ scripts/",
     "format": "biome format --write src/ scripts/",
-    "prepare": "husky"
+    "prepare": "husky",
+    "web:dev": "bun --filter mcp-telegram-web dev",
+    "web:build": "bun --filter mcp-telegram-web build",
+    "web:start": "bun --filter mcp-telegram-web start",
+    "web:lint": "bun --filter mcp-telegram-web lint",
+    "web:typecheck": "bun --filter mcp-telegram-web typecheck"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
