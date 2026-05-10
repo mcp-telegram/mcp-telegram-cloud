@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
+import { TranslationBanner } from "@/components/TranslationBanner";
 import { routing } from "@/i18n/routing";
 import { config, iconUrl } from "@/lib/config";
 import { getLocale } from "@/lib/locales";
@@ -57,7 +58,10 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
   return (
     <html lang={locale} dir={dir}>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <TranslationBanner />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

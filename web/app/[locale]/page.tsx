@@ -69,8 +69,8 @@ function HomePageContent() {
         </div>
         <nav className={s.nav}>
           <a href="#features">{tNav("features")}</a>
-          <a href="#how-it-works">{tNav("howItWorks")}</a>
-          <a href="#choice">{tNav("choice")}</a>
+          <Link href="/docs/quickstart">{tNav("quickstart")}</Link>
+          <Link href="/examples">{tNav("examples")}</Link>
           <a href="#faq">{tNav("faq")}</a>
           <a href={config.sourceRepoUrl}>{tNav("github")}</a>
           <LangSwitcher />
@@ -84,9 +84,9 @@ function HomePageContent() {
         </h1>
         <p className={s.heroSubtitle}>{tHero("subtitle")}</p>
         <div>
-          <a className={s.cta} href="#how-it-works">
-            {tHero("ctaPrimary")}
-          </a>
+          <Link className={s.cta} href="/docs/quickstart">
+            {tHero("ctaQuickstart")}
+          </Link>
           <a className={s.ctaSecondary} href={config.sourceRepoUrl}>
             {tHero("ctaSecondary")}
           </a>
@@ -171,6 +171,12 @@ function HomePageContent() {
             <p>"{tEx("mediaPrompt")}"</p>
           </div>
         </div>
+
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <Link href="/examples" className={s.ctaSecondary}>
+            {tEx("ctaSeeAll")} →
+          </Link>
+        </div>
       </section>
 
       <hr className={s.divider} />
@@ -192,6 +198,12 @@ function HomePageContent() {
             <h3>{tHow("step3Title")}</h3>
             <p>{tHow("step3Desc")}</p>
           </div>
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <Link href="/docs/quickstart" className={s.cta}>
+            {tHow("ctaFullGuide")} →
+          </Link>
         </div>
       </section>
 
