@@ -76,6 +76,28 @@ export type LogFields = Partial<{
   tool: string;
   /** OAuth client_id (public token, not user PII). */
   clientId: string;
+  /**
+   * OAuth refresh-token chain id — opaque random hex per auth-code exchange.
+   * Used by the rotation/replay detector for forensics ("show me everything in this chain").
+   * Server-generated, not derived from user input. Not PII.
+   */
+  chainId: string;
+  /**
+   * SHA-256 truncated to 16 hex chars of an OAuth refresh_token. Irreversible group key for
+   * correlating multiple replay events on the same token without leaking the secret.
+   */
+  tokenFingerprint: string;
+  /**
+   * Whether a replayed refresh_token was a mid-chain link (1) or a freshly created leaf (0).
+   * Helps SecOps distinguish "leaked-and-stored" attacks from "truncated-response retry".
+   */
+  wasMidChain: number;
+  /** Count of refresh tokens revoked in a chain-revoke operation. */
+  refreshRevoked: number;
+  /** Count of access tokens revoked in a chain-revoke operation. */
+  accessRevoked: number;
+  /** Age in seconds since a refresh-token row was first revoked (used by replay detector). */
+  ageSeconds: number;
   /** Issuer URL from server config. */
   issuer: string;
   /** Environment-variable name (e.g. `MCP_TELEGRAM_ENABLE_STARS`). */
@@ -91,8 +113,8 @@ export type LogFields = Partial<{
   /**
    * Truncated diagnostic blob from the upstream rate-limiter
    * (`flood_wait` / `network_retry` / `temporary_retry` + method name).
-   * Caller MUST cap to ≤200 chars; the logger boundary truncates to 256
-   * regardless as defense-in-depth.
+   * Caller SHOULD cap to ≤200 chars to stay below the `MAX_ATTR_VALUE_LEN`
+   * (256-byte) boundary truncation; the logger applies the cap regardless.
    */
   context: string;
   /** MIME type of an upload. */
