@@ -1,0 +1,59 @@
+/* Shared styles for /privacy and /terms (port of inline `s` objects from
+ * PrivacyPage.tsx and TermsPage.tsx — both used identical structure). */
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  font-family: var(--tg-font);
+  color: var(--tg-text);
+  line-height: 1.7;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tg-text);
+  text-decoration: none;
+  margin-bottom: 40px;
+}
+
+.h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.updated {
+  color: var(--tg-hint);
+  font-size: 14px;
+  margin: 0 0 32px;
+}
+
+.h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 32px 0 12px;
+}
+
+.p {
+  margin: 0 0 16px;
+  color: var(--tg-text);
+}
+
+.ul {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+
+.link {
+  color: var(--tg-link);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
