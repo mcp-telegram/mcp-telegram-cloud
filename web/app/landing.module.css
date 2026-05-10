@@ -1,0 +1,347 @@
+/* Port of `landing` object from src/styles.ts. CSS classes follow the same
+ * names so the visual diff against the Hono original is structural, not
+ * stylistic. All values reference design tokens from globals.css. */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.logo img,
+.logo svg {
+  width: 28px;
+  height: 28px;
+}
+
+.nav {
+  display: flex;
+  gap: 24px;
+  font-size: 15px;
+  color: var(--tg-hint);
+}
+
+.nav a {
+  transition: color 0.15s;
+}
+
+.nav a:hover {
+  color: var(--tg-link);
+}
+
+.hero {
+  text-align: center;
+  padding: 80px 24px 64px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+.heroTitle span {
+  color: var(--tg-link);
+}
+
+@media (max-width: 600px) {
+  .heroTitle {
+    font-size: 32px;
+  }
+}
+
+.heroSubtitle {
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--tg-hint);
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
+
+.cta {
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: 12px;
+  background: var(--tg-button);
+  color: var(--tg-button-text);
+  font-size: 17px;
+  font-weight: 600;
+  transition: opacity 0.15s ease-out;
+}
+
+.cta:hover {
+  opacity: 0.85;
+}
+
+.ctaSecondary {
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: 12px;
+  background: var(--tg-tertiary-bg);
+  color: var(--tg-text);
+  font-size: 17px;
+  font-weight: 600;
+  margin-left: 12px;
+  transition: background 0.15s ease-out;
+}
+
+.ctaSecondary:hover {
+  background: var(--tg-secondary-bg);
+}
+
+.section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.sectionSubtitle {
+  text-align: center;
+  font-size: 15px;
+  color: var(--tg-hint);
+  margin-bottom: 48px;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.featureCard {
+  background: var(--tg-secondary-bg);
+  border-radius: 20px;
+  padding: 28px 24px;
+}
+
+.featureCard h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.featureCard p {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--tg-hint);
+}
+
+.featureIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.stepsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  counter-reset: step;
+}
+
+@media (max-width: 700px) {
+  .stepsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stepCard {
+  background: var(--tg-secondary-bg);
+  border-radius: 20px;
+  padding: 28px 24px;
+  position: relative;
+  counter-increment: step;
+}
+
+.stepCard::before {
+  content: counter(step);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--tg-link);
+  color: var(--tg-button-text);
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stepCard h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.stepCard p {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--tg-hint);
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .choiceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.choiceCard {
+  background: var(--tg-bg);
+  border: 1px solid var(--tg-outline);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: var(--tg-card-shadow);
+}
+
+.choiceCard h3 {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.choiceTagline {
+  font-size: 14px;
+  color: var(--tg-hint);
+  margin-bottom: 20px;
+}
+
+.choiceFeatures {
+  text-align: left;
+  font-size: 15px;
+  line-height: 28px;
+  color: var(--tg-text);
+  margin-bottom: 24px;
+}
+
+.choiceFeatures li {
+  list-style: none;
+  padding-left: 22px;
+  position: relative;
+}
+
+.choiceFeatures li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--tg-link);
+  font-weight: 700;
+}
+
+.choiceCta {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid var(--tg-divider);
+  color: var(--tg-text);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.15s ease-out;
+}
+
+.choiceCta:hover {
+  background: var(--tg-tertiary-bg);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--tg-outline);
+  margin: 0;
+}
+
+.footer {
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 13px;
+  color: var(--tg-secondary-hint);
+}
+
+.footer a {
+  color: var(--tg-hint);
+  transition: color 0.15s;
+}
+
+.footer a:hover {
+  color: var(--tg-link);
+}
+
+.faqList {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faqItem {
+  background: var(--tg-secondary-bg);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.faqItem h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.faqItem p {
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--tg-hint);
+}
+
+.subtleNote {
+  text-align: center;
+  font-size: 14px;
+  color: var(--tg-hint);
+  margin-top: 24px;
+}
+
+.faqLink {
+  color: var(--tg-link);
+}
+
+.faqCode {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.footerSecond {
+  margin-top: 8px;
+}

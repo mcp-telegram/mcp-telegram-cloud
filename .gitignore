@@ -1,14 +1,20 @@
 # Dependencies
 node_modules/
-# This project uses pnpm exclusively — package-lock.json is a stale npm artifact.
-# Corepack pin via package.json#packageManager keeps contributors on pnpm.
+# This project uses Bun exclusively (since v2.24.0) — npm/pnpm/yarn lockfiles
+# are stale artifacts. bun.lock is the only committed lockfile.
 package-lock.json
+pnpm-lock.yaml
 yarn.lock
 
 # Build artifacts
 dist/
 build/
 *.tsbuildinfo
+
+# Next.js (web/ workspace)
+web/.next/
+web/out/
+web/next-env.d.ts.bak
 
 # Environment & secrets
 .env

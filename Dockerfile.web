@@ -1,0 +1,47 @@
+## Dockerfile for the Next.js content site (mcp-telegram-web).
+##
+## Build context is the cloud root because of the Bun workspace shape — the
+## monorepo's `package.json + bun.lock` define the workspace, and `web/` is
+## the actual Next.js package. We need both for `bun install` to resolve.
+##
+## Pattern mirrors Dockerfile (cloud backend): npm install in Alpine builder
+## (Bun installer hits sporadic IntegrityCheckFailed on Alpine — see
+## feedback_bun_installer_alpine_flake), then a Bun runtime stage. Build
+## itself uses `next build` which works under Node just fine.
+
+# Stage 1: Install all monorepo deps (incl. web's Next + React).
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json bun.lock ./
+COPY web/package.json ./web/
+# --ignore-scripts skips native compilation of optional ws speedups
+# (utf-8-validate, bufferutil) — they need Python+gcc; the JS fallback is
+# functionally identical. Same approach as the cloud backend Dockerfile.
+RUN npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
+
+# Stage 2: Run `next build` to produce a standalone output.
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json bun.lock ./
+COPY web ./web
+ENV NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app/web
+RUN npx next build
+
+# Stage 3: Production runtime — Bun executes the standalone server.
+# Standalone output bundles the Node-style server.js + a trimmed
+# node_modules; Bun runs server.js as Node-compatible JS without rebuild.
+FROM oven/bun:1.3.13-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3001
+ENV HOSTNAME=0.0.0.0
+# Standalone output co-locates a self-contained Node server + minimal
+# node_modules tree. Static assets and public/ live alongside.
+COPY --from=builder /app/web/.next/standalone ./
+COPY --from=builder /app/web/.next/static ./web/.next/static
+COPY --from=builder /app/web/public ./web/public
+EXPOSE 3001
+CMD ["bun", "web/server.js"]

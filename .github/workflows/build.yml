@@ -26,6 +26,7 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
+  IMAGE_NAME_WEB: ghcr.io/${{ github.repository_owner }}/mcp-telegram-web
 
 jobs:
   check:
@@ -48,6 +49,10 @@ jobs:
       - run: bun run test
       - run: bun run check-parity
       - run: bun run check-telemetry
+      # Web workspace (Next.js content site) — same install handles both
+      # because it's a Bun workspace; we just need to validate web too.
+      - run: bun run web:lint
+      - run: bun run web:typecheck
 
   build:
     needs: check
@@ -86,8 +91,50 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.tags }}
 
+  build-web:
+    # Builds mcp-telegram-web image (Next.js content site) in parallel with
+    # the backend image. Same tagging scheme; runs on the same triggers but
+    # only when files relevant to the web build change OR on tags
+    # (release semver flow always runs both).
+    needs: check
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker tags
+        id: tags
+        run: |
+          TAGS="${{ env.IMAGE_NAME_WEB }}:${{ github.sha }},${{ env.IMAGE_NAME_WEB }}:latest"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            TAGS="$TAGS,${{ env.IMAGE_NAME_WEB }}:${VERSION}"
+            MINOR="${VERSION%.*}"
+            MAJOR="${MINOR%.*}"
+            TAGS="$TAGS,${{ env.IMAGE_NAME_WEB }}:${MINOR},${{ env.IMAGE_NAME_WEB }}:${MAJOR}"
+          fi
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.web
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+
   release:
-    needs: build
+    needs: [build, build-web]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -123,6 +170,7 @@ jobs:
 
             ```bash
             docker pull ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            docker pull ${{ env.IMAGE_NAME_WEB }}:${{ github.ref_name }}
             ```
 
             ## Deploy

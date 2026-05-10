@@ -8,6 +8,8 @@ node_modules/
 # Build artefacts
 dist/
 *.tsbuildinfo
+web/.next/
+web/out/
 
 # Local secrets and runtime data — NEVER ship these into a layer
 .env
