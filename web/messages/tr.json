@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Claude AI ve ChatGPT'de Telegram'ınız",
-    "siteDescription": "Telegram hesabınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, kişilere ulaşın — hepsi tek tıkla yapay zekâdan."
+    "siteDescription": "Telegram'ınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin ve tepki verin — hepsi tek tıklamayla yapay zekâdan."
   },
   "nav": {
     "features": "Özellikler",
     "howItWorks": "Nasıl çalışır",
-    "choice": "Barındırılan veya kendi sunucunuz",
     "faq": "SSS",
     "github": "GitHub",
     "quickstart": "Hızlı başlangıç",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "ve",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Mesajları okuyun, sohbetlerde arama yapın, kişileri takip edin ve medya indirin — hepsi Claude.ai veya ChatGPT içinden. QR kodu ile 30 saniyede bağlanın.",
-    "ctaPrimary": "Telegram'ı bağla",
-    "ctaSecondary": "Kendi sunucunuzda",
+    "subtitle": "Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin, gönderilere tepki verin — hepsi Claude.ai veya ChatGPT içinden. QR kod ile 30 saniyede bağlanın.",
     "ctaQuickstart": "30 saniyede başlayın"
   },
   "features": {
     "heading": "Neler yapabilirsiniz",
-    "subheading": "Salt okunur araçlar — güvenli, gizli, sizin adınıza mesaj gönderilmez",
+    "subheading": "Sohbetlerinizi okuyun, yanıt gönderin, gönderilere tepki verin — sizin hesabınız, sizin kontrolünüzde",
     "readMessagesTitle": "Mesajları okuyun",
     "readMessagesDesc": "Tarih filtresi ve sayfalama ile her sohbetteki mesajlara göz atın",
     "searchTitle": "Her şeyde arayın",
@@ -42,8 +40,8 @@
     "mediaDesc": "Fotoğrafları yapay zekâ sohbeti içinde doğrudan indirip görüntüleyin",
     "contactsTitle": "Kişiler ve üyeler",
     "contactsDesc": "Kişi listenize ve grup/kanal üye listelerine erişin",
-    "secureTitle": "Salt okunur ve güvenli",
-    "secureDesc": "Mesaj gönderemez, düzenleyemez veya silemez. Hesabınız güvendedir"
+    "writeTitle": "Gönder ve tepki ver",
+    "writeDesc": "Mesajlara yanıt verin, fotoğraf gönderin, tepki ekleyin ve taslakları güncelleyin"
   },
   "examples": {
     "heading": "İnsanlar neler soruyor",
@@ -73,30 +71,11 @@
     "step3Desc": "Yapay zekâdan sohbetlerinizi okumasını, mesajları aramasını veya konuşmaları özetlemesini isteyin",
     "ctaFullGuide": "Tam kılavuzu oku"
   },
-  "choice": {
-    "heading": "Barındırılan veya kendi sunucunuz",
-    "subheading": "MIT lisansı altında açık kaynak. Barındırılan örneği kullanın veya kendi kopyanızı çalıştırın.",
-    "hostedTitle": "Barındırılan",
-    "hostedTagline": "Tek tıkla bağlantı, proje tarafından bakımı yapılır.",
-    "hostedFeature1": "QR kodu ile giriş — yönetilecek API anahtarı yok",
-    "hostedFeature2": "Salt okunur araç seti, tasarımı gereği güvenli",
-    "hostedFeature3": "Servisin sağlığı için günlük adil kullanım sınırı",
-    "hostedFeature4": "Telegram botu üzerinden servis durumu güncellemeleri",
-    "hostedCta": "Şimdi bağlanın",
-    "selfHostTitle": "Kendi sunucunuzda",
-    "selfHostTagline": "Tam kontrol, sizin makineniz, sizin verileriniz.",
-    "selfHostFeature1": "Tüm araçlar — okuma ve yazma",
-    "selfHostFeature2": "Günlük sınır yok",
-    "selfHostFeature3": "Verileriniz sunucunuzdan asla çıkmaz",
-    "selfHostFeature4": "Docker Compose + .env, ~10 dakikada kurulum",
-    "selfHostCta": "GitHub'da görüntüle",
-    "footnote": "İzleme yok. Reklam yok. Tek kişi tarafından boş zamanlarda sürdürülür — issue'lar ve PR'lar için lütfen sabırlı olun."
-  },
   "faq": {
     "heading": "SSS",
     "subheading": "Güvenlik ve gizlilik hakkında sık sorulan sorular",
     "safeQ": "Telegram'ımı bağlamak güvenli mi?",
-    "safeA": "Evet. Barındırılan sürüm kesinlikle salt okunurdur — hiçbir mesaj gönderemez, düzenleyemez veya silemez. Hesabınız, Telegram Web veya Desktop'a giriş yapmakla aynı şekilde kullanılır. Telegram'ın \"Cihazlar\" ayarlarından istediğiniz zaman bağlantıyı kesebilirsiniz.",
+    "safeA": "Evet. Hesabınız QR kod ile bağlanır — Telegram Web ve Masaüstü ile aynı akış kullanılır, böylece kontrol sizde kalır. Salt okunur araçlar kutudan çıktığı gibi çalışır. Yazma araçları (yanıt gönderme, tepki verme, taslak kaydetme), siz istediğinizde yapay zekânın sizin adınıza hareket edebilmesi için mevcuttur. Geri alınamaz eylemler (silme, düzenleme, çıkarma) varsayılan olarak kapalıdır ve günlük kota ile denetim kaydı dahil olmak üzere ayarlarınızdan kullanıcı tarafından açıkça etkinleştirilmesini gerektirir. Telegram → Ayarlar → Cihazlar üzerinden istediğiniz zaman bağlantıyı kesebilir veya oturumu iptal edebilirsiniz.",
     "readQ": "Mesajlarımı sunucuda okuyabilir misiniz?",
     "readAStart": "Mesajlarınızı saklamıyoruz. Her araç çağrısı verileri doğrudan Telegram'ın API'sinden alır ve yapay zekâ asistanına döndürür. Telegram oturum anahtarınız, bağlayıcının istekler arasında çalışmaya devam edebilmesi için sunucumuzda saklanır ve oturumunuz sona erdiğinde silinir (tam zamanlama için bir sonraki yanıta bakın). Saklama ayrıntıları ve sıkılaştırma rehberi şu belgemizde:",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "Evet. ChatGPT Ayarlar → Uygulamalar (Geliştirici Modu) üzerinden uygulama olarak ekleyin. Şu URL'yi kullanın:",
     "chatgptAEnd": "OAuth kimlik doğrulamasıyla. Plus, Pro, Team ve Enterprise planlarında çalışır.",
     "openSourceQ": "Kaynak kodu açık mı?",
-    "openSourceAStart": "Sunucu tamamen açık kaynaktır (MIT lisansı) ve şurada bulunabilir:",
-    "openSourceAEnd": ". Tam okuma+yazma erişimiyle ücretsiz olarak kendi sunucunuzda barındırabilirsiniz.",
+    "openSourceAStart": "Evet. Sunucu, MIT lisansı altında tamamen açık kaynaktır:",
+    "openSourceAEnd": ".",
     "botQ": "Servis güncellemelerini nasıl öğreneceğim?",
     "botAStart": "Şuna abone olun:",
     "botAEnd": "servis durumu, kırıcı değişiklikler ve yeni sürümler hakkında bilgilendirilmek için. Aboneliği iptal etmek için istediğiniz zaman /stop gönderin."
@@ -119,7 +98,7 @@
     "mit": "MIT lisanslı",
     "privacy": "Gizlilik",
     "terms": "Şartlar",
-    "tagline": "Claude AI ve ChatGPT için salt okunur Telegram erişimi."
+    "tagline": "Claude AI ve ChatGPT için Telegram."
   },
   "language": {
     "switcherLabel": "Dil"

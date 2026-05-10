@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — 在 Claude AI 與 ChatGPT 中使用您的 Telegram",
-    "siteDescription": "將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、取得聯絡人 — 全部一鍵在 AI 中完成。"
+    "siteDescription": "將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、傳送回覆並送出反應 — 全都由 AI 一鍵完成。"
   },
   "nav": {
     "features": "功能",
     "howItWorks": "運作方式",
-    "choice": "雲端代管或自行部署",
     "faq": "常見問題",
     "github": "GitHub",
     "quickstart": "快速入門",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "與",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "讀取訊息、搜尋聊天、追蹤聯絡人並下載媒體 — 全部直接在 Claude.ai 或 ChatGPT 中完成。透過 QR 碼 30 秒即可連接。",
-    "ctaPrimary": "連接 Telegram",
-    "ctaSecondary": "自行部署",
+    "subtitle": "讀取訊息、搜尋聊天、傳送回覆、對貼文送出反應 — 全都在 Claude.ai 或 ChatGPT 內完成。透過 QR 碼,30 秒即可連接。",
     "ctaQuickstart": "30 秒內開始使用"
   },
   "features": {
     "heading": "您可以做什麼",
-    "subheading": "唯讀工具 — 安全、私密,不會以您的名義發送任何訊息",
+    "subheading": "讀取您的聊天、傳送回覆、對貼文送出反應 — 您的帳號,由您掌控",
     "readMessagesTitle": "讀取訊息",
     "readMessagesDesc": "瀏覽任何聊天的訊息,支援日期篩選與分頁",
     "searchTitle": "全方位搜尋",
@@ -42,8 +40,8 @@
     "mediaDesc": "直接在 AI 對話中下載並檢視相片",
     "contactsTitle": "聯絡人與成員",
     "contactsDesc": "存取您的聯絡人清單以及群組/頻道成員清單",
-    "secureTitle": "唯讀且安全",
-    "secureDesc": "無法發送、編輯或刪除訊息。您的帳號安全無虞"
+    "writeTitle": "傳送與反應",
+    "writeDesc": "回覆訊息、傳送相片、加入反應並更新草稿"
   },
   "examples": {
     "heading": "大家都問什麼",
@@ -73,30 +71,11 @@
     "step3Desc": "請 AI 讀取您的聊天、搜尋訊息或為對話摘要",
     "ctaFullGuide": "閱讀完整指南"
   },
-  "choice": {
-    "heading": "雲端代管或自行部署",
-    "subheading": "以 MIT 授權開源。使用我們的代管服務,或自行架設。",
-    "hostedTitle": "雲端代管",
-    "hostedTagline": "一鍵連接,由專案維護。",
-    "hostedFeature1": "QR 碼登入 — 無需管理 API 金鑰",
-    "hostedFeature2": "唯讀工具集,設計上即安全",
-    "hostedFeature3": "每日合理使用上限,維持服務穩定",
-    "hostedFeature4": "透過 Telegram 機器人取得服務狀態更新",
-    "hostedCta": "立即連接",
-    "selfHostTitle": "自行部署",
-    "selfHostTagline": "完全掌控,您的伺服器,您的資料。",
-    "selfHostFeature1": "所有工具 — 讀取與寫入",
-    "selfHostFeature2": "無每日使用限制",
-    "selfHostFeature3": "您的資料絕不離開您的伺服器",
-    "selfHostFeature4": "Docker Compose + .env,大約 10 分鐘完成安裝",
-    "selfHostCta": "在 GitHub 上查看",
-    "footnote": "無追蹤。無廣告。由一個人在業餘時間維護 — 對於 issues 與 PR 請耐心等候。"
-  },
   "faq": {
     "heading": "常見問題",
     "subheading": "關於安全與隱私的常見問題",
     "safeQ": "連接我的 Telegram 安全嗎?",
-    "safeA": "是的。代管版本嚴格唯讀 — 無法發送、編輯或刪除任何訊息。您的帳號的使用方式與登入 Telegram 網頁版或桌面版相同。您可以隨時從 Telegram 的「已連線的裝置」設定中中斷連線。",
+    "safeA": "是的。您的帳號透過 QR 碼連接 — 與 Telegram Web 和 Desktop 使用的流程相同,因此主控權仍在您手中。唯讀工具開箱即用。寫入工具(傳送回覆、送出反應、儲存草稿)也可使用,讓 AI 能在您要求時代表您操作。無法復原的操作(刪除、編輯、踢出)預設為關閉,需要在設定中明確啟用,並附帶每日配額與稽核日誌。您可以隨時在 Telegram → 設定 → 已連線的裝置中中斷連線或撤銷工作階段。",
     "readQ": "您會在伺服器上讀取我的訊息嗎?",
     "readAStart": "我們不儲存您的訊息。每次工具呼叫都直接從 Telegram API 取得資料並回傳給 AI 助理。您的 Telegram 工作階段金鑰儲存在我們的伺服器上,以便連接器能在請求之間持續運作,並在工作階段結束時刪除(精確時機請參考下一個答案)。儲存細節與強化指南請見我們的",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "可以。在 ChatGPT 設定 → Apps(開發者模式)中將它新增為應用程式。使用以下 URL",
     "chatgptAEnd": "並透過 OAuth 驗證。可在 Plus、Pro、Team 和 Enterprise 方案上使用。",
     "openSourceQ": "原始碼是開放的嗎?",
-    "openSourceAStart": "伺服器完全開源(MIT 授權),位於",
-    "openSourceAEnd": "。您可以免費自行部署,享有完整的讀寫權限。",
+    "openSourceAStart": "是的。伺服器是完全開源的,以 MIT 授權釋出,位於",
+    "openSourceAEnd": "。",
     "botQ": "我如何得知服務的更新?",
     "botAStart": "訂閱",
     "botAEnd": "以接收服務狀態、重大變更與新版本發布的通知。隨時發送 /stop 即可取消訂閱。"
@@ -119,7 +98,7 @@
     "mit": "MIT 授權",
     "privacy": "隱私",
     "terms": "條款",
-    "tagline": "為 Claude AI 與 ChatGPT 提供唯讀的 Telegram 存取。"
+    "tagline": "為 Claude AI 與 ChatGPT 而生的 Telegram。"
   },
   "language": {
     "switcherLabel": "語言"

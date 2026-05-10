@@ -36,7 +36,6 @@ function HomePageContent() {
   const tFeat = useTranslations("features");
   const tEx = useTranslations("examples");
   const tHow = useTranslations("howItWorks");
-  const tChoice = useTranslations("choice");
   const tFaq = useTranslations("faq");
   const tFooter = useTranslations("footer");
   const tMeta = useTranslations("metadata");
@@ -89,9 +88,6 @@ function HomePageContent() {
           <Link className={s.cta} href="/docs/quickstart">
             {tHero("ctaQuickstart")}
           </Link>
-          <a className={s.ctaSecondary} href={config.sourceRepoUrl}>
-            {tHero("ctaSecondary")}
-          </a>
         </div>
       </section>
 
@@ -128,9 +124,9 @@ function HomePageContent() {
             <p>{tFeat("contactsDesc")}</p>
           </div>
           <div className={s.featureCard}>
-            <div className={s.featureIcon}>🔒</div>
-            <h3>{tFeat("secureTitle")}</h3>
-            <p>{tFeat("secureDesc")}</p>
+            <div className={s.featureIcon}>✍️</div>
+            <h3>{tFeat("writeTitle")}</h3>
+            <p>{tFeat("writeDesc")}</p>
           </div>
         </div>
       </section>
@@ -207,45 +203,6 @@ function HomePageContent() {
             {tHow("ctaFullGuide")} →
           </Link>
         </div>
-      </section>
-
-      <hr className={s.divider} />
-
-      <section className={s.section} id="choice">
-        <h2 className={s.sectionTitle}>{tChoice("heading")}</h2>
-        <p className={s.sectionSubtitle}>{tChoice("subheading")}</p>
-
-        <div className={s.choiceGrid}>
-          <div className={s.choiceCard}>
-            <h3>{tChoice("hostedTitle")}</h3>
-            <p className={s.choiceTagline}>{tChoice("hostedTagline")}</p>
-            <ul className={s.choiceFeatures}>
-              <li>{tChoice("hostedFeature1")}</li>
-              <li>{tChoice("hostedFeature2")}</li>
-              <li>{tChoice("hostedFeature3")}</li>
-              <li>{tChoice("hostedFeature4")}</li>
-            </ul>
-            <a className={s.choiceCta} href="#how-it-works">
-              {tChoice("hostedCta")}
-            </a>
-          </div>
-
-          <div className={s.choiceCard}>
-            <h3>{tChoice("selfHostTitle")}</h3>
-            <p className={s.choiceTagline}>{tChoice("selfHostTagline")}</p>
-            <ul className={s.choiceFeatures}>
-              <li>{tChoice("selfHostFeature1")}</li>
-              <li>{tChoice("selfHostFeature2")}</li>
-              <li>{tChoice("selfHostFeature3")}</li>
-              <li>{tChoice("selfHostFeature4")}</li>
-            </ul>
-            <a className={s.choiceCta} href={config.sourceRepoUrl}>
-              {tChoice("selfHostCta")}
-            </a>
-          </div>
-        </div>
-
-        <p className={s.subtleNote}>{tChoice("footnote")}</p>
       </section>
 
       <hr className={s.divider} />

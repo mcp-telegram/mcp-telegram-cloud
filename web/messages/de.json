@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Ihr Telegram in Claude AI & ChatGPT",
-    "siteDescription": "Verbinden Sie Ihr Telegram mit Claude AI oder ChatGPT. Nachrichten lesen, Chats durchsuchen, Kontakte abrufen — alles direkt aus der KI mit einem Klick."
+    "siteDescription": "Verbinden Sie Ihr Telegram mit Claude AI oder ChatGPT. Nachrichten lesen, Chats durchsuchen, Antworten senden und reagieren — alles aus der KI mit einem Klick."
   },
   "nav": {
     "features": "Funktionen",
     "howItWorks": "So funktioniert es",
-    "choice": "Gehostet oder selbst betrieben",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Schnellstart",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Lesen Sie Nachrichten, durchsuchen Sie Chats, verfolgen Sie Kontakte und laden Sie Medien herunter — alles direkt aus Claude.ai oder ChatGPT. Verbindung in 30 Sekunden per QR-Code.",
-    "ctaPrimary": "Telegram verbinden",
-    "ctaSecondary": "Selbst hosten",
+    "subtitle": "Nachrichten lesen, Chats durchsuchen, Antworten senden, auf Beiträge reagieren — alles aus Claude.ai oder ChatGPT. In 30 Sekunden per QR-Code verbinden.",
     "ctaQuickstart": "In 30 Sekunden loslegen"
   },
   "features": {
     "heading": "Was Sie tun können",
-    "subheading": "Schreibgeschützte Werkzeuge — sicher, privat, keine Nachrichten in Ihrem Namen",
+    "subheading": "Ihre Chats lesen, Antworten senden, auf Beiträge reagieren — Ihr Konto, Ihre Kontrolle",
     "readMessagesTitle": "Nachrichten lesen",
     "readMessagesDesc": "Nachrichten aus jedem Chat mit Datumsfilter und Seitennavigation durchstöbern",
     "searchTitle": "Alles durchsuchen",
@@ -42,8 +40,8 @@
     "mediaDesc": "Fotos herunterladen und direkt in KI-Konversationen anzeigen",
     "contactsTitle": "Kontakte & Mitglieder",
     "contactsDesc": "Zugriff auf Ihre Kontaktliste und auf Mitgliederlisten von Gruppen und Kanälen",
-    "secureTitle": "Schreibgeschützt & sicher",
-    "secureDesc": "Kann keine Nachrichten senden, bearbeiten oder löschen. Ihr Konto bleibt sicher"
+    "writeTitle": "Senden & reagieren",
+    "writeDesc": "Auf Nachrichten antworten, Fotos senden, Reaktionen hinzufügen und Entwürfe aktualisieren"
   },
   "examples": {
     "heading": "Was die Leute fragen",
@@ -73,30 +71,11 @@
     "step3Desc": "Bitten Sie die KI, Ihre Chats zu lesen, Nachrichten zu durchsuchen oder Unterhaltungen zusammenzufassen",
     "ctaFullGuide": "Die vollständige Anleitung lesen"
   },
-  "choice": {
-    "heading": "Gehostet oder selbst betrieben",
-    "subheading": "Open Source unter MIT-Lizenz. Nutzen Sie die gehostete Instanz oder betreiben Sie Ihre eigene.",
-    "hostedTitle": "Gehostet",
-    "hostedTagline": "Verbindung mit einem Klick, gepflegt vom Projekt.",
-    "hostedFeature1": "Login per QR-Code — keine API-Schlüssel zu verwalten",
-    "hostedFeature2": "Schreibgeschütztes Tool-Set, sicher per Design",
-    "hostedFeature3": "Tägliches Fair-Use-Limit, um den Dienst stabil zu halten",
-    "hostedFeature4": "Statusmeldungen zum Dienst über einen Telegram-Bot",
-    "hostedCta": "Jetzt verbinden",
-    "selfHostTitle": "Selbst hosten",
-    "selfHostTagline": "Volle Kontrolle, Ihr Rechner, Ihre Daten.",
-    "selfHostFeature1": "Alle Tools — Lesen und Schreiben",
-    "selfHostFeature2": "Keine täglichen Limits",
-    "selfHostFeature3": "Ihre Daten verlassen Ihren Server nie",
-    "selfHostFeature4": "Docker Compose + .env, etwa 10 Minuten Einrichtung",
-    "selfHostCta": "Auf GitHub ansehen",
-    "footnote": "Kein Tracking. Keine Werbung. Wird in der Freizeit von einer einzelnen Person gepflegt — bitte haben Sie Geduld mit Issues und PRs."
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "Häufige Fragen zu Sicherheit und Datenschutz",
     "safeQ": "Ist es sicher, mein Telegram zu verbinden?",
-    "safeA": "Ja. Die gehostete Version ist strikt schreibgeschützt — sie kann keine Nachrichten senden, bearbeiten oder löschen. Ihr Konto wird genauso verwendet wie beim Anmelden in Telegram Web oder Desktop. Sie können sich jederzeit über die \"Geräte\"-Einstellungen in Telegram trennen.",
+    "safeA": "Ja. Ihr Konto wird per QR-Code verbunden — derselbe Ablauf wie bei Telegram Web und Desktop, sodass Sie die Kontrolle behalten. Schreibgeschützte Tools funktionieren sofort. Schreib-Tools (Antwort senden, reagieren, Entwurf speichern) sind verfügbar, damit die KI in Ihrem Auftrag handeln kann, wenn Sie sie darum bitten. Unumkehrbare Aktionen (löschen, bearbeiten, kicken) sind standardmäßig deaktiviert und erfordern eine ausdrückliche Zustimmung in Ihren Einstellungen, mit Tageskontingent und Audit-Log. Sie können die Sitzung jederzeit über Telegram → Einstellungen → Geräte trennen oder widerrufen.",
     "readQ": "Können Sie meine Nachrichten auf dem Server lesen?",
     "readAStart": "Wir speichern Ihre Nachrichten nicht. Jeder Tool-Aufruf holt die Daten direkt aus der Telegram-API und gibt sie an den KI-Assistenten zurück. Ihr Telegram-Sitzungsschlüssel wird auf unserem Server gespeichert, damit der Connector zwischen Anfragen weiter funktioniert, und wird gelöscht, sobald Ihre Sitzung endet (genaue Zeitvorgaben siehe nächste Antwort). Details zur Speicherung und Hinweise zur Härtung finden Sie in unserer",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "Ja. Fügen Sie es in ChatGPT unter Settings → Apps (Developer Mode) als App hinzu. Verwenden Sie die URL",
     "chatgptAEnd": "mit OAuth-Authentifizierung. Funktioniert in den Plus-, Pro-, Team- und Enterprise-Plänen.",
     "openSourceQ": "Ist der Quellcode offen?",
-    "openSourceAStart": "Der Server ist vollständig Open Source (MIT-Lizenz) auf",
-    "openSourceAEnd": ". Sie können ihn kostenlos selbst hosten — mit vollem Lese- und Schreibzugriff.",
+    "openSourceAStart": "Ja. Der Server ist vollständig Open Source unter der MIT-Lizenz auf",
+    "openSourceAEnd": ".",
     "botQ": "Wie erfahre ich von Dienst-Updates?",
     "botAStart": "Abonnieren Sie",
     "botAEnd": "um über Dienststatus, Breaking Changes und neue Releases informiert zu werden. Senden Sie jederzeit /stop, um sich abzumelden."
@@ -119,7 +98,7 @@
     "mit": "MIT-Lizenz",
     "privacy": "Datenschutz",
     "terms": "Nutzungsbedingungen",
-    "tagline": "Schreibgeschützter Telegram-Zugriff für Claude AI & ChatGPT."
+    "tagline": "Telegram für Claude AI & ChatGPT."
   },
   "language": {
     "switcherLabel": "Sprache"

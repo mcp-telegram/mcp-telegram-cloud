@@ -227,76 +227,6 @@
   color: var(--tg-hint);
 }
 
-.choiceGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 700px) {
-  .choiceGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.choiceCard {
-  background: var(--tg-bg);
-  border: 1px solid var(--tg-outline);
-  border-radius: 20px;
-  padding: 32px 28px;
-  box-shadow: var(--tg-card-shadow);
-}
-
-.choiceCard h3 {
-  font-size: 19px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.choiceTagline {
-  font-size: 14px;
-  color: var(--tg-hint);
-  margin-bottom: 20px;
-}
-
-.choiceFeatures {
-  text-align: left;
-  font-size: 15px;
-  line-height: 28px;
-  color: var(--tg-text);
-  margin-bottom: 24px;
-}
-
-.choiceFeatures li {
-  list-style: none;
-  padding-left: 22px;
-  position: relative;
-}
-
-.choiceFeatures li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: var(--tg-link);
-  font-weight: 700;
-}
-
-.choiceCta {
-  display: inline-block;
-  padding: 10px 24px;
-  border-radius: 12px;
-  background: transparent;
-  border: 1px solid var(--tg-divider);
-  color: var(--tg-text);
-  font-size: 15px;
-  font-weight: 600;
-  transition: background 0.15s ease-out;
-}
-
-.choiceCta:hover {
-  background: var(--tg-tertiary-bg);
-}
-
 .divider {
   border: none;
   border-top: 1px solid var(--tg-outline);
@@ -343,13 +273,6 @@
   font-size: 15px;
   line-height: 24px;
   color: var(--tg-hint);
-}
-
-.subtleNote {
-  text-align: center;
-  font-size: 14px;
-  color: var(--tg-hint);
-  margin-top: 24px;
 }
 
 .faqLink {

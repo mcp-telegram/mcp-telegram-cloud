@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Telegram của bạn trong Claude AI & ChatGPT",
-    "siteDescription": "Kết nối Telegram của bạn với Claude AI hoặc ChatGPT. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, lấy danh bạ — tất cả từ AI chỉ với một cú nhấp chuột."
+    "siteDescription": "Kết nối Telegram của bạn với Claude AI hoặc ChatGPT. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, gửi trả lời và phản hồi — tất cả từ AI chỉ với một cú nhấp chuột."
   },
   "nav": {
     "features": "Tính năng",
     "howItWorks": "Cách hoạt động",
-    "choice": "Hosted hoặc self-host",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Bắt đầu nhanh",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Đọc tin nhắn, tìm kiếm cuộc trò chuyện, theo dõi danh bạ và tải xuống phương tiện — tất cả từ Claude.ai hoặc ChatGPT. Kết nối trong 30 giây bằng mã QR.",
-    "ctaPrimary": "Kết nối Telegram",
-    "ctaSecondary": "Self-host",
+    "subtitle": "Đọc tin nhắn, tìm kiếm cuộc trò chuyện, gửi trả lời, phản hồi bài đăng — tất cả từ Claude.ai hoặc ChatGPT. Kết nối trong 30 giây bằng mã QR.",
     "ctaQuickstart": "Bắt đầu trong 30 giây"
   },
   "features": {
     "heading": "Bạn có thể làm gì",
-    "subheading": "Công cụ chỉ đọc — an toàn, riêng tư, không có tin nhắn nào được gửi thay bạn",
+    "subheading": "Đọc các cuộc trò chuyện, gửi trả lời, phản hồi bài đăng — tài khoản của bạn, do bạn kiểm soát",
     "readMessagesTitle": "Đọc tin nhắn",
     "readMessagesDesc": "Duyệt tin nhắn từ bất kỳ cuộc trò chuyện nào với bộ lọc ngày tháng và phân trang",
     "searchTitle": "Tìm kiếm mọi thứ",
@@ -42,8 +40,8 @@
     "mediaDesc": "Tải xuống và xem ảnh trực tiếp trong cuộc trò chuyện với AI",
     "contactsTitle": "Danh bạ & thành viên",
     "contactsDesc": "Truy cập danh sách liên hệ và danh sách thành viên nhóm/kênh của bạn",
-    "secureTitle": "Chỉ đọc & an toàn",
-    "secureDesc": "Không thể gửi, chỉnh sửa hoặc xóa tin nhắn. Tài khoản của bạn an toàn"
+    "writeTitle": "Gửi & phản hồi",
+    "writeDesc": "Trả lời tin nhắn, gửi ảnh, thêm phản hồi và cập nhật bản nháp"
   },
   "examples": {
     "heading": "Mọi người hỏi gì",
@@ -73,30 +71,11 @@
     "step3Desc": "Yêu cầu AI đọc cuộc trò chuyện, tìm kiếm tin nhắn hoặc tóm tắt các cuộc trò chuyện",
     "ctaFullGuide": "Đọc hướng dẫn đầy đủ"
   },
-  "choice": {
-    "heading": "Hosted hoặc self-host",
-    "subheading": "Mã nguồn mở theo giấy phép MIT. Sử dụng instance hosted, hoặc tự chạy của riêng bạn.",
-    "hostedTitle": "Hosted",
-    "hostedTagline": "Kết nối một cú nhấp, được duy trì bởi dự án.",
-    "hostedFeature1": "Đăng nhập bằng mã QR — không cần quản lý API key",
-    "hostedFeature2": "Bộ công cụ chỉ đọc, an toàn theo thiết kế",
-    "hostedFeature3": "Giới hạn sử dụng hợp lý hàng ngày để giữ dịch vụ ổn định",
-    "hostedFeature4": "Cập nhật trạng thái dịch vụ qua bot Telegram",
-    "hostedCta": "Kết nối ngay",
-    "selfHostTitle": "Self-host",
-    "selfHostTagline": "Toàn quyền kiểm soát, máy của bạn, dữ liệu của bạn.",
-    "selfHostFeature1": "Tất cả công cụ — đọc và ghi",
-    "selfHostFeature2": "Không có giới hạn hàng ngày",
-    "selfHostFeature3": "Dữ liệu của bạn không bao giờ rời khỏi máy chủ của bạn",
-    "selfHostFeature4": "Docker Compose + .env, thiết lập ~10 phút",
-    "selfHostCta": "Xem trên GitHub",
-    "footnote": "Không theo dõi. Không quảng cáo. Được duy trì bởi một người trong thời gian rảnh — vui lòng kiên nhẫn với các issues và PR."
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "Câu hỏi thường gặp về bảo mật và quyền riêng tư",
     "safeQ": "Việc kết nối Telegram của tôi có an toàn không?",
-    "safeA": "Có. Phiên bản hosted là chỉ đọc nghiêm ngặt — không thể gửi, chỉnh sửa hoặc xóa bất kỳ tin nhắn nào. Tài khoản của bạn được sử dụng giống như cách đăng nhập vào Telegram Web hoặc Desktop. Bạn có thể ngắt kết nối bất cứ lúc nào từ cài đặt \"Thiết bị\" của Telegram.",
+    "safeA": "Có. Tài khoản của bạn kết nối qua mã QR — cùng luồng mà Telegram Web và Desktop sử dụng, nên bạn vẫn nắm quyền kiểm soát. Các công cụ chỉ đọc hoạt động ngay lập tức. Các công cụ ghi (gửi trả lời, phản hồi, lưu bản nháp) có sẵn để AI có thể hành động thay bạn khi bạn yêu cầu. Các hành động không thể đảo ngược (xóa, sửa, đuổi) bị tắt mặc định và yêu cầu kích hoạt rõ ràng trong cài đặt của bạn, kèm theo hạn ngạch hàng ngày và nhật ký kiểm tra. Bạn có thể ngắt kết nối hoặc thu hồi phiên bất cứ lúc nào từ Telegram → Cài đặt → Thiết bị.",
     "readQ": "Bạn có thể đọc tin nhắn của tôi trên máy chủ không?",
     "readAStart": "Chúng tôi không lưu trữ tin nhắn của bạn. Mỗi lần gọi công cụ sẽ lấy dữ liệu trực tiếp từ API của Telegram và trả về cho trợ lý AI. Khóa phiên Telegram của bạn được lưu trữ trên máy chủ của chúng tôi để trình kết nối có thể tiếp tục hoạt động giữa các yêu cầu, và bị xóa khi phiên của bạn kết thúc (xem câu trả lời tiếp theo để biết thời điểm chính xác). Chi tiết lưu trữ và hướng dẫn tăng cường bảo mật có trong",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "Có. Thêm nó dưới dạng ứng dụng trong ChatGPT Settings → Apps (Developer Mode). Sử dụng URL",
     "chatgptAEnd": "với xác thực OAuth. Hoạt động trên các gói Plus, Pro, Team và Enterprise.",
     "openSourceQ": "Mã nguồn có mở không?",
-    "openSourceAStart": "Máy chủ hoàn toàn mã nguồn mở (giấy phép MIT) tại",
-    "openSourceAEnd": ". Bạn có thể self-host miễn phí với quyền truy cập đọc+ghi đầy đủ.",
+    "openSourceAStart": "Có. Máy chủ hoàn toàn mã nguồn mở theo giấy phép MIT tại",
+    "openSourceAEnd": ".",
     "botQ": "Làm thế nào để tôi biết về các bản cập nhật dịch vụ?",
     "botAStart": "Đăng ký theo dõi",
     "botAEnd": "để được thông báo về trạng thái dịch vụ, thay đổi đột phá và các bản phát hành mới. Gửi /stop bất cứ lúc nào để hủy đăng ký."
@@ -119,7 +98,7 @@
     "mit": "Cấp phép MIT",
     "privacy": "Quyền riêng tư",
     "terms": "Điều khoản",
-    "tagline": "Truy cập Telegram chỉ đọc cho Claude AI & ChatGPT."
+    "tagline": "Telegram cho Claude AI & ChatGPT."
   },
   "language": {
     "switcherLabel": "Ngôn ngữ"

@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Claude AI와 ChatGPT에서 사용하는 당신의 Telegram",
-    "siteDescription": "Telegram을 Claude AI 또는 ChatGPT에 연결합니다. 메시지 읽기, 대화방 검색, 연락처 가져오기를 AI에서 클릭 한 번으로 수행할 수 있습니다."
+    "siteDescription": "Telegram을 Claude AI 또는 ChatGPT에 연결하세요. 메시지를 읽고, 대화방을 검색하고, 답장을 보내고, 반응까지 — 모두 AI에서 한 번의 클릭으로."
   },
   "nav": {
     "features": "기능",
     "howItWorks": "작동 방식",
-    "choice": "호스팅 또는 셀프 호스팅",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "빠른 시작",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "와",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "메시지 읽기, 대화방 검색, 연락처 추적, 미디어 다운로드를 Claude.ai 또는 ChatGPT에서 모두 수행할 수 있습니다. QR 코드로 30초 만에 연결할 수 있습니다.",
-    "ctaPrimary": "Telegram 연결",
-    "ctaSecondary": "셀프 호스팅",
+    "subtitle": "메시지 읽기, 대화방 검색, 답장 보내기, 게시물에 반응까지 — 모두 Claude.ai 또는 ChatGPT 안에서. QR 코드로 30초 만에 연결하세요.",
     "ctaQuickstart": "30초 만에 시작하기"
   },
   "features": {
     "heading": "할 수 있는 일",
-    "subheading": "읽기 전용 도구 — 안전하고 비공개이며, 사용자를 대신해 메시지를 보내지 않습니다",
+    "subheading": "대화방을 읽고, 답장을 보내고, 게시물에 반응하기 — 당신의 계정, 당신의 제어 아래",
     "readMessagesTitle": "메시지 읽기",
     "readMessagesDesc": "날짜 필터와 페이지네이션으로 모든 대화방의 메시지를 탐색합니다",
     "searchTitle": "전체 검색",
@@ -42,8 +40,8 @@
     "mediaDesc": "AI 대화 안에서 사진을 직접 다운로드하고 인라인으로 볼 수 있습니다",
     "contactsTitle": "연락처와 멤버",
     "contactsDesc": "연락처 목록과 그룹/채널 멤버 목록에 접근할 수 있습니다",
-    "secureTitle": "읽기 전용 및 안전",
-    "secureDesc": "메시지를 보내거나 편집·삭제할 수 없습니다. 당신의 계정은 안전합니다"
+    "writeTitle": "전송 및 반응",
+    "writeDesc": "메시지에 답장하고, 사진을 보내고, 반응을 추가하며, 임시 보관함을 업데이트할 수 있습니다"
   },
   "examples": {
     "heading": "사람들이 묻는 것",
@@ -73,30 +71,11 @@
     "step3Desc": "AI에게 대화방 읽기, 메시지 검색, 대화 요약을 요청합니다",
     "ctaFullGuide": "전체 가이드 읽기"
   },
-  "choice": {
-    "heading": "호스팅 또는 셀프 호스팅",
-    "subheading": "MIT 라이선스 오픈소스입니다. 호스팅 인스턴스를 사용하거나 직접 운영할 수 있습니다.",
-    "hostedTitle": "호스팅",
-    "hostedTagline": "원클릭 연결, 프로젝트가 직접 운영합니다.",
-    "hostedFeature1": "QR 코드 로그인 — 관리할 API 키 없음",
-    "hostedFeature2": "읽기 전용 도구 세트, 설계상 안전",
-    "hostedFeature3": "서비스 안정성을 위한 일일 공정 사용 한도",
-    "hostedFeature4": "Telegram 봇을 통한 서비스 상태 업데이트",
-    "hostedCta": "지금 연결",
-    "selfHostTitle": "셀프 호스팅",
-    "selfHostTagline": "완전한 통제, 내 서버, 내 데이터.",
-    "selfHostFeature1": "모든 도구 — 읽기 및 쓰기",
-    "selfHostFeature2": "일일 제한 없음",
-    "selfHostFeature3": "데이터가 서버를 벗어나지 않습니다",
-    "selfHostFeature4": "Docker Compose + .env, 약 10분이면 설정 완료",
-    "selfHostCta": "GitHub에서 보기",
-    "footnote": "트래킹 없음. 광고 없음. 한 명이 여가 시간에 운영하고 있으니 이슈와 PR에는 너그러이 기다려 주시기 바랍니다."
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "보안과 프라이버시에 관한 자주 묻는 질문",
     "safeQ": "Telegram을 연결해도 안전한가요?",
-    "safeA": "예. 호스팅 버전은 엄격히 읽기 전용이며 메시지를 보내거나 편집·삭제할 수 없습니다. 사용자의 계정은 Telegram Web이나 Desktop에 로그인할 때와 동일한 방식으로 사용됩니다. Telegram의 \"기기\" 설정에서 언제든지 연결을 해제할 수 있습니다.",
+    "safeA": "예. 계정은 QR 코드로 연결됩니다 — Telegram Web과 데스크톱이 사용하는 것과 동일한 흐름이므로 제어는 사용자에게 남습니다. 읽기 전용 도구는 별도 설정 없이 바로 작동합니다. 쓰기 도구(답장 보내기, 반응하기, 임시 보관함 저장)는 사용자가 요청할 때 AI가 사용자를 대신해 동작할 수 있도록 제공됩니다. 되돌릴 수 없는 작업(삭제, 편집, 추방)은 기본적으로 꺼져 있으며, 설정에서 명시적인 옵트인이 필요하고 일일 할당량과 감사 로그가 적용됩니다. Telegram → 설정 → 기기에서 언제든지 연결을 해제하거나 세션을 회수할 수 있습니다.",
     "readQ": "서버에서 제 메시지를 읽을 수 있나요?",
     "readAStart": "사용자의 메시지를 저장하지 않습니다. 각 도구 호출은 Telegram API에서 직접 데이터를 가져와 AI 어시스턴트에 반환합니다. Telegram 세션 키는 요청 간에 커넥터가 계속 작동할 수 있도록 서버에 저장되며, 세션이 종료될 때 삭제됩니다(정확한 시점은 다음 답변을 참조하세요). 저장에 관한 세부 사항과 하드닝 가이드는",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "예. ChatGPT 설정 → Apps(Developer Mode)에서 앱으로 추가하세요. URL은 다음을 사용합니다:",
     "chatgptAEnd": "OAuth 인증을 사용합니다. Plus, Pro, Team, Enterprise 요금제에서 작동합니다.",
     "openSourceQ": "소스 코드가 공개되어 있나요?",
-    "openSourceAStart": "서버는 완전히 오픈소스이며(MIT 라이선스), 위치는",
-    "openSourceAEnd": "입니다. 읽기+쓰기 전체 권한으로 무료로 셀프 호스팅할 수 있습니다.",
+    "openSourceAStart": "예. 서버는 MIT 라이선스로 완전히 오픈 소스입니다:",
+    "openSourceAEnd": ".",
     "botQ": "서비스 업데이트는 어떻게 알 수 있나요?",
     "botAStart": "다음을 구독하세요:",
     "botAEnd": "서비스 상태, 호환성 변경, 새 릴리스 알림을 받을 수 있습니다. 구독 해지는 언제든 /stop을 보내면 됩니다."
@@ -119,7 +98,7 @@
     "mit": "MIT 라이선스",
     "privacy": "개인정보",
     "terms": "이용약관",
-    "tagline": "Claude AI와 ChatGPT를 위한 읽기 전용 Telegram 액세스."
+    "tagline": "Claude AI 및 ChatGPT를 위한 Telegram."
   },
   "language": {
     "switcherLabel": "언어"

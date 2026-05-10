@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Twój Telegram w Claude AI i ChatGPT",
-    "siteDescription": "Połącz swój Telegram z Claude AI lub ChatGPT. Czytaj wiadomości, przeszukuj czaty, pobieraj kontakty — wszystko z poziomu AI jednym kliknięciem."
+    "siteDescription": "Podłącz swojego Telegrama do Claude AI lub ChatGPT. Czytaj wiadomości, przeszukuj czaty, wysyłaj odpowiedzi i reaguj — wszystko z poziomu AI jednym kliknięciem."
   },
   "nav": {
     "features": "Funkcje",
     "howItWorks": "Jak to działa",
-    "choice": "Hosting lub self-host",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Szybki start",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "i",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Czytaj wiadomości, przeszukuj czaty, śledź kontakty i pobieraj media — wszystko z Claude.ai lub ChatGPT. Połącz się w 30 sekund za pomocą kodu QR.",
-    "ctaPrimary": "Połącz Telegram",
-    "ctaSecondary": "Self-host",
+    "subtitle": "Czytaj wiadomości, przeszukuj czaty, wysyłaj odpowiedzi, reaguj na posty — wszystko z Claude.ai lub ChatGPT. Połącz się w 30 sekund za pomocą kodu QR.",
     "ctaQuickstart": "Zacznij w 30 sekund"
   },
   "features": {
     "heading": "Co możesz robić",
-    "subheading": "Narzędzia tylko do odczytu — bezpieczne, prywatne, żadnych wiadomości wysyłanych w Twoim imieniu",
+    "subheading": "Czytaj swoje czaty, wysyłaj odpowiedzi, reaguj na posty — Twoje konto, Twoja kontrola",
     "readMessagesTitle": "Czytaj wiadomości",
     "readMessagesDesc": "Przeglądaj wiadomości z dowolnego czatu z filtrowaniem po dacie i paginacją",
     "searchTitle": "Wyszukuj wszędzie",
@@ -42,8 +40,8 @@
     "mediaDesc": "Pobieraj i oglądaj zdjęcia bezpośrednio w rozmowach z AI",
     "contactsTitle": "Kontakty i członkowie",
     "contactsDesc": "Dostęp do listy kontaktów oraz list członków grup i kanałów",
-    "secureTitle": "Tylko do odczytu i bezpiecznie",
-    "secureDesc": "Nie może wysyłać, edytować ani usuwać wiadomości. Twoje konto jest bezpieczne"
+    "writeTitle": "Wysyłaj i reaguj",
+    "writeDesc": "Odpowiadaj na wiadomości, wysyłaj zdjęcia, dodawaj reakcje i aktualizuj wersje robocze"
   },
   "examples": {
     "heading": "O co pytają ludzie",
@@ -73,30 +71,11 @@
     "step3Desc": "Poproś AI o czytanie czatów, wyszukiwanie wiadomości lub podsumowywanie rozmów",
     "ctaFullGuide": "Przeczytaj pełny przewodnik"
   },
-  "choice": {
-    "heading": "Hosting lub self-host",
-    "subheading": "Open source na licencji MIT. Skorzystaj z hostowanej instancji lub uruchom własną.",
-    "hostedTitle": "Hosting",
-    "hostedTagline": "Połączenie jednym kliknięciem, utrzymywane przez projekt.",
-    "hostedFeature1": "Logowanie kodem QR — bez kluczy API do zarządzania",
-    "hostedFeature2": "Zestaw narzędzi tylko do odczytu, bezpieczny z założenia",
-    "hostedFeature3": "Dzienny limit fair-use dla utrzymania zdrowia usługi",
-    "hostedFeature4": "Aktualizacje statusu usługi przez bota Telegram",
-    "hostedCta": "Połącz teraz",
-    "selfHostTitle": "Self-host",
-    "selfHostTagline": "Pełna kontrola, Twoja maszyna, Twoje dane.",
-    "selfHostFeature1": "Wszystkie narzędzia — odczyt i zapis",
-    "selfHostFeature2": "Bez dziennych limitów",
-    "selfHostFeature3": "Twoje dane nigdy nie opuszczają Twojego serwera",
-    "selfHostFeature4": "Docker Compose + .env, konfiguracja w ~10 minut",
-    "selfHostCta": "Zobacz na GitHubie",
-    "footnote": "Bez śledzenia. Bez reklam. Utrzymywane przez jedną osobę w wolnym czasie — prosimy o cierpliwość przy issues i PR-ach."
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "Najczęstsze pytania o bezpieczeństwo i prywatność",
     "safeQ": "Czy podłączenie mojego Telegrama jest bezpieczne?",
-    "safeA": "Tak. Wersja hostowana jest ściśle tylko do odczytu — nie może wysyłać, edytować ani usuwać wiadomości. Twoje konto jest używane tak samo, jak przy logowaniu do Telegram Web lub Desktop. Możesz rozłączyć się w dowolnym momencie z ustawień \"Urządzenia\" w Telegramie.",
+    "safeA": "Tak. Twoje konto łączy się za pomocą kodu QR — tego samego przepływu, którego używa Telegram Web i Desktop, więc to Ty zachowujesz kontrolę. Narzędzia tylko do odczytu działają od razu. Narzędzia do zapisu (wysłanie odpowiedzi, reakcja, zapisanie wersji roboczej) są dostępne, aby AI mogło działać w Twoim imieniu, gdy je o to poprosisz. Działania nieodwracalne (usuwanie, edycja, wyrzucanie) są domyślnie wyłączone i wymagają jawnego włączenia (opt-in) w ustawieniach, z dziennym limitem i logiem audytu. Możesz rozłączyć lub wycofać sesję w dowolnym momencie z poziomu Telegram → Ustawienia → Urządzenia.",
     "readQ": "Czy możecie czytać moje wiadomości na serwerze?",
     "readAStart": "Nie przechowujemy Twoich wiadomości. Każde wywołanie narzędzia pobiera dane bezpośrednio z API Telegrama i zwraca je asystentowi AI. Klucz Twojej sesji Telegrama jest przechowywany na naszym serwerze, aby konektor działał między żądaniami, i jest usuwany za każdym razem, gdy Twoja sesja się kończy (dokładny moment — patrz następna odpowiedź). Szczegóły przechowywania oraz wskazówki dotyczące hardeningu znajdują się w naszym",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "Tak. Dodaj jako aplikację w ChatGPT Settings → Apps (Developer Mode). Użyj adresu",
     "chatgptAEnd": "z uwierzytelnianiem OAuth. Działa w planach Plus, Pro, Team i Enterprise.",
     "openSourceQ": "Czy kod źródłowy jest otwarty?",
-    "openSourceAStart": "Serwer jest w pełni open-source (licencja MIT) na",
-    "openSourceAEnd": ". Możesz uruchomić self-host za darmo z pełnym dostępem do odczytu i zapisu.",
+    "openSourceAStart": "Tak. Serwer jest w pełni open source na licencji MIT pod adresem",
+    "openSourceAEnd": ".",
     "botQ": "Jak będę wiedzieć o aktualizacjach usługi?",
     "botAStart": "Subskrybuj",
     "botAEnd": "aby otrzymywać powiadomienia o statusie usługi, breaking changes i nowych wydaniach. Wyślij /stop w dowolnym momencie, aby anulować subskrypcję."
@@ -119,7 +98,7 @@
     "mit": "Licencja MIT",
     "privacy": "Prywatność",
     "terms": "Regulamin",
-    "tagline": "Dostęp tylko do odczytu do Telegrama dla Claude AI i ChatGPT."
+    "tagline": "Telegram dla Claude AI i ChatGPT."
   },
   "language": {
     "switcherLabel": "Język"

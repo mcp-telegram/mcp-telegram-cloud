@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Claude AI と ChatGPT であなたの Telegram を",
-    "siteDescription": "Telegram を Claude AI または ChatGPT に接続します。メッセージの閲覧、チャット検索、連絡先の取得を、AI からワンクリックで実行できます。"
+    "siteDescription": "Telegram を Claude AI または ChatGPT に接続。メッセージの読み取り、チャット検索、返信送信、リアクションまで、すべて AI からワンクリックで行えます。"
   },
   "nav": {
     "features": "機能",
     "howItWorks": "仕組み",
-    "choice": "ホスト版またはセルフホスト",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "クイックスタート",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "と",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "メッセージの閲覧、チャット検索、連絡先の追跡、メディアのダウンロードを Claude.ai や ChatGPT からすべて実行できます。QRコードで30秒で接続できます。",
-    "ctaPrimary": "Telegram を接続",
-    "ctaSecondary": "セルフホスト",
+    "subtitle": "メッセージの読み取り、チャット検索、返信送信、投稿へのリアクション — すべて Claude.ai または ChatGPT から。QRコードで30秒で接続できます。",
     "ctaQuickstart": "30秒で始める"
   },
   "features": {
     "heading": "できること",
-    "subheading": "読み取り専用ツール — 安全でプライバシーを保護し、あなたの代わりにメッセージを送信することはありません",
+    "subheading": "チャットを読み、返信を送り、投稿にリアクション — あなたのアカウント、あなたの管理下で",
     "readMessagesTitle": "メッセージの読み取り",
     "readMessagesDesc": "日付フィルターとページネーションで任意のチャットのメッセージを閲覧できます",
     "searchTitle": "あらゆる検索",
@@ -42,8 +40,8 @@
     "mediaDesc": "AI との会話の中で写真を直接ダウンロードして表示できます",
     "contactsTitle": "連絡先とメンバー",
     "contactsDesc": "連絡先リストやグループ・チャンネルのメンバー一覧にアクセスできます",
-    "secureTitle": "読み取り専用で安全",
-    "secureDesc": "メッセージの送信、編集、削除はできません。あなたのアカウントは安全です"
+    "writeTitle": "送信＆リアクション",
+    "writeDesc": "メッセージに返信し、写真を送信し、リアクションを追加し、下書きを更新できます"
   },
   "examples": {
     "heading": "みんなが聞いていること",
@@ -73,30 +71,11 @@
     "step3Desc": "AI にチャットの読み取り、メッセージ検索、会話の要約を依頼できます",
     "ctaFullGuide": "詳しいガイドを読む"
   },
-  "choice": {
-    "heading": "ホスト版またはセルフホスト",
-    "subheading": "MIT ライセンスのオープンソース。ホスト版を使うか、自分で運用できます。",
-    "hostedTitle": "ホスト版",
-    "hostedTagline": "ワンクリック接続、プロジェクトがメンテナンス。",
-    "hostedFeature1": "QRコードログイン — API キーの管理不要",
-    "hostedFeature2": "読み取り専用ツールセット、設計上安全",
-    "hostedFeature3": "サービスの健全性を保つための1日あたりのフェアユース上限",
-    "hostedFeature4": "Telegram ボット経由のサービスステータス通知",
-    "hostedCta": "今すぐ接続",
-    "selfHostTitle": "セルフホスト",
-    "selfHostTagline": "完全なコントロール、自分のマシン、自分のデータ。",
-    "selfHostFeature1": "すべてのツール — 読み取りと書き込み",
-    "selfHostFeature2": "1日の利用制限なし",
-    "selfHostFeature3": "データがサーバーから外に出ることはありません",
-    "selfHostFeature4": "Docker Compose + .env、約10分でセットアップ",
-    "selfHostCta": "GitHub で見る",
-    "footnote": "トラッキングなし。広告なし。一人が空き時間でメンテナンスしているため、Issue や PR への対応はお待ちいただけると幸いです。"
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "セキュリティとプライバシーに関するよくある質問",
     "safeQ": "Telegram を接続しても安全ですか?",
-    "safeA": "はい。ホスト版は厳密に読み取り専用であり、メッセージの送信、編集、削除は一切できません。アカウントの利用方法は、Telegram Web や Desktop にログインする場合と同じです。Telegram の「デバイス」設定からいつでも切断できます。",
+    "safeA": "はい。アカウントは QRコードで接続します — Telegram Web やデスクトップ版と同じフローのため、管理はあなたの手に残ります。読み取り専用ツールはそのまま動作します。書き込みツール(返信送信、リアクション、下書き保存)も用意されており、あなたが依頼したときに AI があなたの代わりに動作できます。取り消せない操作(削除、編集、キック)はデフォルトでオフで、設定での明示的なオプトインが必要であり、1日あたりのクォータと監査ログが適用されます。Telegram → 設定 → デバイスから、いつでも切断またはセッションの取り消しが可能です。",
     "readQ": "サーバー上で私のメッセージを読むことはできますか?",
     "readAStart": "メッセージは保存しません。各ツール呼び出しは Telegram の API から直接データを取得し、AI アシスタントに返します。Telegram のセッションキーは、リクエスト間でコネクタが動作し続けるためにサーバーに保存され、セッション終了時に削除されます(具体的なタイミングは次の回答を参照してください)。保存の詳細とハードニングのガイダンスは",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "はい。ChatGPT の Settings → Apps(Developer Mode)からアプリとして追加します。次の URL を使用してください:",
     "chatgptAEnd": "OAuth 認証で利用できます。Plus、Pro、Team、Enterprise プランで動作します。",
     "openSourceQ": "ソースコードはオープンですか?",
-    "openSourceAStart": "サーバーは完全にオープンソース(MIT ライセンス)で、",
-    "openSourceAEnd": "にあります。読み取り+書き込みのフルアクセスで無料でセルフホストできます。",
+    "openSourceAStart": "はい。サーバーは MIT ライセンスの下で完全にオープンソースです:",
+    "openSourceAEnd": "。",
     "botQ": "サービスの更新情報はどうやって知ることができますか?",
     "botAStart": "登録先:",
     "botAEnd": "サービスステータス、破壊的変更、新リリースについて通知を受けられます。いつでも /stop を送信すれば購読解除できます。"
@@ -119,7 +98,7 @@
     "mit": "MIT ライセンス",
     "privacy": "プライバシー",
     "terms": "利用規約",
-    "tagline": "Claude AI と ChatGPT のための読み取り専用 Telegram アクセス。"
+    "tagline": "Claude AI と ChatGPT のための Telegram。"
   },
   "language": {
     "switcherLabel": "言語"

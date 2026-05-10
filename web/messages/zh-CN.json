@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — 在 Claude AI 和 ChatGPT 中使用您的 Telegram",
-    "siteDescription": "将您的 Telegram 连接到 Claude AI 或 ChatGPT。一键即可在 AI 中阅读消息、搜索聊天、获取联系人。"
+    "siteDescription": "将您的 Telegram 接入 Claude AI 或 ChatGPT。阅读消息、搜索聊天、发送回复和反应——一键即可在 AI 中完成。"
   },
   "nav": {
     "features": "功能",
     "howItWorks": "工作原理",
-    "choice": "托管或自托管",
     "faq": "常见问题",
     "github": "GitHub",
     "quickstart": "快速开始",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "和",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "在 Claude.ai 或 ChatGPT 中阅读消息、搜索聊天、追踪联系人、下载媒体——一站式完成。通过二维码 30 秒即可连接。",
-    "ctaPrimary": "连接 Telegram",
-    "ctaSecondary": "自托管",
+    "subtitle": "阅读消息、搜索聊天、发送回复、为帖子添加反应——全部在 Claude.ai 或 ChatGPT 中完成。使用二维码 30 秒即可连接。",
     "ctaQuickstart": "30 秒上手"
   },
   "features": {
     "heading": "您可以做什么",
-    "subheading": "只读工具——安全、私密,不会以您的名义发送任何消息",
+    "subheading": "阅读您的聊天、发送回复、为帖子添加反应——您的账户,由您掌控",
     "readMessagesTitle": "阅读消息",
     "readMessagesDesc": "通过日期筛选和分页浏览任意聊天的消息",
     "searchTitle": "全面搜索",
@@ -42,8 +40,8 @@
     "mediaDesc": "直接在 AI 对话中下载并查看图片",
     "contactsTitle": "联系人与成员",
     "contactsDesc": "访问您的联系人列表以及群组/频道的成员名单",
-    "secureTitle": "只读且安全",
-    "secureDesc": "无法发送、编辑或删除消息。您的账号是安全的"
+    "writeTitle": "发送和反应",
+    "writeDesc": "回复消息、发送照片、添加反应并更新草稿"
   },
   "examples": {
     "heading": "大家都在问什么",
@@ -73,30 +71,11 @@
     "step3Desc": "让 AI 帮您阅读聊天、搜索消息或总结对话",
     "ctaFullGuide": "阅读完整指南"
   },
-  "choice": {
-    "heading": "托管或自托管",
-    "subheading": "采用 MIT 协议开源。可使用我们的托管实例,或自行部署。",
-    "hostedTitle": "托管",
-    "hostedTagline": "一键连接,由项目维护。",
-    "hostedFeature1": "二维码登录——无需管理 API 密钥",
-    "hostedFeature2": "只读工具集,设计上即安全",
-    "hostedFeature3": "每日合理使用上限以保障服务稳定",
-    "hostedFeature4": "通过 Telegram 机器人推送服务状态更新",
-    "hostedCta": "立即连接",
-    "selfHostTitle": "自托管",
-    "selfHostTagline": "完全掌控,您的机器,您的数据。",
-    "selfHostFeature1": "全部工具——读取和写入",
-    "selfHostFeature2": "无每日限制",
-    "selfHostFeature3": "您的数据永远不会离开您的服务器",
-    "selfHostFeature4": "Docker Compose + .env,约 10 分钟即可完成搭建",
-    "selfHostCta": "在 GitHub 查看",
-    "footnote": "无跟踪。无广告。由一人在业余时间维护——请耐心对待 issue 与 PR。"
-  },
   "faq": {
     "heading": "常见问题",
     "subheading": "关于安全与隐私的常见疑问",
     "safeQ": "连接 Telegram 安全吗?",
-    "safeA": "安全。托管版本严格只读——无法发送、编辑或删除任何消息。账号的使用方式与登录 Telegram Web 或桌面客户端相同。您可以随时在 Telegram 的「设备」设置中断开连接。",
+    "safeA": "安全。您的账户通过二维码连接——与 Telegram Web 和桌面版相同的流程,主动权始终在您手中。只读工具开箱即用。写入工具(发送回复、添加反应、保存草稿)也可用,这样当您要求时,AI 可以代表您执行操作。不可逆操作(删除、编辑、踢出)默认关闭,需要在您的设置中明确启用,并附带每日配额和审计日志。您可以随时通过 Telegram → 设置 → 设备 断开连接或撤销会话。",
     "readQ": "你们能在服务器上读取我的消息吗?",
     "readAStart": "我们不会存储您的消息。每次工具调用都直接从 Telegram API 获取数据并返回给 AI 助手。Telegram 会话密钥保存在我们的服务器上,以便连接器在多次请求之间持续工作,会话结束时即被删除(具体时机参见下一个回答)。存储细节和加固指南请查阅我们的",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "支持。请在 ChatGPT 的 Settings → Apps(Developer Mode)中将其作为应用添加。使用以下 URL:",
     "chatgptAEnd": "采用 OAuth 身份验证。Plus、Pro、Team 和 Enterprise 套餐均可使用。",
     "openSourceQ": "源代码开源吗?",
-    "openSourceAStart": "服务端完全开源(MIT 协议),仓库位于",
-    "openSourceAEnd": "。您可以免费自托管,获得完整的读写权限。",
+    "openSourceAStart": "是的。服务器在 MIT 许可下完全开源,代码位于",
+    "openSourceAEnd": "。",
     "botQ": "我如何了解服务更新?",
     "botAStart": "订阅",
     "botAEnd": "以获取服务状态、不兼容变更和新版本发布的通知。随时发送 /stop 即可取消订阅。"
@@ -119,7 +98,7 @@
     "mit": "采用 MIT 许可",
     "privacy": "隐私",
     "terms": "条款",
-    "tagline": "面向 Claude AI 和 ChatGPT 的只读 Telegram 访问。"
+    "tagline": "为 Claude AI 和 ChatGPT 而生的 Telegram。"
   },
   "language": {
     "switcherLabel": "语言"

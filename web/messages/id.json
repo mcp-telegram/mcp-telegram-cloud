@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Telegram Anda di Claude AI & ChatGPT",
-    "siteDescription": "Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, dapatkan kontak — semua dari AI dengan satu klik."
+    "siteDescription": "Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, kirim balasan, dan beri reaksi — semuanya dari AI dengan satu klik."
   },
   "nav": {
     "features": "Fitur",
     "howItWorks": "Cara kerja",
-    "choice": "Hosted atau self-host",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Mulai cepat",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Baca pesan, cari obrolan, pantau kontak, dan unduh media — semua dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
-    "ctaPrimary": "Hubungkan Telegram",
-    "ctaSecondary": "Self-host",
+    "subtitle": "Baca pesan, cari obrolan, kirim balasan, beri reaksi pada postingan — semuanya dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
     "ctaQuickstart": "Mulai dalam 30 detik"
   },
   "features": {
     "heading": "Apa yang dapat Anda lakukan",
-    "subheading": "Alat hanya-baca — aman, privat, tidak ada pesan yang dikirim atas nama Anda",
+    "subheading": "Baca obrolan Anda, kirim balasan, beri reaksi pada postingan — akun Anda, kendali Anda",
     "readMessagesTitle": "Baca pesan",
     "readMessagesDesc": "Telusuri pesan dari obrolan mana pun dengan filter tanggal dan paginasi",
     "searchTitle": "Cari semuanya",
@@ -42,8 +40,8 @@
     "mediaDesc": "Unduh dan lihat foto secara inline langsung di percakapan AI",
     "contactsTitle": "Kontak & anggota",
     "contactsDesc": "Akses daftar kontak Anda dan daftar anggota grup/kanal",
-    "secureTitle": "Hanya-baca & aman",
-    "secureDesc": "Tidak dapat mengirim, mengedit, atau menghapus pesan. Akun Anda aman"
+    "writeTitle": "Kirim & reaksi",
+    "writeDesc": "Balas pesan, kirim foto, tambahkan reaksi, dan perbarui draf"
   },
   "examples": {
     "heading": "Apa yang ditanyakan orang",
@@ -73,30 +71,11 @@
     "step3Desc": "Minta AI untuk membaca obrolan, mencari pesan, atau meringkas percakapan",
     "ctaFullGuide": "Baca panduan lengkap"
   },
-  "choice": {
-    "heading": "Hosted atau self-host",
-    "subheading": "Open source di bawah lisensi MIT. Gunakan instance hosted, atau jalankan sendiri.",
-    "hostedTitle": "Hosted",
-    "hostedTagline": "Hubungkan dengan satu klik, dipelihara oleh proyek.",
-    "hostedFeature1": "Login kode QR — tanpa API key untuk dikelola",
-    "hostedFeature2": "Set alat hanya-baca, aman sejak awal",
-    "hostedFeature3": "Batas penggunaan wajar harian untuk menjaga layanan tetap sehat",
-    "hostedFeature4": "Pembaruan status layanan via bot Telegram",
-    "hostedCta": "Hubungkan sekarang",
-    "selfHostTitle": "Self-host",
-    "selfHostTagline": "Kontrol penuh, mesin Anda, data Anda.",
-    "selfHostFeature1": "Semua alat — baca dan tulis",
-    "selfHostFeature2": "Tanpa batas harian",
-    "selfHostFeature3": "Data Anda tidak pernah meninggalkan server Anda",
-    "selfHostFeature4": "Docker Compose + .env, pengaturan ~10 menit",
-    "selfHostCta": "Lihat di GitHub",
-    "footnote": "Tanpa pelacakan. Tanpa iklan. Dipelihara oleh satu orang di waktu luang — mohon bersabar dengan issues dan PR."
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "Pertanyaan umum tentang keamanan dan privasi",
     "safeQ": "Apakah aman menghubungkan Telegram saya?",
-    "safeA": "Ya. Versi hosted bersifat hanya-baca secara ketat — tidak dapat mengirim, mengedit, atau menghapus pesan apa pun. Akun Anda digunakan dengan cara yang sama seperti login ke Telegram Web atau Desktop. Anda dapat memutuskan koneksi kapan saja dari pengaturan \"Perangkat\" di Telegram.",
+    "safeA": "Ya. Akun Anda terhubung via kode QR — alur yang sama yang digunakan Telegram Web dan Desktop, sehingga kendali tetap di tangan Anda. Alat baca-saja bekerja langsung tanpa pengaturan tambahan. Alat tulis (mengirim balasan, memberi reaksi, menyimpan draf) tersedia agar AI dapat bertindak atas nama Anda saat Anda memintanya. Tindakan yang tidak dapat dibatalkan (hapus, edit, keluarkan) dinonaktifkan secara default dan memerlukan persetujuan eksplisit di pengaturan Anda, dengan kuota harian dan log audit. Anda dapat memutuskan koneksi atau mencabut sesi kapan saja dari Telegram → Pengaturan → Perangkat.",
     "readQ": "Apakah Anda dapat membaca pesan saya di server?",
     "readAStart": "Kami tidak menyimpan pesan Anda. Setiap panggilan alat mengambil data langsung dari API Telegram dan mengembalikannya ke asisten AI. Kunci sesi Telegram Anda disimpan di server kami agar konektor dapat terus bekerja antar permintaan, dan dihapus ketika sesi Anda berakhir (lihat jawaban berikutnya untuk waktu yang tepat). Detail penyimpanan dan panduan hardening ada di",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "Ya. Tambahkan sebagai aplikasi di ChatGPT Settings → Apps (Developer Mode). Gunakan URL",
     "chatgptAEnd": "dengan autentikasi OAuth. Bekerja pada paket Plus, Pro, Team, dan Enterprise.",
     "openSourceQ": "Apakah kode sumbernya terbuka?",
-    "openSourceAStart": "Server sepenuhnya open-source (lisensi MIT) di",
-    "openSourceAEnd": ". Anda dapat melakukan self-host secara gratis dengan akses baca+tulis penuh.",
+    "openSourceAStart": "Ya. Server sepenuhnya open-source di bawah lisensi MIT di",
+    "openSourceAEnd": ".",
     "botQ": "Bagaimana cara mengetahui pembaruan layanan?",
     "botAStart": "Berlangganan ke",
     "botAEnd": "untuk diberi tahu tentang status layanan, perubahan yang merusak, dan rilis baru. Kirim /stop kapan saja untuk berhenti berlangganan."
@@ -119,7 +98,7 @@
     "mit": "Berlisensi MIT",
     "privacy": "Privasi",
     "terms": "Ketentuan",
-    "tagline": "Akses Telegram hanya-baca untuk Claude AI & ChatGPT."
+    "tagline": "Telegram untuk Claude AI & ChatGPT."
   },
   "language": {
     "switcherLabel": "Bahasa"

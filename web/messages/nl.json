@@ -1,19 +1,19 @@
 {
   "_meta": {
-    "sourceSha": "cdd0404618d6f81a",
+    "sourceSha": "3817d448db82af6c",
     "sourceFile": "en.json",
-    "translatedAt": "2026-05-10T22:35:00Z",
+    "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
-    "autoTranslated": true
+    "autoTranslated": true,
+    "retranslatedAt": "2026-05-10T20:22:30Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Uw Telegram in Claude AI en ChatGPT",
-    "siteDescription": "Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats en haal contacten op — allemaal vanuit AI met één klik."
+    "siteDescription": "Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats, verstuur antwoorden en reageer — alles vanuit AI met één klik."
   },
   "nav": {
     "features": "Functies",
     "howItWorks": "Hoe het werkt",
-    "choice": "Hosted of zelf-hosten",
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Snelstart",
@@ -24,14 +24,12 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Lees berichten, doorzoek chats, volg contacten en download media — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
-    "ctaPrimary": "Telegram verbinden",
-    "ctaSecondary": "Zelf hosten",
+    "subtitle": "Lees berichten, doorzoek chats, verstuur antwoorden, reageer op berichten — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
     "ctaQuickstart": "Begin in 30 seconden"
   },
   "features": {
     "heading": "Wat u kunt doen",
-    "subheading": "Alleen-lezen tools — veilig, privé, geen berichten namens u verzonden",
+    "subheading": "Lees uw chats, verstuur antwoorden, reageer op berichten — uw account, uw controle",
     "readMessagesTitle": "Berichten lezen",
     "readMessagesDesc": "Bekijk berichten uit elke chat met datumfilter en paginering",
     "searchTitle": "Doorzoek alles",
@@ -42,8 +40,8 @@
     "mediaDesc": "Download en bekijk foto's direct in AI-gesprekken",
     "contactsTitle": "Contacten en leden",
     "contactsDesc": "Toegang tot uw contactenlijst en ledenlijsten van groepen/kanalen",
-    "secureTitle": "Alleen-lezen en veilig",
-    "secureDesc": "Kan geen berichten versturen, bewerken of verwijderen. Uw account is veilig"
+    "writeTitle": "Verzenden & reageren",
+    "writeDesc": "Beantwoord berichten, verstuur foto's, voeg reacties toe en werk concepten bij"
   },
   "examples": {
     "heading": "Wat mensen vragen",
@@ -73,30 +71,11 @@
     "step3Desc": "Vraag AI om uw chats te lezen, berichten te doorzoeken of gesprekken samen te vatten",
     "ctaFullGuide": "Lees de volledige gids"
   },
-  "choice": {
-    "heading": "Hosted of zelf-hosten",
-    "subheading": "Open source onder MIT. Gebruik onze gehoste instantie of draai uw eigen versie.",
-    "hostedTitle": "Hosted",
-    "hostedTagline": "Verbinden met één klik, onderhouden door het project.",
-    "hostedFeature1": "Inloggen met QR-code — geen API-sleutels om te beheren",
-    "hostedFeature2": "Alleen-lezen toolset, veilig door ontwerp",
-    "hostedFeature3": "Dagelijkse fair-use-limiet om de service gezond te houden",
-    "hostedFeature4": "Updates over de servicestatus via een Telegram-bot",
-    "hostedCta": "Nu verbinden",
-    "selfHostTitle": "Zelf hosten",
-    "selfHostTagline": "Volledige controle, uw machine, uw gegevens.",
-    "selfHostFeature1": "Alle tools — lezen en schrijven",
-    "selfHostFeature2": "Geen dagelijkse limieten",
-    "selfHostFeature3": "Uw gegevens verlaten uw server nooit",
-    "selfHostFeature4": "Docker Compose + .env, ~10 minuten installatie",
-    "selfHostCta": "Bekijk op GitHub",
-    "footnote": "Geen tracking. Geen advertenties. Onderhouden door één persoon in zijn vrije tijd — heb geduld met issues en PR's."
-  },
   "faq": {
     "heading": "FAQ",
     "subheading": "Veelgestelde vragen over beveiliging en privacy",
     "safeQ": "Is het veilig om mijn Telegram te verbinden?",
-    "safeA": "Ja. De gehoste versie is strikt alleen-lezen — er kunnen geen berichten worden verzonden, bewerkt of verwijderd. Uw account wordt op dezelfde manier gebruikt als wanneer u inlogt op Telegram Web of Desktop. U kunt op elk moment de verbinding verbreken via Telegrams \"Apparaten\"-instellingen.",
+    "safeA": "Ja. Uw account wordt verbonden via een QR-code — dezelfde flow die Telegram Web en Desktop gebruiken, zodat u de controle behoudt. Alleen-lezen tools werken direct. Schrijftools (een antwoord versturen, reageren, een concept opslaan) zijn beschikbaar zodat de AI namens u kan handelen wanneer u dat vraagt. Onomkeerbare acties (verwijderen, bewerken, verwijderen van leden) staan standaard uit en vereisen een uitdrukkelijke opt-in in uw instellingen, met een dagelijks quotum en een auditlog. U kunt op elk moment de verbinding verbreken of de sessie intrekken via Telegram → Instellingen → Apparaten.",
     "readQ": "Kunt u mijn berichten op de server lezen?",
     "readAStart": "Wij slaan uw berichten niet op. Elke toolaanroep haalt gegevens rechtstreeks op uit de API van Telegram en geeft die door aan de AI-assistent. Uw Telegram-sessiesleutel wordt op onze server bewaard zodat de connector tussen verzoeken door kan blijven werken, en wordt verwijderd zodra uw sessie eindigt (zie het volgende antwoord voor de exacte timing). Details over opslag en hardening vindt u in onze",
     "readALinkLabel": "SECURITY.md",
@@ -109,8 +88,8 @@
     "chatgptAStart": "Ja. Voeg het toe als app in ChatGPT Instellingen → Apps (ontwikkelaarsmodus). Gebruik de URL",
     "chatgptAEnd": "met OAuth-authenticatie. Werkt op de Plus-, Pro-, Team- en Enterprise-abonnementen.",
     "openSourceQ": "Is de broncode open?",
-    "openSourceAStart": "De server is volledig open source (MIT-licentie) op",
-    "openSourceAEnd": ". U kunt deze gratis zelf hosten met volledige lees- en schrijftoegang.",
+    "openSourceAStart": "Ja. De server is volledig open-source onder de MIT-licentie op",
+    "openSourceAEnd": ".",
     "botQ": "Hoe blijf ik op de hoogte van service-updates?",
     "botAStart": "Abonneer u op",
     "botAEnd": "om op de hoogte te blijven van servicestatus, breaking changes en nieuwe releases. Stuur op elk moment /stop om u uit te schrijven."
@@ -119,7 +98,7 @@
     "mit": "MIT-gelicentieerd",
     "privacy": "Privacy",
     "terms": "Voorwaarden",
-    "tagline": "Alleen-lezen Telegram-toegang voor Claude AI en ChatGPT."
+    "tagline": "Telegram voor Claude AI & ChatGPT."
   },
   "language": {
     "switcherLabel": "Taal"
