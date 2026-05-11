@@ -1,0 +1,15 @@
+.button {
+  min-height: 44px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: var(--tg-link);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.copied {
+  color: var(--tg-green);
+}

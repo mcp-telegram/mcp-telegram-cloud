@@ -21,7 +21,7 @@ export function StepCard({ num, title, description, image, imageAlt, children }:
     <div className={s.card}>
       <div className={s.num}>{num}</div>
       <div className={s.body}>
-        <h3 className={s.title}>{title}</h3>
+        <h2 className={s.title}>{title}</h2>
         <p className={s.desc}>{description}</p>
         {children}
         {image ? (

@@ -16,7 +16,7 @@ export function ExampleCard({ title, description, prompt, category, copyLabel, c
   return (
     <article className={s.card}>
       <div className={s.head}>
-        <h3 className={s.title}>{title}</h3>
+        <h2 className={s.title}>{title}</h2>
         <span className={s.badge}>{category}</span>
       </div>
       <p className={s.desc}>{description}</p>
