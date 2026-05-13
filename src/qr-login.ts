@@ -17,6 +17,16 @@ export async function handleQrLogin(
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
 
+      // Keep the HTTP/2 stream warm so intermediaries (Traefik/Bun) don't close it during idle
+      // gaps between qr.start and the eventual success/redirect. SSE comments (lines starting
+      // with `:`) are ignored by EventSource but count as traffic on the underlying stream.
+      const heartbeat = setInterval(() => {
+        if (signal.aborted) return;
+        try {
+          controller.enqueue(encoder.encode(`: ping\n\n`));
+        } catch {}
+      }, 5000);
+
       try {
         const telegram = await sessions.getOrCreateSession(userId);
 
@@ -58,6 +68,8 @@ export async function handleQrLogin(
         }
       } catch (err) {
         send("error_msg", { message: (err as Error).message });
+      } finally {
+        clearInterval(heartbeat);
       }
 
       controller.close();
@@ -87,6 +99,17 @@ export async function handleOAuthQrLogin(
         if (signal.aborted) return;
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
+
+      // Heartbeat — see handleQrLogin above for rationale. Without this, Telegram's QR
+      // confirmation often arrives 15+ seconds after `qr.start`, and the SSE stream is
+      // terminated mid-flight with ERR_HTTP2_PROTOCOL_ERROR before the `redirect` event
+      // can flush — leaving the browser stuck on the spinner.
+      const heartbeat = setInterval(() => {
+        if (signal.aborted) return;
+        try {
+          controller.enqueue(encoder.encode(`: ping\n\n`));
+        } catch {}
+      }, 5000);
 
       try {
         // If we have a userId hint (from cookie), try to reconnect THAT specific user
@@ -205,6 +228,8 @@ export async function handleOAuthQrLogin(
       } catch (err) {
         logger.error(`QR login error: ${(err as Error).message}`, { component: "oauth-qr", event: "user.login.error" });
         send("error_msg", { message: (err as Error).message });
+      } finally {
+        clearInterval(heartbeat);
       }
 
       controller.close();
