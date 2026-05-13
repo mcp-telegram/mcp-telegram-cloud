@@ -2,6 +2,10 @@ import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 
+// SSE comment-frame interval. Long enough to be cheap, short enough to stay under
+// the ~15s HTTP/2 idle threshold we observed empirically against Traefik+Bun.serve.
+const SSE_HEARTBEAT_INTERVAL_MS = 5000;
+
 /** Handle QR login via SSE stream */
 export async function handleQrLogin(
   sessions: SessionManager,
@@ -21,11 +25,17 @@ export async function handleQrLogin(
       // gaps between qr.start and the eventual success/redirect. SSE comments (lines starting
       // with `:`) are ignored by EventSource but count as traffic on the underlying stream.
       const heartbeat = setInterval(() => {
-        if (signal.aborted) return;
+        if (signal.aborted) {
+          clearInterval(heartbeat);
+          return;
+        }
         try {
           controller.enqueue(encoder.encode(`: ping\n\n`));
-        } catch {}
-      }, 5000);
+        } catch {
+          // Stream already closed/errored — nothing to do, finally will clear the interval.
+        }
+      }, SSE_HEARTBEAT_INTERVAL_MS);
+      signal.addEventListener("abort", () => clearInterval(heartbeat), { once: true });
 
       try {
         const telegram = await sessions.getOrCreateSession(userId);
@@ -100,16 +110,31 @@ export async function handleOAuthQrLogin(
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
 
-      // Heartbeat — see handleQrLogin above for rationale. Without this, Telegram's QR
-      // confirmation often arrives 15+ seconds after `qr.start`, and the SSE stream is
-      // terminated mid-flight with ERR_HTTP2_PROTOCOL_ERROR before the `redirect` event
-      // can flush — leaving the browser stuck on the spinner.
-      const heartbeat = setInterval(() => {
-        if (signal.aborted) return;
-        try {
-          controller.enqueue(encoder.encode(`: ping\n\n`));
-        } catch {}
-      }, 5000);
+      // Heartbeat is installed lazily — see `installHeartbeat` below. The fast `session.reuse`
+      // path (a hinted user with a still-valid Telegram client) finishes in <200ms so the
+      // heartbeat is unnecessary there; the slow QR-wait path installs it before blocking.
+      let heartbeat: ReturnType<typeof setInterval> | null = null;
+      const installHeartbeat = () => {
+        if (heartbeat !== null || signal.aborted) return;
+        heartbeat = setInterval(() => {
+          if (signal.aborted) {
+            if (heartbeat !== null) clearInterval(heartbeat);
+            return;
+          }
+          try {
+            controller.enqueue(encoder.encode(`: ping\n\n`));
+          } catch {
+            // Stream already closed/errored — finally will clear the interval.
+          }
+        }, SSE_HEARTBEAT_INTERVAL_MS);
+        signal.addEventListener(
+          "abort",
+          () => {
+            if (heartbeat !== null) clearInterval(heartbeat);
+          },
+          { once: true },
+        );
+      };
 
       try {
         // If we have a userId hint (from cookie), try to reconnect THAT specific user
@@ -160,11 +185,14 @@ export async function handleOAuthQrLogin(
           });
         }
 
-        // No hint or hint failed — proceed with QR login
+        // No hint or hint failed — proceed with QR login (slow path: waits on user scan,
+        // typically 5–30 seconds). Install the SSE heartbeat now so the HTTP/2 stream
+        // stays warm through Telegram's confirmation round-trip.
         logger.info("Starting QR login (no valid session hint)", {
           component: "oauth-qr",
           event: "qr.start",
         });
+        installHeartbeat();
         const telegram = sessions.createTempTelegram();
         await telegram.connect();
 
@@ -229,7 +257,7 @@ export async function handleOAuthQrLogin(
         logger.error(`QR login error: ${(err as Error).message}`, { component: "oauth-qr", event: "user.login.error" });
         send("error_msg", { message: (err as Error).message });
       } finally {
-        clearInterval(heartbeat);
+        if (heartbeat !== null) clearInterval(heartbeat);
       }
 
       controller.close();
