@@ -4,8 +4,8 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-05-10
-**Current version:** 2.28.0 (cloud — landing fact-check + drop self-host marketing references) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-05-16
+**Current version:** 2.29.0 (cloud — 10-year access token TTL: stop "Needs Auth" prompts) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -113,6 +113,23 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-16** — **10-year access token TTL — stop "Needs Auth" prompts** (cloud v2.29.0).
+  Bumped `ACCESS_TOKEN_TTL_SECONDS` from 3600 (1 hour) to `10 * 365 * 24 * 3600`
+  (10 years). Root cause: some MCP clients (observed: Claude Code keychain) do
+  not persist `refresh_token` reliably — schema has `accessToken`/`expiresAt`
+  but no `refreshToken` field, so when the 1h access token expired the client
+  had nothing to refresh with and surfaced "Needs Auth". The refresh-rotation
+  pipeline on the server (v2.23.0 eternal refresh tokens with chain rotation)
+  worked correctly per SigNoz forensics (52+ successful `POST /oauth/token 200`
+  over 3 days from `clientClass=script`), but a flow that depends on every
+  client implementing refresh perfectly is fragile. A long-lived access token
+  bypasses that dependency entirely: clients hold the bearer until either the
+  user explicitly disconnects or `/oauth/revoke` is called. Refresh flow is
+  retained as a safety net. Security trade-off: stolen tokens live longer; the
+  off-switch is `/oauth/revoke` per RFC 7009, which already revokes the chain
+  + destroys the Telegram session. Acceptable for read-mostly + safe-write
+  MCP usage; mirrors the GitHub PAT / OpenAI key model. 479/479 tests green.
 
 - **2026-05-10** — **Landing fact-check + drop self-host marketing references** (cloud v2.28.0).
   Three-way audit: (a) all "self-host" mentions removed from the marketing site

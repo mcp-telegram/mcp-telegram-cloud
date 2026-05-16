@@ -4,7 +4,12 @@ import { logger, logUser } from "./logger.js";
 
 /** OAuth 2.0 Authorization Server for MCP (RFC 8414, RFC 7591, RFC 7636) */
 
-const ACCESS_TOKEN_TTL_SECONDS = 3600; // 1 hour — short-lived, refreshable
+// 10 years — effectively "no expiry" so MCP clients (Claude Code, ChatGPT) never get a "Needs
+// Auth" prompt purely because the access token expired. Some clients don't persist refresh_token
+// reliably (observed: Claude Code keychain schema lacks the field), so a short access TTL turns
+// into "user re-authenticates every hour" instead of "client transparently refreshes". Refresh
+// flow is kept as a safety net; revoke via /oauth/revoke remains the off-switch.
+const ACCESS_TOKEN_TTL_SECONDS = 10 * 365 * 24 * 3600;
 const AUTH_CODE_TTL_SECONDS = 600; // 10 min — single-use, exchanged immediately by clients
 // Window during which a "replay" of a freshly rotated token is treated as a network retry
 // (e.g. client received our 200 then network dropped before persisting it). Real attacks land
