@@ -5,7 +5,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
 **Last updated:** 2026-05-16
-**Current version:** 2.29.0 (cloud — 10-year access token TTL: stop "Needs Auth" prompts) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.29.1 (cloud — dependency refresh wave) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -113,6 +113,18 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-19** — **Dependency refresh wave** (cloud v2.29.1, OSS dev-deps).
+  Routine patch/minor bumps across all three repos. Cloud root: bun runtime
+  1.3.13 → 1.3.14 (engine + Dockerfile × 2 + CI workflow), `@types/bun`
+  1.3.13 → 1.3.14, `hono` 4.12.18 → 4.12.19, `undici` 8.2.0 → 8.3.0,
+  `@overpod/mcp-telegram` 1.36.2 → 1.36.3. Web workspace: `next-intl`
+  4.11.1 → 4.12.0, `react` + `react-dom` 19.2.0 → 19.2.6. OSS dev-deps:
+  `@types/node` 25.6.0 → 25.9.0, `tsx` 4.21.0 → 4.22.2 (no OSS release —
+  cloud bumps the dep to 1.36.3 already published). No major bumps; zero
+  code changes. 479/479 cloud tests green, 505/505 OSS tests green,
+  parity check (178/3) green, validate-translations green, web build
+  502/502 prerender unchanged.
 
 - **2026-05-16** — **10-year access token TTL — stop "Needs Auth" prompts** (cloud v2.29.0).
   Bumped `ACCESS_TOKEN_TTL_SECONDS` from 3600 (1 hour) to `10 * 365 * 24 * 3600`

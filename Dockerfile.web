@@ -32,7 +32,7 @@ RUN npx next build
 # Stage 3: Production runtime — Bun executes the standalone server.
 # Standalone output bundles the Node-style server.js + a trimmed
 # node_modules; Bun runs server.js as Node-compatible JS without rebuild.
-FROM oven/bun:1.3.13-alpine AS runner
+FROM oven/bun:1.3.14-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

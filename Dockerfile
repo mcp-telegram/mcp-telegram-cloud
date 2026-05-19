@@ -19,7 +19,7 @@ RUN npm install --no-audit --no-fund --omit=dev --ignore-scripts
 COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 
 # Stage 3: Production runtime — Bun runs .ts directly, no build step
-FROM oven/bun:1.3.13-alpine
+FROM oven/bun:1.3.14-alpine
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
