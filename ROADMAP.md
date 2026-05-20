@@ -4,8 +4,8 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-05-16
-**Current version:** 2.29.1 (cloud — dependency refresh wave) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-05-20
+**Current version:** 2.29.2 (cloud — dependency refresh wave) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -113,6 +113,15 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-20** — **Dependency refresh wave** (cloud v2.29.2, OSS dev-deps).
+  Patch-level bumps following v2.29.1. Cloud root: `hono` 4.12.19 → 4.12.21.
+  Web workspace: `@types/node` 22.10.5 → 25.9.1 (aligned with cloud root /
+  OSS — devDep, no runtime impact), `@types/react` 19.2.14 → 19.2.15.
+  OSS dev-deps: `@types/node` 25.9.0 → 25.9.1, `tsx` 4.22.2 → 4.22.3 (no
+  OSS release — npm tarball already at 1.36.3). 479/479 cloud tests green,
+  505/505 OSS tests green, parity 178/3 green, validate-translations 19 locales
+  green, web build 502/502 prerender unchanged.
 
 - **2026-05-19** — **Dependency refresh wave** (cloud v2.29.1, OSS dev-deps).
   Routine patch/minor bumps across all three repos. Cloud root: bun runtime

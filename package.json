@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.29.1",
+  "version": "2.29.2",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -32,7 +32,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@overpod/mcp-telegram": "^1.36.3",
     "dotenv": "^17.4.2",
-    "hono": "^4.12.19",
+    "hono": "^4.12.21",
     "undici": "^8.3.0",
     "zod": "^4.4.3"
   },
