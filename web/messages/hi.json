@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Claude AI और ChatGPT में आपका Telegram",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — बिल्ट-इन MCP connector के ज़रिए",
     "testedClientHermes": "Hermes Agent — ओपन-सोर्स CLI MCP क्लाइंट (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — IDE प्लगइन (RFC 8252 loopback flow)",
-    "testedClientGeneric": "कोई भी RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 के अनुरूप क्लाइंट हमारी तरफ से बिना किसी कोड परिवर्तन के काम करना चाहिए।"
+    "testedClientGeneric": "कोई भी RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 के अनुरूप क्लाइंट हमारी तरफ से बिना किसी कोड परिवर्तन के काम करना चाहिए।",
+    "multiAccountHeading": "एक ही OAuth कनेक्शन पर कई Telegram खाते",
+    "multiAccountLead": "v2.32.0 से एक ही OAuth कनेक्शन कई Telegram पहचानों को रख सकता है और एक टूल कॉल से उनके बीच स्विच कर सकता है — कोई Disconnect/Connect चक्र नहीं, कोई नया क्लाइंट पंजीकरण नहीं।",
+    "multiAccountStep1Title": "जुड़े खातों की सूची देखें",
+    "multiAccountStep1Desc": "telegram-accounts-list को कॉल करें। आप अपना primary (OAuth-बद्ध) खाता देखेंगे जो सक्रिय होने पर ⭐ से चिह्नित होगा, साथ ही आपने जोड़े गए कोई भी द्वितीयक खाते भी।",
+    "multiAccountStep2Title": "एक और खाता जोड़ें",
+    "multiAccountStep2Desc": "एक वैकल्पिक लेबल (जैसे \"testing\") के साथ telegram-accounts-add को कॉल करें। टूल एक एक-बार उपयोग वाला URL लौटाता है (TTL 10 मिनट) — इसे किसी भी डिवाइस पर खोलें और जिस Telegram खाते को जोड़ना चाहते हैं उसके साथ QR स्कैन करें।",
+    "multiAccountStep3Title": "सक्रिय खाता बदलें",
+    "multiAccountStep3Desc": "identifier=label, @username, account_id या 'primary' के साथ telegram-accounts-switch को कॉल करें। अगला telegram-* टूल कॉल तुरंत उस खाते का उपयोग करेगा। कोई पुनः-कनेक्ट नहीं।",
+    "multiAccountStep4Title": "एक द्वितीयक खाता हटाएँ",
+    "multiAccountStep4Desc": "किसी द्वितीयक खाते पर telegram-accounts-remove identifier=… को कॉल करें। Telegram खाता स्वयं लॉग आउट नहीं होता — केवल यहाँ की बाइंडिंग हटती है। primary को इस तरह नहीं हटाया जा सकता; पूर्ण रूप से साइन आउट करने के लिए अपने क्लाइंट के Disconnect फ़्लो का उपयोग करें।",
+    "multiAccountSecurityNote": "प्रत्येक OAuth कनेक्शन अलग-थलग है: आप Hermes के माध्यम से जो खाते जोड़ते हैं वे Claude.ai या ChatGPT को दिखाई नहीं देते, भले ही यह वही Telegram पहचान हो। विभिन्न खातों को विभिन्न MCP क्लाइंट्स से जोड़ने के लिए, प्रत्येक क्लाइंट को अलग से पंजीकृत करें और उसके अपने सत्र के भीतर telegram-accounts-add का उपयोग करें।"
   }
 }

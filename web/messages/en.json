@@ -308,6 +308,17 @@
     "testedClientChatGPT": "ChatGPT Apps — via built-in MCP connector",
     "testedClientHermes": "Hermes Agent — open-source CLI MCP client (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — IDE plugin (RFC 8252 loopback flow)",
-    "testedClientGeneric": "Any RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 compliant client should work without code changes on our end."
+    "testedClientGeneric": "Any RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 compliant client should work without code changes on our end.",
+    "multiAccountHeading": "Multiple Telegram accounts on one OAuth connection",
+    "multiAccountLead": "Since v2.32.0 a single OAuth connection can hold several Telegram identities and switch between them with one tool call — no Disconnect/Connect cycle, no new client registration.",
+    "multiAccountStep1Title": "List what's attached",
+    "multiAccountStep1Desc": "Call telegram-accounts-list. You will see your primary (OAuth-bound) account marked with ⭐ if it's active, plus any secondaries you've added.",
+    "multiAccountStep2Title": "Attach another account",
+    "multiAccountStep2Desc": "Call telegram-accounts-add with an optional label (e.g. \"testing\"). The tool returns a one-time URL (TTL 10 minutes) — open it on any device and scan the QR with the Telegram account you want to add.",
+    "multiAccountStep3Title": "Switch active account",
+    "multiAccountStep3Desc": "Call telegram-accounts-switch with identifier=label, @username, account_id, or 'primary'. The next telegram-* tool call uses that account immediately. No reconnect.",
+    "multiAccountStep4Title": "Detach a secondary",
+    "multiAccountStep4Desc": "Call telegram-accounts-remove identifier=… on a secondary. The Telegram account itself is NOT logged out — only the binding here. The primary cannot be removed this way; use your client's Disconnect flow to fully sign out.",
+    "multiAccountSecurityNote": "Each OAuth connection is isolated: accounts you attach via Hermes are invisible to Claude.ai or ChatGPT, even if it's the same Telegram identity. To connect different accounts to different MCP clients, register each client separately and use telegram-accounts-add inside its own session."
   }
 }

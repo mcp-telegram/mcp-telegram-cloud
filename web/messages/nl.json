@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Uw Telegram in Claude AI en ChatGPT",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — via ingebouwde MCP connector",
     "testedClientHermes": "Hermes Agent — open-source CLI MCP-client (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — IDE-plug-in (RFC 8252 loopback flow)",
-    "testedClientGeneric": "Elke client die voldoet aan RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 zou aan onze kant zonder codewijzigingen moeten werken."
+    "testedClientGeneric": "Elke client die voldoet aan RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 zou aan onze kant zonder codewijzigingen moeten werken.",
+    "multiAccountHeading": "Meerdere Telegram-accounts op één OAuth-verbinding",
+    "multiAccountLead": "Sinds v2.32.0 kan één OAuth-verbinding meerdere Telegram-identiteiten bevatten en met één tool-aanroep tussen accounts wisselen — geen Disconnect/Connect-cyclus, geen nieuwe client-registratie.",
+    "multiAccountStep1Title": "Bekijk wat er gekoppeld is",
+    "multiAccountStep1Desc": "Roep telegram-accounts-list aan. U ziet uw primary (OAuth-gebonden) account gemarkeerd met ⭐ als deze actief is, plus eventuele secundaire accounts die u heeft toegevoegd.",
+    "multiAccountStep2Title": "Koppel nog een account",
+    "multiAccountStep2Desc": "Roep telegram-accounts-add aan met een optionele label (bijv. \"testing\"). De tool retourneert een eenmalige URL (TTL 10 minutes) — open deze op een willekeurig apparaat en scan de QR met het Telegram-account dat u wilt toevoegen.",
+    "multiAccountStep3Title": "Wissel het actieve account",
+    "multiAccountStep3Desc": "Roep telegram-accounts-switch aan met identifier=label, @username, account_id of 'primary'. De volgende telegram-* aanroep gebruikt dit account direct. Geen reconnect nodig.",
+    "multiAccountStep4Title": "Ontkoppel een secundair account",
+    "multiAccountStep4Desc": "Roep telegram-accounts-remove identifier=… aan voor een secundair account. Het Telegram-account zelf wordt NIET uitgelogd — alleen de koppeling hier wordt verwijderd. De primary kan niet op deze manier worden verwijderd; gebruik de Disconnect-flow van uw client om volledig uit te loggen.",
+    "multiAccountSecurityNote": "Elke OAuth-verbinding is geïsoleerd: accounts die u via Hermes koppelt zijn onzichtbaar voor Claude.ai of ChatGPT, zelfs als het om dezelfde Telegram-identiteit gaat. Om verschillende accounts aan verschillende MCP-clients te koppelen, registreer elke client afzonderlijk en gebruik telegram-accounts-add binnen zijn eigen sessie."
   }
 }

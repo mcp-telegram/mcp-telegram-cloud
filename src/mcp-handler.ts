@@ -388,10 +388,14 @@ export async function handleMcpRequest(
     ],
   });
 
-  await sessions.getOrCreateSession(userId);
+  // v2.32.0 multi-account: ensureActiveSession resolves to the secondary
+  // account if the user has switched, otherwise to the primary (same code path
+  // as before). getSession also routes through active_account internally.
+  await sessions.ensureActiveSession(userId);
 
   // Dynamic lookup: always get the CURRENT telegram instance from the pool
   // This prevents stale references when adoptSession replaces the instance after QR re-login
+  // and ALSO honours runtime account switches (getSession reads active_account).
   const getTelegram = () => {
     const current = sessions.getSession(userId);
     if (!current) throw new Error("No Telegram session — please reconnect");
@@ -400,6 +404,10 @@ export async function handleMcpRequest(
 
   const requireConnection = async (): Promise<string | null> => {
     try {
+      // Hot-path: if a switch happened between tool calls, the secondary
+      // account may not be in the pool yet — materialise it lazily here so
+      // the next getTelegram() finds a live instance.
+      await sessions.ensureActiveSession(userId);
       const telegram = getTelegram();
       if (await telegram.ensureConnected()) return null;
       const reason = telegram.lastError ? ` ${telegram.lastError}` : "";
@@ -501,7 +509,7 @@ export async function handleMcpRequest(
     checkRateLimit,
     checkDestructive,
     recordDestructive,
-    { userId, uploads, fetchUrl: fetchUrlSafely },
+    { userId, uploads, fetchUrl: fetchUrlSafely, sessions, baseUrl: config.issuer },
   );
 
   await server.connect(transport);

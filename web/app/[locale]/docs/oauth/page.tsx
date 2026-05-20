@@ -156,6 +156,14 @@ function Body() {
         <li>{t("testedClientCursor")}</li>
         <li>{t("testedClientGeneric")}</li>
       </ul>
+
+      <h2 className={s.h2}>{t("multiAccountHeading")}</h2>
+      <p className={s.desc}>{t("multiAccountLead")}</p>
+      <StepCard num={1} title={t("multiAccountStep1Title")} description={t("multiAccountStep1Desc")} />
+      <StepCard num={2} title={t("multiAccountStep2Title")} description={t("multiAccountStep2Desc")} />
+      <StepCard num={3} title={t("multiAccountStep3Title")} description={t("multiAccountStep3Desc")} />
+      <StepCard num={4} title={t("multiAccountStep4Title")} description={t("multiAccountStep4Desc")} />
+      <p className={s.desc}>{t("multiAccountSecurityNote")}</p>
     </main>
   );
 }

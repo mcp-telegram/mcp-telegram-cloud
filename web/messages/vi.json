@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Telegram của bạn trong Claude AI & ChatGPT",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — qua MCP connector tích hợp sẵn",
     "testedClientHermes": "Hermes Agent — CLI MCP client mã nguồn mở (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — plugin IDE (RFC 8252 loopback flow)",
-    "testedClientGeneric": "Bất kỳ client nào tuân thủ RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 đều có thể hoạt động mà không cần thay đổi code ở phía chúng tôi."
+    "testedClientGeneric": "Bất kỳ client nào tuân thủ RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 đều có thể hoạt động mà không cần thay đổi code ở phía chúng tôi.",
+    "multiAccountHeading": "Nhiều tài khoản Telegram trên một kết nối OAuth",
+    "multiAccountLead": "Kể từ v2.32.0, một kết nối OAuth có thể giữ nhiều danh tính Telegram và chuyển đổi giữa chúng chỉ bằng một lệnh gọi tool — không cần chu kỳ Disconnect/Connect, không cần đăng ký client mới.",
+    "multiAccountStep1Title": "Liệt kê các tài khoản đã gắn",
+    "multiAccountStep1Desc": "Gọi telegram-accounts-list. Bạn sẽ thấy tài khoản primary (đã gắn OAuth) được đánh dấu bằng ⭐ nếu nó đang hoạt động, cùng với mọi tài khoản phụ mà bạn đã thêm.",
+    "multiAccountStep2Title": "Gắn thêm một tài khoản",
+    "multiAccountStep2Desc": "Gọi telegram-accounts-add với một label tùy chọn (ví dụ \"testing\"). Tool trả về một URL dùng một lần (TTL 10 phút) — mở URL đó trên thiết bị bất kỳ và quét mã QR bằng tài khoản Telegram mà bạn muốn thêm.",
+    "multiAccountStep3Title": "Chuyển tài khoản đang hoạt động",
+    "multiAccountStep3Desc": "Gọi telegram-accounts-switch với identifier=label, @username, account_id, hoặc 'primary'. Lệnh gọi tool telegram-* tiếp theo sẽ sử dụng tài khoản đó ngay lập tức. Không cần reconnect.",
+    "multiAccountStep4Title": "Gỡ một tài khoản phụ",
+    "multiAccountStep4Desc": "Gọi telegram-accounts-remove identifier=… trên một tài khoản phụ. Bản thân tài khoản Telegram KHÔNG bị đăng xuất — chỉ liên kết tại đây bị gỡ bỏ. Tài khoản primary không thể gỡ theo cách này; hãy sử dụng luồng Disconnect của client để đăng xuất hoàn toàn.",
+    "multiAccountSecurityNote": "Mỗi kết nối OAuth được cô lập: các tài khoản bạn gắn qua Hermes sẽ không nhìn thấy được từ Claude.ai hay ChatGPT, ngay cả khi đó là cùng một danh tính Telegram. Để kết nối các tài khoản khác nhau với các MCP client khác nhau, hãy đăng ký từng client riêng biệt và sử dụng telegram-accounts-add bên trong session của chính nó."
   }
 }

@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — تطبيق Telegram الخاص بك في Claude AI و ChatGPT",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — عبر MCP connector المدمج",
     "testedClientHermes": "Hermes Agent — عميل MCP مفتوح المصدر يعمل من CLI (تدفّق loopback وفق RFC 8252)",
     "testedClientCursor": "Cursor MCP — إضافة IDE (تدفّق loopback وفق RFC 8252)",
-    "testedClientGeneric": "أي عميل متوافق مع RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 ينبغي أن يعمل دون أي تعديلات في الكود من جانبنا."
+    "testedClientGeneric": "أي عميل متوافق مع RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 ينبغي أن يعمل دون أي تعديلات في الكود من جانبنا.",
+    "multiAccountHeading": "حسابات Telegram متعددة على اتصال OAuth واحد",
+    "multiAccountLead": "اعتباراً من الإصدار v2.32.0، يمكن لاتصال OAuth واحد أن يحمل عدة هويات Telegram والتبديل بينها باستدعاء أداة واحد — دون دورة Disconnect/Connect ودون تسجيل عميل جديد.",
+    "multiAccountStep1Title": "اعرض الحسابات المرتبطة",
+    "multiAccountStep1Desc": "استدعِ telegram-accounts-list. سترى حسابك الـ primary المرتبط بـ OAuth مُعلَّماً بـ ⭐ إن كان نشطاً، إضافةً إلى أي حسابات ثانوية أضفتها.",
+    "multiAccountStep2Title": "اربط حساباً آخر",
+    "multiAccountStep2Desc": "استدعِ telegram-accounts-add مع تسمية اختيارية (مثل \"testing\"). تُعيد الأداة عنوان URL لمرة واحدة (مدة الصلاحية 10 دقائق) — افتحه على أي جهاز وامسح رمز QR بحساب Telegram الذي تريد إضافته.",
+    "multiAccountStep3Title": "بدّل الحساب النشط",
+    "multiAccountStep3Desc": "استدعِ telegram-accounts-switch مع identifier=label أو @username أو account_id أو 'primary'. سيستخدم استدعاء أداة telegram-* التالي ذلك الحساب فوراً. دون إعادة اتصال.",
+    "multiAccountStep4Title": "افصل حساباً ثانوياً",
+    "multiAccountStep4Desc": "استدعِ telegram-accounts-remove identifier=… على حساب ثانوي. لن يتم تسجيل خروج حساب Telegram نفسه — فقط الربط هنا يُفصل. لا يمكن إزالة الـ primary بهذه الطريقة؛ استخدم تدفّق Disconnect الخاص بعميلك لتسجيل الخروج الكامل.",
+    "multiAccountSecurityNote": "كل اتصال OAuth معزول تماماً: الحسابات التي تربطها عبر Hermes غير مرئية لـ Claude.ai أو ChatGPT، حتى وإن كانت هويّة Telegram ذاتها. لربط حسابات مختلفة بعملاء MCP مختلفين، سجّل كل عميل بشكل منفصل واستخدم telegram-accounts-add داخل جلسته الخاصة."
   }
 }

@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — 在 Claude AI 和 ChatGPT 中使用您的 Telegram",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — 通过内置的 MCP connector",
     "testedClientHermes": "Hermes Agent — 开源 CLI MCP 客户端 (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — IDE 插件 (RFC 8252 loopback flow)",
-    "testedClientGeneric": "任何符合 RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 的客户端都应该可以在不修改我们这端代码的情况下正常工作。"
+    "testedClientGeneric": "任何符合 RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 的客户端都应该可以在不修改我们这端代码的情况下正常工作。",
+    "multiAccountHeading": "在一个 OAuth 连接中管理多个 Telegram 账号",
+    "multiAccountLead": "自 v2.32.0 起，单个 OAuth 连接可以同时持有多个 Telegram 身份，并通过一次工具调用在它们之间切换——无需 Disconnect/Connect 循环，也无需重新注册客户端。",
+    "multiAccountStep1Title": "查看已连接的账号",
+    "multiAccountStep1Desc": "调用 telegram-accounts-list。如果您的 primary（绑定到 OAuth 的）账号处于活动状态，将带有 ⭐ 标记显示，同时也会列出您添加的所有副账号。",
+    "multiAccountStep2Title": "添加另一个账号",
+    "multiAccountStep2Desc": "调用 telegram-accounts-add，可选传入标签（例如 \"testing\"）。该工具会返回一个一次性 URL（TTL 10 分钟）——在任意设备上打开它，并使用您想添加的 Telegram 账号扫描 QR 码。",
+    "multiAccountStep3Title": "切换活动账号",
+    "multiAccountStep3Desc": "调用 telegram-accounts-switch，identifier 可为 label、@username、account_id 或 'primary'。下一次 telegram-* 工具调用将立即使用该账号。无需重新连接。",
+    "multiAccountStep4Title": "分离副账号",
+    "multiAccountStep4Desc": "对副账号调用 telegram-accounts-remove identifier=…。Telegram 账号本身不会被登出——仅解除此处的绑定。primary 无法通过此方式移除；如需完全登出，请使用客户端的 Disconnect 流程。",
+    "multiAccountSecurityNote": "每个 OAuth 连接都是隔离的：您通过 Hermes 添加的账号在 Claude.ai 或 ChatGPT 中是不可见的，即使它们是同一个 Telegram 身份。若要将不同账号连接到不同的 MCP 客户端，请分别注册每个客户端，并在各自的会话中使用 telegram-accounts-add。"
   }
 }

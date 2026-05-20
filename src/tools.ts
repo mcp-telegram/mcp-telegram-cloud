@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
+import type { SessionManager } from "./session-manager.js";
 import {
   type DestructiveCheck,
   type DestructiveRecord,
@@ -10,6 +11,7 @@ import {
   registerAllTools,
   type ToolDefinition,
 } from "./tool-registry.js";
+import { ACCOUNTS_TOOLS } from "./tools/accounts.js";
 import { CHATS_TOOLS } from "./tools/chats.js";
 import { MESSAGING_TOOLS } from "./tools/messaging.js";
 import { MISC_TOOLS } from "./tools/misc.js";
@@ -32,6 +34,7 @@ export const TOOLS: ToolDefinition[] = [
   ...STARS_TOOLS,
   ...MISC_TOOLS,
   ...UPLOAD_TOOLS,
+  ...ACCOUNTS_TOOLS,
 ];
 
 /**
@@ -51,6 +54,10 @@ export interface RegisterAllowedToolsExtras {
   uploads?: UploadStore;
   /** Phase X: SSRF-hardened URL fetcher for the URL variant of upload-backed tools. */
   fetchUrl?: typeof fetchUrlSafely;
+  /** v2.32.0 multi-account: session manager for the accounts-* tools. */
+  sessions?: SessionManager;
+  /** v2.32.0: public-facing base URL (https://mcp-telegram.com) for accounts-add URLs. */
+  baseUrl?: string;
 }
 
 export function registerAllAllowedTools(
@@ -75,5 +82,7 @@ export function registerAllAllowedTools(
     ...(extras?.userId !== undefined && { userId: extras.userId }),
     ...(extras?.uploads !== undefined && { uploads: extras.uploads }),
     ...(extras?.fetchUrl !== undefined && { fetchUrl: extras.fetchUrl }),
+    ...(extras?.sessions !== undefined && { sessions: extras.sessions }),
+    ...(extras?.baseUrl !== undefined && { baseUrl: extras.baseUrl }),
   });
 }

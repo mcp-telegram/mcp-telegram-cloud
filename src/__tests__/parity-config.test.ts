@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
-import { EXPLICIT_EXCLUDED } from "../parity-config.js";
+import { CLOUD_ONLY, EXPLICIT_EXCLUDED } from "../parity-config.js";
 
 describe("parity-config", () => {
   it("has unique exclusion names", () => {
@@ -19,6 +19,24 @@ describe("parity-config", () => {
   it("every exclusion name follows the telegram-* convention", () => {
     for (const entry of EXPLICIT_EXCLUDED) {
       assert.match(entry.name, /^telegram-[a-z-]+$/, `unexpected exclusion name format: ${entry.name}`);
+    }
+  });
+});
+
+describe("parity-config CLOUD_ONLY", () => {
+  it("has unique names with non-empty reasons", () => {
+    const names = CLOUD_ONLY.map((e) => e.name);
+    assert.equal(new Set(names).size, names.length, "duplicate name(s) in CLOUD_ONLY");
+    for (const entry of CLOUD_ONLY) {
+      assert.ok(entry.reason.trim().length >= 20, `reason too short for ${entry.name}`);
+      assert.match(entry.name, /^telegram-[a-z-]+$/, `unexpected name format: ${entry.name}`);
+    }
+  });
+
+  it("does not overlap with EXPLICIT_EXCLUDED — a tool can't be both cloud-only AND excluded", () => {
+    const excluded = new Set(EXPLICIT_EXCLUDED.map((e) => e.name));
+    for (const entry of CLOUD_ONLY) {
+      assert.ok(!excluded.has(entry.name), `${entry.name} is in both CLOUD_ONLY and EXPLICIT_EXCLUDED — pick one`);
     }
   });
 });

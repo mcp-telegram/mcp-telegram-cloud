@@ -3,6 +3,7 @@ import type { ShapeOutput, ZodRawShapeCompat } from "@modelcontextprotocol/sdk/s
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { logger } from "./logger.js";
+import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION } from "./telemetry/metrics.js";
 import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js";
 import type { UploadStore } from "./upload-store.js";
@@ -37,6 +38,10 @@ export interface ToolDeps {
   readonly uploads?: UploadStore;
   /** Phase X: SSRF-hardened URL fetcher. Required for the URL variant of the 6 FS-bound tools. */
   readonly fetchUrl?: typeof fetchUrlSafely;
+  /** v2.32.0 multi-account: session manager handle for the `accounts-*` tools. */
+  readonly sessions?: SessionManager;
+  /** v2.32.0: public-facing base URL used by `accounts-add` to build the QR-login link. */
+  readonly baseUrl?: string;
 }
 
 type Args<TShape extends ZodRawShapeCompat> = ShapeOutput<TShape>;
@@ -117,6 +122,10 @@ export interface RegisterAllOptions {
   uploads?: UploadStore;
   /** Phase X: piped through to {@link ToolDeps.fetchUrl}. */
   fetchUrl?: typeof fetchUrlSafely;
+  /** v2.32.0: piped through to {@link ToolDeps.sessions} for `accounts-*` tools. */
+  sessions?: SessionManager;
+  /** v2.32.0: piped through to {@link ToolDeps.baseUrl}. */
+  baseUrl?: string;
 }
 
 /**
@@ -186,11 +195,26 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
         },
         async (span) => {
           try {
+            // For tools that skip requireConnection (e.g. accounts-list runs
+            // even when no Telegram session is alive) `getTelegram()` can throw.
+            // The handler is opted out via `skipRequireConnection: true` and
+            // works through `sessions` instead, so we tolerate the absence.
+            let telegram: TelegramService;
+            try {
+              telegram = opts.getTelegram();
+            } catch (err) {
+              if (!tool.skipRequireConnection) throw err;
+              // Dummy placeholder only reachable from handlers that don't dereference
+              // `telegram`; the cast lets us keep `telegram` non-nullable in ToolDeps.
+              telegram = undefined as unknown as TelegramService;
+            }
             const deps: ToolDeps = {
-              telegram: opts.getTelegram(),
+              telegram,
               ...(opts.userId !== undefined && { userId: opts.userId }),
               ...(opts.uploads !== undefined && { uploads: opts.uploads }),
               ...(opts.fetchUrl !== undefined && { fetchUrl: opts.fetchUrl }),
+              ...(opts.sessions !== undefined && { sessions: opts.sessions }),
+              ...(opts.baseUrl !== undefined && { baseUrl: opts.baseUrl }),
             };
             const result = await tool.handler(args, deps);
             const duration = Date.now() - start;

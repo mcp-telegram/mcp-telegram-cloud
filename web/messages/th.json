@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Telegram ของคุณใน Claude AI และ ChatGPT",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — ผ่าน MCP connector ในตัว",
     "testedClientHermes": "Hermes Agent — CLI MCP client แบบโอเพนซอร์ส (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — ปลั๊กอิน IDE (RFC 8252 loopback flow)",
-    "testedClientGeneric": "Client ใดก็ตามที่ปฏิบัติตาม RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 จะทำงานได้โดยไม่ต้องเปลี่ยนแปลงโค้ดในฝั่งของเรา"
+    "testedClientGeneric": "Client ใดก็ตามที่ปฏิบัติตาม RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 จะทำงานได้โดยไม่ต้องเปลี่ยนแปลงโค้ดในฝั่งของเรา",
+    "multiAccountHeading": "หลายบัญชี Telegram บนการเชื่อมต่อ OAuth เดียว",
+    "multiAccountLead": "ตั้งแต่ v2.32.0 เป็นต้นมา การเชื่อมต่อ OAuth เดียวสามารถเก็บหลายตัวตน Telegram และสลับระหว่างกันได้ด้วยการเรียก tool เพียงครั้งเดียว — ไม่ต้องวนรอบ Disconnect/Connect ไม่ต้องลงทะเบียน client ใหม่",
+    "multiAccountStep1Title": "ดูบัญชีที่ผูกอยู่",
+    "multiAccountStep1Desc": "เรียก telegram-accounts-list คุณจะเห็นบัญชี primary (ที่ผูกกับ OAuth) ของคุณถูกทำเครื่องหมายด้วย ⭐ หากกำลังใช้งานอยู่ พร้อมด้วยบัญชีรองทุกบัญชีที่คุณเพิ่มเข้ามา",
+    "multiAccountStep2Title": "ผูกบัญชีอื่นเพิ่ม",
+    "multiAccountStep2Desc": "เรียก telegram-accounts-add พร้อม label ที่เลือกได้ (เช่น \"testing\") Tool จะคืน URL แบบใช้ครั้งเดียว (TTL 10 นาที) — เปิด URL นั้นบนอุปกรณ์ใดก็ได้และสแกน QR ด้วยบัญชี Telegram ที่คุณต้องการเพิ่ม",
+    "multiAccountStep3Title": "สลับบัญชีที่กำลังใช้งาน",
+    "multiAccountStep3Desc": "เรียก telegram-accounts-switch ด้วย identifier=label, @username, account_id, หรือ 'primary' การเรียก tool telegram-* ครั้งถัดไปจะใช้บัญชีนั้นทันที ไม่ต้อง reconnect",
+    "multiAccountStep4Title": "ถอดบัญชีรองออก",
+    "multiAccountStep4Desc": "เรียก telegram-accounts-remove identifier=… บนบัญชีรอง ตัวบัญชี Telegram เองจะ ไม่ ถูก log out — มีเพียงการผูกที่นี่เท่านั้นที่ถูกลบ ไม่สามารถลบบัญชี primary ด้วยวิธีนี้ได้ ให้ใช้ขั้นตอน Disconnect ของ client เพื่อออกจากระบบโดยสมบูรณ์",
+    "multiAccountSecurityNote": "การเชื่อมต่อ OAuth แต่ละครั้งถูกแยกออกจากกัน: บัญชีที่คุณผูกผ่าน Hermes จะมองไม่เห็นจาก Claude.ai หรือ ChatGPT แม้ว่าจะเป็นตัวตน Telegram เดียวกันก็ตาม หากต้องการเชื่อมต่อบัญชีที่ต่างกันกับ MCP client ที่ต่างกัน ให้ลงทะเบียน client แต่ละตัวแยกกัน และใช้ telegram-accounts-add ภายใน session ของตัวเอง"
   }
 }

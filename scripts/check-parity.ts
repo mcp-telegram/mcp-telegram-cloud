@@ -30,7 +30,7 @@ import { McpServer as McpServerImpl } from "@modelcontextprotocol/sdk/server/mcp
 import { getToolManifest } from "@overpod/mcp-telegram/manifest";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 
-const { EXPLICIT_EXCLUDED } = await import("../src/parity-config.js");
+const { EXPLICIT_EXCLUDED, CLOUD_ONLY } = await import("../src/parity-config.js");
 const { registerAllAllowedTools } = await import("../src/tools.js");
 
 /**
@@ -133,9 +133,13 @@ function buildReport(): ParityReport {
     if (!upstreamNames.has(name)) staleExclusions.push(name);
   }
 
+  // CLOUD_ONLY tools are intentional cloud-only extensions (multi-account,
+  // hosted-only flows). They are present in the cloud whitelist but absent
+  // from upstream catalog — that's expected, not drift.
+  const cloudOnly = new Set(CLOUD_ONLY.map((e) => e.name));
   const unknownInWhitelist: string[] = [];
   for (const name of cloudWhitelist) {
-    if (!upstreamNames.has(name)) unknownInWhitelist.push(name);
+    if (!upstreamNames.has(name) && !cloudOnly.has(name)) unknownInWhitelist.push(name);
   }
 
   newDrift.sort();

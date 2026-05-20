@@ -308,6 +308,17 @@
     "testedClientChatGPT": "ChatGPT Apps — через встроенный MCP connector",
     "testedClientHermes": "Hermes Agent — open-source CLI MCP-клиент (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — IDE-плагин (RFC 8252 loopback flow)",
-    "testedClientGeneric": "Любой клиент, который соответствует RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252, должен работать без правок с нашей стороны."
+    "testedClientGeneric": "Любой клиент, который соответствует RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252, должен работать без правок с нашей стороны.",
+    "multiAccountHeading": "Несколько Telegram-аккаунтов на одном OAuth-подключении",
+    "multiAccountLead": "С версии v2.32.0 одно OAuth-подключение может держать несколько Telegram-идентичностей и переключаться между ними одним tool-вызовом — без цикла Disconnect/Connect, без регистрации нового клиента.",
+    "multiAccountStep1Title": "Посмотреть что привязано",
+    "multiAccountStep1Desc": "Вызовите telegram-accounts-list. Вы увидите основной (OAuth-bound) аккаунт со значком ⭐ если он активный, плюс любые вторичные, которые вы добавили.",
+    "multiAccountStep2Title": "Привязать ещё один аккаунт",
+    "multiAccountStep2Desc": "Вызовите telegram-accounts-add с опциональной меткой (например, \"testing\"). Tool вернёт одноразовую ссылку (TTL 10 минут) — откройте её на любом устройстве и сосканируйте QR Telegram-аккаунтом, который хотите добавить.",
+    "multiAccountStep3Title": "Переключить активный аккаунт",
+    "multiAccountStep3Desc": "Вызовите telegram-accounts-switch с identifier=label, @username, account_id или 'primary'. Следующий telegram-* вызов сразу пойдёт от выбранного аккаунта. Без переподключения.",
+    "multiAccountStep4Title": "Отвязать вторичный аккаунт",
+    "multiAccountStep4Desc": "Вызовите telegram-accounts-remove identifier=… для вторичного. Сам Telegram-аккаунт НЕ выходит из системы — отвязывается только привязка здесь. Основной аккаунт так удалить нельзя; используйте Disconnect в клиенте для полного выхода.",
+    "multiAccountSecurityNote": "Каждое OAuth-подключение изолировано: аккаунты, которые вы добавили через Hermes, не видны Claude.ai или ChatGPT, даже если это та же Telegram-идентичность. Чтобы подключить разные аккаунты к разным MCP-клиентам, зарегистрируйте каждый клиент отдельно и используйте telegram-accounts-add внутри его сессии."
   }
 }

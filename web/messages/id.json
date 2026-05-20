@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Telegram Anda di Claude AI & ChatGPT",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — melalui konektor MCP bawaan",
     "testedClientHermes": "Hermes Agent — klien CLI MCP open-source (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — plugin IDE (RFC 8252 loopback flow)",
-    "testedClientGeneric": "Klien apa pun yang patuh terhadap RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 seharusnya bekerja tanpa perubahan kode di sisi kami."
+    "testedClientGeneric": "Klien apa pun yang patuh terhadap RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 seharusnya bekerja tanpa perubahan kode di sisi kami.",
+    "multiAccountHeading": "Beberapa akun Telegram pada satu koneksi OAuth",
+    "multiAccountLead": "Sejak v2.32.0, satu koneksi OAuth dapat menampung beberapa identitas Telegram dan beralih di antaranya hanya dengan satu pemanggilan tool — tanpa siklus Disconnect/Connect, tanpa pendaftaran client baru.",
+    "multiAccountStep1Title": "Lihat akun yang terpasang",
+    "multiAccountStep1Desc": "Panggil telegram-accounts-list. Anda akan melihat akun primary (yang terikat OAuth) Anda ditandai dengan ⭐ jika sedang aktif, beserta akun-akun sekunder yang telah Anda tambahkan.",
+    "multiAccountStep2Title": "Pasang akun lain",
+    "multiAccountStep2Desc": "Panggil telegram-accounts-add dengan label opsional (misalnya \"testing\"). Tool ini mengembalikan URL sekali pakai (TTL 10 menit) — buka URL tersebut di perangkat apa pun dan pindai QR dengan akun Telegram yang ingin Anda tambahkan.",
+    "multiAccountStep3Title": "Beralih akun aktif",
+    "multiAccountStep3Desc": "Panggil telegram-accounts-switch dengan identifier=label, @username, account_id, atau 'primary'. Pemanggilan tool telegram-* berikutnya akan langsung menggunakan akun tersebut. Tanpa reconnect.",
+    "multiAccountStep4Title": "Lepaskan akun sekunder",
+    "multiAccountStep4Desc": "Panggil telegram-accounts-remove identifier=… pada akun sekunder. Akun Telegram itu sendiri TIDAK di-log out — hanya pengikatannya di sini yang dihapus. Akun primary tidak dapat dihapus dengan cara ini; gunakan alur Disconnect pada klien Anda untuk keluar sepenuhnya.",
+    "multiAccountSecurityNote": "Setiap koneksi OAuth terisolasi: akun-akun yang Anda pasang melalui Hermes tidak terlihat oleh Claude.ai atau ChatGPT, bahkan jika identitas Telegram-nya sama. Untuk menghubungkan akun yang berbeda ke klien MCP yang berbeda, daftarkan setiap klien secara terpisah dan gunakan telegram-accounts-add di dalam sesinya masing-masing."
   }
 }

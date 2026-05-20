@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Claude AI ve ChatGPT'de Telegram'ınız",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — yerleşik MCP connector aracılığıyla",
     "testedClientHermes": "Hermes Agent — açık kaynak CLI MCP istemcisi (RFC 8252 loopback akışı)",
     "testedClientCursor": "Cursor MCP — IDE eklentisi (RFC 8252 loopback akışı)",
-    "testedClientGeneric": "RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 ile uyumlu herhangi bir istemci, bizim tarafımızda kod değişikliği olmadan çalışmalıdır."
+    "testedClientGeneric": "RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 ile uyumlu herhangi bir istemci, bizim tarafımızda kod değişikliği olmadan çalışmalıdır.",
+    "multiAccountHeading": "Tek bir OAuth bağlantısında birden fazla Telegram hesabı",
+    "multiAccountLead": "v2.32.0 sürümünden itibaren tek bir OAuth bağlantısı birden çok Telegram kimliğini barındırabilir ve tek bir tool çağrısıyla aralarında geçiş yapabilirsiniz — Disconnect/Connect döngüsü yok, yeni client kaydı gerekmez.",
+    "multiAccountStep1Title": "Bağlı olanları listeleyin",
+    "multiAccountStep1Desc": "telegram-accounts-list çağırın. Aktifse ⭐ ile işaretlenmiş primary (OAuth'a bağlı) hesabınızı ve eklediğiniz tüm ikincil hesapları görürsünüz.",
+    "multiAccountStep2Title": "Başka bir hesap ekleyin",
+    "multiAccountStep2Desc": "telegram-accounts-add çağırın, isteğe bağlı bir label verin (ör. \"testing\"). Tool tek kullanımlık bir URL döndürür (TTL 10 minutes) — herhangi bir cihazda açın ve eklemek istediğiniz Telegram hesabıyla QR'ı tarayın.",
+    "multiAccountStep3Title": "Aktif hesabı değiştirin",
+    "multiAccountStep3Desc": "telegram-accounts-switch çağırın; identifier=label, @username, account_id veya 'primary' verin. Sonraki telegram-* çağrısı anında bu hesabı kullanır. Yeniden bağlanma gerekmez.",
+    "multiAccountStep4Title": "İkincil hesabı kaldırın",
+    "multiAccountStep4Desc": "İkincil bir hesap için telegram-accounts-remove identifier=… çağırın. Telegram hesabının kendisi oturumdan ÇIKMAZ — yalnızca buradaki bağ kaldırılır. Primary bu yolla kaldırılamaz; tamamen oturum kapatmak için istemcinizin Disconnect akışını kullanın.",
+    "multiAccountSecurityNote": "Her OAuth bağlantısı yalıtılmıştır: Hermes üzerinden eklediğiniz hesaplar, aynı Telegram kimliği olsa bile Claude.ai veya ChatGPT için görünmezdir. Farklı hesapları farklı MCP istemcilerine bağlamak için her istemciyi ayrı ayrı kaydedin ve kendi oturumu içinde telegram-accounts-add kullanın."
   }
 }

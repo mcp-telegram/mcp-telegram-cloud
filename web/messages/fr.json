@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Votre Telegram dans Claude AI et ChatGPT",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — via le connector MCP intégré",
     "testedClientHermes": "Hermes Agent — client MCP open-source en CLI (flux loopback RFC 8252)",
     "testedClientCursor": "Cursor MCP — plugin d'IDE (flux loopback RFC 8252)",
-    "testedClientGeneric": "Tout client conforme à RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 devrait fonctionner sans changement de code de notre côté."
+    "testedClientGeneric": "Tout client conforme à RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252 devrait fonctionner sans changement de code de notre côté.",
+    "multiAccountHeading": "Plusieurs comptes Telegram sur une seule connexion OAuth",
+    "multiAccountLead": "Depuis v2.32.0, une seule connexion OAuth peut héberger plusieurs identités Telegram et basculer entre elles avec un seul appel d'outil — pas de cycle Disconnect/Connect, pas de nouvel enregistrement de client.",
+    "multiAccountStep1Title": "Listez ce qui est rattaché",
+    "multiAccountStep1Desc": "Appelez telegram-accounts-list. Vous verrez votre compte primary (lié à OAuth) marqué d'un ⭐ s'il est actif, ainsi que toutes les comptes secondaires que vous avez ajoutés.",
+    "multiAccountStep2Title": "Rattachez un autre compte",
+    "multiAccountStep2Desc": "Appelez telegram-accounts-add avec un label optionnel (par ex. \"testing\"). L'outil renvoie une URL à usage unique (TTL 10 minutes) — ouvrez-la sur n'importe quel appareil et scannez le QR avec le compte Telegram que vous souhaitez ajouter.",
+    "multiAccountStep3Title": "Changez de compte actif",
+    "multiAccountStep3Desc": "Appelez telegram-accounts-switch avec identifier=label, @username, account_id ou 'primary'. Le prochain appel d'outil telegram-* utilisera ce compte immédiatement. Aucune reconnexion.",
+    "multiAccountStep4Title": "Détachez un compte secondaire",
+    "multiAccountStep4Desc": "Appelez telegram-accounts-remove identifier=… sur un compte secondaire. Le compte Telegram lui-même n'est PAS déconnecté — seul le lien ici est supprimé. Le compte primary ne peut pas être retiré de cette manière ; utilisez le flux Disconnect de votre client pour vous déconnecter complètement.",
+    "multiAccountSecurityNote": "Chaque connexion OAuth est isolée : les comptes que vous rattachez via Hermes sont invisibles pour Claude.ai ou ChatGPT, même s'il s'agit de la même identité Telegram. Pour connecter des comptes différents à des clients MCP différents, enregistrez chaque client séparément et utilisez telegram-accounts-add à l'intérieur de sa propre session."
   }
 }

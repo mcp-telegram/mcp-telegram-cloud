@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "sourceSha": "3817d448db82af6c",
+    "sourceSha": "v2.32.0-pending",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
     "autoTranslated": true,
-    "retranslatedAt": "2026-05-10T20:22:30Z"
+    "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
     "siteTitle": "MCP Telegram — Claude AI와 ChatGPT에서 사용하는 당신의 Telegram",
@@ -316,6 +316,17 @@
     "testedClientChatGPT": "ChatGPT Apps — 내장 MCP connector 사용",
     "testedClientHermes": "Hermes Agent — 오픈소스 CLI MCP 클라이언트 (RFC 8252 loopback flow)",
     "testedClientCursor": "Cursor MCP — IDE 플러그인 (RFC 8252 loopback flow)",
-    "testedClientGeneric": "RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252를 준수하는 모든 클라이언트는 우리 쪽에서 코드 변경 없이 작동해야 합니다."
+    "testedClientGeneric": "RFC 6749 + RFC 7591 + RFC 7636 + RFC 8252를 준수하는 모든 클라이언트는 우리 쪽에서 코드 변경 없이 작동해야 합니다.",
+    "multiAccountHeading": "하나의 OAuth 연결로 여러 Telegram 계정 관리",
+    "multiAccountLead": "v2.32.0부터 하나의 OAuth 연결로 여러 Telegram 아이덴티티를 보유하고 단일 도구 호출로 전환할 수 있습니다. Disconnect/Connect 사이클이나 새로운 클라이언트 등록이 필요하지 않습니다.",
+    "multiAccountStep1Title": "연결된 계정 확인하기",
+    "multiAccountStep1Desc": "telegram-accounts-list를 호출합니다. 프라이머리(OAuth에 바인딩된) 계정이 활성 상태인 경우 ⭐ 표시와 함께 표시되며, 추가한 세컨더리 계정도 함께 표시됩니다.",
+    "multiAccountStep2Title": "다른 계정 추가하기",
+    "multiAccountStep2Desc": "telegram-accounts-add를 호출하며, 선택적으로 라벨(예: \"testing\")을 지정할 수 있습니다. 도구는 일회용 URL(TTL 10분)을 반환하므로, 원하는 디바이스에서 열어 추가하려는 Telegram 계정으로 QR을 스캔하십시오.",
+    "multiAccountStep3Title": "활성 계정 전환하기",
+    "multiAccountStep3Desc": "telegram-accounts-switch를 identifier=label, @username, account_id 또는 'primary'와 함께 호출합니다. 다음 telegram-* 도구 호출부터 해당 계정이 즉시 사용됩니다. 재연결은 필요하지 않습니다.",
+    "multiAccountStep4Title": "세컨더리 계정 분리하기",
+    "multiAccountStep4Desc": "세컨더리 계정에 대해 telegram-accounts-remove identifier=…를 호출합니다. Telegram 계정 자체는 로그아웃되지 않으며, 여기서의 바인딩만 해제됩니다. 프라이머리는 이 방법으로 제거할 수 없습니다. 완전히 로그아웃하려면 클라이언트의 Disconnect 흐름을 사용하십시오.",
+    "multiAccountSecurityNote": "각 OAuth 연결은 격리되어 있습니다. Hermes를 통해 추가한 계정은 동일한 Telegram 아이덴티티라도 Claude.ai나 ChatGPT에서는 보이지 않습니다. 서로 다른 MCP 클라이언트에 서로 다른 계정을 연결하려면 각 클라이언트를 개별적으로 등록하고 해당 세션 내에서 telegram-accounts-add를 사용하십시오."
   }
 }

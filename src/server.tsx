@@ -12,6 +12,7 @@ import { accessLog } from "./middleware/access-log.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { OAuthProvider } from "./oauth.js";
 import { installRateLimiterEventListener } from "./rate-limiter-events.js";
+import { createAccountsRoutes } from "./routes/accounts.js";
 import { createAdminRoutes } from "./routes/admin.js";
 import { createAlertRoutes } from "./routes/alerts.js";
 import { createBotWebhookRoutes, createBroadcastRoute } from "./routes/bot.js";
@@ -193,6 +194,7 @@ app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
 registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads }));
+app.route("/accounts", createAccountsRoutes({ sessions }));
 
 if (botEnabled && botClient && subscribers) {
   const botDeps = { client: botClient, subscribers, webhookSecret: config.botWebhookSecret };

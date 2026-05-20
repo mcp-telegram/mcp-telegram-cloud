@@ -21,6 +21,39 @@ export interface ExclusionEntry {
   reason: string;
 }
 
+/**
+ * Tools that exist ONLY in cloud (not upstream OSS). The parity gate uses this
+ * list to skip the "unknown in whitelist" warning — these are intentional
+ * cloud extensions, not drift. Reasons should explain WHY the tool is
+ * cloud-specific (multi-tenant, hosted-only flows, etc.).
+ */
+export const CLOUD_ONLY: ExclusionEntry[] = [
+  {
+    name: "telegram-accounts-list",
+    reason:
+      "v2.32.0 multi-account: lists Telegram identities attached to one OAuth user. Cloud-only concept — OSS self-host has one identity per process.",
+  },
+  {
+    name: "telegram-accounts-current",
+    reason:
+      "v2.32.0 multi-account: shows which Telegram identity the next tool call will use. Cloud-only — OSS has no switching.",
+  },
+  {
+    name: "telegram-accounts-switch",
+    reason:
+      "v2.32.0 multi-account: changes the active Telegram identity. Cloud-only — OSS would just spawn another process.",
+  },
+  {
+    name: "telegram-accounts-add",
+    reason:
+      "v2.32.0 multi-account: capability-token URL for adding a secondary Telegram identity via QR. Cloud-only — OSS adds identities by running another process.",
+  },
+  {
+    name: "telegram-accounts-remove",
+    reason: "v2.32.0 multi-account: detach a secondary identity. Cloud-only — OSS removes by stopping the process.",
+  },
+];
+
 export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
   {
     name: "telegram-login",

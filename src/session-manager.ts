@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { randomBytes } from "node:crypto";
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import { config } from "./config.js";
 import { logUser } from "./logger.js";
@@ -8,6 +9,31 @@ interface UserSession {
   connectedAt: Date;
   lastActivity: Date;
 }
+
+export interface TelegramAccount {
+  accountId: number;
+  ownerUserId: string;
+  telegramUserId: string;
+  label: string | null;
+  addedAt: string;
+  lastUsedAt: string;
+}
+
+export interface AccountSummary {
+  /** 0 = primary (lives in user_sessions); >0 = secondary (in telegram_accounts). */
+  accountId: number;
+  /** Telegram username or numeric id — same shape that the primary user_id uses. */
+  telegramUserId: string;
+  label: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
+  addedAt: string | null;
+  lastUsedAt: string | null;
+}
+
+/** Pool key for non-primary accounts. Two accounts of the same owner must NOT collide
+ *  with each other or with the primary slot (which keys by raw `ownerUserId`). */
+const secondaryKey = (ownerUserId: string, accountId: number): string => `${ownerUserId}#${accountId}`;
 
 export class SessionManager {
   private sessions = new Map<string, UserSession>();
@@ -59,6 +85,47 @@ export class SessionManager {
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
       )
+    `);
+
+    // v2.32.0 multi-account: secondary Telegram accounts attached to a primary
+    // owner_user_id. owner_user_id is the original `user_sessions.user_id` —
+    // i.e. the Telegram identity that completed the OAuth flow. Primary account
+    // is implicit (lives in user_sessions); secondary accounts live here.
+    //
+    // active_account.account_id = 0  ⇒  primary (default, backward-compatible)
+    // active_account.account_id > 0  ⇒  telegram_accounts.account_id
+    //
+    // add_tokens are short-lived capabilities issued by `accounts-add` so the
+    // owner can finish QR login on a different device. The token is the auth —
+    // anyone who opens the URL adds a Telegram account to this owner_user_id.
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS telegram_accounts (
+        account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_user_id TEXT NOT NULL,
+        telegram_user_id TEXT NOT NULL,
+        session_string TEXT NOT NULL,
+        label TEXT,
+        added_at TEXT DEFAULT (datetime('now')),
+        last_used_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(owner_user_id, telegram_user_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_telegram_accounts_owner ON telegram_accounts(owner_user_id);
+
+      CREATE TABLE IF NOT EXISTS active_account (
+        owner_user_id TEXT PRIMARY KEY,
+        account_id INTEGER NOT NULL DEFAULT 0,
+        switched_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS add_account_tokens (
+        token TEXT PRIMARY KEY,
+        owner_user_id TEXT NOT NULL,
+        label TEXT,
+        expires_at INTEGER NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_add_account_tokens_expires ON add_account_tokens(expires_at);
     `);
   }
 
@@ -149,6 +216,18 @@ export class SessionManager {
   }
 
   getSession(userId: string): TelegramService | undefined {
+    // v2.32.0 multi-account: if owner has a non-primary active account, route reads/writes
+    // through that account's TelegramService instead of the primary. Pool key for secondary
+    // accounts is `${ownerUserId}#${accountId}` so two accounts of the same owner never
+    // share a `UserSession` slot.
+    const activeId = this.getActiveAccountId(userId);
+    if (activeId > 0) {
+      const session = this.sessions.get(secondaryKey(userId, activeId));
+      if (session) {
+        session.lastActivity = new Date();
+      }
+      return session?.telegram;
+    }
     const session = this.sessions.get(userId);
     if (session) {
       session.lastActivity = new Date();
@@ -227,6 +306,10 @@ export class SessionManager {
 
     // Remove session string from SQLite
     this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
+
+    // v2.32.0: also wipe multi-account state for this owner.
+    this.deleteSecondariesForOwner(userId);
+
     console.log(`[sessions] Destroyed session for ${logUser(userId)} (loggedOut=${loggedOut})`);
 
     return { loggedOut };
@@ -350,6 +433,267 @@ export class SessionManager {
   }
 
   /** Expose the database for shared use (e.g. OAuth tables) */
+  // ──────────────────────────────────────────────────────────────────────────
+  // v2.32.0 multi-account API.
+  //
+  // Concept: every OAuth-authenticated `ownerUserId` has one *primary* Telegram
+  // account (the one that completed the OAuth QR flow, lives in `user_sessions`)
+  // plus zero or more *secondary* accounts (live in `telegram_accounts`). At any
+  // moment exactly one is "active" — that's the one `getSession(ownerUserId)`
+  // returns. Switching is a row update in `active_account`; existing tool
+  // dispatch needs no changes because it always goes through `getSession`.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /** 0 = primary active (default for owners with no row in `active_account`). */
+  getActiveAccountId(ownerUserId: string): number {
+    const row = this.db.prepare("SELECT account_id FROM active_account WHERE owner_user_id = ?").get(ownerUserId) as
+      | { account_id: number }
+      | undefined;
+    return row?.account_id ?? 0;
+  }
+
+  /** List primary + secondaries for one owner with `isActive` indicator. */
+  listAccounts(ownerUserId: string): AccountSummary[] {
+    const activeId = this.getActiveAccountId(ownerUserId);
+    const result: AccountSummary[] = [];
+
+    // Primary: the OAuth-authenticated identity itself.
+    const primary = this.db
+      .prepare("SELECT user_id, created_at, updated_at FROM user_sessions WHERE user_id = ?")
+      .get(ownerUserId) as { user_id: string; created_at: string; updated_at: string } | undefined;
+    if (primary) {
+      result.push({
+        accountId: 0,
+        telegramUserId: primary.user_id,
+        label: null,
+        isPrimary: true,
+        isActive: activeId === 0,
+        addedAt: primary.created_at,
+        lastUsedAt: primary.updated_at,
+      });
+    }
+
+    const rows = this.db
+      .prepare(
+        "SELECT account_id, telegram_user_id, label, added_at, last_used_at FROM telegram_accounts WHERE owner_user_id = ? ORDER BY account_id",
+      )
+      .all(ownerUserId) as Array<{
+      account_id: number;
+      telegram_user_id: string;
+      label: string | null;
+      added_at: string;
+      last_used_at: string;
+    }>;
+    for (const r of rows) {
+      result.push({
+        accountId: r.account_id,
+        telegramUserId: r.telegram_user_id,
+        label: r.label,
+        isPrimary: false,
+        isActive: activeId === r.account_id,
+        addedAt: r.added_at,
+        lastUsedAt: r.last_used_at,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Resolve a user-supplied identifier (label, telegram username with/without `@`,
+   * numeric account_id, or the literal "primary") to an account row this owner can
+   * switch to. Returns `null` if no match. Match is case-insensitive on label and
+   * username. Numeric must be exact.
+   */
+  resolveAccount(ownerUserId: string, identifier: string): AccountSummary | null {
+    const accounts = this.listAccounts(ownerUserId);
+    const norm = identifier.trim().replace(/^@/, "").toLowerCase();
+    if (norm === "primary" || norm === "0") return accounts.find((a) => a.isPrimary) ?? null;
+    const asNum = Number.parseInt(norm, 10);
+    if (Number.isInteger(asNum) && asNum > 0) {
+      return accounts.find((a) => a.accountId === asNum) ?? null;
+    }
+    return (
+      accounts.find(
+        (a) => (a.label !== null && a.label.toLowerCase() === norm) || a.telegramUserId.toLowerCase() === norm,
+      ) ?? null
+    );
+  }
+
+  /** Switch the owner's active account. account_id=0 means "back to primary". */
+  setActiveAccount(ownerUserId: string, accountId: number): void {
+    if (accountId !== 0) {
+      const exists = this.db
+        .prepare("SELECT 1 FROM telegram_accounts WHERE owner_user_id = ? AND account_id = ?")
+        .get(ownerUserId, accountId);
+      if (!exists) throw new Error(`Account ${accountId} not found for owner ${logUser(ownerUserId)}`);
+    }
+    this.db
+      .prepare(
+        `INSERT INTO active_account (owner_user_id, account_id, switched_at)
+         VALUES (?, ?, datetime('now'))
+         ON CONFLICT(owner_user_id) DO UPDATE SET account_id = excluded.account_id, switched_at = excluded.switched_at`,
+      )
+      .run(ownerUserId, accountId);
+    if (accountId > 0) {
+      this.db
+        .prepare("UPDATE telegram_accounts SET last_used_at = datetime('now') WHERE account_id = ?")
+        .run(accountId);
+    }
+  }
+
+  /**
+   * Add a secondary Telegram account for this owner. Called from the add-account
+   * QR-flow after a successful login. Idempotent on `(owner_user_id, telegram_user_id)`
+   * — re-adding the same Telegram identity updates the session_string and label.
+   * Returns the resulting account_id (new or existing).
+   */
+  addAccount(ownerUserId: string, telegramUserId: string, sessionString: string, label: string | null): number {
+    const existing = this.db
+      .prepare("SELECT account_id FROM telegram_accounts WHERE owner_user_id = ? AND telegram_user_id = ?")
+      .get(ownerUserId, telegramUserId) as { account_id: number } | undefined;
+
+    if (existing) {
+      this.db
+        .prepare(
+          "UPDATE telegram_accounts SET session_string = ?, label = ?, last_used_at = datetime('now') WHERE account_id = ?",
+        )
+        .run(sessionString, label, existing.account_id);
+      return existing.account_id;
+    }
+
+    const result = this.db
+      .prepare(
+        "INSERT INTO telegram_accounts (owner_user_id, telegram_user_id, session_string, label) VALUES (?, ?, ?, ?)",
+      )
+      .run(ownerUserId, telegramUserId, sessionString, label);
+    return Number(result.lastInsertRowid);
+  }
+
+  /**
+   * Remove a secondary account. If it was active, fall back to primary (0).
+   * The primary account is NOT removable here — `destroyUserSession` is the
+   * only path that revokes the OAuth identity itself.
+   */
+  removeAccount(ownerUserId: string, accountId: number): boolean {
+    if (accountId === 0) throw new Error("Cannot remove primary account via removeAccount — use destroyUserSession");
+    const result = this.db
+      .prepare("DELETE FROM telegram_accounts WHERE owner_user_id = ? AND account_id = ?")
+      .run(ownerUserId, accountId);
+    if (result.changes === 0) return false;
+    // Drop the live session from pool (fire-and-forget disconnect).
+    const key = secondaryKey(ownerUserId, accountId);
+    const pooled = this.sessions.get(key);
+    if (pooled) {
+      this.sessions.delete(key);
+      pooled.telegram.disconnect().catch(() => {});
+    }
+    // Demote active if this was the active one.
+    if (this.getActiveAccountId(ownerUserId) === accountId) {
+      this.setActiveAccount(ownerUserId, 0);
+    }
+    return true;
+  }
+
+  /**
+   * Ensure the live session for the owner's currently-active account is in the
+   * pool. Primary path delegates to `getOrCreateSession(ownerUserId)` (which
+   * looks at `user_sessions`); secondary path looks up the account row, creates
+   * a fresh `TelegramService`, sets the session string and connects.
+   *
+   * Pool key for secondary is `secondaryKey(ownerUserId, accountId)`.
+   */
+  async ensureActiveSession(ownerUserId: string): Promise<TelegramService> {
+    const accountId = this.getActiveAccountId(ownerUserId);
+    if (accountId === 0) return this.getOrCreateSession(ownerUserId);
+    const key = secondaryKey(ownerUserId, accountId);
+    return this.withLock(key, async () => {
+      const pooled = this.sessions.get(key);
+      if (pooled) {
+        pooled.lastActivity = new Date();
+        if (!pooled.telegram.isConnected()) await pooled.telegram.ensureConnected();
+        return pooled.telegram;
+      }
+      const row = this.db
+        .prepare("SELECT session_string FROM telegram_accounts WHERE owner_user_id = ? AND account_id = ?")
+        .get(ownerUserId, accountId) as { session_string: string } | undefined;
+      if (!row?.session_string) {
+        // Account disappeared from under us — demote to primary so we don't
+        // wedge tool dispatch.
+        this.setActiveAccount(ownerUserId, 0);
+        return this.getOrCreateSession(ownerUserId);
+      }
+      const telegram = this.telegramFactory(this.apiId, this.apiHash);
+      telegram.setSessionString(row.session_string);
+      const connected = await telegram.connect();
+      if (connected) {
+        this.sessions.set(key, { telegram, connectedAt: new Date(), lastActivity: new Date() });
+      }
+      return telegram;
+    });
+  }
+
+  // ── add-account capability tokens ────────────────────────────────────────
+
+  /** Create a one-time short-lived URL token allowing QR-login that attaches a new
+   *  Telegram identity to `ownerUserId`. The token IS the auth — keep TTL short. */
+  createAddAccountToken(ownerUserId: string, label: string | null, ttlSeconds: number): string {
+    const token = randomBytes(24).toString("hex");
+    const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
+    this.db
+      .prepare("INSERT INTO add_account_tokens (token, owner_user_id, label, expires_at) VALUES (?, ?, ?, ?)")
+      .run(token, ownerUserId, label, expiresAt);
+    return token;
+  }
+
+  /** Validate an add-account token without consuming it (for GET page render). */
+  peekAddAccountToken(token: string): { ownerUserId: string; label: string | null } | null {
+    const row = this.db
+      .prepare("SELECT owner_user_id, label, expires_at, used FROM add_account_tokens WHERE token = ?")
+      .get(token) as { owner_user_id: string; label: string | null; expires_at: number; used: number } | undefined;
+    if (!row) return null;
+    if (row.used === 1) return null;
+    if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
+    return { ownerUserId: row.owner_user_id, label: row.label };
+  }
+
+  /** Consume an add-account token (single-use). Returns the owner/label on success. */
+  consumeAddAccountToken(token: string): { ownerUserId: string; label: string | null } | null {
+    const peeked = this.peekAddAccountToken(token);
+    if (!peeked) return null;
+    const result = this.db.prepare("UPDATE add_account_tokens SET used = 1 WHERE token = ? AND used = 0").run(token);
+    if (result.changes === 0) return null;
+    return peeked;
+  }
+
+  /** Periodic cleanup — drop expired / used add-account tokens older than a day. */
+  pruneAddAccountTokens(): number {
+    const now = Math.floor(Date.now() / 1000);
+    const result = this.db.prepare("DELETE FROM add_account_tokens WHERE expires_at < ? OR used = 1").run(now);
+    return result.changes;
+  }
+
+  /**
+   * On destroyUserSession, also delete this owner's secondary accounts. Caller
+   * runs inside the per-user lock so this is safe to perform inline.
+   */
+  private deleteSecondariesForOwner(ownerUserId: string): void {
+    const rows = this.db
+      .prepare("SELECT account_id FROM telegram_accounts WHERE owner_user_id = ?")
+      .all(ownerUserId) as Array<{ account_id: number }>;
+    for (const { account_id } of rows) {
+      const key = secondaryKey(ownerUserId, account_id);
+      const pooled = this.sessions.get(key);
+      if (pooled) {
+        this.sessions.delete(key);
+        pooled.telegram.disconnect().catch(() => {});
+      }
+    }
+    this.db.prepare("DELETE FROM telegram_accounts WHERE owner_user_id = ?").run(ownerUserId);
+    this.db.prepare("DELETE FROM active_account WHERE owner_user_id = ?").run(ownerUserId);
+    this.db.prepare("DELETE FROM add_account_tokens WHERE owner_user_id = ?").run(ownerUserId);
+  }
+
   getDb(): Database {
     return this.db;
   }
