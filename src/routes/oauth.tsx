@@ -7,6 +7,7 @@ import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
 import { oauthRateLimit } from "../rate-limit.js";
+import { matchRedirectUri } from "../redirect-uri-matcher.js";
 import type { SessionManager } from "../session-manager.js";
 import { incr, OAUTH_FLOW } from "../telemetry/metrics.js";
 
@@ -82,7 +83,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     }
 
     const allowedUris: string[] = JSON.parse(client.redirect_uris);
-    if (!allowedUris.includes(redirectUri)) {
+    if (!matchRedirectUri(allowedUris, redirectUri)) {
       incr(OAUTH_FLOW, { step: "authorize", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
     }
@@ -139,6 +140,12 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     const client = oauth.getClient(clientId);
     if (!client) {
       return c.text("Unknown client", 400);
+    }
+
+    const allowedUris: string[] = JSON.parse(client.redirect_uris);
+    if (!matchRedirectUri(allowedUris, redirectUri)) {
+      incr(OAUTH_FLOW, { step: "authorize_qr", outcome: "bad_redirect" });
+      return c.text("Invalid redirect_uri", 400);
     }
 
     const userIdHint = getUserIdHint(c);

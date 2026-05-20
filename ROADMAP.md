@@ -5,7 +5,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
 **Last updated:** 2026-05-20
-**Current version:** 2.29.2 (cloud — dependency refresh wave) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.30.0 (cloud — RFC 8252 loopback redirect_uri support) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -113,6 +113,30 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-20** — **RFC 8252 loopback redirect_uri support + close `/authorize/qr` open redirect** (cloud v2.30.0).
+  Reported by an external MCP client implementer (Hermes Agent) — native
+  CLI MCP clients bind an ephemeral OS-assigned port for their loopback
+  callback (`http://127.0.0.1:<port>/callback`) and that port may change
+  between `POST /oauth/register` and `GET /oauth/authorize`. RFC 8252
+  §7.3 + §8.4 require the authorization server to **MUST** allow the port
+  to vary for loopback IP redirect URIs while still enforcing exact match
+  on scheme + host + path + query. The pre-fix code used
+  `allowedUris.includes(redirectUri)` (full-string equality), which was
+  RFC 6749-compliant for confidential clients but broke every native MCP
+  client whose port wasn't stable across requests. New
+  `src/redirect-uri-matcher.ts` does byte-equal fast path then loopback
+  port-flexible match for `127.0.0.1` and `[::1]`; `localhost` is
+  intentionally NOT aliased (per RFC 8252 §8.3 preference for IP literals).
+  Secondary fix: `/oauth/authorize/qr` previously did not validate
+  `redirect_uri` at all — a known-good `client_id` could be paired with
+  any URI and the SSE handler would mint an auth code redirect there.
+  Now `/authorize/qr` runs the same matcher. 19 new unit tests covering
+  exact match, loopback port flex, IPv6 `[::1]`, path/query difference,
+  scheme rejection (https loopback gets no port flex), `localhost`
+  rejection, malformed URI safety, and multi-URI lists. 498/498 backend
+  tests green (479 prior + 19 new), parity 178/3, validate-translations
+  19 locales, web build 502/502 prerender unchanged.
 
 - **2026-05-20** — **Dependency refresh wave** (cloud v2.29.2, OSS dev-deps).
   Patch-level bumps following v2.29.1. Cloud root: `hono` 4.12.19 → 4.12.21.
