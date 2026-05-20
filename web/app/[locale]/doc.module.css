@@ -74,3 +74,38 @@
   font-size: 14px;
   color: var(--tg-hint);
 }
+
+.h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 24px 0 8px;
+  color: var(--tg-text);
+}
+
+.desc {
+  font-size: 15px;
+  color: var(--tg-text);
+  margin: 0 0 12px;
+}
+
+.list {
+  margin: 0 0 16px;
+  padding-left: 24px;
+  font-size: 15px;
+  color: var(--tg-text);
+}
+
+.list li {
+  margin: 6px 0;
+}
+
+.list strong {
+  color: var(--tg-text);
+}
+
+.endpoints {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}

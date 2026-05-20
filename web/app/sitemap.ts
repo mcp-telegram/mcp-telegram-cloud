@@ -8,15 +8,15 @@ import { canonicalForLocale, languageAlternates } from "@/lib/seo";
  * `i18n/request.ts` fallback, so listing them with hreflang alternates would
  * mislead crawlers. They remain reachable via direct URL.
  *
- * Output is 20 indexable locales (Tier 1 + Tier 2) × 7 paths = 140 entries
- * once the Tier 2 batch translation lands. Default locale (en) is at the
- * un-prefixed URL (`/`), others at `/<locale>/...`. */
+ * Output is 20 indexable locales (Tier 1 + Tier 2) × 8 paths = 160 entries.
+ * Default locale (en) is at the un-prefixed URL (`/`), others at `/<locale>/...`. */
 
 const PAGES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "/", changeFrequency: "monthly", priority: 1 },
   { path: "/docs/quickstart", changeFrequency: "monthly", priority: 0.9 },
   { path: "/docs/quickstart/claude", changeFrequency: "monthly", priority: 0.85 },
   { path: "/docs/quickstart/chatgpt", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/docs/oauth", changeFrequency: "monthly", priority: 0.8 },
   { path: "/examples", changeFrequency: "monthly", priority: 0.85 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },

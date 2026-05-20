@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PlatformTabs } from "@/components/docs/PlatformTabs";
+import { Link } from "@/i18n/navigation";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 import s from "../../doc.module.css";
 
@@ -52,6 +53,10 @@ function Body() {
       />
 
       <p className={s.note}>{t("needAccount")}</p>
+
+      <p className={s.note}>
+        {t("oauthDocsHint")} <Link href="/docs/oauth">{t("oauthDocsLink")}</Link>
+      </p>
     </main>
   );
 }

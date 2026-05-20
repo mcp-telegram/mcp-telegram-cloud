@@ -5,7 +5,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
 **Last updated:** 2026-05-20
-**Current version:** 2.30.0 (cloud — RFC 8252 loopback redirect_uri support) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.31.0 (cloud — /docs/oauth developer reference + 19-locale i18n) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -113,6 +113,23 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-05-20** — **`/docs/oauth` developer reference page** (cloud v2.31.0).
+  New top-level docs route at `/docs/oauth` for MCP client implementers.
+  Covers: standards we implement (RFC 6749/7591/7636/8252/8414/9728),
+  endpoint reference (with copy-to-clipboard URLs), authorization code +
+  PKCE flow as 5 numbered steps, redirect_uri matching rules with
+  explicit loopback (port-flex) vs HTTPS (exact-match) vs localhost (NOT
+  aliased) sections, PKCE requirements, token lifetime (10-year access
+  TTL rationale), troubleshooting for the 3 most common errors (Invalid
+  redirect_uri / Unknown client / Needs Auth loop), and a "Tested
+  clients" list (Claude.ai, ChatGPT, Hermes Agent, Cursor MCP). EN + RU
+  hand-translated (62 leaves each); 18 Tier 2 locales translated via
+  6 parallel subagents (same inline pipeline as v2.27.0). Sitemap
+  bumped from 7 to 8 paths × 20 indexable locales = 160 entries.
+  Quickstart overview gains a callout link to `/docs/oauth` for users
+  building custom clients. Web build now generates 573 prerendered
+  pages (502 prior + 71 oauth × full locale routing universe).
 
 - **2026-05-20** — **RFC 8252 loopback redirect_uri support + close `/authorize/qr` open redirect** (cloud v2.30.0).
   Reported by an external MCP client implementer (Hermes Agent) — native
