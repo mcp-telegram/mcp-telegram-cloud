@@ -18,6 +18,7 @@
     "test": "bun test --parallel src/__tests__/",
     "check-parity": "bun scripts/check-parity.ts",
     "check-telemetry": "bun scripts/check-telemetry.ts",
+    "check-traefik-parity": "bun scripts/check-traefik-parity.ts",
     "lint": "biome check src/ scripts/",
     "lint:fix": "biome check --write src/ scripts/",
     "format": "biome format --write src/ scripts/",

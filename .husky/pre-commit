@@ -16,3 +16,8 @@ fi
 
 # 2. Lint + format staged files via biome
 bunx biome check --staged --write --no-errors-on-unmatched src/ scripts/
+
+# 3. Traefik parity — block commit if a new app.route() mount in src/server.tsx
+# lacks a corresponding PathPrefix in the infra repo's Traefik backend rule.
+# Skips itself silently if mcp-telegram-infra is not cloned alongside.
+bun scripts/check-traefik-parity.ts

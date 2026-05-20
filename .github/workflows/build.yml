@@ -49,6 +49,13 @@ jobs:
       - run: bun run test
       - run: bun run check-parity
       - run: bun run check-telemetry
+      # Infra repo (mcp-telegram-infra) ships the Traefik stack and isn't
+      # checked out here, so this step skips itself with a clear message.
+      # The real value of check-traefik-parity is local pre-commit: if a
+      # maintainer with both repos cloned side-by-side adds a new
+      # `app.route("/X", ...)` mount without updating the Traefik
+      # PathPrefix list, the script blocks the commit (v2.32.0 lesson).
+      - run: bun run check-traefik-parity
       # Web workspace (Next.js content site) — same install handles both
       # because it's a Bun workspace; we just need to validate web too.
       - run: bun run web:lint
