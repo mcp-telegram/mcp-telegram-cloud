@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { config } from "../config.js";
 import { TELEGRAM_ICON_PNG_128, TELEGRAM_ICON_PNG_256, TELEGRAM_ICON_SVG } from "../icon.js";
+import { getActiveMcpSessionsTotal, isDraining } from "../lifecycle.js";
 import type { SessionManager } from "../session-manager.js";
 
 export interface StaticRoutesDeps {
@@ -15,12 +16,17 @@ export function createStaticRoutes({ sessions }: StaticRoutesDeps): Hono {
     config.openaiAppsChallenge ? c.text(config.openaiAppsChallenge) : c.notFound(),
   );
 
-  app.get("/health", (c) =>
-    c.json({
-      status: "ok",
+  app.get("/health", (c) => {
+    const body = {
+      status: isDraining() ? "draining" : "ok",
       activeSessions: sessions.getActiveCount(),
-    }),
-  );
+      activeMcpSessions: getActiveMcpSessionsTotal(),
+    };
+    // 503 during drain so Traefik / Swarm healthchecks fail-fast and
+    // remove this task from the LB pool. Body still carries detail so
+    // dashboards/ops can see why.
+    return c.json(body, isDraining() ? 503 : 200);
+  });
 
   app.get("/icon.svg", (c) => {
     return c.body(TELEGRAM_ICON_SVG, {

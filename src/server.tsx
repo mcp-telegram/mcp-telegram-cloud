@@ -6,6 +6,7 @@ import { BotClient } from "./bot/api.js";
 import { Subscribers } from "./bot/subscribers.js";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { DestructiveGuard } from "./destructive-guard.js";
+import { startDrain } from "./lifecycle.js";
 import { logger } from "./logger.js";
 import { getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mcp-handler.js";
 import { accessLog } from "./middleware/access-log.js";
@@ -266,7 +267,31 @@ const httpServer = Bun.serve({ fetch: app.fetch, port: config.port });
 
 for (const sig of ["SIGTERM", "SIGINT"] as const) {
   process.on(sig, async () => {
-    logger.info(`Received ${sig}, shutting down`, { component: "cloud", event: "server.stop" });
+    logger.info(`Received ${sig}, draining`, { component: "cloud", event: "server.drain.start" });
+    // Phase 1: flip /health to 503 + wait out the healthcheck interval so
+    // Traefik / Swarm mark this task unhealthy and stop sending new traffic.
+    // Then poll active MCP transport sessions until they hit zero or the
+    // timeout elapses. Defaults (10s health-delay, 60s timeout, 500ms poll)
+    // are tuned for our Swarm `healthcheck.interval: 10s` and the typical
+    // tool-call duration; override via env if traffic shape changes.
+    const drainHealthDelayMs = Number(process.env.MCP_DRAIN_HEALTH_DELAY_MS ?? 10_000);
+    const drainTimeoutMs = Number(process.env.MCP_DRAIN_TIMEOUT_MS ?? 60_000);
+    const drainPollMs = Number(process.env.MCP_DRAIN_POLL_MS ?? 500);
+    const drainResult = await startDrain({
+      healthDelayMs: drainHealthDelayMs,
+      timeoutMs: drainTimeoutMs,
+      pollMs: drainPollMs,
+      onProgress: (event, activeSessions) => {
+        logger.info(`drain ${event} active=${activeSessions}`, {
+          component: "cloud",
+          event: `server.drain.${event}`,
+        });
+      },
+    });
+    logger.info(`drain ${drainResult.outcome} remaining=${drainResult.remaining}, shutting down`, {
+      component: "cloud",
+      event: "server.stop",
+    });
     stopMetricsFlush();
     stopTraceFlush();
     stopIdleReaper();
