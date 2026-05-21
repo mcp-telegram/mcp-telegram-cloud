@@ -29,6 +29,7 @@ export default async function QuickstartOverviewPage({ params }: PageProps) {
 
 function Body() {
   const t = useTranslations("quickstart");
+  const tDiscover = useTranslations("featureGuides.discover");
 
   return (
     <main className={s.container}>
@@ -57,6 +58,31 @@ function Body() {
       <p className={s.note}>
         {t("oauthDocsHint")} <Link href="/docs/oauth">{t("oauthDocsLink")}</Link>
       </p>
+
+      <h2 className={s.h2}>{tDiscover("heading")}</h2>
+      <p className={s.lead}>{tDiscover("lead")}</p>
+      <PlatformTabs
+        tabs={[
+          {
+            href: "/docs/multi-account",
+            title: tDiscover("multiAccountTitle"),
+            description: tDiscover("multiAccountDesc"),
+            cta: tDiscover("cta"),
+          },
+          {
+            href: "/docs/stories",
+            title: tDiscover("storiesTitle"),
+            description: tDiscover("storiesDesc"),
+            cta: tDiscover("cta"),
+          },
+          {
+            href: "/docs/uploads",
+            title: tDiscover("uploadsTitle"),
+            description: tDiscover("uploadsDesc"),
+            cta: tDiscover("cta"),
+          },
+        ]}
+      />
     </main>
   );
 }
