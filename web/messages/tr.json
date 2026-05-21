@@ -41,7 +41,13 @@
     "contactsTitle": "Kişiler ve üyeler",
     "contactsDesc": "Kişi listenize ve grup/kanal üye listelerine erişin",
     "writeTitle": "Gönder ve tepki ver",
-    "writeDesc": "Mesajlara yanıt verin, fotoğraf gönderin, tepki ekleyin ve taslakları güncelleyin"
+    "writeDesc": "Mesajlara yanıt verin, fotoğraf gönderin, tepki ekleyin ve taslakları güncelleyin",
+    "multiAccountTitle": "Birden çok hesap",
+    "multiAccountDesc": "Birden fazla Telegram hesabını tek bir yapay zekâ asistanına bağlayın ve aralarında tek komutla geçiş yapın",
+    "storiesTitle": "Hikâyeler",
+    "storiesDesc": "Hikâyelerinizi okuyun, paylaşın, düzenleyin ve kimlerin görüntülediğini inceleyin — kendiniz ve yönettiğiniz kanallar için",
+    "uploadsTitle": "Dosyalar ve ses",
+    "uploadsDesc": "Belgeleri, fotoğrafları, sesli notları ve albümleri bilgisayarınızdan veya bir URL'den gönderin"
   },
   "examples": {
     "heading": "İnsanlar neler soruyor",
@@ -90,6 +96,8 @@
     "openSourceQ": "Kaynak kodu açık mı?",
     "openSourceAStart": "Evet. Sunucu, MIT lisansı altında tamamen açık kaynaktır:",
     "openSourceAEnd": ".",
+    "multiAccountQ": "Birden fazla Telegram hesabını bağlayabilir miyim?",
+    "multiAccountA": "Evet. İlk hesabınızı bağladıktan sonra asistandan `telegram-accounts-add` aracıyla başka bir hesap eklemesini isteyin — ikinci hesap için QR kodlu tek kullanımlık bir URL alırsınız. Sonraki araç çağrısının hangi hesabı kullanacağını değiştirmek için `telegram-accounts-switch` kullanın. Bağlantı kesip yeniden bağlanmaya gerek yok.",
     "botQ": "Servis güncellemelerini nasıl öğreneceğim?",
     "botAStart": "Şuna abone olun:",
     "botAEnd": "servis durumu, kırıcı değişiklikler ve yeni sürümler hakkında bilgilendirilmek için. Aboneliği iptal etmek için istediğiniz zaman /stop gönderin."

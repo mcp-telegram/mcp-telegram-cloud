@@ -41,7 +41,13 @@
     "contactsTitle": "Kontakte & Mitglieder",
     "contactsDesc": "Zugriff auf Ihre Kontaktliste und auf Mitgliederlisten von Gruppen und Kanälen",
     "writeTitle": "Senden & reagieren",
-    "writeDesc": "Auf Nachrichten antworten, Fotos senden, Reaktionen hinzufügen und Entwürfe aktualisieren"
+    "writeDesc": "Auf Nachrichten antworten, Fotos senden, Reaktionen hinzufügen und Entwürfe aktualisieren",
+    "multiAccountTitle": "Mehrere Konten",
+    "multiAccountDesc": "Mehrere Telegram-Konten mit einem KI-Assistenten verbinden und per Befehl zwischen ihnen umschalten",
+    "storiesTitle": "Stories",
+    "storiesDesc": "Stories lesen, posten, bearbeiten und sehen, wer sie angesehen hat — für Sie selbst und für Ihre Kanäle",
+    "uploadsTitle": "Dateien & Sprache",
+    "uploadsDesc": "Senden Sie Dokumente, Fotos, Sprachnachrichten und Alben von Ihrem Computer oder per URL"
   },
   "examples": {
     "heading": "Was die Leute fragen",
@@ -90,6 +96,8 @@
     "openSourceQ": "Ist der Quellcode offen?",
     "openSourceAStart": "Ja. Der Server ist vollständig Open Source unter der MIT-Lizenz auf",
     "openSourceAEnd": ".",
+    "multiAccountQ": "Kann ich mehr als ein Telegram-Konto verbinden?",
+    "multiAccountA": "Ja. Nachdem Sie Ihr erstes Konto verbunden haben, bitten Sie den Assistenten, mit dem Tool `telegram-accounts-add` ein weiteres hinzuzufügen — Sie erhalten eine Einmal-URL mit einem QR-Code für das zweite Konto. Mit `telegram-accounts-switch` legen Sie fest, welches Konto beim nächsten Tool-Aufruf verwendet wird. Disconnect/Reconnect ist nicht erforderlich.",
     "botQ": "Wie erfahre ich von Dienst-Updates?",
     "botAStart": "Abonnieren Sie",
     "botAEnd": "um über Dienststatus, Breaking Changes und neue Releases informiert zu werden. Senden Sie jederzeit /stop, um sich abzumelden."

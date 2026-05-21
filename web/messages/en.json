@@ -33,7 +33,13 @@
     "contactsTitle": "Contacts & members",
     "contactsDesc": "Access your contacts list and group/channel member lists",
     "writeTitle": "Send & react",
-    "writeDesc": "Reply to messages, send photos, add reactions and update drafts"
+    "writeDesc": "Reply to messages, send photos, add reactions and update drafts",
+    "multiAccountTitle": "Multiple accounts",
+    "multiAccountDesc": "Connect several Telegram accounts to one AI assistant and switch between them with one command",
+    "storiesTitle": "Stories",
+    "storiesDesc": "Read, post, edit and review who viewed your stories — for yourself and channels you run",
+    "uploadsTitle": "Files & voice",
+    "uploadsDesc": "Send documents, photos, voice notes and albums from your computer or a URL"
   },
   "examples": {
     "heading": "What people ask",
@@ -82,6 +88,8 @@
     "openSourceQ": "Is the source code open?",
     "openSourceAStart": "Yes. The server is fully open-source under the MIT license at",
     "openSourceAEnd": ".",
+    "multiAccountQ": "Can I connect more than one Telegram account?",
+    "multiAccountA": "Yes. After connecting your first account, ask the assistant to add another with the `telegram-accounts-add` tool — you'll get a one-time URL with a QR code for the second account. Use `telegram-accounts-switch` to change which account the next tool call will use. No disconnect/reconnect needed.",
     "botQ": "How will I know about service updates?",
     "botAStart": "Subscribe to",
     "botAEnd": "to get notified about service status, breaking changes and new releases. Send /stop any time to unsubscribe."

@@ -41,7 +41,13 @@
     "contactsTitle": "Contatti e membri",
     "contactsDesc": "Accedi al tuo elenco contatti e agli elenchi membri di gruppi e canali",
     "writeTitle": "Invia e reagisci",
-    "writeDesc": "Rispondi ai messaggi, invia foto, aggiungi reazioni e aggiorna le bozze"
+    "writeDesc": "Rispondi ai messaggi, invia foto, aggiungi reazioni e aggiorna le bozze",
+    "multiAccountTitle": "Account multipli",
+    "multiAccountDesc": "Collega più account Telegram a un unico assistente IA e passa dall'uno all'altro con un solo comando",
+    "storiesTitle": "Storie",
+    "storiesDesc": "Leggi, pubblica, modifica e controlla chi ha visualizzato le tue storie — per te stesso e per i canali che gestisci",
+    "uploadsTitle": "File e vocali",
+    "uploadsDesc": "Invia documenti, foto, messaggi vocali e album dal tuo computer o da un URL"
   },
   "examples": {
     "heading": "Cosa chiedono le persone",
@@ -90,6 +96,8 @@
     "openSourceQ": "Il codice sorgente è aperto?",
     "openSourceAStart": "Sì. Il server è completamente open source sotto licenza MIT su",
     "openSourceAEnd": ".",
+    "multiAccountQ": "Posso collegare più di un account Telegram?",
+    "multiAccountA": "Sì. Dopo aver collegato il tuo primo account, chiedi all'assistente di aggiungerne un altro con lo strumento `telegram-accounts-add` — riceverai un URL monouso con un codice QR per il secondo account. Usa `telegram-accounts-switch` per cambiare l'account che verrà utilizzato nella chiamata di strumento successiva. Nessuna disconnessione o riconnessione necessaria.",
     "botQ": "Come saprò degli aggiornamenti del servizio?",
     "botAStart": "Iscriviti a",
     "botAEnd": "per ricevere notifiche sullo stato del servizio, breaking change e nuove release. Invia /stop in qualsiasi momento per annullare l'iscrizione."

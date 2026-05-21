@@ -128,6 +128,21 @@ function HomePageContent() {
             <h3>{tFeat("writeTitle")}</h3>
             <p>{tFeat("writeDesc")}</p>
           </div>
+          <div className={s.featureCard}>
+            <div className={s.featureIcon}>👥</div>
+            <h3>{tFeat("multiAccountTitle")}</h3>
+            <p>{tFeat("multiAccountDesc")}</p>
+          </div>
+          <div className={s.featureCard}>
+            <div className={s.featureIcon}>📖</div>
+            <h3>{tFeat("storiesTitle")}</h3>
+            <p>{tFeat("storiesDesc")}</p>
+          </div>
+          <div className={s.featureCard}>
+            <div className={s.featureIcon}>📎</div>
+            <h3>{tFeat("uploadsTitle")}</h3>
+            <p>{tFeat("uploadsDesc")}</p>
+          </div>
         </div>
       </section>
 
@@ -233,6 +248,10 @@ function HomePageContent() {
           <div className={s.faqItem}>
             <h3>{tFaq("disconnectQ")}</h3>
             <p>{tFaq("disconnectA")}</p>
+          </div>
+          <div className={s.faqItem}>
+            <h3>{tFaq("multiAccountQ")}</h3>
+            <p>{tFaq("multiAccountA")}</p>
           </div>
           <div className={s.faqItem}>
             <h3>{tFaq("chatgptQ")}</h3>

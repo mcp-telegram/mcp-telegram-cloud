@@ -41,7 +41,13 @@
     "contactsTitle": "Kontak & anggota",
     "contactsDesc": "Akses daftar kontak Anda dan daftar anggota grup/kanal",
     "writeTitle": "Kirim & reaksi",
-    "writeDesc": "Balas pesan, kirim foto, tambahkan reaksi, dan perbarui draf"
+    "writeDesc": "Balas pesan, kirim foto, tambahkan reaksi, dan perbarui draf",
+    "multiAccountTitle": "Beberapa akun",
+    "multiAccountDesc": "Hubungkan beberapa akun Telegram ke satu asisten AI dan beralih di antaranya dengan satu perintah",
+    "storiesTitle": "Stories",
+    "storiesDesc": "Baca, posting, edit, dan tinjau siapa yang melihat stories Anda — untuk akun Anda dan kanal yang Anda kelola",
+    "uploadsTitle": "File & suara",
+    "uploadsDesc": "Kirim dokumen, foto, pesan suara, dan album dari komputer Anda atau dari URL"
   },
   "examples": {
     "heading": "Apa yang ditanyakan orang",
@@ -90,6 +96,8 @@
     "openSourceQ": "Apakah kode sumbernya terbuka?",
     "openSourceAStart": "Ya. Server sepenuhnya open-source di bawah lisensi MIT di",
     "openSourceAEnd": ".",
+    "multiAccountQ": "Bisakah saya menghubungkan lebih dari satu akun Telegram?",
+    "multiAccountA": "Ya. Setelah menghubungkan akun pertama Anda, minta asisten untuk menambahkan akun lain dengan tool `telegram-accounts-add` — Anda akan mendapatkan URL sekali pakai dengan kode QR untuk akun kedua. Gunakan `telegram-accounts-switch` untuk mengubah akun mana yang akan digunakan pada panggilan tool berikutnya. Tidak perlu disconnect/reconnect.",
     "botQ": "Bagaimana cara mengetahui pembaruan layanan?",
     "botAStart": "Berlangganan ke",
     "botAEnd": "untuk diberi tahu tentang status layanan, perubahan yang merusak, dan rilis baru. Kirim /stop kapan saja untuk berhenti berlangganan."

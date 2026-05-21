@@ -41,7 +41,13 @@
     "contactsTitle": "聯絡人與成員",
     "contactsDesc": "存取您的聯絡人清單以及群組/頻道成員清單",
     "writeTitle": "傳送與反應",
-    "writeDesc": "回覆訊息、傳送相片、加入反應並更新草稿"
+    "writeDesc": "回覆訊息、傳送相片、加入反應並更新草稿",
+    "multiAccountTitle": "多個帳號",
+    "multiAccountDesc": "將多個 Telegram 帳號連接到單一 AI 助理,只需一個指令即可在它們之間切換",
+    "storiesTitle": "限時動態",
+    "storiesDesc": "閱讀、發佈、編輯限時動態並查看誰看過 — 適用於您自己以及您所經營的頻道",
+    "uploadsTitle": "檔案與語音",
+    "uploadsDesc": "從您的電腦或 URL 傳送文件、相片、語音訊息和相簿"
   },
   "examples": {
     "heading": "大家都問什麼",
@@ -90,6 +96,8 @@
     "openSourceQ": "原始碼是開放的嗎?",
     "openSourceAStart": "是的。伺服器是完全開源的,以 MIT 授權釋出,位於",
     "openSourceAEnd": "。",
+    "multiAccountQ": "我可以連接多個 Telegram 帳號嗎?",
+    "multiAccountA": "可以。連接第一個帳號之後,請助理使用 `telegram-accounts-add` 工具加入另一個帳號 — 您會取得一個包含 QR 碼的一次性 URL,用於第二個帳號。使用 `telegram-accounts-switch` 即可變更下一次工具呼叫所使用的帳號。無需中斷重連。",
     "botQ": "我如何得知服務的更新?",
     "botAStart": "訂閱",
     "botAEnd": "以接收服務狀態、重大變更與新版本發布的通知。隨時發送 /stop 即可取消訂閱。"

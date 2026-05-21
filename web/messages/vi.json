@@ -41,7 +41,13 @@
     "contactsTitle": "Danh bạ & thành viên",
     "contactsDesc": "Truy cập danh sách liên hệ và danh sách thành viên nhóm/kênh của bạn",
     "writeTitle": "Gửi & phản hồi",
-    "writeDesc": "Trả lời tin nhắn, gửi ảnh, thêm phản hồi và cập nhật bản nháp"
+    "writeDesc": "Trả lời tin nhắn, gửi ảnh, thêm phản hồi và cập nhật bản nháp",
+    "multiAccountTitle": "Nhiều tài khoản",
+    "multiAccountDesc": "Kết nối nhiều tài khoản Telegram với một trợ lý AI và chuyển đổi giữa chúng chỉ bằng một lệnh",
+    "storiesTitle": "Stories",
+    "storiesDesc": "Đọc, đăng, chỉnh sửa và xem ai đã xem stories của bạn — cho chính bạn và các kênh bạn quản lý",
+    "uploadsTitle": "Tệp & giọng nói",
+    "uploadsDesc": "Gửi tài liệu, ảnh, ghi chú thoại và album từ máy tính của bạn hoặc từ một URL"
   },
   "examples": {
     "heading": "Mọi người hỏi gì",
@@ -90,6 +96,8 @@
     "openSourceQ": "Mã nguồn có mở không?",
     "openSourceAStart": "Có. Máy chủ hoàn toàn mã nguồn mở theo giấy phép MIT tại",
     "openSourceAEnd": ".",
+    "multiAccountQ": "Tôi có thể kết nối nhiều hơn một tài khoản Telegram không?",
+    "multiAccountA": "Có. Sau khi kết nối tài khoản đầu tiên, hãy yêu cầu trợ lý thêm một tài khoản khác bằng tool `telegram-accounts-add` — bạn sẽ nhận được một URL dùng một lần kèm mã QR cho tài khoản thứ hai. Dùng `telegram-accounts-switch` để thay đổi tài khoản sẽ được sử dụng trong lần gọi tool tiếp theo. Không cần ngắt kết nối rồi kết nối lại.",
     "botQ": "Làm thế nào để tôi biết về các bản cập nhật dịch vụ?",
     "botAStart": "Đăng ký theo dõi",
     "botAEnd": "để được thông báo về trạng thái dịch vụ, thay đổi đột phá và các bản phát hành mới. Gửi /stop bất cứ lúc nào để hủy đăng ký."
