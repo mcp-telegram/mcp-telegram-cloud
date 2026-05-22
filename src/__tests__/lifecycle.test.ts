@@ -7,6 +7,7 @@ process.env.TELEGRAM_API_HASH ??= "test";
 process.env.ISSUER ??= "https://example.com";
 
 const { _resetDrainingFlagForTest, isDraining, startDrain } = await import("../lifecycle.js");
+const { _resetMetricsForTest, snapshot } = await import("../telemetry/metrics.js");
 
 /** Fake clock — accumulates virtual ms instead of really sleeping, so the
  *  60s default timeout doesn't slow the test suite. */
@@ -24,6 +25,7 @@ function fakeSleeper() {
 describe("lifecycle.startDrain", () => {
   afterEach(() => {
     _resetDrainingFlagForTest();
+    _resetMetricsForTest();
   });
 
   it("isDraining flips to true once startDrain begins", async () => {
@@ -106,5 +108,36 @@ describe("lifecycle.startDrain", () => {
     assert.equal(second.outcome, "drained");
     assert.equal(second.remaining, 7);
     assert.deepEqual(events, [], "second startDrain must not emit progress");
+  });
+
+  it("records DRAIN_OUTCOME=drained on clean drain", async () => {
+    const clock = fakeSleeper();
+    await startDrain({
+      healthDelayMs: 10,
+      timeoutMs: 100,
+      pollMs: 10,
+      activeSessions: () => 0,
+      sleep: clock.sleep,
+    });
+    const def = snapshot().counters.find((c) => c.name === "mcp.drain.outcome");
+    assert.ok(def, "counter should be present after drain");
+    assert.equal(def.points.length, 1);
+    assert.equal(def.points[0]?.labels.outcome, "drained");
+    assert.equal(def.points[0]?.value, 1);
+  });
+
+  it("records DRAIN_OUTCOME=timeout when active sessions never reach zero", async () => {
+    const clock = fakeSleeper();
+    await startDrain({
+      healthDelayMs: 10,
+      timeoutMs: 50,
+      pollMs: 10,
+      activeSessions: () => 1,
+      sleep: clock.sleep,
+    });
+    const def = snapshot().counters.find((c) => c.name === "mcp.drain.outcome");
+    assert.ok(def);
+    assert.equal(def.points[0]?.labels.outcome, "timeout");
+    assert.equal(def.points[0]?.value, 1);
   });
 });

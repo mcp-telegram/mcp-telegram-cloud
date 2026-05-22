@@ -111,6 +111,14 @@ export type LogFields = Partial<{
   /** HTTP status code as string (`200`/`404`/...). */
   status: string;
   /**
+   * Bounded HTTP status class (`2xx`/`3xx`/`4xx`/`5xx`). Mirrors the
+   * `status_class` label on the `http.requests` counter so logs- and
+   * metrics-based dashboard queries share one bucketing scheme. Keeps
+   * SigNoz filters numeric-free (the `status` field is `string` and would
+   * need `LIKE '5%'` otherwise).
+   */
+  status_class: string;
+  /**
    * Truncated diagnostic blob from the upstream rate-limiter
    * (`flood_wait` / `network_retry` / `temporary_retry` + method name).
    * Caller SHOULD cap to ≤200 chars to stay below the `MAX_ATTR_VALUE_LEN`

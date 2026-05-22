@@ -63,6 +63,7 @@ export const accessLog: MiddlewareHandler = async (c, next) => {
         path: rawPath,
         route,
         status: String(status),
+        status_class: cls,
         durationMs: duration,
         clientClass: client,
       });

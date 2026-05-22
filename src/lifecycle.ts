@@ -19,6 +19,7 @@
 
 import { getActiveSessionsByClient } from "./mcp-handler.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
+import { DRAIN_OUTCOME, incr } from "./telemetry/metrics.js";
 
 let draining = false;
 
@@ -88,6 +89,7 @@ export async function startDrain(opts: DrainOptions): Promise<{ outcome: "draine
     const remaining = readActive();
     if (remaining === 0) {
       onProgress?.("drained", 0);
+      incr(DRAIN_OUTCOME, { outcome: "drained" });
       return { outcome: "drained", remaining: 0 };
     }
     await sleep(opts.pollMs);
@@ -95,5 +97,6 @@ export async function startDrain(opts: DrainOptions): Promise<{ outcome: "draine
 
   const finalRemaining = readActive();
   onProgress?.("timeout", finalRemaining);
+  incr(DRAIN_OUTCOME, { outcome: "timeout" });
   return { outcome: "timeout", remaining: finalRemaining };
 }

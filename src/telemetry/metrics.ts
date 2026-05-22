@@ -132,6 +132,10 @@ export const TELEMETRY_EXPORT_ERRORS = counter(
   "OTLP export failures by signal+reason (operator visibility into silent fetch catches)",
   "1",
 );
+/** Graceful-drain outcomes. `drained` = active sessions hit zero before `DRAIN_TIMEOUT_MS`;
+ * `timeout` = forced shutdown with N still active (clients see connection reset). Empirical
+ * data here informs whether `MCP_DRAIN_TIMEOUT_MS` (default 60s) is too tight. */
+export const DRAIN_OUTCOME = counter("mcp.drain.outcome", "Graceful-drain outcomes (drained vs timeout)", "1");
 
 /** Map a `Response` (when fetch resolves) or thrown error (when it rejects) to a
  * coarse reason label. Cardinality bounded to 5 buckets — never bleed raw status
@@ -439,6 +443,7 @@ export function _resetMetricsForTest(): void {
   counters.set(OAUTH_FLOW.name, OAUTH_FLOW);
   counters.set(RATE_LIMIT_HITS.name, RATE_LIMIT_HITS);
   counters.set(TELEMETRY_EXPORT_ERRORS.name, TELEMETRY_EXPORT_ERRORS);
+  counters.set(DRAIN_OUTCOME.name, DRAIN_OUTCOME);
   histograms.set(HTTP_DURATION.name, HTTP_DURATION);
   histograms.set(TOOL_DURATION.name, TOOL_DURATION);
   HTTP_REQUESTS.data.clear();
@@ -446,6 +451,7 @@ export function _resetMetricsForTest(): void {
   OAUTH_FLOW.data.clear();
   RATE_LIMIT_HITS.data.clear();
   TELEMETRY_EXPORT_ERRORS.data.clear();
+  DRAIN_OUTCOME.data.clear();
   HTTP_DURATION.data.clear();
   TOOL_DURATION.data.clear();
   cardinalityWarned.clear();
