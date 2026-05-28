@@ -63,9 +63,6 @@ const HELPER_MOUNTS: Record<string, readonly string[]> = {
   createOAuthWellKnownRoutes: ["/.well-known/oauth-authorization-server", "/.well-known/oauth-protected-resource"],
   // src/routes/mcp.ts — `app.all("/mcp")` + `/mcp/` on bare app
   registerMcpRoutes: ["/mcp"],
-  // src/routes/alerts.ts — conditional, mounts at "/api" → /api/alerts/signoz
-  // /api already covered by createAdminRoutes mount on "/api", no extra prefix needed.
-  createAlertRoutes: [],
 };
 
 /**
