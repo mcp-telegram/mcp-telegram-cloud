@@ -33,7 +33,7 @@ export default async function QuickstartChatGPTPage({ params }: PageProps) {
 
 function Body() {
   const t = useTranslations("quickstart");
-  const mcpUrl = `${config.issuer}/mcp`;
+  const mcpUrl = `${config.mcpBaseUrl}/mcp`;
 
   const howTo = JSON.stringify({
     "@context": "https://schema.org",

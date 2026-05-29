@@ -256,7 +256,7 @@ function HomePageContent() {
           <div className={s.faqItem}>
             <h3>{tFaq("chatgptQ")}</h3>
             <p>
-              {tFaq("chatgptAStart")} <code className={s.faqCode}>{config.issuer}/mcp</code> {tFaq("chatgptAEnd")}
+              {tFaq("chatgptAStart")} <code className={s.faqCode}>{config.mcpBaseUrl}/mcp</code> {tFaq("chatgptAEnd")}
             </p>
           </div>
           <div className={s.faqItem}>

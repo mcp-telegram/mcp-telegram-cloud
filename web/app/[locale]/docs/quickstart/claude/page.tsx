@@ -33,7 +33,7 @@ export default async function QuickstartClaudePage({ params }: PageProps) {
 
 function Body() {
   const t = useTranslations("quickstart");
-  const mcpUrl = `${config.issuer}/mcp`;
+  const mcpUrl = `${config.mcpBaseUrl}/mcp`;
 
   // HowTo schema for SERP rich snippets.
   const howTo = JSON.stringify({

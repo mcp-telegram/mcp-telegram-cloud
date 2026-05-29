@@ -33,11 +33,11 @@ export default async function OAuthDocsPage({ params }: PageProps) {
 
 function Body() {
   const t = useTranslations("oauthDocs");
-  const mcpUrl = `${config.issuer}/mcp`;
-  const registerUrl = `${config.issuer}/oauth/register`;
-  const authorizeUrl = `${config.issuer}/oauth/authorize`;
-  const tokenUrl = `${config.issuer}/oauth/token`;
-  const metadataUrl = `${config.issuer}/.well-known/oauth-authorization-server`;
+  const mcpUrl = `${config.mcpBaseUrl}/mcp`;
+  const registerUrl = `${config.mcpBaseUrl}/oauth/register`;
+  const authorizeUrl = `${config.mcpBaseUrl}/oauth/authorize`;
+  const tokenUrl = `${config.mcpBaseUrl}/oauth/token`;
+  const metadataUrl = `${config.mcpBaseUrl}/.well-known/oauth-authorization-server`;
 
   return (
     <main className={s.container}>

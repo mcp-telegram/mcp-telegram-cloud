@@ -26,6 +26,12 @@ const httpUrl = (name: string, value: string): string => {
 
 const DEFAULT_SOURCE_REPO_URL = "https://github.com/mcp-telegram/mcp-telegram-cloud";
 const DEFAULT_ISSUER = "https://mcp-telegram.com";
+// MCP endpoint base. Defaults to the apex (self-hosters serve site + backend
+// from one host) but the public hosted deployment overrides it via MCP_BASE_URL
+// because the backend lives on its own subdomain (mcp.mcp-telegram.com) while
+// the content site is served from a separate host. Keep ISSUER as the apex for
+// canonical/SEO; only the connect URL shown to users points at the backend.
+const DEFAULT_MCP_BASE_URL = DEFAULT_ISSUER;
 
 const sourceRepoUrl = httpUrl(
   "SOURCE_REPO_URL",
@@ -34,9 +40,15 @@ const sourceRepoUrl = httpUrl(
 
 const issuer = httpUrl("ISSUER", optional(process.env.ISSUER, DEFAULT_ISSUER)).replace(/\/+$/, "");
 
+const mcpBaseUrl = httpUrl("MCP_BASE_URL", optional(process.env.MCP_BASE_URL, DEFAULT_MCP_BASE_URL)).replace(
+  /\/+$/,
+  "",
+);
+
 export const config = {
   brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
   issuer,
+  mcpBaseUrl,
   sourceRepoUrl,
   issuesUrl: httpUrl("ISSUES_URL", optional(process.env.ISSUES_URL, `${sourceRepoUrl}/issues`)),
   issuesLabel: optional(process.env.ISSUES_LABEL, "GitHub Issues"),
