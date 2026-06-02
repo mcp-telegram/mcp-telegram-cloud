@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.ssr.config.ts",
+    "build:client": "vite build",
+    "build:ssr": "vite build --config vite.ssr.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test src/__tests__/",
-    "lint": "biome check src",
-    "gen-i18n-types": "bun scripts/gen-i18n-types.ts"
+    "lint": "biome check src vite.config.ts vite.ssr.config.ts"
   },
   "dependencies": {
     "react": "^19.2.7",

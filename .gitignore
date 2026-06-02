@@ -8,6 +8,7 @@ yarn.lock
 
 # Build artifacts
 dist/
+dist-ssr/
 build/
 *.tsbuildinfo
 
