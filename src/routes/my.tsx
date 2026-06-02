@@ -71,7 +71,7 @@ export function createMyRoutes({ destructive, sessions, uploads }: MyRoutesDeps)
 
   app.get("/", (c) => c.redirect("/my/settings", 302));
 
-  app.get("/uploads", (c) => {
+  app.get("/uploads", async (c) => {
     const userId = requireUser(c, sessions);
     if (!userId) return unauthorizedRedirect(c);
 
@@ -86,6 +86,16 @@ export function createMyRoutes({ destructive, sessions, uploads }: MyRoutesDeps)
       pendingBytes: uploads.pendingBytesForUser(userId),
     };
     if (flash !== undefined) props.flash = flash;
+
+    if (reactPagesAvailable()) {
+      const locale = detectRequestLocale(c);
+      const html = await renderReactPage("uploads", {
+        ...props,
+        locale,
+        scripts: islandScripts("language-switcher", "uploads"),
+      });
+      return c.html(html);
+    }
     return c.html(<UploadsPage {...props} />);
   });
 
@@ -221,11 +231,24 @@ export function createMyRoutes({ destructive, sessions, uploads }: MyRoutesDeps)
     return c.redirect(`/my/settings?ok=${next ? "on" : "off"}`, 303);
   });
 
-  app.get("/audit", (c) => {
+  app.get("/audit", async (c) => {
     const userId = requireUser(c, sessions);
     if (!userId) return unauthorizedRedirect(c);
 
     const rows = destructive.listForUser(userId, 100);
+
+    // Prefer the React/i18n page when its bundle is built; fall back to the
+    // legacy hono page otherwise (mirrors /settings).
+    if (reactPagesAvailable()) {
+      const locale = detectRequestLocale(c);
+      const html = await renderReactPage("audit", {
+        username: userId,
+        rows,
+        locale,
+        scripts: islandScripts("language-switcher"),
+      });
+      return c.html(html);
+    }
     return c.html(<AuditPage username={userId} rows={rows} />);
   });
 

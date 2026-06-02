@@ -22,6 +22,7 @@ export default defineConfig({
       // More islands (qr-login, uploads, settings) land as pages migrate.
       input: {
         "language-switcher": "src/islands/language-switcher.tsx",
+        uploads: "src/islands/uploads.ts",
       },
     },
   },

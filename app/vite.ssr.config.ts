@@ -22,6 +22,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         settings: "src/pages/settings.tsx",
+        audit: "src/pages/audit.tsx",
+        uploads: "src/pages/uploads.tsx",
       },
       output: { format: "esm", entryFileNames: "[name].js" },
     },

@@ -51,7 +51,8 @@ export function islandScripts(...islandNames: string[]): string[] {
   const manifest = loadManifest();
   const urls: string[] = [];
   for (const name of islandNames) {
-    const entry = manifest[`src/islands/${name}.tsx`];
+    // Islands may be authored as .tsx (React) or .ts (plain DOM) — try both.
+    const entry = manifest[`src/islands/${name}.tsx`] ?? manifest[`src/islands/${name}.ts`];
     if (entry) urls.push(`/app-assets/${entry.file}`);
   }
   return urls;
