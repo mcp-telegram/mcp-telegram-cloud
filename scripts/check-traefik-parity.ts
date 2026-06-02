@@ -116,7 +116,7 @@ function collectServerMounts(): string[] {
   return [...mounts].sort();
 }
 
-function collectTraefikPrefixes(): string[] {
+function readBackendRuleBlock(): string {
   const yaml = readFileSync(TRAEFIK_YAML, "utf8");
   // Find the mcp-backend router rule block. The rule is a folded scalar
   // (`>`), so the value spans multiple lines until the next `traefik.*` key.
@@ -126,8 +126,11 @@ function collectTraefikPrefixes(): string[] {
   }
   // Take everything from the rule key to the next labels key at same indent.
   const ruleEnd = yaml.indexOf("traefik.http.routers.mcp-backend.priority", ruleStart);
-  const ruleBlock = yaml.slice(ruleStart, ruleEnd === -1 ? undefined : ruleEnd);
+  return yaml.slice(ruleStart, ruleEnd === -1 ? undefined : ruleEnd);
+}
 
+function collectTraefikPrefixes(): string[] {
+  const ruleBlock = readBackendRuleBlock();
   const prefixes = new Set<string>();
   // Match both PathPrefix(`/x`) and Path(`/x`). Backticks must be literal.
   const tokenRegex = /(?:PathPrefix|Path)\(`(\/[^`]+)`\)/g;
@@ -135,6 +138,22 @@ function collectTraefikPrefixes(): string[] {
     prefixes.add(match[1]);
   }
   return [...prefixes].sort();
+}
+
+/**
+ * Host-based routing detector. Since the 2026-06-01 apex-clause removal the
+ * backend lives on a dedicated host (`mcp.mcp-telegram.com`) where the Hono
+ * app owns EVERY path — there is no Next.js web catchall on that host to fall
+ * through to, so path-prefix parity is no longer meaningful. We recognise this
+ * shape (a rule with `Host(...)` but zero `PathPrefix`/`Path` tokens) and skip
+ * the gate. The gate only protects path-based split-routing (the old apex
+ * shared-host setup); if a PathPrefix token ever reappears, the gate re-arms.
+ */
+function isDedicatedHostRouting(): boolean {
+  const ruleBlock = readBackendRuleBlock();
+  const hasHost = /Host\(`[^`]+`\)/.test(ruleBlock);
+  const hasPathToken = /(?:PathPrefix|Path)\(`\/[^`]+`\)/.test(ruleBlock);
+  return hasHost && !hasPathToken;
 }
 
 /**
@@ -183,6 +202,21 @@ function buildReport(): ParityReport {
       };
     }
     throw e;
+  }
+
+  // Dedicated-host routing (post 2026-06-01): backend owns every path on its
+  // own host, no shared-host path split to police — skip gracefully.
+  if (isDedicatedHostRouting()) {
+    return {
+      ok: true,
+      serverMounts: [],
+      traefikPrefixes: [],
+      missing: [],
+      stale: [],
+      traefikYamlPath: TRAEFIK_YAML,
+      skipped:
+        "backend uses dedicated-host routing (Host(...) with no PathPrefix tokens) — path-prefix parity not applicable.",
+    };
   }
 
   const serverMounts = collectServerMounts();
