@@ -53,6 +53,9 @@ export function templatePath(path: string): string {
   if (STATIC.has(path)) return path;
   if (path.startsWith("/my/upload/")) return "/my/upload/:id";
   if (path.startsWith("/my/uploads/")) return "/my/uploads/:id";
+  // Content-hashed React island bundles — collapse so each hash isn't its own
+  // time series.
+  if (path.startsWith("/app-assets/")) return "/app-assets/:asset";
   // Collapse any ID-shaped segment anywhere in the path. Bounds the time-series
   // cardinality even for future routes shaped `/users/:id/profile` that we
   // forgot to template explicitly. Cost: a brand-new route segment that happens

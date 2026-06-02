@@ -60,6 +60,13 @@ jobs:
       # because it's a Bun workspace; we just need to validate web too.
       - run: bun run web:lint
       - run: bun run web:typecheck
+      # App workspace (React backend pages: SSR + i18n islands). Same install
+      # covers it. `app:build` produces dist/ + dist-ssr/ which the Docker
+      # build also generates; running it here catches build breakage early.
+      - run: bun run app:lint
+      - run: bun run app:typecheck
+      - run: bun run app:test
+      - run: bun run app:build
 
   build:
     needs: check

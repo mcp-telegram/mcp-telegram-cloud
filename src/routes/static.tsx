@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { config } from "../config.js";
 import { TELEGRAM_ICON_PNG_128, TELEGRAM_ICON_PNG_256, TELEGRAM_ICON_SVG } from "../icon.js";
 import { getActiveMcpSessionsTotal, isDraining } from "../lifecycle.js";
+import { readClientAsset } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
 
 export interface StaticRoutesDeps {
@@ -21,6 +22,19 @@ export function createStaticRoutes({ sessions }: StaticRoutesDeps): Hono {
   app.get("/robots.txt", (c) =>
     c.text("User-agent: *\nDisallow: /\n", 200, { "Content-Type": "text/plain; charset=utf-8" }),
   );
+
+  // Hashed client island bundles built by the `app/` workspace (Vite). Names
+  // are content-hashed, so cache immutably. `:path{.+}` captures the rest of
+  // the URL (e.g. `assets/language-switcher-pR8QhwXz.js`).
+  app.get("/app-assets/:path{.+}", (c) => {
+    const body = readClientAsset(c.req.param("path"));
+    if (body === null) return c.notFound();
+    const isCss = c.req.param("path").endsWith(".css");
+    return c.body(body, 200, {
+      "Content-Type": isCss ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    });
+  });
 
   app.get("/health", (c) => {
     const body = {

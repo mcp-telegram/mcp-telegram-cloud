@@ -7,6 +7,7 @@ import { logger, logUser } from "../logger.js";
 import { AuditPage } from "../pages/AuditPage.js";
 import { SettingsPage } from "../pages/SettingsPage.js";
 import { UploadsPage, type UploadsPageProps } from "../pages/UploadsPage.js";
+import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
 
@@ -166,7 +167,7 @@ export function createMyRoutes({ destructive, sessions, uploads }: MyRoutesDeps)
     },
   );
 
-  app.get("/settings", (c) => {
+  app.get("/settings", async (c) => {
     const userId = requireUser(c, sessions);
     if (!userId) return unauthorizedRedirect(c);
 
@@ -181,6 +182,14 @@ export function createMyRoutes({ destructive, sessions, uploads }: MyRoutesDeps)
     };
     if (flash !== undefined) props.flash = flash;
 
+    // Prefer the React/i18n page when its bundle is built; fall back to the
+    // legacy hono page otherwise (e.g. dev without `bun app:build`). The
+    // switch is per-request and transparent.
+    if (reactPagesAvailable()) {
+      const locale = detectRequestLocale(c);
+      const html = await renderReactPage("settings", { ...props, locale, scripts: islandScripts("language-switcher") });
+      return c.html(html);
+    }
     return c.html(<SettingsPage {...props} />);
   });
 

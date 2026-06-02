@@ -50,3 +50,27 @@ describe("/health endpoint", () => {
     assert.equal(body.activeSessions, 2);
   });
 });
+
+describe("/robots.txt", () => {
+  it("disallows all crawlers", async () => {
+    const app = createStaticRoutes({ sessions: stubSessions(0) });
+    const res = await app.request("/robots.txt");
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /text\/plain/);
+    assert.equal(await res.text(), "User-agent: *\nDisallow: /\n");
+  });
+});
+
+describe("/app-assets/* static serving", () => {
+  it("404s an unknown asset", async () => {
+    const app = createStaticRoutes({ sessions: stubSessions(0) });
+    const res = await app.request("/app-assets/assets/does-not-exist.js");
+    assert.equal(res.status, 404);
+  });
+
+  it("404s a path-traversal attempt instead of leaking files", async () => {
+    const app = createStaticRoutes({ sessions: stubSessions(0) });
+    const res = await app.request("/app-assets/..%2f..%2f..%2fetc%2fpasswd");
+    assert.equal(res.status, 404);
+  });
+});
