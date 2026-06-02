@@ -21,7 +21,28 @@ const nextConfig = {
     // React's dev runtime needs eval() for hot reload + better stack traces.
     // Production builds never use eval, so we only relax script-src in dev.
     const isDev = process.env.NODE_ENV !== "production";
-    const scriptSrc = isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+
+    // Analytics CSP allowances — only widened when an analytics ID is set at
+    // build time (same env that gates the <Analytics> mount). With no IDs the
+    // CSP stays strict 'self'-only, keeping the OSS image locked down.
+    //   Yandex.Metrika: mc.yandex.ru loads tag.js + sends hits; webvisor.org
+    //     carries Webvisor session-replay payloads; img pixels go to *.yandex.ru.
+    //   GA4: googletagmanager.com loads gtag.js; *.google-analytics.com receives
+    //     the /g/collect hits (regionN. subdomain varies by visitor location).
+    const analyticsEnabled = Boolean(
+      (process.env.METRIKA_ID || "").trim() || (process.env.GA4_ID || "").trim(),
+    );
+    const metrikaScript = "https://mc.yandex.ru https://mc.webvisor.org https://mc.webvisor.com";
+    const metrikaConnect =
+      "https://mc.yandex.ru https://mc.webvisor.org https://mc.webvisor.com https://yandex.ru";
+    const gaScript = "https://www.googletagmanager.com";
+    const gaConnect =
+      "https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://*.google-analytics.com";
+
+    const scriptExtra = analyticsEnabled ? ` ${metrikaScript} ${gaScript}` : "";
+    const connectExtra = analyticsEnabled ? ` ${metrikaConnect} ${gaConnect}` : "";
+
+    const scriptSrc = `${isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'"}${scriptExtra}`;
     const securityHeaders = [
       {
         key: "Content-Security-Policy",
@@ -31,7 +52,7 @@ const nextConfig = {
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: https:",
           "font-src 'self' data:",
-          "connect-src 'self'",
+          `connect-src 'self'${connectExtra}`,
           "frame-ancestors 'none'",
           "base-uri 'self'",
           "form-action 'self'",
