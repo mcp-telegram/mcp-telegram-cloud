@@ -4,8 +4,8 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-05-20
-**Current version:** 2.31.0 (cloud — /docs/oauth developer reference + 19-locale i18n) / [`@overpod/mcp-telegram` 1.36.3](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-06-02
+**Current version:** 2.36.1 (cloud) / [`@overpod/mcp-telegram` 1.36.5](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 ---
 
@@ -17,6 +17,9 @@ As of v2.15.0 the cloud whitelist covers **178 of 181 upstream tools** —
 **100% of what is achievable on a shared HTTP server**. The remaining 3 are
 permanently `EXPLICIT_EXCLUDED` auth-lifecycle tools that conflict with cloud's
 OAuth/QR flow (`telegram-login`, `telegram-logout`, `telegram-terminate-session`).
+Since v2.32.0 the whitelist also adds **5 cloud-only multi-account tools**
+(`telegram-accounts-{list,current,switch,add,remove}`) that have no upstream
+equivalent, so `bun check-parity` reports `whitelist=183, excluded=3, pending=0`.
 Phase X filesystem-upload path shipped in v2.15.0 — 6 FS-bound media tools
 (`telegram-send-file`/`-voice`/`-video-note`/`-album`/`-story` + `telegram-set-profile-photo`)
 now flow via cookie-authenticated multipart upload to `/my/upload` or SSRF-protected
@@ -34,9 +37,11 @@ Tracked in [`scripts/parity-baseline.json`](scripts/parity-baseline.json) —
 
 Things actively being worked on or about to ship.
 
-- **Observability hardening** — external uptime monitoring + manual SigNoz
-  alerts (8 rules: 4 rate-limiter, 4 SLA). Dashboards already live;
-  alert delivery via Telegram bot to admin remains. Phase 0.2 tail.
+- Nothing actively in flight. Parity is closed, observability is shipped,
+  and remaining work is signal-driven (see **Next** / **Later** below).
+  The observability arc closed in v2.32.1 (counter-based SigNoz alerts) —
+  alert delivery is via email; the earlier Telegram bridge-bot was removed
+  in v2.33.0.
 
 ## Next (planned, not started)
 
