@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** Ukrainian — machine-assisted, reviewed. */
+export const uk: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "Мова",
+    loading: "Завантаження…",
+    retry: "Оновіть сторінку, щоб повторити.",
+  },
+  login: {
+    title: "Підключіть свій акаунт Telegram",
+    usernameLabel: "Ваше ім'я користувача",
+    usernamePlaceholder: "your_username",
+    startButton: "Увійти за QR-кодом",
+    step1: "Введіть ім'я користувача",
+    step2: "Відскануйте QR-код у Telegram",
+    step3: "Відкрийте Telegram › Налаштування › Пристрої › Підключити комп'ютер",
+    connecting: "Підключення…",
+    connected: "Підключено!",
+    sessionSaved: "Сесію збережено. Можете закрити цю сторінку.",
+    connectionLost: "З'єднання втрачено. Оновіть сторінку, щоб повторити.",
+  },
+  settings: {
+    title: "Налаштування",
+    subtitle: "Керування підключенням",
+    accountSection: "Акаунт",
+    save: "Зберегти",
+    saved: "Збережено",
+    disconnect: "Відключити",
+    disconnectConfirm: "Це вийде з Telegram на цьому сервері. Продовжити?",
+  },
+  uploads: {
+    title: "Завантаження",
+    subtitle: "Файли, підготовлені для надсилання через ШІ",
+    dropzone: "Перетягніть файл сюди або натисніть, щоб вибрати",
+    uploading: "Завантаження…",
+    delete: "Видалити",
+    empty: "Поки що немає завантажень.",
+    quota: "Квота",
+    expires: "Закінчується",
+  },
+  audit: {
+    title: "Активність",
+    subtitle: "Нещодавні виклики інструментів на вашому акаунті",
+    empty: "Поки що немає активності.",
+    tool: "Інструмент",
+    client: "Клієнт",
+    when: "Коли",
+  },
+  addAccount: {
+    title: "Додати ще акаунт",
+    subtitle: "Прив'язати другий акаунт Telegram",
+    scanPrompt: "Відскануйте QR-код акаунтом Telegram, який хочете додати.",
+  },
+};

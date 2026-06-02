@@ -6,9 +6,10 @@ describe("getMessages", () => {
     expect(getMessages("ru").login.title).toBe("Подключите свой аккаунт Telegram");
   });
 
-  it("falls back to English for an unregistered (but listed) locale", () => {
-    // `ja` is a supported code but has no catalog yet → English fallback.
-    expect(getMessages("ja").login.title).toBe(getMessages("en").login.title);
+  it("returns a non-English catalog for every registered locale", () => {
+    // `ja` now ships a catalog → its own copy, not the English fallback.
+    expect(getMessages("ja").login.title).toBe("Telegram アカウントを接続");
+    expect(getMessages("ja").login.title).not.toBe(getMessages("en").login.title);
   });
 
   it("falls back to English for a completely unknown code", () => {

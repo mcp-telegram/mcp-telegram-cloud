@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** Italian — machine-assisted, reviewed. */
+export const it: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "Lingua",
+    loading: "Caricamento…",
+    retry: "Aggiorna per riprovare.",
+  },
+  login: {
+    title: "Collega il tuo account Telegram",
+    usernameLabel: "Il tuo nome utente",
+    usernamePlaceholder: "your_username",
+    startButton: "Accedi con QR",
+    step1: "Inserisci il tuo nome utente",
+    step2: "Scansiona il codice QR con Telegram",
+    step3: "Apri Telegram › Impostazioni › Dispositivi › Collega dispositivo desktop",
+    connecting: "Connessione…",
+    connected: "Connesso!",
+    sessionSaved: "Sessione salvata. Puoi chiudere questa pagina.",
+    connectionLost: "Connessione persa. Aggiorna per riprovare.",
+  },
+  settings: {
+    title: "Impostazioni",
+    subtitle: "Gestisci la tua connessione",
+    accountSection: "Account",
+    save: "Salva",
+    saved: "Salvato",
+    disconnect: "Disconnetti",
+    disconnectConfirm: "Questo ti disconnette da Telegram su questo server. Continuare?",
+  },
+  uploads: {
+    title: "File",
+    subtitle: "File pronti per l'invio tramite IA",
+    dropzone: "Trascina un file qui o clicca per sceglierlo",
+    uploading: "Caricamento…",
+    delete: "Elimina",
+    empty: "Ancora nessun file.",
+    quota: "Quota",
+    expires: "Scade",
+  },
+  audit: {
+    title: "Attività",
+    subtitle: "Chiamate di strumenti recenti sul tuo account",
+    empty: "Ancora nessuna attività.",
+    tool: "Strumento",
+    client: "Client",
+    when: "Quando",
+  },
+  addAccount: {
+    title: "Aggiungi un altro account",
+    subtitle: "Collega un secondo account Telegram",
+    scanPrompt: "Scansiona il codice QR con l'account Telegram che vuoi aggiungere.",
+  },
+};

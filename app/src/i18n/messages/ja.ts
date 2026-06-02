@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** Japanese — machine-assisted, reviewed. */
+export const ja: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "言語",
+    loading: "読み込み中…",
+    retry: "再試行するには更新してください。",
+  },
+  login: {
+    title: "Telegram アカウントを接続",
+    usernameLabel: "ユーザー名",
+    usernamePlaceholder: "your_username",
+    startButton: "QR ログインを開始",
+    step1: "ユーザー名を入力してください",
+    step2: "Telegram で QR コードをスキャンしてください",
+    step3: "Telegram › 設定 › デバイス › デスクトップ端末をリンク を開いてください",
+    connecting: "接続中…",
+    connected: "接続しました！",
+    sessionSaved: "セッションを保存しました。このページを閉じてかまいません。",
+    connectionLost: "接続が切断されました。再試行するには更新してください。",
+  },
+  settings: {
+    title: "設定",
+    subtitle: "接続を管理",
+    accountSection: "アカウント",
+    save: "保存",
+    saved: "保存しました",
+    disconnect: "切断",
+    disconnectConfirm: "このサーバーで Telegram からログアウトします。続行しますか？",
+  },
+  uploads: {
+    title: "アップロード",
+    subtitle: "AI 経由で送信するために準備されたファイル",
+    dropzone: "ここにファイルをドロップするか、クリックして選択してください",
+    uploading: "アップロード中…",
+    delete: "削除",
+    empty: "アップロードはまだありません。",
+    quota: "容量",
+    expires: "有効期限",
+  },
+  audit: {
+    title: "アクティビティ",
+    subtitle: "アカウントでの最近のツール呼び出し",
+    empty: "アクティビティはまだありません。",
+    tool: "ツール",
+    client: "クライアント",
+    when: "日時",
+  },
+  addAccount: {
+    title: "別のアカウントを追加",
+    subtitle: "2 つ目の Telegram アカウントをリンク",
+    scanPrompt: "追加したい Telegram アカウントで QR コードをスキャンしてください。",
+  },
+};

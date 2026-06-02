@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** Hindi — machine-assisted, reviewed. */
+export const hi: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "भाषा",
+    loading: "लोड हो रहा है…",
+    retry: "पुनः प्रयास के लिए रिफ़्रेश करें।",
+  },
+  login: {
+    title: "अपना Telegram खाता कनेक्ट करें",
+    usernameLabel: "आपका उपयोगकर्ता नाम",
+    usernamePlaceholder: "your_username",
+    startButton: "QR लॉगिन शुरू करें",
+    step1: "अपना उपयोगकर्ता नाम दर्ज करें",
+    step2: "Telegram से QR कोड स्कैन करें",
+    step3: "Telegram › सेटिंग्स › डिवाइस › डेस्कटॉप डिवाइस लिंक करें खोलें",
+    connecting: "कनेक्ट हो रहा है…",
+    connected: "कनेक्ट हो गया!",
+    sessionSaved: "सत्र सहेजा गया। आप यह पेज बंद कर सकते हैं।",
+    connectionLost: "कनेक्शन टूट गया। पुनः प्रयास के लिए रिफ़्रेश करें।",
+  },
+  settings: {
+    title: "सेटिंग्स",
+    subtitle: "अपना कनेक्शन प्रबंधित करें",
+    accountSection: "खाता",
+    save: "सहेजें",
+    saved: "सहेजा गया",
+    disconnect: "डिस्कनेक्ट करें",
+    disconnectConfirm: "इससे आप इस सर्वर पर Telegram से लॉग आउट हो जाएँगे। जारी रखें?",
+  },
+  uploads: {
+    title: "अपलोड",
+    subtitle: "AI के ज़रिए भेजने के लिए तैयार फ़ाइलें",
+    dropzone: "यहाँ कोई फ़ाइल छोड़ें या चुनने के लिए क्लिक करें",
+    uploading: "अपलोड हो रहा है…",
+    delete: "हटाएँ",
+    empty: "अभी तक कोई अपलोड नहीं।",
+    quota: "कोटा",
+    expires: "समाप्त होता है",
+  },
+  audit: {
+    title: "गतिविधि",
+    subtitle: "आपके खाते पर हाल के टूल कॉल",
+    empty: "अभी तक कोई गतिविधि नहीं।",
+    tool: "टूल",
+    client: "क्लाइंट",
+    when: "कब",
+  },
+  addAccount: {
+    title: "एक और खाता जोड़ें",
+    subtitle: "दूसरा Telegram खाता लिंक करें",
+    scanPrompt: "जिस Telegram खाते को जोड़ना चाहते हैं उससे QR कोड स्कैन करें।",
+  },
+};

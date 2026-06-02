@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** Turkish — machine-assisted, reviewed. */
+export const tr: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "Dil",
+    loading: "Yükleniyor…",
+    retry: "Yeniden denemek için sayfayı yenileyin.",
+  },
+  login: {
+    title: "Telegram hesabınızı bağlayın",
+    usernameLabel: "Kullanıcı adınız",
+    usernamePlaceholder: "your_username",
+    startButton: "QR ile Giriş Yap",
+    step1: "Kullanıcı adınızı girin",
+    step2: "QR kodunu Telegram ile tarayın",
+    step3: "Telegram › Ayarlar › Cihazlar › Masaüstü Cihazı Bağla'yı açın",
+    connecting: "Bağlanıyor…",
+    connected: "Bağlandı!",
+    sessionSaved: "Oturum kaydedildi. Bu sayfayı kapatabilirsiniz.",
+    connectionLost: "Bağlantı koptu. Yeniden denemek için sayfayı yenileyin.",
+  },
+  settings: {
+    title: "Ayarlar",
+    subtitle: "Bağlantınızı yönetin",
+    accountSection: "Hesap",
+    save: "Kaydet",
+    saved: "Kaydedildi",
+    disconnect: "Bağlantıyı kes",
+    disconnectConfirm: "Bu, sizi bu sunucuda Telegram'dan çıkış yaptırır. Devam edilsin mi?",
+  },
+  uploads: {
+    title: "Dosyalar",
+    subtitle: "Yapay zeka ile gönderilmek üzere hazırlanan dosyalar",
+    dropzone: "Bir dosyayı buraya bırakın veya seçmek için tıklayın",
+    uploading: "Yükleniyor…",
+    delete: "Sil",
+    empty: "Henüz dosya yok.",
+    quota: "Kota",
+    expires: "Sona eriyor",
+  },
+  audit: {
+    title: "Etkinlik",
+    subtitle: "Hesabınızdaki son araç çağrıları",
+    empty: "Henüz etkinlik yok.",
+    tool: "Araç",
+    client: "İstemci",
+    when: "Ne zaman",
+  },
+  addAccount: {
+    title: "Başka bir hesap ekle",
+    subtitle: "İkinci bir Telegram hesabı bağlayın",
+    scanPrompt: "QR kodunu eklemek istediğiniz Telegram hesabıyla tarayın.",
+  },
+};

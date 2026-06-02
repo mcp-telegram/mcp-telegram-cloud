@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** German — machine-assisted, reviewed. */
+export const de: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "Sprache",
+    loading: "Wird geladen…",
+    retry: "Zum erneuten Versuch aktualisieren.",
+  },
+  login: {
+    title: "Verbinde dein Telegram-Konto",
+    usernameLabel: "Dein Benutzername",
+    usernamePlaceholder: "your_username",
+    startButton: "QR-Anmeldung starten",
+    step1: "Gib deinen Benutzernamen ein",
+    step2: "Scanne den QR-Code mit Telegram",
+    step3: "Öffne Telegram › Einstellungen › Geräte › Desktop-Gerät verknüpfen",
+    connecting: "Verbindung wird hergestellt…",
+    connected: "Verbunden!",
+    sessionSaved: "Sitzung gespeichert. Du kannst diese Seite schließen.",
+    connectionLost: "Verbindung verloren. Zum erneuten Versuch aktualisieren.",
+  },
+  settings: {
+    title: "Einstellungen",
+    subtitle: "Verwalte deine Verbindung",
+    accountSection: "Konto",
+    save: "Speichern",
+    saved: "Gespeichert",
+    disconnect: "Trennen",
+    disconnectConfirm: "Dadurch wirst du auf diesem Server von Telegram abgemeldet. Fortfahren?",
+  },
+  uploads: {
+    title: "Uploads",
+    subtitle: "Dateien, die zum Senden per KI bereitstehen",
+    dropzone: "Datei hier ablegen oder zum Auswählen klicken",
+    uploading: "Wird hochgeladen…",
+    delete: "Löschen",
+    empty: "Noch keine Uploads.",
+    quota: "Kontingent",
+    expires: "Läuft ab",
+  },
+  audit: {
+    title: "Aktivität",
+    subtitle: "Letzte Tool-Aufrufe auf deinem Konto",
+    empty: "Noch keine Aktivität.",
+    tool: "Tool",
+    client: "Client",
+    when: "Wann",
+  },
+  addAccount: {
+    title: "Weiteres Konto hinzufügen",
+    subtitle: "Ein zweites Telegram-Konto verknüpfen",
+    scanPrompt: "Scanne den QR-Code mit dem Telegram-Konto, das du hinzufügen möchtest.",
+  },
+};
