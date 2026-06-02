@@ -96,9 +96,9 @@ account** for development. The session DB stores plaintext MTProto sessions.
 ## Releasing (maintainers only)
 
 Tagged release process: bump `package.json` version, push a `vX.Y.Z` git
-tag, `.github/workflows/build.yml` builds and pushes the Docker image
-to GHCR, and `notify-release.yml` posts the release to the Telegram
-channel. Production deploy is a manual trigger in the private
+tag, and `.github/workflows/build.yml` builds the Docker images, pushes
+them to GHCR, and creates the GitHub Release with an auto-generated
+changelog. Production deploy is a manual trigger in the private
 `mcp-telegram-infra` repo.
 
 ## License
