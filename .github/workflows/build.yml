@@ -139,6 +139,11 @@ jobs:
           file: Dockerfile.web
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          # Public analytics IDs baked into the SSG build. Sourced from repo
+          # vars (not code) so the OSS image stays clean; empty when unset.
+          build-args: |
+            METRIKA_ID=${{ vars.METRIKA_ID }}
+            GA4_ID=${{ vars.GA4_ID }}
 
   release:
     needs: [build, build-web]

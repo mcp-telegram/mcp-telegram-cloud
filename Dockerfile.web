@@ -26,6 +26,16 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json bun.lock ./
 COPY web ./web
 ENV NEXT_TELEMETRY_DISABLED=1
+# Analytics IDs are baked at build time: the content pages are statically
+# prerendered (SSG via generateStaticParams), so `process.env` is read once
+# during `next build`, not per-request. These are public tracking IDs (not
+# secrets) and default empty — an unset arg yields a tracker-free build, which
+# keeps the OSS image clean for self-hosters. CI passes them from repo vars;
+# runtime container env has no effect on SSG output.
+ARG METRIKA_ID=""
+ARG GA4_ID=""
+ENV METRIKA_ID=${METRIKA_ID}
+ENV GA4_ID=${GA4_ID}
 WORKDIR /app/web
 RUN npx next build
 
