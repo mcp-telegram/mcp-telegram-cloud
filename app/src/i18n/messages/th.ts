@@ -7,6 +7,9 @@ export const th: Messages = {
     languageLabel: "ภาษา",
     loading: "กำลังโหลด…",
     retry: "รีเฟรชเพื่อลองอีกครั้ง",
+    qrLoading: "กำลังโหลดรหัส QR…",
+    connectionLost: "การเชื่อมต่อขาดหาย รีเฟรชเพื่อลองอีกครั้ง",
+    redirecting: "กำลังเปลี่ยนเส้นทาง…",
   },
   login: {
     title: "เชื่อมต่อบัญชี Telegram ของคุณ",
@@ -59,8 +62,15 @@ export const th: Messages = {
     when: "เมื่อใด",
   },
   addAccount: {
-    title: "เพิ่มบัญชีอื่น",
-    subtitle: "เชื่อมโยงบัญชี Telegram ที่สอง",
+    title: "เพิ่มบัญชี Telegram",
+    subtitle: "เชื่อมโยงตัวตน Telegram ที่สองกับผู้ช่วย AI ของคุณ",
     scanPrompt: "สแกนรหัส QR ด้วยบัญชี Telegram ที่คุณต้องการเพิ่ม",
+    step1: "เปิด Telegram ด้วยบัญชีที่คุณต้องการเพิ่ม (บนอุปกรณ์ใดก็ได้)",
+    step2: "การตั้งค่า › อุปกรณ์ › เชื่อมโยงอุปกรณ์เดสก์ท็อป",
+    step3: "คลิกด้านล่างแล้วสแกนรหัส QR",
+    startScan: "เริ่มสแกน QR",
+    added: "เพิ่มบัญชีแล้ว",
+    accountActive: "ตอนนี้เป็นบัญชีที่ใช้งานอยู่ในไคลเอ็นต์ AI ของคุณ คุณสามารถปิดแท็บนี้ได้",
+    errorRetry: "กลับไปที่ไคลเอ็นต์ AI ของคุณแล้วเรียกใช้ telegram-accounts-add อีกครั้งเพื่อรับลิงก์ใหม่",
   },
 };

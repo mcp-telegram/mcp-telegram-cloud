@@ -7,6 +7,9 @@ export const id: Messages = {
     languageLabel: "Bahasa",
     loading: "Memuat…",
     retry: "Segarkan untuk mencoba lagi.",
+    qrLoading: "Memuat kode QR…",
+    connectionLost: "Koneksi terputus. Segarkan untuk mencoba lagi.",
+    redirecting: "Mengalihkan…",
   },
   login: {
     title: "Hubungkan akun Telegram Anda",
@@ -59,8 +62,15 @@ export const id: Messages = {
     when: "Kapan",
   },
   addAccount: {
-    title: "Tambahkan akun lain",
-    subtitle: "Tautkan akun Telegram kedua",
+    title: "Tambahkan akun Telegram",
+    subtitle: "Tautkan identitas Telegram kedua ke asisten AI Anda.",
     scanPrompt: "Pindai kode QR dengan akun Telegram yang ingin Anda tambahkan.",
+    step1: "Buka Telegram dengan akun yang ingin Anda tambahkan (di perangkat mana pun)",
+    step2: "Pengaturan › Perangkat › Tautkan Perangkat Desktop",
+    step3: "Klik di bawah dan pindai QR",
+    startScan: "Mulai pindai QR",
+    added: "Akun ditambahkan",
+    accountActive: "Kini ini adalah akun aktif di klien AI Anda. Anda dapat menutup tab ini.",
+    errorRetry: "Kembali ke klien AI Anda dan jalankan telegram-accounts-add lagi untuk mendapatkan tautan baru.",
   },
 };

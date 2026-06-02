@@ -7,6 +7,9 @@ export const nl: Messages = {
     languageLabel: "Taal",
     loading: "Laden…",
     retry: "Vernieuw om opnieuw te proberen.",
+    qrLoading: "QR-code laden…",
+    connectionLost: "Verbinding verbroken. Vernieuw om opnieuw te proberen.",
+    redirecting: "Doorverwijzen…",
   },
   login: {
     title: "Verbind je Telegram-account",
@@ -59,8 +62,15 @@ export const nl: Messages = {
     when: "Wanneer",
   },
   addAccount: {
-    title: "Nog een account toevoegen",
-    subtitle: "Koppel een tweede Telegram-account",
+    title: "Telegram-account toevoegen",
+    subtitle: "Koppel een tweede Telegram-identiteit aan je AI-assistent.",
     scanPrompt: "Scan de QR-code met het Telegram-account dat je wilt toevoegen.",
+    step1: "Open Telegram met het account dat je wilt toevoegen (op een willekeurig apparaat)",
+    step2: "Instellingen › Apparaten › Desktopapparaat koppelen",
+    step3: "Klik hieronder en scan de QR-code",
+    startScan: "QR-scan starten",
+    added: "Account toegevoegd",
+    accountActive: "Het is nu het actieve account in je AI-client. Je kunt dit tabblad sluiten.",
+    errorRetry: "Ga terug naar je AI-client en voer telegram-accounts-add opnieuw uit voor een nieuwe link.",
   },
 };

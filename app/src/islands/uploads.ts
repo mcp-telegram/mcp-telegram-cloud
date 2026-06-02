@@ -101,3 +101,5 @@ if (root) {
     });
   });
 }
+
+export {}; // island module scope — keeps top-level names out of the shared global compile scope

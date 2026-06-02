@@ -7,6 +7,9 @@ export const tr: Messages = {
     languageLabel: "Dil",
     loading: "Yükleniyor…",
     retry: "Yeniden denemek için sayfayı yenileyin.",
+    qrLoading: "QR kodu yükleniyor…",
+    connectionLost: "Bağlantı koptu. Yeniden denemek için sayfayı yenileyin.",
+    redirecting: "Yönlendiriliyor…",
   },
   login: {
     title: "Telegram hesabınızı bağlayın",
@@ -59,8 +62,16 @@ export const tr: Messages = {
     when: "Ne zaman",
   },
   addAccount: {
-    title: "Başka bir hesap ekle",
-    subtitle: "İkinci bir Telegram hesabı bağlayın",
+    title: "Telegram hesabı ekle",
+    subtitle: "Yapay zeka asistanınıza ikinci bir Telegram kimliği bağlayın.",
     scanPrompt: "QR kodunu eklemek istediğiniz Telegram hesabıyla tarayın.",
+    step1: "Eklemek istediğiniz hesapla Telegram'ı açın (herhangi bir cihazda)",
+    step2: "Ayarlar › Cihazlar › Masaüstü Cihazı Bağla",
+    step3: "Aşağıya tıklayın ve QR kodunu tarayın",
+    startScan: "QR taramasını başlat",
+    added: "Hesap eklendi",
+    accountActive: "Artık yapay zeka istemcinizdeki aktif hesap bu. Bu sekmeyi kapatabilirsiniz.",
+    errorRetry:
+      "Yapay zeka istemcinize dönün ve yeni bir bağlantı almak için telegram-accounts-add komutunu tekrar çalıştırın.",
   },
 };

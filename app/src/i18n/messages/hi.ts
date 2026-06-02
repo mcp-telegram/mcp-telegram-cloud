@@ -7,6 +7,9 @@ export const hi: Messages = {
     languageLabel: "भाषा",
     loading: "लोड हो रहा है…",
     retry: "पुनः प्रयास के लिए रिफ़्रेश करें।",
+    qrLoading: "QR कोड लोड हो रहा है…",
+    connectionLost: "कनेक्शन टूट गया। पुनः प्रयास के लिए रिफ़्रेश करें।",
+    redirecting: "रीडायरेक्ट हो रहा है…",
   },
   login: {
     title: "अपना Telegram खाता कनेक्ट करें",
@@ -59,8 +62,15 @@ export const hi: Messages = {
     when: "कब",
   },
   addAccount: {
-    title: "एक और खाता जोड़ें",
-    subtitle: "दूसरा Telegram खाता लिंक करें",
+    title: "Telegram खाता जोड़ें",
+    subtitle: "अपने AI सहायक से दूसरी Telegram पहचान जोड़ें।",
     scanPrompt: "जिस Telegram खाते को जोड़ना चाहते हैं उससे QR कोड स्कैन करें।",
+    step1: "जिस खाते को जोड़ना चाहते हैं उससे Telegram खोलें (किसी भी डिवाइस पर)",
+    step2: "सेटिंग्स › डिवाइस › डेस्कटॉप डिवाइस लिंक करें",
+    step3: "नीचे क्लिक करें और QR स्कैन करें",
+    startScan: "QR स्कैन शुरू करें",
+    added: "खाता जोड़ा गया",
+    accountActive: "अब यह आपके AI क्लाइंट में सक्रिय खाता है। आप यह टैब बंद कर सकते हैं।",
+    errorRetry: "अपने AI क्लाइंट पर लौटें और नया लिंक पाने के लिए फिर से telegram-accounts-add चलाएँ।",
   },
 };

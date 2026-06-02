@@ -7,6 +7,9 @@ export const de: Messages = {
     languageLabel: "Sprache",
     loading: "Wird geladen…",
     retry: "Zum erneuten Versuch aktualisieren.",
+    qrLoading: "QR-Code wird geladen…",
+    connectionLost: "Verbindung verloren. Zum erneuten Versuch aktualisieren.",
+    redirecting: "Weiterleitung…",
   },
   login: {
     title: "Verbinde dein Telegram-Konto",
@@ -59,8 +62,16 @@ export const de: Messages = {
     when: "Wann",
   },
   addAccount: {
-    title: "Weiteres Konto hinzufügen",
-    subtitle: "Ein zweites Telegram-Konto verknüpfen",
+    title: "Telegram-Konto hinzufügen",
+    subtitle: "Verknüpfe eine zweite Telegram-Identität mit deinem KI-Assistenten.",
     scanPrompt: "Scanne den QR-Code mit dem Telegram-Konto, das du hinzufügen möchtest.",
+    step1: "Öffne Telegram mit dem Konto, das du hinzufügen möchtest (auf einem beliebigen Gerät)",
+    step2: "Einstellungen › Geräte › Desktop-Gerät verknüpfen",
+    step3: "Klicke unten und scanne den QR-Code",
+    startScan: "QR-Scan starten",
+    added: "Konto hinzugefügt",
+    accountActive: "Es ist jetzt das aktive Konto in deinem KI-Client. Du kannst diesen Tab schließen.",
+    errorRetry:
+      "Kehre zu deinem KI-Client zurück und führe telegram-accounts-add erneut aus, um einen neuen Link zu erhalten.",
   },
 };

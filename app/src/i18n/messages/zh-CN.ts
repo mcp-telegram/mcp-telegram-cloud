@@ -7,6 +7,9 @@ export const zhCN: Messages = {
     languageLabel: "语言",
     loading: "加载中…",
     retry: "刷新以重试。",
+    qrLoading: "正在加载二维码…",
+    connectionLost: "连接已断开。刷新以重试。",
+    redirecting: "正在跳转…",
   },
   login: {
     title: "连接你的 Telegram 账号",
@@ -59,8 +62,15 @@ export const zhCN: Messages = {
     when: "时间",
   },
   addAccount: {
-    title: "添加另一个账号",
-    subtitle: "关联第二个 Telegram 账号",
+    title: "添加 Telegram 账号",
+    subtitle: "将第二个 Telegram 身份关联到你的 AI 助手。",
     scanPrompt: "用你想添加的 Telegram 账号扫描二维码。",
+    step1: "用你想添加的账号打开 Telegram（任意设备）",
+    step2: "设置 › 设备 › 关联桌面设备",
+    step3: "点击下方并扫描二维码",
+    startScan: "开始扫描二维码",
+    added: "账号已添加",
+    accountActive: "现在它是你 AI 客户端中的活动账号。你可以关闭此标签页。",
+    errorRetry: "返回你的 AI 客户端并再次运行 telegram-accounts-add 以获取新链接。",
   },
 };

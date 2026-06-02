@@ -7,6 +7,9 @@ export const ko: Messages = {
     languageLabel: "언어",
     loading: "불러오는 중…",
     retry: "다시 시도하려면 새로고침하세요.",
+    qrLoading: "QR 코드를 불러오는 중…",
+    connectionLost: "연결이 끊겼습니다. 다시 시도하려면 새로고침하세요.",
+    redirecting: "리디렉션 중…",
   },
   login: {
     title: "Telegram 계정 연결",
@@ -59,8 +62,15 @@ export const ko: Messages = {
     when: "시간",
   },
   addAccount: {
-    title: "다른 계정 추가",
-    subtitle: "두 번째 Telegram 계정 연결",
+    title: "Telegram 계정 추가",
+    subtitle: "두 번째 Telegram 계정을 AI 어시스턴트에 연결하세요.",
     scanPrompt: "추가하려는 Telegram 계정으로 QR 코드를 스캔하세요.",
+    step1: "추가하려는 계정으로 Telegram을 여세요 (어떤 기기에서나)",
+    step2: "설정 › 기기 › 데스크톱 기기 연결",
+    step3: "아래를 클릭하고 QR을 스캔하세요",
+    startScan: "QR 스캔 시작",
+    added: "계정이 추가됨",
+    accountActive: "이제 AI 클라이언트에서 활성 계정입니다. 이 탭을 닫아도 됩니다.",
+    errorRetry: "AI 클라이언트로 돌아가 새 링크를 받으려면 telegram-accounts-add를 다시 실행하세요.",
   },
 };

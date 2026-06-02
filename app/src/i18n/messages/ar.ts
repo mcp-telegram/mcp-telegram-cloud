@@ -7,6 +7,9 @@ export const ar: Messages = {
     languageLabel: "اللغة",
     loading: "جارٍ التحميل…",
     retry: "حدّث الصفحة للمحاولة مرة أخرى.",
+    qrLoading: "جارٍ تحميل رمز QR…",
+    connectionLost: "انقطع الاتصال. حدّث الصفحة للمحاولة مرة أخرى.",
+    redirecting: "جارٍ إعادة التوجيه…",
   },
   login: {
     title: "اربط حساب Telegram الخاص بك",
@@ -59,8 +62,15 @@ export const ar: Messages = {
     when: "متى",
   },
   addAccount: {
-    title: "إضافة حساب آخر",
-    subtitle: "اربط حساب Telegram ثانيًا",
+    title: "إضافة حساب Telegram",
+    subtitle: "اربط هوية Telegram ثانية بمساعد الذكاء الاصطناعي الخاص بك.",
     scanPrompt: "امسح رمز QR باستخدام حساب Telegram الذي تريد إضافته.",
+    step1: "افتح Telegram بالحساب الذي تريد إضافته (على أي جهاز)",
+    step2: "الإعدادات ‹ الأجهزة ‹ ربط جهاز سطح المكتب",
+    step3: "انقر بالأسفل وامسح رمز QR",
+    startScan: "بدء مسح رمز QR",
+    added: "تمت إضافة الحساب",
+    accountActive: "أصبح الآن الحساب النشط في عميل الذكاء الاصطناعي لديك. يمكنك إغلاق هذه التبويبة.",
+    errorRetry: "ارجع إلى عميل الذكاء الاصطناعي ونفّذ telegram-accounts-add مرة أخرى للحصول على رابط جديد.",
   },
 };

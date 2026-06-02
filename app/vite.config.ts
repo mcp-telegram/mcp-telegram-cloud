@@ -23,6 +23,7 @@ export default defineConfig({
       input: {
         "language-switcher": "src/islands/language-switcher.tsx",
         uploads: "src/islands/uploads.ts",
+        "qr-flow": "src/islands/qr-flow.ts",
       },
     },
   },

@@ -7,6 +7,9 @@ export const ja: Messages = {
     languageLabel: "言語",
     loading: "読み込み中…",
     retry: "再試行するには更新してください。",
+    qrLoading: "QR コードを読み込み中…",
+    connectionLost: "接続が切断されました。再試行するには更新してください。",
+    redirecting: "リダイレクト中…",
   },
   login: {
     title: "Telegram アカウントを接続",
@@ -59,8 +62,15 @@ export const ja: Messages = {
     when: "日時",
   },
   addAccount: {
-    title: "別のアカウントを追加",
-    subtitle: "2 つ目の Telegram アカウントをリンク",
+    title: "Telegram アカウントを追加",
+    subtitle: "2 つ目の Telegram アカウントを AI アシスタントにリンクします。",
     scanPrompt: "追加したい Telegram アカウントで QR コードをスキャンしてください。",
+    step1: "追加したいアカウントで Telegram を開いてください（どの端末でも可）",
+    step2: "設定 › デバイス › デスクトップ端末をリンク",
+    step3: "下をクリックして QR コードをスキャンしてください",
+    startScan: "QR スキャンを開始",
+    added: "アカウントを追加しました",
+    accountActive: "これが AI クライアントでのアクティブなアカウントになりました。このタブを閉じてかまいません。",
+    errorRetry: "AI クライアントに戻り、新しいリンクを取得するには telegram-accounts-add を再度実行してください。",
   },
 };

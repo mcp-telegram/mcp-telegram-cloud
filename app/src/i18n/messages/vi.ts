@@ -7,6 +7,9 @@ export const vi: Messages = {
     languageLabel: "Ngôn ngữ",
     loading: "Đang tải…",
     retry: "Làm mới để thử lại.",
+    qrLoading: "Đang tải mã QR…",
+    connectionLost: "Mất kết nối. Làm mới để thử lại.",
+    redirecting: "Đang chuyển hướng…",
   },
   login: {
     title: "Kết nối tài khoản Telegram của bạn",
@@ -59,8 +62,15 @@ export const vi: Messages = {
     when: "Khi nào",
   },
   addAccount: {
-    title: "Thêm tài khoản khác",
-    subtitle: "Liên kết tài khoản Telegram thứ hai",
+    title: "Thêm tài khoản Telegram",
+    subtitle: "Liên kết danh tính Telegram thứ hai với trợ lý AI của bạn.",
     scanPrompt: "Quét mã QR bằng tài khoản Telegram mà bạn muốn thêm.",
+    step1: "Mở Telegram bằng tài khoản bạn muốn thêm (trên bất kỳ thiết bị nào)",
+    step2: "Cài đặt › Thiết bị › Liên kết thiết bị máy tính",
+    step3: "Nhấp bên dưới và quét mã QR",
+    startScan: "Bắt đầu quét QR",
+    added: "Đã thêm tài khoản",
+    accountActive: "Đây hiện là tài khoản đang hoạt động trong ứng dụng AI của bạn. Bạn có thể đóng thẻ này.",
+    errorRetry: "Quay lại ứng dụng AI của bạn và chạy lại telegram-accounts-add để lấy liên kết mới.",
   },
 };

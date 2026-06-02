@@ -7,6 +7,9 @@ export const zhTW: Messages = {
     languageLabel: "語言",
     loading: "載入中…",
     retry: "重新整理以重試。",
+    qrLoading: "正在載入 QR 碼…",
+    connectionLost: "連線已中斷。重新整理以重試。",
+    redirecting: "正在轉址…",
   },
   login: {
     title: "連接你的 Telegram 帳號",
@@ -59,8 +62,15 @@ export const zhTW: Messages = {
     when: "時間",
   },
   addAccount: {
-    title: "新增另一個帳號",
-    subtitle: "連結第二個 Telegram 帳號",
+    title: "新增 Telegram 帳號",
+    subtitle: "將第二個 Telegram 身分連結到你的 AI 助理。",
     scanPrompt: "用你想新增的 Telegram 帳號掃描 QR 碼。",
+    step1: "用你想新增的帳號開啟 Telegram（任何裝置）",
+    step2: "設定 › 裝置 › 連結桌面裝置",
+    step3: "點按下方並掃描 QR 碼",
+    startScan: "開始掃描 QR 碼",
+    added: "帳號已新增",
+    accountActive: "現在它是你 AI 用戶端中的使用中帳號。你可以關閉此分頁。",
+    errorRetry: "返回你的 AI 用戶端並再次執行 telegram-accounts-add 以取得新連結。",
   },
 };

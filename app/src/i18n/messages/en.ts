@@ -15,6 +15,9 @@ export const en = {
     languageLabel: "Language",
     loading: "Loading…",
     retry: "Refresh to retry.",
+    qrLoading: "Loading QR code…",
+    connectionLost: "Connection lost. Refresh to retry.",
+    redirecting: "Redirecting…",
   },
   login: {
     title: "Connect your Telegram account",
@@ -67,8 +70,15 @@ export const en = {
     when: "When",
   },
   addAccount: {
-    title: "Add another account",
-    subtitle: "Link a second Telegram account",
+    title: "Add Telegram account",
+    subtitle: "Attach a second Telegram identity to your AI assistant.",
     scanPrompt: "Scan the QR code with the Telegram account you want to add.",
+    step1: "Open Telegram with the account you want to add (any device)",
+    step2: "Settings › Devices › Link Desktop Device",
+    step3: "Click below and scan the QR",
+    startScan: "Start QR scan",
+    added: "Account added",
+    accountActive: "It is now the active account in your AI client. You can close this tab.",
+    errorRetry: "Return to your AI client and run telegram-accounts-add again to get a fresh link.",
   },
 } as const;

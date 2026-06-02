@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { LoginPage } from "../pages/LoginPage.js";
 import { handleQrLogin } from "../qr-login.js";
+import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
 
 export interface LoginRoutesDeps {
@@ -10,7 +11,17 @@ export interface LoginRoutesDeps {
 export function createLoginRoutes({ sessions }: LoginRoutesDeps): Hono {
   const app = new Hono();
 
-  app.get("/", (c) => c.html(<LoginPage />));
+  app.get("/", async (c) => {
+    if (reactPagesAvailable()) {
+      const locale = detectRequestLocale(c);
+      const html = await renderReactPage("login", {
+        locale,
+        scripts: islandScripts("language-switcher", "qr-flow"),
+      });
+      return c.html(html);
+    }
+    return c.html(<LoginPage />);
+  });
 
   app.get("/qr", async (c) => {
     const userId = c.req.query("userId");

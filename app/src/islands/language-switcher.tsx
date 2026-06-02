@@ -24,3 +24,5 @@ for (const root of document.querySelectorAll<HTMLElement>('[data-island="languag
   const select = root.querySelector("select");
   select?.addEventListener("change", onChange);
 }
+
+export {}; // island module scope — keeps top-level names out of the shared global compile scope

@@ -7,6 +7,7 @@ import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
 import { oauthRateLimit } from "../rate-limit.js";
+import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import { matchRedirectUri } from "../redirect-uri-matcher.js";
 import type { SessionManager } from "../session-manager.js";
 import { incr, OAUTH_FLOW } from "../telemetry/metrics.js";
@@ -117,6 +118,21 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     }
 
     incr(OAUTH_FLOW, { step: "authorize", outcome: "qr_page" });
+
+    if (reactPagesAvailable()) {
+      const locale = detectRequestLocale(c);
+      const html = await renderReactPage("authorize", {
+        clientId,
+        clientName: client.client_name,
+        redirectUri,
+        state,
+        codeChallenge,
+        codeChallengeMethod,
+        locale,
+        scripts: islandScripts("language-switcher", "qr-flow"),
+      });
+      return c.html(html);
+    }
 
     return c.html(
       <AuthorizePage

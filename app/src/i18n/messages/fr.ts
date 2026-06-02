@@ -7,6 +7,9 @@ export const fr: Messages = {
     languageLabel: "Langue",
     loading: "Chargement…",
     retry: "Actualisez pour réessayer.",
+    qrLoading: "Chargement du QR code…",
+    connectionLost: "Connexion perdue. Actualisez pour réessayer.",
+    redirecting: "Redirection…",
   },
   login: {
     title: "Connectez votre compte Telegram",
@@ -59,8 +62,16 @@ export const fr: Messages = {
     when: "Quand",
   },
   addAccount: {
-    title: "Ajouter un autre compte",
-    subtitle: "Lier un second compte Telegram",
+    title: "Ajouter un compte Telegram",
+    subtitle: "Liez une seconde identité Telegram à votre assistant IA.",
     scanPrompt: "Scannez le QR code avec le compte Telegram que vous souhaitez ajouter.",
+    step1: "Ouvrez Telegram avec le compte que vous souhaitez ajouter (sur n'importe quel appareil)",
+    step2: "Paramètres › Appareils › Lier un ordinateur",
+    step3: "Cliquez ci-dessous et scannez le QR",
+    startScan: "Démarrer le scan du QR",
+    added: "Compte ajouté",
+    accountActive: "C'est désormais le compte actif dans votre client IA. Vous pouvez fermer cet onglet.",
+    errorRetry:
+      "Retournez dans votre client IA et exécutez à nouveau telegram-accounts-add pour obtenir un nouveau lien.",
   },
 };

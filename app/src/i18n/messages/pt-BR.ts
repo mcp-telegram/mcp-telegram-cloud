@@ -7,6 +7,9 @@ export const ptBR: Messages = {
     languageLabel: "Idioma",
     loading: "Carregando…",
     retry: "Atualize para tentar novamente.",
+    qrLoading: "Carregando QR code…",
+    connectionLost: "Conexão perdida. Atualize para tentar novamente.",
+    redirecting: "Redirecionando…",
   },
   login: {
     title: "Conecte sua conta do Telegram",
@@ -59,8 +62,15 @@ export const ptBR: Messages = {
     when: "Quando",
   },
   addAccount: {
-    title: "Adicionar outra conta",
-    subtitle: "Vincular uma segunda conta do Telegram",
+    title: "Adicionar conta do Telegram",
+    subtitle: "Vincule uma segunda identidade do Telegram ao seu assistente de IA.",
     scanPrompt: "Escaneie o QR code com a conta do Telegram que você deseja adicionar.",
+    step1: "Abra o Telegram com a conta que você deseja adicionar (em qualquer dispositivo)",
+    step2: "Configurações › Dispositivos › Vincular dispositivo desktop",
+    step3: "Clique abaixo e escaneie o QR",
+    startScan: "Iniciar leitura do QR",
+    added: "Conta adicionada",
+    accountActive: "Agora é a conta ativa no seu cliente de IA. Você pode fechar esta aba.",
+    errorRetry: "Volte ao seu cliente de IA e execute telegram-accounts-add novamente para obter um novo link.",
   },
 };

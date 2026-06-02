@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { AddAccountPage } from "../pages/AddAccountPage.js";
 import { handleAddAccountQr } from "../qr-login.js";
+import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
 
 export interface AccountsRoutesDeps {
@@ -24,10 +25,20 @@ export function createAccountsRoutes({ sessions }: AccountsRoutesDeps): Hono {
 
   // HTML page — uses peekAddAccountToken so a reload during the QR window still
   // renders. The token isn't consumed until the EventSource opens (next route).
-  app.get("/add/:token", (c) => {
+  app.get("/add/:token", async (c) => {
     const token = c.req.param("token");
     const peeked = sessions.peekAddAccountToken(token);
     if (!peeked) return c.text("Link expired or already used", 404);
+    if (reactPagesAvailable()) {
+      const locale = detectRequestLocale(c);
+      const html = await renderReactPage("add-account", {
+        token,
+        label: peeked.label,
+        locale,
+        scripts: islandScripts("language-switcher", "qr-flow"),
+      });
+      return c.html(html);
+    }
     return c.html(<AddAccountPage token={token} label={peeked.label} />);
   });
 
