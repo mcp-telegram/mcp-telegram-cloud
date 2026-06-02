@@ -3,10 +3,13 @@
 
 # Dependencies (reinstalled in builder stage)
 node_modules/
+**/node_modules/
 .pnpm-store/
 
 # Build artefacts
 dist/
+**/dist/
+**/dist-ssr/
 *.tsbuildinfo
 web/.next/
 web/out/
