@@ -17,7 +17,7 @@ describe("check-telemetry scanText", () => {
 
   it("respects // telemetry-allow", () => {
     const findings = scanText(
-      `logger.info("mount", { username: config.botUsername }); // telemetry-allow: public bot handle`,
+      `logger.info("mount", { username: publicHandle }); // telemetry-allow: public operator handle`,
       "f.ts",
     );
     assert.equal(findings.length, 0);

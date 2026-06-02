@@ -269,18 +269,6 @@ function HomePageContent() {
               {tFaq("openSourceAEnd")}
             </p>
           </div>
-          {config.botUsername ? (
-            <div className={s.faqItem}>
-              <h3>{tFaq("botQ")}</h3>
-              <p>
-                {tFaq("botAStart")}{" "}
-                <a href={`https://t.me/${config.botUsername}?start=subscribe`} className={s.faqLink}>
-                  @{config.botUsername}
-                </a>{" "}
-                {tFaq("botAEnd")}
-              </p>
-            </div>
-          ) : null}
         </div>
       </section>
 

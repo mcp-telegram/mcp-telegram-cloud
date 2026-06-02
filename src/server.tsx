@@ -2,8 +2,6 @@
 // Copyright (c) 2025-2026 overpod
 import "dotenv/config";
 import { Hono } from "hono";
-import { BotClient } from "./bot/api.js";
-import { Subscribers } from "./bot/subscribers.js";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { DestructiveGuard } from "./destructive-guard.js";
 import { startDrain } from "./lifecycle.js";
@@ -15,7 +13,6 @@ import { OAuthProvider } from "./oauth.js";
 import { installRateLimiterEventListener } from "./rate-limiter-events.js";
 import { createAccountsRoutes } from "./routes/accounts.js";
 import { createAdminRoutes } from "./routes/admin.js";
-import { createBotWebhookRoutes, createBroadcastRoute } from "./routes/bot.js";
 import { createLoginRoutes } from "./routes/login.js";
 import { registerMcpRoutes } from "./routes/mcp.js";
 import { createMyRoutes } from "./routes/my.js";
@@ -60,24 +57,6 @@ const uploads = new UploadStore(
   config.uploadQuotaBytes,
   config.uploadTtlSeconds * 1000,
 );
-
-// Optional broadcast bot (Phase 0.1). Either configure all three vars or none —
-// partial config almost always means a deploy mistake (bot answers /start with silence).
-const botVars = {
-  BOT_TOKEN: config.botToken,
-  BOT_USERNAME: config.botUsername,
-  BOT_WEBHOOK_SECRET: config.botWebhookSecret,
-};
-const botSetCount = Object.values(botVars).filter(Boolean).length;
-if (botSetCount > 0 && botSetCount < 3) {
-  const missing = Object.entries(botVars)
-    .filter(([, v]) => !v)
-    .map(([k]) => k);
-  throw new Error(`Bot env partial config: missing ${missing.join(", ")}. Set all three or none.`);
-}
-const botEnabled = botSetCount === 3;
-const subscribers = botEnabled ? new Subscribers(sessions.getDb()) : null;
-const botClient = botEnabled ? new BotClient(config.botToken) : null;
 
 // Periodic cleanup of expired OAuth codes/tokens. Wrapped in `runDetached`
 // for symmetry with the other purge timers — `oauth.cleanup()` is currently
@@ -195,17 +174,6 @@ registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
-
-if (botEnabled && botClient && subscribers) {
-  const botDeps = { client: botClient, subscribers, webhookSecret: config.botWebhookSecret };
-  app.route("/bot", createBotWebhookRoutes(botDeps));
-  app.route("/api", createBroadcastRoute(botDeps));
-  logger.info("Broadcast bot routes mounted", {
-    component: "bot",
-    event: "bot.mount",
-    username: config.botUsername, // telemetry-allow: public bot handle, not user PII
-  });
-}
 
 // Register process-wide gauges before flush starts so the first OTLP push
 // already carries values (otelcol won't synthesize zero data points for us).

@@ -49,9 +49,8 @@ core. The cloud project adds:
 │   ├─ /oauth/revoke           Access-token revocation (RFC 7009)      │
 │   ├─ /login                  Standalone QR login page                │
 │   ├─ /mcp                    MCP Streamable HTTP transport  ──┐      │
-│   ├─ /api/{stats,broadcast,  Admin endpoints                  │      │
-│   │   import-session}                                         │      │
-│   └─ /bot/webhook/<secret>   Telegram bot updates             │      │
+│   └─ /api/{stats,            Admin endpoints                  │      │
+│       import-session}                                         │      │
 │                                                               │      │
 │  ┌────────────────────────────────────────────────────────────▼──┐   │
 │  │                       SessionManager                          │   │
@@ -66,7 +65,7 @@ core. The cloud project adds:
 │                                   │                                  │
 │  ┌────────────────────────────────▼──────────────────────────────┐   │
 │  │                  better-sqlite3 (./data/cloud.db)             │   │
-│  │  user_sessions, oauth_*, usage_log, bot_subscribers           │   │
+│  │  user_sessions, oauth_*, usage_log                            │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
                                    │
@@ -161,7 +160,6 @@ All in one SQLite file at `DATABASE_PATH`. Tables:
 | `oauth_tokens` | Access tokens (1h) | Indexed on `user_id`, `expires_at` |
 | `oauth_refresh_tokens` | Refresh tokens (30d) | Indexed on `user_id`, `expires_at` |
 | `usage_log` | Per-call counter for quotas + analytics | Purged daily by retention |
-| `bot_subscribers` | Users opted into broadcast bot | One row per Telegram user |
 
 Cleanup tasks run on `setInterval`:
 
@@ -201,8 +199,8 @@ The cloud **does not** support implicit grant or password grant.
 
 ### Admin auth
 
-`/api/stats` and `/api/broadcast` accept `Authorization: Bearer
-$ADMIN_TOKEN` only — compared with `crypto.timingSafeEqual()`.
+`/api/stats` accepts `Authorization: Bearer $ADMIN_TOKEN` only —
+compared with `crypto.timingSafeEqual()`.
 `/api/import-session` accepts **either** an admin bearer (and then
 imports for the `userId` in the request body) **or** a regular user
 OAuth bearer (and imports for the token's own user). When
@@ -234,9 +232,6 @@ always called too — composition with other interceptors is preserved.
 - **Telegram DCs** — required, this is what the service exists to
   reach.
 - **OTLP collector (SigNoz)** — optional. No-op when unset.
-- **Telegram Bot API** — optional. Only used if all three `BOT_*` vars
-  are set; otherwise the `/bot/webhook/*` and `/api/broadcast` routes
-  are not registered.
 - **OAuth identity provider** — none. The cloud is its own OAuth
   authorization server.
 
@@ -260,8 +255,7 @@ src/
   icon.ts                 inline SVG icon served at /icon.svg
   styles.ts               shared design tokens for landing pages
   auth/admin.ts           bearer-token check for /api/*
-  bot/                    Telegram bot client + subscriber store
   middleware/access-log.ts HTTP request log
   pages/                  Hono JSX components (landing, privacy, ...)
-  routes/                 Hono route modules (admin, bot, mcp, …)
+  routes/                 Hono route modules (admin, mcp, …)
 ```

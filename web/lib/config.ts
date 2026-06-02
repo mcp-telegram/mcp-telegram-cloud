@@ -54,7 +54,6 @@ export const config = {
   issuesLabel: optional(process.env.ISSUES_LABEL, "GitHub Issues"),
   contactEmail: optional(process.env.CONTACT_EMAIL, ""),
   contactTelegram: optional(process.env.CONTACT_TELEGRAM, "").replace(/^@/, ""),
-  botUsername: optional(process.env.BOT_USERNAME, "").replace(/^@/, ""),
 } as const;
 
 export const iconUrl = `${config.issuer}/icon.svg`;

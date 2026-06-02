@@ -97,10 +97,7 @@
     "openSourceAStart": "Ya. Server sepenuhnya open-source di bawah lisensi MIT di",
     "openSourceAEnd": ".",
     "multiAccountQ": "Bisakah saya menghubungkan lebih dari satu akun Telegram?",
-    "multiAccountA": "Ya. Setelah menghubungkan akun pertama Anda, minta asisten untuk menambahkan akun lain dengan tool `telegram-accounts-add` — Anda akan mendapatkan URL sekali pakai dengan kode QR untuk akun kedua. Gunakan `telegram-accounts-switch` untuk mengubah akun mana yang akan digunakan pada panggilan tool berikutnya. Tidak perlu disconnect/reconnect.",
-    "botQ": "Bagaimana cara mengetahui pembaruan layanan?",
-    "botAStart": "Berlangganan ke",
-    "botAEnd": "untuk diberi tahu tentang status layanan, perubahan yang merusak, dan rilis baru. Kirim /stop kapan saja untuk berhenti berlangganan."
+    "multiAccountA": "Ya. Setelah menghubungkan akun pertama Anda, minta asisten untuk menambahkan akun lain dengan tool `telegram-accounts-add` — Anda akan mendapatkan URL sekali pakai dengan kode QR untuk akun kedua. Gunakan `telegram-accounts-switch` untuk mengubah akun mana yang akan digunakan pada panggilan tool berikutnya. Tidak perlu disconnect/reconnect."
   },
   "footer": {
     "mit": "Berlisensi MIT",

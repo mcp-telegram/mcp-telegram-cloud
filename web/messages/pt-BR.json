@@ -97,10 +97,7 @@
     "openSourceAStart": "Sim. O servidor é totalmente de código aberto sob a licença MIT em",
     "openSourceAEnd": ".",
     "multiAccountQ": "Posso conectar mais de uma conta do Telegram?",
-    "multiAccountA": "Sim. Depois de conectar sua primeira conta, peça ao assistente para adicionar outra com a ferramenta `telegram-accounts-add` — você receberá uma URL de uso único com um código QR para a segunda conta. Use `telegram-accounts-switch` para definir qual conta será usada na próxima chamada de ferramenta. Sem precisar desconectar e reconectar.",
-    "botQ": "Como vou saber das atualizações do serviço?",
-    "botAStart": "Inscreva-se em",
-    "botAEnd": "para receber notificações sobre status do serviço, mudanças breaking e novos lançamentos. Envie /stop a qualquer momento para cancelar a inscrição."
+    "multiAccountA": "Sim. Depois de conectar sua primeira conta, peça ao assistente para adicionar outra com a ferramenta `telegram-accounts-add` — você receberá uma URL de uso único com um código QR para a segunda conta. Use `telegram-accounts-switch` para definir qual conta será usada na próxima chamada de ferramenta. Sem precisar desconectar e reconectar."
   },
   "footer": {
     "mit": "Licença MIT",

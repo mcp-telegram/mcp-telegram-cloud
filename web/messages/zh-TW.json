@@ -97,10 +97,7 @@
     "openSourceAStart": "是的。伺服器是完全開源的,以 MIT 授權釋出,位於",
     "openSourceAEnd": "。",
     "multiAccountQ": "我可以連接多個 Telegram 帳號嗎?",
-    "multiAccountA": "可以。連接第一個帳號之後,請助理使用 `telegram-accounts-add` 工具加入另一個帳號 — 您會取得一個包含 QR 碼的一次性 URL,用於第二個帳號。使用 `telegram-accounts-switch` 即可變更下一次工具呼叫所使用的帳號。無需中斷重連。",
-    "botQ": "我如何得知服務的更新?",
-    "botAStart": "訂閱",
-    "botAEnd": "以接收服務狀態、重大變更與新版本發布的通知。隨時發送 /stop 即可取消訂閱。"
+    "multiAccountA": "可以。連接第一個帳號之後,請助理使用 `telegram-accounts-add` 工具加入另一個帳號 — 您會取得一個包含 QR 碼的一次性 URL,用於第二個帳號。使用 `telegram-accounts-switch` 即可變更下一次工具呼叫所使用的帳號。無需中斷重連。"
   },
   "footer": {
     "mit": "MIT 授權",

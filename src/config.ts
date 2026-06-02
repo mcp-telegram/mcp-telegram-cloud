@@ -60,8 +60,8 @@ export const parseTelemetryMode = (raw: string | undefined): TelemetryMode => {
 };
 
 export const config = {
-  /** Public origin (scheme + host, no trailing slash) — used in OAuth metadata,
-   * absolute URLs in the landing/OAuth pages, and bot webhook setup. */
+  /** Public origin (scheme + host, no trailing slash) — used in OAuth metadata
+   * and absolute URLs in the landing/OAuth pages. */
   issuer: required("ISSUER", process.env.ISSUER).replace(/\/+$/, ""),
   port: intOr(process.env.PORT, 3000),
   brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
@@ -135,13 +135,6 @@ export const config = {
   oauthRateLimit: intOr(process.env.OAUTH_RATE_LIMIT, 30),
   /** OAuth IP rate-limit window in milliseconds. */
   oauthRateWindowMs: intOr(process.env.OAUTH_RATE_WINDOW_MS, 60_000),
-
-  /** Telegram Bot API token for in-product broadcasts (Phase 0.1). Empty disables bot routes. */
-  botToken: optional(process.env.BOT_TOKEN, ""),
-  /** Bot username (without @) for deep-link CTA on landing. */
-  botUsername: optional(process.env.BOT_USERNAME, "").replace(/^@/, ""),
-  /** Random secret in webhook URL path — Telegram echoes only to /bot/webhook/<secret>. */
-  botWebhookSecret: optional(process.env.BOT_WEBHOOK_SECRET, ""),
 };
 
 export const iconUrl = `${config.issuer}/icon.svg`;

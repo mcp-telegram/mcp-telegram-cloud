@@ -38,7 +38,6 @@ const STATIC = new Set([
   "/mcp",
   "/api/stats",
   "/api/observability",
-  "/api/broadcast",
   "/my",
   "/my/settings",
   "/my/audit",
@@ -52,7 +51,6 @@ const STATIC = new Set([
 
 export function templatePath(path: string): string {
   if (STATIC.has(path)) return path;
-  if (path.startsWith("/bot/webhook/")) return "/bot/webhook/:secret";
   if (path.startsWith("/my/upload/")) return "/my/upload/:id";
   if (path.startsWith("/my/uploads/")) return "/my/uploads/:id";
   // Collapse any ID-shaped segment anywhere in the path. Bounds the time-series

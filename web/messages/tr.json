@@ -97,10 +97,7 @@
     "openSourceAStart": "Evet. Sunucu, MIT lisansı altında tamamen açık kaynaktır:",
     "openSourceAEnd": ".",
     "multiAccountQ": "Birden fazla Telegram hesabını bağlayabilir miyim?",
-    "multiAccountA": "Evet. İlk hesabınızı bağladıktan sonra asistandan `telegram-accounts-add` aracıyla başka bir hesap eklemesini isteyin — ikinci hesap için QR kodlu tek kullanımlık bir URL alırsınız. Sonraki araç çağrısının hangi hesabı kullanacağını değiştirmek için `telegram-accounts-switch` kullanın. Bağlantı kesip yeniden bağlanmaya gerek yok.",
-    "botQ": "Servis güncellemelerini nasıl öğreneceğim?",
-    "botAStart": "Şuna abone olun:",
-    "botAEnd": "servis durumu, kırıcı değişiklikler ve yeni sürümler hakkında bilgilendirilmek için. Aboneliği iptal etmek için istediğiniz zaman /stop gönderin."
+    "multiAccountA": "Evet. İlk hesabınızı bağladıktan sonra asistandan `telegram-accounts-add` aracıyla başka bir hesap eklemesini isteyin — ikinci hesap için QR kodlu tek kullanımlık bir URL alırsınız. Sonraki araç çağrısının hangi hesabı kullanacağını değiştirmek için `telegram-accounts-switch` kullanın. Bağlantı kesip yeniden bağlanmaya gerek yok."
   },
   "footer": {
     "mit": "MIT lisanslı",

@@ -41,7 +41,7 @@ export type LogFields = Partial<{
   reason: string;
   /** Logical scope name (e.g. rate-limit scope key, NOT raw user input). */
   scope: string;
-  /** Source channel, e.g. how a bot subscriber arrived. */
+  /** Source channel — low-cardinality label for where an event originated. */
   source: string;
   /**
    * Raw OAuth `client_name` (RFC 7591) — caller-controlled string from
@@ -57,13 +57,6 @@ export type LogFields = Partial<{
    * `client_name` (only the MCP layer can after token validation).
    */
   clientClass: string;
-  /**
-   * Public handle (e.g. `@mcp_telegram_cloud_bot`). The runtime grep guard
-   * still flags `username:` if it isn't accompanied by a `// telemetry-allow`
-   * comment, so the only sanctioned use is logging a published bot/operator
-   * handle — never a Telegram user's @username.
-   */
-  username: string;
 
   // ── Internal identifiers (safe — not user PII) ────────────────────────
   /** Hashed user id — MUST come from `logUser(...)`. */
@@ -137,11 +130,11 @@ export type LogFields = Partial<{
   error: string;
 
   // ── Numeric metrics ───────────────────────────────────────────────────
-  /** Generic counter (e.g. broadcast recipients, rate-limit count). */
+  /** Generic counter (e.g. rate-limit count). */
   count: number;
   /** Items removed by a purge tick. */
   removed: number;
-  /** Items pruned (subscribers, etc.). */
+  /** Items pruned. */
   pruned: number;
   /** Duration in milliseconds. */
   durationMs: number;

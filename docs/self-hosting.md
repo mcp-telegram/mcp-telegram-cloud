@@ -193,9 +193,8 @@ legal advice.
 Specific paragraphs almost everyone needs to revisit:
 
 - **Landing → hero subtitle, FAQ** — the FAQ assumes a specific tier
-  layout (free, hosted, OpenAI Apps). If you charge, run privately, or
-  don't ship the bot subscription flow (`BOT_USERNAME` empty), trim
-  the affected sections.
+  layout (free, hosted, OpenAI Apps). If you charge or run privately,
+  trim the affected sections.
 - **Privacy → "What we collect" / "What we do NOT collect"** — confirm
   the list matches your real logging (`LOG_USER_IDS`,
   `USAGE_LOG_RETENTION_DAYS`, your own SigNoz attributes). The default

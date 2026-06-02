@@ -97,10 +97,7 @@
     "openSourceAStart": "Ja. De server is volledig open-source onder de MIT-licentie op",
     "openSourceAEnd": ".",
     "multiAccountQ": "Kan ik meer dan één Telegram-account verbinden?",
-    "multiAccountA": "Ja. Nadat u uw eerste account heeft verbonden, vraagt u de assistent om er nog een toe te voegen met de tool `telegram-accounts-add` — u ontvangt een eenmalige URL met een QR-code voor het tweede account. Gebruik `telegram-accounts-switch` om in te stellen welk account bij de volgende toolaanroep wordt gebruikt. Geen disconnect/reconnect nodig.",
-    "botQ": "Hoe blijf ik op de hoogte van service-updates?",
-    "botAStart": "Abonneer u op",
-    "botAEnd": "om op de hoogte te blijven van servicestatus, breaking changes en nieuwe releases. Stuur op elk moment /stop om u uit te schrijven."
+    "multiAccountA": "Ja. Nadat u uw eerste account heeft verbonden, vraagt u de assistent om er nog een toe te voegen met de tool `telegram-accounts-add` — u ontvangt een eenmalige URL met een QR-code voor het tweede account. Gebruik `telegram-accounts-switch` om in te stellen welk account bij de volgende toolaanroep wordt gebruikt. Geen disconnect/reconnect nodig."
   },
   "footer": {
     "mit": "MIT-gelicentieerd",

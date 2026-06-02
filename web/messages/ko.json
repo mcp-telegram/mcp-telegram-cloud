@@ -97,10 +97,7 @@
     "openSourceAStart": "예. 서버는 MIT 라이선스로 완전히 오픈 소스입니다:",
     "openSourceAEnd": ".",
     "multiAccountQ": "Telegram 계정을 두 개 이상 연결할 수 있나요?",
-    "multiAccountA": "예. 첫 번째 계정을 연결한 뒤, 어시스턴트에게 `telegram-accounts-add` 도구로 또 다른 계정을 추가해 달라고 요청하세요 — 두 번째 계정용 QR 코드가 포함된 일회용 URL을 받게 됩니다. 다음 도구 호출에 사용할 계정을 바꾸려면 `telegram-accounts-switch`를 사용하세요. 연결을 해제하거나 다시 연결할 필요는 없습니다.",
-    "botQ": "서비스 업데이트는 어떻게 알 수 있나요?",
-    "botAStart": "다음을 구독하세요:",
-    "botAEnd": "서비스 상태, 호환성 변경, 새 릴리스 알림을 받을 수 있습니다. 구독 해지는 언제든 /stop을 보내면 됩니다."
+    "multiAccountA": "예. 첫 번째 계정을 연결한 뒤, 어시스턴트에게 `telegram-accounts-add` 도구로 또 다른 계정을 추가해 달라고 요청하세요 — 두 번째 계정용 QR 코드가 포함된 일회용 URL을 받게 됩니다. 다음 도구 호출에 사용할 계정을 바꾸려면 `telegram-accounts-switch`를 사용하세요. 연결을 해제하거나 다시 연결할 필요는 없습니다."
   },
   "footer": {
     "mit": "MIT 라이선스",

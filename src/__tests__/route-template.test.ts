@@ -10,11 +10,6 @@ describe("route-template", () => {
     assert.equal(templatePath("/.well-known/oauth-authorization-server"), "/.well-known/oauth-authorization-server");
   });
 
-  it("collapses bot webhook secret to :secret", () => {
-    assert.equal(templatePath("/bot/webhook/abc-secret-deadbeef"), "/bot/webhook/:secret");
-    assert.equal(templatePath("/bot/webhook/AAAAaaaa1111"), "/bot/webhook/:secret");
-  });
-
   it("collapses upload IDs to :id under /my/upload(s)", () => {
     assert.equal(templatePath("/my/upload/01HZX5YK6JK4M3W2T8V9R7P0Q1"), "/my/upload/:id");
     assert.equal(templatePath("/my/uploads/abc-def-123"), "/my/uploads/:id");

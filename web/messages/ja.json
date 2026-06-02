@@ -97,10 +97,7 @@
     "openSourceAStart": "はい。サーバーは MIT ライセンスの下で完全にオープンソースです:",
     "openSourceAEnd": "。",
     "multiAccountQ": "Telegram アカウントを複数接続できますか?",
-    "multiAccountA": "はい。最初のアカウントを接続したあと、アシスタントに `telegram-accounts-add` ツールでもう1つ追加するよう依頼してください — 2つ目のアカウント用の QRコード付き使い捨て URL が発行されます。次のツール呼び出しで使うアカウントを切り替えるには `telegram-accounts-switch` を使用します。切断や再接続は不要です。",
-    "botQ": "サービスの更新情報はどうやって知ることができますか?",
-    "botAStart": "登録先:",
-    "botAEnd": "サービスステータス、破壊的変更、新リリースについて通知を受けられます。いつでも /stop を送信すれば購読解除できます。"
+    "multiAccountA": "はい。最初のアカウントを接続したあと、アシスタントに `telegram-accounts-add` ツールでもう1つ追加するよう依頼してください — 2つ目のアカウント用の QRコード付き使い捨て URL が発行されます。次のツール呼び出しで使うアカウントを切り替えるには `telegram-accounts-switch` を使用します。切断や再接続は不要です。"
   },
   "footer": {
     "mit": "MIT ライセンス",

@@ -97,10 +97,7 @@
     "openSourceAStart": "Có. Máy chủ hoàn toàn mã nguồn mở theo giấy phép MIT tại",
     "openSourceAEnd": ".",
     "multiAccountQ": "Tôi có thể kết nối nhiều hơn một tài khoản Telegram không?",
-    "multiAccountA": "Có. Sau khi kết nối tài khoản đầu tiên, hãy yêu cầu trợ lý thêm một tài khoản khác bằng tool `telegram-accounts-add` — bạn sẽ nhận được một URL dùng một lần kèm mã QR cho tài khoản thứ hai. Dùng `telegram-accounts-switch` để thay đổi tài khoản sẽ được sử dụng trong lần gọi tool tiếp theo. Không cần ngắt kết nối rồi kết nối lại.",
-    "botQ": "Làm thế nào để tôi biết về các bản cập nhật dịch vụ?",
-    "botAStart": "Đăng ký theo dõi",
-    "botAEnd": "để được thông báo về trạng thái dịch vụ, thay đổi đột phá và các bản phát hành mới. Gửi /stop bất cứ lúc nào để hủy đăng ký."
+    "multiAccountA": "Có. Sau khi kết nối tài khoản đầu tiên, hãy yêu cầu trợ lý thêm một tài khoản khác bằng tool `telegram-accounts-add` — bạn sẽ nhận được một URL dùng một lần kèm mã QR cho tài khoản thứ hai. Dùng `telegram-accounts-switch` để thay đổi tài khoản sẽ được sử dụng trong lần gọi tool tiếp theo. Không cần ngắt kết nối rồi kết nối lại."
   },
   "footer": {
     "mit": "Cấp phép MIT",

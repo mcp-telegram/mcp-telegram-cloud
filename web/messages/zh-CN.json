@@ -97,10 +97,7 @@
     "openSourceAStart": "是的。服务器在 MIT 许可下完全开源,代码位于",
     "openSourceAEnd": "。",
     "multiAccountQ": "我可以连接多个 Telegram 账户吗?",
-    "multiAccountA": "可以。连接第一个账户后,请让助手使用 `telegram-accounts-add` 工具添加另一个账户——您会收到一个带有二维码的一次性 URL,用于添加第二个账户。使用 `telegram-accounts-switch` 切换下一次工具调用所使用的账户。无需断开重连。",
-    "botQ": "我如何了解服务更新?",
-    "botAStart": "订阅",
-    "botAEnd": "以获取服务状态、不兼容变更和新版本发布的通知。随时发送 /stop 即可取消订阅。"
+    "multiAccountA": "可以。连接第一个账户后,请让助手使用 `telegram-accounts-add` 工具添加另一个账户——您会收到一个带有二维码的一次性 URL,用于添加第二个账户。使用 `telegram-accounts-switch` 切换下一次工具调用所使用的账户。无需断开重连。"
   },
   "footer": {
     "mit": "采用 MIT 许可",

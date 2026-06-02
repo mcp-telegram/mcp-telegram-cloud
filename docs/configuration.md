@@ -37,9 +37,6 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `FREE_TIER_LIMIT` | | `100` | Per-user daily tool-call quota. `0` = unlimited |
 | `OAUTH_RATE_LIMIT` | | `30` | Requests per IP per window on `/oauth/*`. `0` disables |
 | `OAUTH_RATE_WINDOW_MS` | | `60000` | Window duration in milliseconds |
-| `BOT_TOKEN` | | empty | Telegram bot token for broadcasts |
-| `BOT_USERNAME` | | empty | Bot handle (no `@`) for landing CTA |
-| `BOT_WEBHOOK_SECRET` | | empty | Random secret in webhook URL path |
 
 ## Required core
 
@@ -68,7 +65,6 @@ Examples:
 - Redirect URIs allowed during OAuth flow
 - Canonical URLs in landing/privacy/terms (SEO `<link rel="canonical">`)
 - MCP server icon URL
-- Bot webhook URL for `setWebhook` calls
 
 **Changing `ISSUER` after launch invalidates:**
 
@@ -80,9 +76,8 @@ Pick once.
 
 ### `ADMIN_TOKEN` (recommended)
 
-Bearer token for the admin endpoints — `/api/stats`,
-`/api/import-session`, and (when the broadcast bot is enabled)
-`/api/broadcast`. Used with `Authorization: Bearer <token>`.
+Bearer token for the admin endpoints — `/api/stats` and
+`/api/import-session`. Used with `Authorization: Bearer <token>`.
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -187,7 +182,7 @@ with `service.name=$LOG_SERVICE_NAME`:
 
 | Metric | Type | Labels | Notes |
 | --- | --- | --- | --- |
-| `http.requests` | counter | `route`, `method`, `status_class`, `client` | `route` is template-collapsed — `/bot/webhook/<secret>` → `/bot/webhook/:secret` |
+| `http.requests` | counter | `route`, `method`, `status_class`, `client` | `route` is template-collapsed — `/my/uploads/<id>` → `/my/uploads/:id` |
 | `http.duration` | histogram (ms) | `route`, `method`, `status_class` | Buckets `5/10/25/50/100/250/500/1000/2500/5000/10000` |
 | `mcp.tool.calls` | counter | `tool`, `outcome` | `outcome` ∈ `{ok, error}` |
 | `mcp.tool.duration` | histogram (ms) | `tool`, `outcome` | Buckets `50/100/250/500/1000/2500/5000/10000/30000` |
@@ -244,7 +239,6 @@ The DB stores:
 - Telegram session strings (plaintext — see [self-hosting threat model](./self-hosting.md#threat-model--read-this-first))
 - OAuth clients, access codes, tokens, refresh tokens
 - Per-user usage counters
-- Bot subscriber list
 
 Single-writer (better-sqlite3). Not horizontally shardable.
 
@@ -277,42 +271,6 @@ revoke). Default `30 / 60_000` = 30 requests per 60 seconds per IP.
 
 The IP is detected from `X-Real-IP` then `X-Forwarded-For` last hop;
 ensure your reverse proxy sets one of these.
-
-
-## Bot broadcasts (optional)
-
-The Phase 0.1 broadcast bot lets you notify connected users about
-incidents and breaking changes via a dedicated Telegram bot.
-
-All three of `BOT_TOKEN`, `BOT_USERNAME`, `BOT_WEBHOOK_SECRET` must be
-set together — partial config will throw at startup. When unset, the
-bot routes (`/bot/webhook/*`, `/api/broadcast`) are not registered.
-
-### `BOT_TOKEN`
-
-`123456:ABC...` from [@BotFather](https://t.me/BotFather). Create a
-dedicated bot — do not reuse a personal one.
-
-### `BOT_USERNAME`
-
-Bot handle without `@`. Used to render the deep-link CTA on the landing
-page (`https://t.me/<username>?start=subscribe`).
-
-### `BOT_WEBHOOK_SECRET`
-
-Random secret embedded in the webhook URL path —
-`/bot/webhook/<secret>`. Telegram echoes only to this URL, so a leaked
-URL = anyone can spoof bot updates.
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-After setting, register the webhook:
-
-```bash
-curl "https://api.telegram.org/bot$BOT_TOKEN/setWebhook?url=$ISSUER/bot/webhook/$BOT_WEBHOOK_SECRET"
-```
 
 ## ChatGPT Apps Directory (optional)
 
