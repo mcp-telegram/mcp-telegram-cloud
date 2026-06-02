@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "語言"
   },
-  "privacy": {
-    "title": "隱私權政策",
-    "lastUpdated": "最後更新"
-  },
   "terms": {
     "title": "服務條款",
     "lastUpdated": "最後更新"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "cloud 上傳限制約為 50 MB。對於更大的檔案，請將其託管於公開伺服器並傳遞 https:// URL — Telegram 本身支援至 2 GB，cloud 限制僅在上傳步驟。",
       "troubleshoot3Title": "uploadId 已過期或找不到",
       "troubleshoot3Desc": "Pending 上傳僅在 /my/upload 後短時間內保留。若您過了太久才使用，請重新上傳並使用新的 uploadId。"
+    }
+  },
+  "consent": {
+    "title": "我們使用分析工具",
+    "text": "我們使用 Yandex.Metrika 和 Google Analytics 來瞭解網站的使用情況。在您同意之前，不會進行任何追蹤。",
+    "accept": "接受",
+    "decline": "拒絕",
+    "privacyLink": "隱私權政策"
+  },
+  "privacyPage": {
+    "title": "隱私權政策",
+    "metaDescription": "{brand} 託管 Telegram MCP 連接器的隱私權政策。",
+    "lastUpdated": "最後更新：{date}",
+    "updatedDate": "2026年6月2日",
+    "overview": {
+      "heading": "概觀",
+      "body": "{brand}（<host>{hostLabel}</host>）是一個託管連接器，可讓 AI 助理（Claude、ChatGPT）透過 MCP 協定存取您的 Telegram 帳戶。您的隱私對我們很重要。本政策說明我們收集哪些資料、如何使用這些資料，以及您所擁有的權利。"
+    },
+    "collect": {
+      "heading": "我們收集的內容",
+      "items": {
+        "0": {
+          "term": "Telegram 工作階段資料",
+          "desc": "加密的工作階段權杖會儲存在我們的伺服器上，讓您在多次請求之間保持連線。當您中斷連線時，該權杖將被刪除。"
+        },
+        "1": {
+          "term": "使用記錄",
+          "desc": "我們會記錄呼叫了哪些 MCP 工具（例如 \"list-chats\"、\"read-messages\"）、時間戳記以及您的 Telegram 使用者 ID。我們<em>不會</em>記錄訊息內容、聊天名稱或您聊天中的任何個人資料。"
+        },
+        "2": {
+          "term": "OAuth 權杖",
+          "desc": "用於向我們的伺服器驗證您的 AI 用戶端（Claude/ChatGPT）身分的暫時權杖。儲存在記憶體中，不會持續保存。"
+        }
+      }
+    },
+    "analytics": {
+      "heading": "網站分析",
+      "body": "我們的公開網站（而非 MCP 連接器本身）使用 <metrikaHref>Yandex.Metrika</metrikaHref> 和 <gaHref>Google Analytics</gaHref> 來了解訪客如何使用本網站。這些工具會設定 Cookie 並可能記錄匿名化的使用情況。<strong>只有在您接受同意橫幅後它們才會執行</strong>——如果您拒絕，則不會載入任何分析指令碼，也不會設定任何 Cookie。",
+      "items": {
+        "0": {
+          "term": "涵蓋範圍",
+          "desc": "僅限行銷／文件網站。您的 Telegram 資料和 MCP 請求絕不會傳送至任何分析服務。"
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "包括 Webvisor（頁面互動的匿名化工作階段重播）和點擊地圖。表單欄位預設會被遮蔽；我們的頁面不含帶有個人資料的輸入表單。"
+        },
+        "2": {
+          "term": "選擇退出",
+          "desc": "拒絕同意橫幅，清除 <strong>mcpt-consent</strong> Cookie／localStorage 以便再次被詢問，或在您的瀏覽器中封鎖分析網域。"
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "我們不收集的內容",
+      "items": {
+        "0": "訊息內容、媒體檔案或聊天記錄",
+        "1": "電話號碼、聯絡人清單或個人檔案資料",
+        "2": "密碼或 Telegram 兩步驟驗證（2FA）代碼"
+      }
+    },
+    "dataFlow": {
+      "heading": "您的資料如何流動",
+      "body": "當您要求 Claude 或 ChatGPT 讀取您的 Telegram 訊息時，AI 用戶端會向我們的伺服器傳送請求。我們的伺服器會使用您的工作階段從 Telegram 的 API 擷取資料，將其回傳給 AI 用戶端，並且不會保留這些資料。訊息內容會經過我們的伺服器，但<strong>不會被儲存或記錄</strong>。"
+    },
+    "retention": {
+      "heading": "資料保留",
+      "items": {
+        "0": {
+          "term": "工作階段權杖",
+          "desc": "在您中斷連線或處於閒置狀態後刪除。"
+        },
+        "1": {
+          "term": "使用記錄",
+          "desc": "為分析和速率限制而保留。不含個人內容。"
+        },
+        "2": {
+          "term": "OAuth 資料",
+          "desc": "僅存於記憶體中，伺服器重新啟動時清除。"
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "第三方",
+      "body": "我們不會出售、分享或將您的 Telegram 資料轉讓給第三方。您的 Telegram 資料僅透過官方 Telegram MTProto API 代表您進行存取。AI 用戶端（Anthropic/OpenAI）會將您的 Telegram 資料作為對話的一部分接收——其隱私權政策適用於該處理程序。網站分析供應商（Yandex、Google）僅接收匿名化的網站使用資料，絕不會接收您的 Telegram 資料。"
+    },
+    "security": {
+      "heading": "安全性",
+      "body": "所有連線皆使用 TLS（HTTPS）。Telegram 工作階段皆經過加密。伺服器執行於專用基礎架構上，存取權限僅限於營運者。我們在工作階段管理和憑證儲存方面遵循安全性最佳實務。"
+    },
+    "rights": {
+      "heading": "您的權利",
+      "items": {
+        "0": {
+          "term": "隨時中斷連線",
+          "desc": "在 Claude/ChatGPT 設定中移除該連接器。您的工作階段將被立即刪除。"
+        },
+        "1": {
+          "term": "資料刪除",
+          "desc": "聯絡我們以要求完全刪除任何已儲存的資料。"
+        },
+        "2": {
+          "term": "自我託管選項",
+          "desc": "使用<repo>開放原始碼版本</repo>在您自己的機器上執行所有內容，沒有任何資料離開您的裝置。"
+        }
+      }
+    },
+    "openSource": {
+      "heading": "開放原始碼",
+      "body": "該伺服器在 <repo>{repoLabel}</repo> 以 MIT 授權開放原始碼。您可以確切地查看存取了哪些資料以及如何存取。"
+    },
+    "contact": {
+      "heading": "聯絡我們",
+      "body": "對本政策有疑問嗎？請透過 <issues>{issuesLabel}</issues> 與我們聯絡",
+      "telegram": "或透過 Telegram <tg>@{handle}</tg>",
+      "email": "或寄送電子郵件至 <mail>{address}</mail>"
     }
   }
 }

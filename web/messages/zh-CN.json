@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "语言"
   },
-  "privacy": {
-    "title": "隐私政策",
-    "lastUpdated": "最后更新"
-  },
   "terms": {
     "title": "服务条款",
     "lastUpdated": "最后更新"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "云端上传上限约为 50 MB。更大的文件请托管在公开服务器上，并传入 https:// URL——Telegram 本身支持最大 2 GB，云端限制仅适用于上传步骤。",
       "troubleshoot3Title": "uploadId 已过期或找不到",
       "troubleshoot3Desc": "待处理的上传只会在 /my/upload 之后短时间内保留。如果使用得太晚，请重新上传并使用新的 uploadId。"
+    }
+  },
+  "consent": {
+    "title": "我们使用分析工具",
+    "text": "我们使用 Yandex.Metrika 和 Google Analytics 来了解网站的使用情况。在您同意之前，不会进行任何跟踪。",
+    "accept": "接受",
+    "decline": "拒绝",
+    "privacyLink": "隐私政策"
+  },
+  "privacyPage": {
+    "title": "隐私政策",
+    "metaDescription": "{brand} 托管 Telegram MCP 连接器的隐私政策。",
+    "lastUpdated": "最后更新：{date}",
+    "updatedDate": "2026年6月2日",
+    "overview": {
+      "heading": "概述",
+      "body": "{brand}（<host>{hostLabel}</host>）是一个托管连接器，可让 AI 助手（Claude、ChatGPT）通过 MCP 协议访问您的 Telegram 账户。您的隐私对我们很重要。本政策说明了我们收集哪些数据、如何使用这些数据以及您拥有的权利。"
+    },
+    "collect": {
+      "heading": "我们收集的内容",
+      "items": {
+        "0": {
+          "term": "Telegram 会话数据",
+          "desc": "加密的会话令牌存储在我们的服务器上，以便您在多次请求之间保持连接。当您断开连接时，该令牌将被删除。"
+        },
+        "1": {
+          "term": "使用日志",
+          "desc": "我们会记录调用了哪些 MCP 工具（例如 \"list-chats\"、\"read-messages\"）、时间戳以及您的 Telegram 用户 ID。我们<em>不会</em>记录消息内容、聊天名称或您聊天中的任何个人数据。"
+        },
+        "2": {
+          "term": "OAuth 令牌",
+          "desc": "用于向我们的服务器验证您的 AI 客户端（Claude/ChatGPT）身份的临时令牌。存储在内存中，不会持久保存。"
+        }
+      }
+    },
+    "analytics": {
+      "heading": "网站分析",
+      "body": "我们的公开网站（而非 MCP 连接器本身）使用 <metrikaHref>Yandex.Metrika</metrikaHref> 和 <gaHref>Google Analytics</gaHref> 来了解访问者如何使用本网站。这些工具会设置 Cookie 并可能记录匿名化的使用情况。<strong>只有在您接受同意横幅后它们才会运行</strong>——如果您拒绝，则不会加载任何分析脚本，也不会设置任何 Cookie。",
+      "items": {
+        "0": {
+          "term": "涵盖范围",
+          "desc": "仅限营销/文档网站。您的 Telegram 数据和 MCP 请求绝不会发送至任何分析服务。"
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "包括 Webvisor（页面交互的匿名化会话回放）和点击地图。表单字段默认会被遮蔽；我们的页面不含带有个人数据的输入表单。"
+        },
+        "2": {
+          "term": "选择退出",
+          "desc": "拒绝同意横幅，清除 <strong>mcpt-consent</strong> Cookie/localStorage 以便再次被询问，或在您的浏览器中屏蔽分析域名。"
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "我们不收集的内容",
+      "items": {
+        "0": "消息内容、媒体文件或聊天记录",
+        "1": "电话号码、联系人列表或个人资料数据",
+        "2": "密码或 Telegram 两步验证（2FA）代码"
+      }
+    },
+    "dataFlow": {
+      "heading": "您的数据如何流转",
+      "body": "当您要求 Claude 或 ChatGPT 读取您的 Telegram 消息时，AI 客户端会向我们的服务器发送请求。我们的服务器使用您的会话从 Telegram 的 API 获取数据，将其返回给 AI 客户端，并且不会保留这些数据。消息内容会经过我们的服务器，但<strong>不会被存储或记录</strong>。"
+    },
+    "retention": {
+      "heading": "数据保留",
+      "items": {
+        "0": {
+          "term": "会话令牌",
+          "desc": "在您断开连接或处于非活动状态后删除。"
+        },
+        "1": {
+          "term": "使用日志",
+          "desc": "为分析和速率限制而保留。不含个人内容。"
+        },
+        "2": {
+          "term": "OAuth 数据",
+          "desc": "仅存于内存中，服务器重启时清除。"
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "第三方",
+      "body": "我们不会出售、共享或将您的 Telegram 数据转让给第三方。您的 Telegram 数据仅通过官方 Telegram MTProto API 代表您进行访问。AI 客户端（Anthropic/OpenAI）将您的 Telegram 数据作为对话的一部分接收——其隐私政策适用于该处理过程。网站分析提供商（Yandex、Google）仅接收匿名化的网站使用数据，绝不会接收您的 Telegram 数据。"
+    },
+    "security": {
+      "heading": "安全",
+      "body": "所有连接均使用 TLS（HTTPS）。Telegram 会话均经过加密。服务器运行在专用基础设施上，访问权限仅限于运营者。我们在会话管理和凭据存储方面遵循安全最佳实践。"
+    },
+    "rights": {
+      "heading": "您的权利",
+      "items": {
+        "0": {
+          "term": "随时断开连接",
+          "desc": "在 Claude/ChatGPT 设置中移除该连接器。您的会话将被立即删除。"
+        },
+        "1": {
+          "term": "数据删除",
+          "desc": "联系我们以请求完全删除任何已存储的数据。"
+        },
+        "2": {
+          "term": "自托管选项",
+          "desc": "使用<repo>开源版本</repo>在您自己的机器上运行所有内容，没有任何数据离开您的设备。"
+        }
+      }
+    },
+    "openSource": {
+      "heading": "开源",
+      "body": "该服务器在 <repo>{repoLabel}</repo> 以 MIT 许可证开源。您可以确切地查看访问了哪些数据以及如何访问。"
+    },
+    "contact": {
+      "heading": "联系我们",
+      "body": "对本政策有疑问？请通过 <issues>{issuesLabel}</issues> 与我们联系",
+      "telegram": "或通过 Telegram <tg>@{handle}</tg>",
+      "email": "或发送电子邮件至 <mail>{address}</mail>"
     }
   }
 }

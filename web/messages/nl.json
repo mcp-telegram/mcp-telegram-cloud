@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "Taal"
   },
-  "privacy": {
-    "title": "Privacybeleid",
-    "lastUpdated": "Laatst bijgewerkt"
-  },
   "terms": {
     "title": "Servicevoorwaarden",
     "lastUpdated": "Laatst bijgewerkt"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "Cloud-uploads zijn beperkt tot ongeveer 50 MB. Voor grotere bestanden, host ze op een publieke server en geef de https://-URL door — Telegram zelf ondersteunt tot 2 GB, de cloud-limiet geldt alleen voor de upload-stap.",
       "troubleshoot3Title": "uploadId verlopen of niet gevonden",
       "troubleshoot3Desc": "Lopende uploads worden kort bewaard na /my/upload. Als u te lang heeft gewacht met gebruik, upload opnieuw en gebruik de nieuwe uploadId."
+    }
+  },
+  "consent": {
+    "title": "We gebruiken analyse.",
+    "text": "We gebruiken Yandex.Metrika en Google Analytics om te begrijpen hoe de site wordt gebruikt. Er wordt niets bijgehouden totdat je akkoord gaat.",
+    "accept": "Accepteren",
+    "decline": "Weigeren",
+    "privacyLink": "Privacybeleid"
+  },
+  "privacyPage": {
+    "title": "Privacybeleid",
+    "metaDescription": "Privacybeleid voor de gehoste Telegram MCP-connector van {brand}.",
+    "lastUpdated": "Laatst bijgewerkt: {date}",
+    "updatedDate": "2 juni 2026",
+    "overview": {
+      "heading": "Overzicht",
+      "body": "{brand} (<host>{hostLabel}</host>) is een gehoste connector waarmee AI-assistenten (Claude, ChatGPT) toegang krijgen tot je Telegram-account via het MCP-protocol. Je privacy is belangrijk voor ons. Dit beleid legt uit welke gegevens we verzamelen, hoe we ze gebruiken en wat je rechten zijn."
+    },
+    "collect": {
+      "heading": "Wat we verzamelen",
+      "items": {
+        "0": {
+          "term": "Telegram-sessiegegevens",
+          "desc": "Een versleuteld sessietoken wordt op onze server opgeslagen zodat je verbonden blijft tussen verzoeken. Het wordt verwijderd zodra je de verbinding verbreekt."
+        },
+        "1": {
+          "term": "Gebruikslogboeken",
+          "desc": "We loggen welke MCP-tools worden aangeroepen (bijv. \"list-chats\", \"read-messages\"), het tijdstip en je Telegram-gebruikers-ID. We loggen <em>geen</em> berichtinhoud, chatnamen of persoonlijke gegevens uit je chats."
+        },
+        "2": {
+          "term": "OAuth-tokens",
+          "desc": "Tijdelijke tokens om je AI-client (Claude/ChatGPT) bij onze server te authenticeren. Opgeslagen in het geheugen, niet permanent bewaard."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "Website-analyse",
+      "body": "Onze openbare website (niet de MCP-connector zelf) gebruikt <metrikaHref>Yandex.Metrika</metrikaHref> en <gaHref>Google Analytics</gaHref> om te begrijpen hoe bezoekers de site gebruiken. Deze tools plaatsen cookies en kunnen geanonimiseerd gebruik registreren. <strong>Ze worden pas uitgevoerd nadat je de toestemmingsbanner hebt geaccepteerd</strong> — als je weigert, worden er geen analysescripts geladen en geen cookies geplaatst.",
+      "items": {
+        "0": {
+          "term": "Wat het omvat",
+          "desc": "Alleen de marketing-/documentatiewebsite. Je Telegram-gegevens en MCP-verzoeken worden nooit naar een analysedienst gestuurd."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Bevat Webvisor (geanonimiseerde sessieweergave van pagina-interacties) en klikkaarten. Formuliervelden worden standaard gemaskeerd; onze pagina's bevatten geen invoerformulieren met persoonlijke gegevens."
+        },
+        "2": {
+          "term": "Afmelden",
+          "desc": "Weiger de toestemmingsbanner, wis de cookie/localStorage <strong>mcpt-consent</strong> om opnieuw gevraagd te worden, of blokkeer analysedomeinen in je browser."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "Wat we NIET verzamelen",
+      "items": {
+        "0": "Berichtinhoud, mediabestanden of chatgeschiedenis",
+        "1": "Telefoonnummers, contactenlijsten of profielgegevens",
+        "2": "Wachtwoorden of Telegram 2FA-codes"
+      }
+    },
+    "dataFlow": {
+      "heading": "Hoe je gegevens stromen",
+      "body": "Wanneer je Claude of ChatGPT vraagt je Telegram-berichten te lezen, stuurt de AI-client een verzoek naar onze server. Onze server haalt gegevens op uit de API van Telegram met behulp van je sessie, geeft die terug aan de AI-client en bewaart ze niet. Berichtinhoud passeert onze server, maar wordt <strong>niet opgeslagen of gelogd</strong>."
+    },
+    "retention": {
+      "heading": "Gegevensbewaring",
+      "items": {
+        "0": {
+          "term": "Sessietokens",
+          "desc": "Verwijderd wanneer je de verbinding verbreekt of na inactiviteit."
+        },
+        "1": {
+          "term": "Gebruikslogboeken",
+          "desc": "Bewaard voor analyse en snelheidsbeperking. Geen persoonlijke inhoud."
+        },
+        "2": {
+          "term": "OAuth-gegevens",
+          "desc": "Alleen in het geheugen, gewist bij herstart van de server."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "Derden",
+      "body": "We verkopen, delen of dragen je Telegram-gegevens niet over aan derden. Je Telegram-gegevens worden alleen namens jou benaderd via de officiële Telegram MTProto-API. De AI-client (Anthropic/OpenAI) ontvangt je Telegram-gegevens als onderdeel van het gesprek — hun privacybeleid is op die verwerking van toepassing. Aanbieders van website-analyse (Yandex, Google) ontvangen alleen geanonimiseerde sitegebruiksgegevens, nooit je Telegram-gegevens."
+    },
+    "security": {
+      "heading": "Beveiliging",
+      "body": "Alle verbindingen gebruiken TLS (HTTPS). Telegram-sessies zijn versleuteld. De server draait op speciale infrastructuur waarbij de toegang beperkt is tot de beheerder. We volgen de beste beveiligingspraktijken voor sessiebeheer en het opslaan van inloggegevens."
+    },
+    "rights": {
+      "heading": "Je rechten",
+      "items": {
+        "0": {
+          "term": "Altijd de verbinding verbreken",
+          "desc": "Verwijder de connector in de instellingen van Claude/ChatGPT. Je sessie wordt onmiddellijk verwijderd."
+        },
+        "1": {
+          "term": "Gegevensverwijdering",
+          "desc": "Neem contact met ons op om volledige verwijdering van alle opgeslagen gegevens aan te vragen."
+        },
+        "2": {
+          "term": "Self-hostingoptie",
+          "desc": "Gebruik de <repo>opensourceversie</repo> om alles op je eigen machine te draaien, zonder dat er gegevens je apparaat verlaten."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "Opensource",
+      "body": "De server is opensource onder de MIT-licentie op <repo>{repoLabel}</repo>. Je kunt precies inzien welke gegevens worden benaderd en hoe."
+    },
+    "contact": {
+      "heading": "Contact",
+      "body": "Vragen over dit beleid? Neem contact op via <issues>{issuesLabel}</issues>",
+      "telegram": "of via Telegram <tg>@{handle}</tg>",
+      "email": "of per e-mail <mail>{address}</mail>"
     }
   }
 }

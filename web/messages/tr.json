@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "Dil"
   },
-  "privacy": {
-    "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme"
-  },
   "terms": {
     "title": "Hizmet Şartları",
     "lastUpdated": "Son güncelleme"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "Bulut yüklemeleri yaklaşık 50 MB ile sınırlıdır. Daha büyük dosyalar için bunları herkese açık bir sunucuda barındırın ve https:// URL'yi geçirin — Telegram'ın kendisi 2 GB'a kadar destekler, bulut sınırı yalnızca yükleme adımında geçerlidir.",
       "troubleshoot3Title": "uploadId süresi doldu veya bulunamadı",
       "troubleshoot3Desc": "Bekleyen yüklemeler /my/upload sonrasında kısa bir süre saklanır. Kullanmak için çok beklediyseniz tekrar yükleyin ve yeni uploadId'yi kullanın."
+    }
+  },
+  "consent": {
+    "title": "Analiz araçları kullanıyoruz",
+    "text": "Sitenin nasıl kullanıldığını anlamak için Yandex.Metrika ve Google Analytics kullanıyoruz. Siz kabul edene kadar hiçbir takip yapılmaz.",
+    "accept": "Kabul et",
+    "decline": "Reddet",
+    "privacyLink": "Gizlilik Politikası"
+  },
+  "privacyPage": {
+    "title": "Gizlilik Politikası",
+    "metaDescription": "{brand} barındırılan Telegram MCP bağlayıcısı için gizlilik politikası.",
+    "lastUpdated": "Son güncelleme: {date}",
+    "updatedDate": "2 Haziran 2026",
+    "overview": {
+      "heading": "Genel bakış",
+      "body": "{brand} (<host>{hostLabel}</host>), yapay zeka asistanlarının (Claude, ChatGPT) MCP protokolü aracılığıyla Telegram hesabınıza erişmesini sağlayan barındırılan bir bağlayıcıdır. Gizliliğiniz bizim için önemlidir. Bu politika, hangi verileri topladığımızı, bunları nasıl kullandığımızı ve haklarınızı açıklar."
+    },
+    "collect": {
+      "heading": "Neler topluyoruz",
+      "items": {
+        "0": {
+          "term": "Telegram oturum verileri",
+          "desc": "İstekler arasında bağlı kalmanız için sunucumuzda şifrelenmiş bir oturum jetonu saklanır. Bağlantıyı kestiğinizde silinir."
+        },
+        "1": {
+          "term": "Kullanım günlükleri",
+          "desc": "Hangi MCP araçlarının çağrıldığını (ör. \"list-chats\", \"read-messages\"), zaman damgasını ve Telegram kullanıcı kimliğinizi günlüğe kaydederiz. Mesaj içeriğini, sohbet adlarını veya sohbetlerinizdeki herhangi bir kişisel veriyi günlüğe <em>kaydetmeyiz</em>."
+        },
+        "2": {
+          "term": "OAuth jetonları",
+          "desc": "Yapay zeka istemcinizin (Claude/ChatGPT) sunucumuza kimliğini doğrulamak için kullanılan geçici jetonlar. Bellekte saklanır, kalıcı olarak tutulmaz."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "Web sitesi analitiği",
+      "body": "Genel web sitemiz (MCP bağlayıcısının kendisi değil), ziyaretçilerin siteyi nasıl kullandığını anlamak için <metrikaHref>Yandex.Metrika</metrikaHref> ve <gaHref>Google Analytics</gaHref> kullanır. Bu araçlar çerezler ayarlar ve anonimleştirilmiş kullanımı kaydedebilir. <strong>Yalnızca onay banner'ını kabul ettikten sonra çalışırlar</strong> — reddederseniz hiçbir analitik betiği yüklenmez ve hiçbir çerez ayarlanmaz.",
+      "items": {
+        "0": {
+          "term": "Neyi kapsar",
+          "desc": "Yalnızca pazarlama/dokümantasyon web sitesini. Telegram verileriniz ve MCP istekleriniz hiçbir analitik hizmetine gönderilmez."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Webvisor (sayfa etkileşimlerinin anonimleştirilmiş oturum tekrarı) ve tıklama haritalarını içerir. Form alanları varsayılan olarak maskelenir; sayfalarımızda kişisel veri içeren giriş formu bulunmaz."
+        },
+        "2": {
+          "term": "Vazgeçme",
+          "desc": "Onay banner'ını reddedin, tekrar sorulması için <strong>mcpt-consent</strong> çerezini/localStorage'ı temizleyin veya tarayıcınızda analitik alan adlarını engelleyin."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "Neleri toplamıyoruz",
+      "items": {
+        "0": "Mesaj içeriği, medya dosyaları veya sohbet geçmişi",
+        "1": "Telefon numaraları, kişi listeleri veya profil verileri",
+        "2": "Parolalar veya Telegram 2FA kodları"
+      }
+    },
+    "dataFlow": {
+      "heading": "Verileriniz nasıl akar",
+      "body": "Claude veya ChatGPT'den Telegram mesajlarınızı okumasını istediğinizde, yapay zeka istemcisi sunucumuza bir istek gönderir. Sunucumuz, oturumunuzu kullanarak Telegram'ın API'sinden verileri çeker, bunları yapay zeka istemcisine geri döndürür ve saklamaz. Mesaj içeriği sunucumuzdan geçer ancak <strong>saklanmaz veya günlüğe kaydedilmez</strong>."
+    },
+    "retention": {
+      "heading": "Veri saklama",
+      "items": {
+        "0": {
+          "term": "Oturum jetonları",
+          "desc": "Bağlantıyı kestiğinizde veya hareketsizlik sonrasında silinir."
+        },
+        "1": {
+          "term": "Kullanım günlükleri",
+          "desc": "Analitik ve hız sınırlaması için saklanır. Kişisel içerik yoktur."
+        },
+        "2": {
+          "term": "OAuth verileri",
+          "desc": "Yalnızca bellekte; sunucu yeniden başlatıldığında temizlenir."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "Üçüncü taraflar",
+      "body": "Telegram verilerinizi üçüncü taraflara satmaz, paylaşmaz veya aktarmayız. Telegram verilerinize yalnızca sizin adınıza resmi Telegram MTProto API aracılığıyla erişilir. Yapay zeka istemcisi (Anthropic/OpenAI), Telegram verilerinizi konuşmanın bir parçası olarak alır — bu işleme için kendi gizlilik politikaları geçerlidir. Web sitesi analitik sağlayıcıları (Yandex, Google) yalnızca anonimleştirilmiş site kullanım verilerini alır, asla Telegram verilerinizi almaz."
+    },
+    "security": {
+      "heading": "Güvenlik",
+      "body": "Tüm bağlantılar TLS (HTTPS) kullanır. Telegram oturumları şifrelenir. Sunucu, erişimi yalnızca operatörle sınırlı, özel bir altyapıda çalışır. Oturum yönetimi ve kimlik bilgisi depolama için güvenlik en iyi uygulamalarını izleriz."
+    },
+    "rights": {
+      "heading": "Haklarınız",
+      "items": {
+        "0": {
+          "term": "İstediğiniz zaman bağlantıyı kesin",
+          "desc": "Claude/ChatGPT ayarlarından bağlayıcıyı kaldırın. Oturumunuz anında silinir."
+        },
+        "1": {
+          "term": "Veri silme",
+          "desc": "Saklanan tüm verilerin tamamen silinmesini talep etmek için bizimle iletişime geçin."
+        },
+        "2": {
+          "term": "Kendi sunucunuzda barındırma seçeneği",
+          "desc": "Her şeyi kendi makinenizde çalıştırmak ve cihazınızdan hiçbir verinin çıkmaması için <repo>açık kaynak sürümünü</repo> kullanın."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "Açık kaynak",
+      "body": "Sunucu, <repo>{repoLabel}</repo> adresinde MIT lisansı altında açık kaynaktır. Tam olarak hangi verilere ve nasıl erişildiğini inceleyebilirsiniz."
+    },
+    "contact": {
+      "heading": "İletişim",
+      "body": "Bu politikayla ilgili sorularınız mı var? <issues>{issuesLabel}</issues> üzerinden bize ulaşın",
+      "telegram": "veya Telegram <tg>@{handle}</tg>",
+      "email": "veya e-posta <mail>{address}</mail>"
     }
   }
 }

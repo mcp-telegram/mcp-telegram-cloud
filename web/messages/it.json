@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "Lingua"
   },
-  "privacy": {
-    "title": "Informativa sulla privacy",
-    "lastUpdated": "Ultimo aggiornamento"
-  },
   "terms": {
     "title": "Termini di servizio",
     "lastUpdated": "Ultimo aggiornamento"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "I caricamenti sul cloud sono limitati a circa 50 MB. Per file più grandi, ospitali su un server pubblico e passa l'URL https:// — Telegram stesso supporta fino a 2 GB, il limite del cloud è solo sul passo di upload.",
       "troubleshoot3Title": "uploadId scaduto o non trovato",
       "troubleshoot3Desc": "I caricamenti pendenti sono conservati per una breve finestra dopo /my/upload. Se hai impiegato troppo tempo a usarne uno, carica di nuovo e usa il nuovo uploadId."
+    }
+  },
+  "consent": {
+    "title": "Usiamo strumenti di analisi.",
+    "text": "Usiamo Yandex.Metrika e Google Analytics per capire come viene utilizzato il sito. Nessun tracciamento avviene finché non accetti.",
+    "accept": "Accetta",
+    "decline": "Rifiuta",
+    "privacyLink": "Informativa sulla privacy"
+  },
+  "privacyPage": {
+    "title": "Informativa sulla privacy",
+    "metaDescription": "Informativa sulla privacy per il connettore MCP Telegram ospitato {brand}.",
+    "lastUpdated": "Ultimo aggiornamento: {date}",
+    "updatedDate": "2 giugno 2026",
+    "overview": {
+      "heading": "Panoramica",
+      "body": "{brand} (<host>{hostLabel}</host>) è un connettore ospitato che consente agli assistenti AI (Claude, ChatGPT) di accedere al tuo account Telegram tramite il protocollo MCP. La tua privacy è importante per noi. Questa informativa spiega quali dati raccogliamo, come li utilizziamo e quali sono i tuoi diritti."
+    },
+    "collect": {
+      "heading": "Cosa raccogliamo",
+      "items": {
+        "0": {
+          "term": "Dati di sessione Telegram",
+          "desc": "Un token di sessione crittografato viene archiviato sul nostro server affinché tu rimanga connesso tra una richiesta e l'altra. Viene eliminato quando ti disconnetti."
+        },
+        "1": {
+          "term": "Log di utilizzo",
+          "desc": "Registriamo quali strumenti MCP vengono richiamati (ad es. \"list-chats\", \"read-messages\"), l'orario e il tuo ID utente Telegram. Non registriamo <em>nessun</em> contenuto dei messaggi, nome delle chat o dato personale proveniente dalle tue conversazioni."
+        },
+        "2": {
+          "term": "Token OAuth",
+          "desc": "Token temporanei per autenticare il tuo client AI (Claude/ChatGPT) sul nostro server. Conservati in memoria, non resi persistenti."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "Statistiche del sito web",
+      "body": "Il nostro sito web pubblico (non il connettore MCP in sé) utilizza <metrikaHref>Yandex.Metrika</metrikaHref> e <gaHref>Google Analytics</gaHref> per capire come i visitatori usano il sito. Questi strumenti impostano cookie e possono registrare dati di utilizzo anonimizzati. <strong>Vengono eseguiti solo dopo che hai accettato il banner di consenso</strong> — se rifiuti, non viene caricato alcuno script di analisi e non viene impostato alcun cookie.",
+      "items": {
+        "0": {
+          "term": "Cosa riguarda",
+          "desc": "Solo il sito web di marketing/documentazione. I tuoi dati Telegram e le richieste MCP non vengono mai inviati ad alcun servizio di analisi."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Include Webvisor (replay anonimizzato delle interazioni con le pagine) e mappe dei clic. I campi dei moduli sono mascherati per impostazione predefinita; le nostre pagine non contengono moduli di input con dati personali."
+        },
+        "2": {
+          "term": "Disattivazione",
+          "desc": "Rifiuta il banner di consenso, cancella il cookie/localStorage <strong>mcpt-consent</strong> per ricevere nuovamente la richiesta, oppure blocca i domini di analisi nel tuo browser."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "Cosa NON raccogliamo",
+      "items": {
+        "0": "Contenuto dei messaggi, file multimediali o cronologia delle chat",
+        "1": "Numeri di telefono, elenchi di contatti o dati del profilo",
+        "2": "Password o codici 2FA di Telegram"
+      }
+    },
+    "dataFlow": {
+      "heading": "Come fluiscono i tuoi dati",
+      "body": "Quando chiedi a Claude o ChatGPT di leggere i tuoi messaggi Telegram, il client AI invia una richiesta al nostro server. Il nostro server recupera i dati dall'API di Telegram utilizzando la tua sessione, li restituisce al client AI e non li conserva. Il contenuto dei messaggi transita attraverso il nostro server ma <strong>non viene memorizzato né registrato</strong>."
+    },
+    "retention": {
+      "heading": "Conservazione dei dati",
+      "items": {
+        "0": {
+          "term": "Token di sessione",
+          "desc": "Eliminati quando ti disconnetti o dopo un periodo di inattività."
+        },
+        "1": {
+          "term": "Log di utilizzo",
+          "desc": "Conservati per analisi e limitazione della frequenza. Nessun contenuto personale."
+        },
+        "2": {
+          "term": "Dati OAuth",
+          "desc": "Solo in memoria, cancellati al riavvio del server."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "Terze parti",
+      "body": "Non vendiamo, condividiamo o trasferiamo i tuoi dati Telegram a terze parti. Si accede ai tuoi dati Telegram esclusivamente tramite l'API ufficiale MTProto di Telegram per tuo conto. Il client AI (Anthropic/OpenAI) riceve i tuoi dati Telegram come parte della conversazione — a tale trattamento si applicano le rispettive informative sulla privacy. I fornitori di analisi del sito web (Yandex, Google) ricevono solo dati di utilizzo anonimizzati del sito, mai i tuoi dati Telegram."
+    },
+    "security": {
+      "heading": "Sicurezza",
+      "body": "Tutte le connessioni utilizzano TLS (HTTPS). Le sessioni Telegram sono crittografate. Il server è in esecuzione su infrastruttura dedicata con accesso limitato all'operatore. Seguiamo le migliori pratiche di sicurezza per la gestione delle sessioni e l'archiviazione delle credenziali."
+    },
+    "rights": {
+      "heading": "I tuoi diritti",
+      "items": {
+        "0": {
+          "term": "Disconnessione in qualsiasi momento",
+          "desc": "Rimuovi il connettore nelle impostazioni di Claude/ChatGPT. La tua sessione viene eliminata immediatamente."
+        },
+        "1": {
+          "term": "Cancellazione dei dati",
+          "desc": "Contattaci per richiedere la cancellazione completa di qualsiasi dato archiviato."
+        },
+        "2": {
+          "term": "Opzione self-hosting",
+          "desc": "Usa la <repo>versione open source</repo> per eseguire tutto sulla tua macchina, senza che alcun dato lasci il tuo dispositivo."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "Open source",
+      "body": "Il server è open source con licenza MIT su <repo>{repoLabel}</repo>. Puoi verificare esattamente a quali dati si accede e in che modo."
+    },
+    "contact": {
+      "heading": "Contatti",
+      "body": "Domande su questa informativa? Contattaci tramite <issues>{issuesLabel}</issues>",
+      "telegram": "oppure su Telegram <tg>@{handle}</tg>",
+      "email": "oppure via email <mail>{address}</mail>"
     }
   }
 }

@@ -103,10 +103,6 @@
   "language": {
     "switcherLabel": "Language"
   },
-  "privacy": {
-    "title": "Privacy Policy",
-    "lastUpdated": "Last updated"
-  },
   "terms": {
     "title": "Terms of Service",
     "lastUpdated": "Last updated"
@@ -418,6 +414,122 @@
       "troubleshoot2Desc": "Cloud uploads are capped around 50 MB. For larger files, host them on a public server and pass the https:// URL — Telegram itself supports up to 2 GB, the cloud limit is on the upload step only.",
       "troubleshoot3Title": "uploadId expired or not found",
       "troubleshoot3Desc": "Pending uploads are kept for a short window after /my/upload. If you took too long to use one, upload again and use the new uploadId."
+    }
+  },
+  "consent": {
+    "title": "We use analytics.",
+    "text": "We use Yandex.Metrika and Google Analytics to understand how the site is used. No tracking happens until you accept.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "privacyLink": "Privacy Policy"
+  },
+  "privacyPage": {
+    "title": "Privacy Policy",
+    "metaDescription": "Privacy policy for {brand} hosted Telegram MCP connector.",
+    "lastUpdated": "Last updated: {date}",
+    "updatedDate": "June 2, 2026",
+    "overview": {
+      "heading": "Overview",
+      "body": "{brand} (<host>{hostLabel}</host>) is a hosted connector that lets AI assistants (Claude, ChatGPT) access your Telegram account via the MCP protocol. Your privacy is important to us. This policy explains what data we collect, how we use it, and your rights."
+    },
+    "collect": {
+      "heading": "What we collect",
+      "items": {
+        "0": {
+          "term": "Telegram session data",
+          "desc": "An encrypted session token is stored on our server so you stay connected between requests. It is deleted when you disconnect."
+        },
+        "1": {
+          "term": "Usage logs",
+          "desc": "We log which MCP tools are called (e.g. \"list-chats\", \"read-messages\"), the timestamp, and your Telegram user ID. We do <em>not</em> log message content, chat names, or any personal data from your chats."
+        },
+        "2": {
+          "term": "OAuth tokens",
+          "desc": "Temporary tokens for authenticating your AI client (Claude/ChatGPT) to our server. Stored in memory, not persisted."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "Website analytics",
+      "body": "Our public website (not the MCP connector itself) uses <metrikaHref>Yandex.Metrika</metrikaHref> and <gaHref>Google Analytics</gaHref> to understand how visitors use the site. These tools set cookies and may record anonymized usage. <strong>They run only after you accept the consent banner</strong> — if you decline, no analytics scripts load and no cookies are set.",
+      "items": {
+        "0": {
+          "term": "What it covers",
+          "desc": "Only the marketing/documentation website. Your Telegram data and MCP requests are never sent to any analytics service."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Includes Webvisor (anonymized session replay of page interactions) and click maps. Form fields are masked by default; our pages contain no input forms with personal data."
+        },
+        "2": {
+          "term": "Opt out",
+          "desc": "Decline the consent banner, clear the <strong>mcpt-consent</strong> cookie/localStorage to be asked again, or block analytics domains in your browser."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "What we do NOT collect",
+      "items": {
+        "0": "Message content, media files, or chat history",
+        "1": "Phone numbers, contact lists, or profile data",
+        "2": "Passwords or Telegram 2FA codes"
+      }
+    },
+    "dataFlow": {
+      "heading": "How your data flows",
+      "body": "When you ask Claude or ChatGPT to read your Telegram messages, the AI client sends a request to our server. Our server fetches data from Telegram's API using your session, returns it to the AI client, and does not retain it. Message content passes through our server but is <strong>not stored or logged</strong>."
+    },
+    "retention": {
+      "heading": "Data retention",
+      "items": {
+        "0": {
+          "term": "Session tokens",
+          "desc": "Deleted when you disconnect or after inactivity."
+        },
+        "1": {
+          "term": "Usage logs",
+          "desc": "Retained for analytics and rate limiting. No personal content."
+        },
+        "2": {
+          "term": "OAuth data",
+          "desc": "In-memory only, cleared on server restart."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "Third parties",
+      "body": "We do not sell, share, or transfer your Telegram data to third parties. Your Telegram data is only accessed via the official Telegram MTProto API on your behalf. The AI client (Anthropic/OpenAI) receives your Telegram data as part of the conversation — their privacy policies apply to that processing. Website analytics providers (Yandex, Google) receive only anonymized site-usage data, never your Telegram data."
+    },
+    "security": {
+      "heading": "Security",
+      "body": "All connections use TLS (HTTPS). Telegram sessions are encrypted. The server runs on dedicated infrastructure with access restricted to the operator. We follow security best practices for session management and credential storage."
+    },
+    "rights": {
+      "heading": "Your rights",
+      "items": {
+        "0": {
+          "term": "Disconnect anytime",
+          "desc": "Remove the connector in Claude/ChatGPT settings. Your session is deleted immediately."
+        },
+        "1": {
+          "term": "Data deletion",
+          "desc": "Contact us to request full deletion of any stored data."
+        },
+        "2": {
+          "term": "Self-host option",
+          "desc": "Use the <repo>open-source version</repo> to run everything on your own machine with zero data leaving your device."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "Open source",
+      "body": "The server is open source under the MIT license at <repo>{repoLabel}</repo>. You can inspect exactly what data is accessed and how."
+    },
+    "contact": {
+      "heading": "Contact",
+      "body": "Questions about this policy? Reach out via <issues>{issuesLabel}</issues>",
+      "telegram": "or Telegram <tg>@{handle}</tg>",
+      "email": "or email <mail>{address}</mail>"
     }
   }
 }

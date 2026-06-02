@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "언어"
   },
-  "privacy": {
-    "title": "개인정보 처리방침",
-    "lastUpdated": "최종 업데이트"
-  },
   "terms": {
     "title": "이용약관",
     "lastUpdated": "최종 업데이트"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "클라우드 업로드는 약 50 MB로 제한됩니다. 더 큰 파일은 공개 서버에 호스팅하고 https:// URL을 전달하십시오 — Telegram 자체는 최대 2 GB를 지원하며, 클라우드 제한은 업로드 단계에만 적용됩니다.",
       "troubleshoot3Title": "uploadId가 만료되었거나 찾을 수 없음",
       "troubleshoot3Desc": "보류 중인 업로드는 /my/upload 이후 짧은 시간 동안만 유지됩니다. 사용하는 데 너무 오래 걸렸다면 다시 업로드하고 새 uploadId를 사용하십시오."
+    }
+  },
+  "consent": {
+    "title": "분석 도구를 사용합니다.",
+    "text": "사이트가 어떻게 사용되는지 파악하기 위해 Yandex.Metrika와 Google Analytics를 사용합니다. 동의하기 전까지는 어떠한 추적도 이루어지지 않습니다.",
+    "accept": "동의",
+    "decline": "거부",
+    "privacyLink": "개인정보 처리방침"
+  },
+  "privacyPage": {
+    "title": "개인정보 처리방침",
+    "metaDescription": "{brand} 호스팅 Telegram MCP 커넥터에 대한 개인정보 처리방침입니다.",
+    "lastUpdated": "마지막 업데이트: {date}",
+    "updatedDate": "2026년 6월 2일",
+    "overview": {
+      "heading": "개요",
+      "body": "{brand}(<host>{hostLabel}</host>)은(는) AI 어시스턴트(Claude, ChatGPT)가 MCP 프로토콜을 통해 사용자의 Telegram 계정에 접근할 수 있도록 하는 호스팅 커넥터입니다. 저희는 사용자의 개인정보를 소중히 여깁니다. 본 방침은 저희가 어떤 데이터를 수집하고, 이를 어떻게 사용하며, 사용자에게 어떤 권리가 있는지 설명합니다."
+    },
+    "collect": {
+      "heading": "수집하는 정보",
+      "items": {
+        "0": {
+          "term": "Telegram 세션 데이터",
+          "desc": "요청 사이에 연결을 유지하기 위해 암호화된 세션 토큰이 저희 서버에 저장됩니다. 연결을 해제하면 삭제됩니다."
+        },
+        "1": {
+          "term": "사용 로그",
+          "desc": "호출된 MCP 도구(예: \"list-chats\", \"read-messages\"), 타임스탬프, 사용자의 Telegram 사용자 ID를 기록합니다. 메시지 내용, 채팅 이름 또는 채팅의 개인 데이터는 <em>기록하지 않습니다</em>."
+        },
+        "2": {
+          "term": "OAuth 토큰",
+          "desc": "사용자의 AI 클라이언트(Claude/ChatGPT)를 저희 서버에 인증하기 위한 임시 토큰입니다. 메모리에 저장되며 영구 보관되지 않습니다."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "웹사이트 분석",
+      "body": "저희 공개 웹사이트(MCP 커넥터 자체가 아님)는 방문자가 사이트를 어떻게 사용하는지 파악하기 위해 <metrikaHref>Yandex.Metrika</metrikaHref>와 <gaHref>Google Analytics</gaHref>를 사용합니다. 이러한 도구는 쿠키를 설정하고 익명화된 사용 정보를 기록할 수 있습니다. <strong>이들은 사용자가 동의 배너를 수락한 후에만 실행됩니다</strong> — 거부하면 분석 스크립트가 로드되지 않으며 쿠키도 설정되지 않습니다.",
+      "items": {
+        "0": {
+          "term": "적용 범위",
+          "desc": "마케팅/문서 웹사이트에만 적용됩니다. 사용자의 Telegram 데이터와 MCP 요청은 어떤 분석 서비스로도 전송되지 않습니다."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Webvisor(페이지 상호작용의 익명화된 세션 재생)와 클릭 맵을 포함합니다. 양식 필드는 기본적으로 마스킹되며, 저희 페이지에는 개인 데이터를 입력하는 양식이 없습니다."
+        },
+        "2": {
+          "term": "수신 거부",
+          "desc": "동의 배너를 거부하거나, 다시 묻도록 <strong>mcpt-consent</strong> 쿠키/localStorage를 삭제하거나, 브라우저에서 분석 도메인을 차단하세요."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "수집하지 않는 정보",
+      "items": {
+        "0": "메시지 내용, 미디어 파일 또는 채팅 기록",
+        "1": "전화번호, 연락처 목록 또는 프로필 데이터",
+        "2": "비밀번호 또는 Telegram 2단계 인증 코드"
+      }
+    },
+    "dataFlow": {
+      "heading": "데이터 흐름 방식",
+      "body": "Claude 또는 ChatGPT에 Telegram 메시지를 읽어 달라고 요청하면 AI 클라이언트가 저희 서버에 요청을 보냅니다. 저희 서버는 사용자의 세션을 사용해 Telegram API에서 데이터를 가져와 AI 클라이언트에 반환하며 이를 보관하지 않습니다. 메시지 내용은 저희 서버를 거치지만 <strong>저장되거나 기록되지 않습니다</strong>."
+    },
+    "retention": {
+      "heading": "데이터 보관",
+      "items": {
+        "0": {
+          "term": "세션 토큰",
+          "desc": "연결을 해제하거나 일정 기간 비활성 상태가 되면 삭제됩니다."
+        },
+        "1": {
+          "term": "사용 로그",
+          "desc": "분석 및 요청 제한을 위해 보관됩니다. 개인적인 내용은 포함되지 않습니다."
+        },
+        "2": {
+          "term": "OAuth 데이터",
+          "desc": "메모리에만 보관되며 서버 재시작 시 삭제됩니다."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "제3자",
+      "body": "저희는 사용자의 Telegram 데이터를 제3자에게 판매, 공유 또는 양도하지 않습니다. 사용자의 Telegram 데이터는 사용자를 대신하여 공식 Telegram MTProto API를 통해서만 접근됩니다. AI 클라이언트(Anthropic/OpenAI)는 대화의 일부로 사용자의 Telegram 데이터를 수신하며, 해당 처리에는 각 사의 개인정보 처리방침이 적용됩니다. 웹사이트 분석 제공업체(Yandex, Google)는 익명화된 사이트 사용 데이터만 수신하며, 사용자의 Telegram 데이터는 절대 수신하지 않습니다."
+    },
+    "security": {
+      "heading": "보안",
+      "body": "모든 연결은 TLS(HTTPS)를 사용합니다. Telegram 세션은 암호화됩니다. 서버는 운영자에게만 접근이 제한된 전용 인프라에서 실행됩니다. 저희는 세션 관리와 자격 증명 저장에 대한 보안 모범 사례를 따릅니다."
+    },
+    "rights": {
+      "heading": "사용자의 권리",
+      "items": {
+        "0": {
+          "term": "언제든지 연결 해제",
+          "desc": "Claude/ChatGPT 설정에서 커넥터를 제거하세요. 사용자의 세션이 즉시 삭제됩니다."
+        },
+        "1": {
+          "term": "데이터 삭제",
+          "desc": "저장된 모든 데이터의 완전한 삭제를 요청하려면 저희에게 문의하세요."
+        },
+        "2": {
+          "term": "셀프 호스팅 옵션",
+          "desc": "<repo>오픈소스 버전</repo>을 사용하면 모든 것을 사용자 본인의 기기에서 실행할 수 있으며, 데이터가 기기를 벗어나지 않습니다."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "오픈소스",
+      "body": "서버는 MIT 라이선스에 따라 <repo>{repoLabel}</repo>에서 오픈소스로 제공됩니다. 어떤 데이터에 어떻게 접근하는지 정확히 확인할 수 있습니다."
+    },
+    "contact": {
+      "heading": "문의",
+      "body": "본 방침에 관한 질문이 있으신가요? <issues>{issuesLabel}</issues>를 통해 문의해 주세요",
+      "telegram": "또는 Telegram <tg>@{handle}</tg>으로 문의하세요",
+      "email": "또는 이메일 <mail>{address}</mail>로 문의하세요"
     }
   }
 }

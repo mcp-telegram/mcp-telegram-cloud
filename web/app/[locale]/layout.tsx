@@ -10,7 +10,10 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
+import { Analytics } from "@/components/Analytics";
+import { ConsentBanner } from "@/components/ConsentBanner";
 import { routing } from "@/i18n/routing";
+import { analytics } from "@/lib/analytics";
 import { config, iconUrl } from "@/lib/config";
 import { getLocale } from "@/lib/locales";
 import "../globals.css";
@@ -64,7 +67,15 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
   return (
     <html lang={locale} dir={dir}>
       <body>
-        <NextIntlClientProvider locale={locale}>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale}>
+          {children}
+          {analytics.enabled && (
+            <>
+              <ConsentBanner />
+              <Analytics metrikaId={analytics.metrikaId} ga4Id={analytics.ga4Id} />
+            </>
+          )}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

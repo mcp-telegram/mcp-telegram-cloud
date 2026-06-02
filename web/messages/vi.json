@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "Ngôn ngữ"
   },
-  "privacy": {
-    "title": "Chính sách bảo mật",
-    "lastUpdated": "Cập nhật lần cuối"
-  },
   "terms": {
     "title": "Điều khoản dịch vụ",
     "lastUpdated": "Cập nhật lần cuối"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "Mức tải lên trên cloud bị giới hạn khoảng 50 MB. Với file lớn hơn, hãy host trên máy chủ công khai và truyền URL https:// — bản thân Telegram hỗ trợ tới 2 GB, giới hạn cloud chỉ áp dụng cho bước upload.",
       "troubleshoot3Title": "uploadId hết hạn hoặc không tìm thấy",
       "troubleshoot3Desc": "Các upload đang chờ chỉ được giữ trong một khoảng ngắn sau /my/upload. Nếu bạn dùng quá muộn, hãy tải lên lại và dùng uploadId mới."
+    }
+  },
+  "consent": {
+    "title": "Chúng tôi sử dụng phân tích",
+    "text": "Chúng tôi sử dụng Yandex.Metrika và Google Analytics để hiểu cách trang web được sử dụng. Sẽ không có hoạt động theo dõi nào cho đến khi bạn đồng ý.",
+    "accept": "Đồng ý",
+    "decline": "Từ chối",
+    "privacyLink": "Chính sách quyền riêng tư"
+  },
+  "privacyPage": {
+    "title": "Chính sách quyền riêng tư",
+    "metaDescription": "Chính sách quyền riêng tư cho trình kết nối Telegram MCP được lưu trữ {brand}.",
+    "lastUpdated": "Cập nhật lần cuối: {date}",
+    "updatedDate": "Ngày 2 tháng 6 năm 2026",
+    "overview": {
+      "heading": "Tổng quan",
+      "body": "{brand} (<host>{hostLabel}</host>) là một trình kết nối được lưu trữ, cho phép các trợ lý AI (Claude, ChatGPT) truy cập tài khoản Telegram của bạn thông qua giao thức MCP. Quyền riêng tư của bạn rất quan trọng đối với chúng tôi. Chính sách này giải thích chúng tôi thu thập dữ liệu gì, sử dụng như thế nào và các quyền của bạn."
+    },
+    "collect": {
+      "heading": "Những gì chúng tôi thu thập",
+      "items": {
+        "0": {
+          "term": "Dữ liệu phiên Telegram",
+          "desc": "Một mã thông báo phiên được mã hóa được lưu trữ trên máy chủ của chúng tôi để bạn luôn được kết nối giữa các yêu cầu. Nó sẽ bị xóa khi bạn ngắt kết nối."
+        },
+        "1": {
+          "term": "Nhật ký sử dụng",
+          "desc": "Chúng tôi ghi lại những công cụ MCP nào được gọi (ví dụ: \"list-chats\", \"read-messages\"), dấu thời gian và ID người dùng Telegram của bạn. Chúng tôi <em>không</em> ghi lại nội dung tin nhắn, tên cuộc trò chuyện hoặc bất kỳ dữ liệu cá nhân nào từ các cuộc trò chuyện của bạn."
+        },
+        "2": {
+          "term": "Mã thông báo OAuth",
+          "desc": "Mã thông báo tạm thời để xác thực ứng dụng AI của bạn (Claude/ChatGPT) với máy chủ của chúng tôi. Được lưu trong bộ nhớ, không được lưu trữ lâu dài."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "Phân tích trang web",
+      "body": "Trang web công khai của chúng tôi (không phải bản thân trình kết nối MCP) sử dụng <metrikaHref>Yandex.Metrika</metrikaHref> và <gaHref>Google Analytics</gaHref> để hiểu cách khách truy cập sử dụng trang web. Những công cụ này thiết lập cookie và có thể ghi lại dữ liệu sử dụng đã được ẩn danh. <strong>Chúng chỉ chạy sau khi bạn chấp nhận biểu ngữ đồng ý</strong> — nếu bạn từ chối, không có tập lệnh phân tích nào được tải và không có cookie nào được thiết lập.",
+      "items": {
+        "0": {
+          "term": "Phạm vi áp dụng",
+          "desc": "Chỉ trang web tiếp thị/tài liệu. Dữ liệu Telegram và các yêu cầu MCP của bạn không bao giờ được gửi đến bất kỳ dịch vụ phân tích nào."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Bao gồm Webvisor (phát lại phiên đã ẩn danh của các tương tác trên trang) và bản đồ nhấp chuột. Các trường biểu mẫu được che theo mặc định; các trang của chúng tôi không chứa biểu mẫu nhập liệu với dữ liệu cá nhân."
+        },
+        "2": {
+          "term": "Từ chối",
+          "desc": "Từ chối biểu ngữ đồng ý, xóa cookie/localStorage <strong>mcpt-consent</strong> để được hỏi lại, hoặc chặn các tên miền phân tích trong trình duyệt của bạn."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "Những gì chúng tôi KHÔNG thu thập",
+      "items": {
+        "0": "Nội dung tin nhắn, tệp phương tiện hoặc lịch sử trò chuyện",
+        "1": "Số điện thoại, danh sách liên hệ hoặc dữ liệu hồ sơ",
+        "2": "Mật khẩu hoặc mã 2FA của Telegram"
+      }
+    },
+    "dataFlow": {
+      "heading": "Cách dữ liệu của bạn luân chuyển",
+      "body": "Khi bạn yêu cầu Claude hoặc ChatGPT đọc tin nhắn Telegram của bạn, ứng dụng AI sẽ gửi một yêu cầu đến máy chủ của chúng tôi. Máy chủ của chúng tôi lấy dữ liệu từ API của Telegram bằng phiên của bạn, trả lại cho ứng dụng AI và không lưu giữ nó. Nội dung tin nhắn đi qua máy chủ của chúng tôi nhưng <strong>không được lưu trữ hoặc ghi lại</strong>."
+    },
+    "retention": {
+      "heading": "Lưu giữ dữ liệu",
+      "items": {
+        "0": {
+          "term": "Mã thông báo phiên",
+          "desc": "Bị xóa khi bạn ngắt kết nối hoặc sau một thời gian không hoạt động."
+        },
+        "1": {
+          "term": "Nhật ký sử dụng",
+          "desc": "Được lưu giữ để phân tích và giới hạn tốc độ. Không có nội dung cá nhân."
+        },
+        "2": {
+          "term": "Dữ liệu OAuth",
+          "desc": "Chỉ trong bộ nhớ, bị xóa khi máy chủ khởi động lại."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "Bên thứ ba",
+      "body": "Chúng tôi không bán, chia sẻ hoặc chuyển giao dữ liệu Telegram của bạn cho bên thứ ba. Dữ liệu Telegram của bạn chỉ được truy cập thông qua API Telegram MTProto chính thức thay mặt cho bạn. Ứng dụng AI (Anthropic/OpenAI) nhận dữ liệu Telegram của bạn như một phần của cuộc trò chuyện — chính sách quyền riêng tư của họ áp dụng cho việc xử lý đó. Các nhà cung cấp phân tích trang web (Yandex, Google) chỉ nhận dữ liệu sử dụng trang web đã được ẩn danh, không bao giờ nhận dữ liệu Telegram của bạn."
+    },
+    "security": {
+      "heading": "Bảo mật",
+      "body": "Tất cả các kết nối đều sử dụng TLS (HTTPS). Các phiên Telegram được mã hóa. Máy chủ chạy trên hạ tầng chuyên dụng với quyền truy cập bị giới hạn cho người vận hành. Chúng tôi tuân theo các phương pháp bảo mật tốt nhất cho việc quản lý phiên và lưu trữ thông tin xác thực."
+    },
+    "rights": {
+      "heading": "Quyền của bạn",
+      "items": {
+        "0": {
+          "term": "Ngắt kết nối bất cứ lúc nào",
+          "desc": "Gỡ bỏ trình kết nối trong cài đặt Claude/ChatGPT. Phiên của bạn sẽ bị xóa ngay lập tức."
+        },
+        "1": {
+          "term": "Xóa dữ liệu",
+          "desc": "Liên hệ với chúng tôi để yêu cầu xóa hoàn toàn bất kỳ dữ liệu nào đã lưu trữ."
+        },
+        "2": {
+          "term": "Tùy chọn tự lưu trữ",
+          "desc": "Sử dụng <repo>phiên bản mã nguồn mở</repo> để chạy mọi thứ trên máy của riêng bạn mà không có dữ liệu nào rời khỏi thiết bị của bạn."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "Mã nguồn mở",
+      "body": "Máy chủ là mã nguồn mở theo giấy phép MIT tại <repo>{repoLabel}</repo>. Bạn có thể kiểm tra chính xác dữ liệu nào được truy cập và bằng cách nào."
+    },
+    "contact": {
+      "heading": "Liên hệ",
+      "body": "Có câu hỏi về chính sách này? Liên hệ với chúng tôi qua <issues>{issuesLabel}</issues>",
+      "telegram": "hoặc Telegram <tg>@{handle}</tg>",
+      "email": "hoặc email <mail>{address}</mail>"
     }
   }
 }

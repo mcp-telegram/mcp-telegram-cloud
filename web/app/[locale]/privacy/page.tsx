@@ -1,32 +1,58 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { ReactNode } from "react";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 import s from "../../legal.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-const TITLE = `Privacy Policy — ${config.brandName}`;
-const DESCRIPTION = `Privacy policy for ${config.brandName} hosted Telegram MCP connector.`;
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "privacyPage" });
   const canonical = canonicalForLocale(locale, "/privacy");
+  const title = `${t("title")} — ${config.brandName}`;
+  const description = t("metaDescription", { brand: config.brandName });
   return {
-    title: TITLE,
-    description: DESCRIPTION,
+    title,
+    description,
     alternates: { canonical, languages: languageAlternates("/privacy") },
-    openGraph: { url: canonical, title: TITLE, description: DESCRIPTION },
-    twitter: { title: TITLE, description: DESCRIPTION },
+    openGraph: { url: canonical, title, description },
+    twitter: { title, description },
   };
 }
 
 export default async function PrivacyPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "privacyPage" });
 
   const hostLabel = config.issuer.replace(/^https?:\/\//, "");
   const repoLabel = config.sourceRepoUrl.replace(/^https?:\/\//, "");
+
+  // Shared rich-text element factories. next-intl `t.rich` injects these into
+  // translated strings, so the markup stays in code (one source of truth) while
+  // the prose is localized. Each link/emphasis tag wraps the matching token.
+  const link = (href: string) => (chunks: ReactNode) => (
+    <a className={s.link} href={href}>
+      {chunks}
+    </a>
+  );
+  const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
+  const em = (chunks: ReactNode) => <em>{chunks}</em>;
+
+  // List items are arrays of {term, desc} — translated via indexed keys to keep
+  // the JSON flat and reviewable. We render a fixed count per section. The key
+  // casts mirror the project pattern (see FeatureGuide.tsx) — next-intl types
+  // keys as literals, so a dynamically-built key needs a representative cast.
+  const li = (ns: string, count: number) =>
+    Array.from({ length: count }, (_, i) => (
+      // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length, never reordered — namespace+index is a stable key.
+      <li key={`${ns}.${i}`}>
+        <strong>{t(`${ns}.${i}.term` as "collect.items.0.term")}</strong> —{" "}
+        {t.rich(`${ns}.${i}.desc` as "collect.items.0.desc", { strong, em })}
+      </li>
+    ));
 
   return (
     <div className={s.container}>
@@ -36,131 +62,89 @@ export default async function PrivacyPage({ params }: PageProps) {
         {config.brandName}
       </a>
 
-      <h1 className={s.h1}>Privacy Policy</h1>
-      <p className={s.updated}>Last updated: April 27, 2026</p>
+      <h1 className={s.h1}>{t("title")}</h1>
+      <p className={s.updated}>{t("lastUpdated", { date: t("updatedDate") })}</p>
 
-      <h2 className={s.h2}>Overview</h2>
+      <h2 className={s.h2}>{t("overview.heading")}</h2>
       <p className={s.p}>
-        {config.brandName} (
-        <a className={s.link} href={config.issuer}>
-          {hostLabel}
-        </a>
-        ) is a hosted connector that lets AI assistants (Claude, ChatGPT) access your Telegram account via the MCP
-        protocol. Your privacy is important to us. This policy explains what data we collect, how we use it, and your
-        rights.
+        {t.rich("overview.body", {
+          brand: config.brandName,
+          host: link(config.issuer),
+          hostLabel,
+          strong,
+        })}
       </p>
 
-      <h2 className={s.h2}>What we collect</h2>
+      <h2 className={s.h2}>{t("collect.heading")}</h2>
+      <ul className={s.ul}>{li("collect.items", 3)}</ul>
+
+      <h2 className={s.h2}>{t("analytics.heading")}</h2>
+      <p className={s.p}>
+        {t.rich("analytics.body", {
+          metrikaHref: link("https://yandex.com/legal/confidential/"),
+          gaHref: link("https://policies.google.com/privacy"),
+          strong,
+        })}
+      </p>
+      <ul className={s.ul}>{li("analytics.items", 3)}</ul>
+
+      <h2 className={s.h2}>{t("notCollect.heading")}</h2>
+      <ul className={s.ul}>
+        <li>{t("notCollect.items.0")}</li>
+        <li>{t("notCollect.items.1")}</li>
+        <li>{t("notCollect.items.2")}</li>
+      </ul>
+
+      <h2 className={s.h2}>{t("dataFlow.heading")}</h2>
+      <p className={s.p}>{t.rich("dataFlow.body", { strong })}</p>
+
+      <h2 className={s.h2}>{t("retention.heading")}</h2>
+      <ul className={s.ul}>{li("retention.items", 3)}</ul>
+
+      <h2 className={s.h2}>{t("thirdParties.heading")}</h2>
+      <p className={s.p}>{t.rich("thirdParties.body", { strong })}</p>
+
+      <h2 className={s.h2}>{t("security.heading")}</h2>
+      <p className={s.p}>{t("security.body")}</p>
+
+      <h2 className={s.h2}>{t("rights.heading")}</h2>
       <ul className={s.ul}>
         <li>
-          <strong>Telegram session data</strong> — An encrypted session token is stored on our server so you stay
-          connected between requests. It is deleted when you disconnect.
+          <strong>{t("rights.items.0.term")}</strong> — {t("rights.items.0.desc")}
         </li>
         <li>
-          <strong>Usage logs</strong> — We log which MCP tools are called (e.g. "list-chats", "read-messages"), the
-          timestamp, and your Telegram user ID. We do <em>not</em> log message content, chat names, or any personal data
-          from your chats.
+          <strong>{t("rights.items.1.term")}</strong> — {t("rights.items.1.desc")}
         </li>
         <li>
-          <strong>OAuth tokens</strong> — Temporary tokens for authenticating your AI client (Claude/ChatGPT) to our
-          server. Stored in memory, not persisted.
+          <strong>{t("rights.items.2.term")}</strong> —{" "}
+          {t.rich("rights.items.2.desc", { repo: link(config.sourceRepoUrl) })}
         </li>
       </ul>
 
-      <h2 className={s.h2}>What we do NOT collect</h2>
-      <ul className={s.ul}>
-        <li>Message content, media files, or chat history</li>
-        <li>Phone numbers, contact lists, or profile data</li>
-        <li>Passwords or Telegram 2FA codes</li>
-        <li>Analytics cookies or tracking pixels</li>
-      </ul>
+      <h2 className={s.h2}>{t("openSource.heading")}</h2>
+      <p className={s.p}>{t.rich("openSource.body", { repo: link(config.sourceRepoUrl), repoLabel })}</p>
 
-      <h2 className={s.h2}>How your data flows</h2>
+      <h2 className={s.h2}>{t("contact.heading")}</h2>
       <p className={s.p}>
-        When you ask Claude or ChatGPT to read your Telegram messages, the AI client sends a request to our server. Our
-        server fetches data from Telegram's API using your session, returns it to the AI client, and does not retain it.
-        Message content passes through our server but is <strong>not stored or logged</strong>.
-      </p>
-
-      <h2 className={s.h2}>Data retention</h2>
-      <ul className={s.ul}>
-        <li>
-          <strong>Session tokens</strong> — Deleted when you disconnect or after inactivity.
-        </li>
-        <li>
-          <strong>Usage logs</strong> — Retained for analytics and rate limiting. No personal content.
-        </li>
-        <li>
-          <strong>OAuth data</strong> — In-memory only, cleared on server restart.
-        </li>
-      </ul>
-
-      <h2 className={s.h2}>Third parties</h2>
-      <p className={s.p}>
-        We do not sell, share, or transfer your data to third parties. Your Telegram data is only accessed via the
-        official Telegram MTProto API on your behalf. The AI client (Anthropic/OpenAI) receives your Telegram data as
-        part of the conversation — their privacy policies apply to that processing.
-      </p>
-
-      <h2 className={s.h2}>Security</h2>
-      <p className={s.p}>
-        All connections use TLS (HTTPS). Telegram sessions are encrypted. The server runs on dedicated infrastructure
-        with access restricted to the operator. We follow security best practices for session management and credential
-        storage.
-      </p>
-
-      <h2 className={s.h2}>Your rights</h2>
-      <ul className={s.ul}>
-        <li>
-          <strong>Disconnect anytime</strong> — Remove the connector in Claude/ChatGPT settings. Your session is deleted
-          immediately.
-        </li>
-        <li>
-          <strong>Data deletion</strong> — Contact us to request full deletion of any stored data.
-        </li>
-        <li>
-          <strong>Self-host option</strong> — Use the{" "}
-          <a className={s.link} href={config.sourceRepoUrl}>
-            open-source version
-          </a>{" "}
-          to run everything on your own machine with zero data leaving your device.
-        </li>
-      </ul>
-
-      <h2 className={s.h2}>Open source</h2>
-      <p className={s.p}>
-        The server is open source under the MIT license at{" "}
-        <a className={s.link} href={config.sourceRepoUrl}>
-          {repoLabel}
-        </a>
-        . You can inspect exactly what data is accessed and how.
-      </p>
-
-      <h2 className={s.h2}>Contact</h2>
-      <p className={s.p}>
-        Questions about this policy? Reach out via{" "}
-        <a className={s.link} href={config.issuesUrl}>
-          {config.issuesLabel}
-        </a>
+        {t.rich("contact.body", { issues: link(config.issuesUrl), issuesLabel: config.issuesLabel })}
         {config.contactTelegram && (
           <>
             {" "}
-            or Telegram{" "}
-            <a className={s.link} href={`https://t.me/${config.contactTelegram}`}>
-              @{config.contactTelegram}
-            </a>
+            {t.rich("contact.telegram", {
+              tg: link(`https://t.me/${config.contactTelegram}`),
+              handle: config.contactTelegram,
+            })}
           </>
         )}
         {config.contactEmail && (
           <>
             {" "}
-            or email{" "}
-            <a className={s.link} href={`mailto:${config.contactEmail}`}>
-              {config.contactEmail}
-            </a>
+            {t.rich("contact.email", {
+              mail: link(`mailto:${config.contactEmail}`),
+              address: config.contactEmail,
+            })}
           </>
         )}
-        .
       </p>
     </div>
   );

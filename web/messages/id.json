@@ -111,10 +111,6 @@
   "language": {
     "switcherLabel": "Bahasa"
   },
-  "privacy": {
-    "title": "Kebijakan Privasi",
-    "lastUpdated": "Terakhir diperbarui"
-  },
   "terms": {
     "title": "Ketentuan Layanan",
     "lastUpdated": "Terakhir diperbarui"
@@ -426,6 +422,122 @@
       "troubleshoot2Desc": "Unggahan cloud dibatasi sekitar 50 MB. Untuk file yang lebih besar, host di server publik dan kirim URL https://-nya — Telegram sendiri mendukung hingga 2 GB, batas cloud hanya berlaku pada tahap upload.",
       "troubleshoot3Title": "uploadId kedaluwarsa atau tidak ditemukan",
       "troubleshoot3Desc": "Unggahan yang menunggu hanya disimpan dalam jangka waktu pendek setelah /my/upload. Jika Anda terlalu lama menggunakannya, unggah lagi dan gunakan uploadId yang baru."
+    }
+  },
+  "consent": {
+    "title": "Kami menggunakan analitik.",
+    "text": "Kami menggunakan Yandex.Metrika dan Google Analytics untuk memahami bagaimana situs ini digunakan. Tidak ada pelacakan yang berjalan sebelum Anda menyetujuinya.",
+    "accept": "Terima",
+    "decline": "Tolak",
+    "privacyLink": "Kebijakan Privasi"
+  },
+  "privacyPage": {
+    "title": "Kebijakan Privasi",
+    "metaDescription": "Kebijakan privasi untuk konektor MCP Telegram yang dihosting {brand}.",
+    "lastUpdated": "Terakhir diperbarui: {date}",
+    "updatedDate": "2 Juni 2026",
+    "overview": {
+      "heading": "Ikhtisar",
+      "body": "{brand} (<host>{hostLabel}</host>) adalah konektor terhosting yang memungkinkan asisten AI (Claude, ChatGPT) mengakses akun Telegram Anda melalui protokol MCP. Privasi Anda penting bagi kami. Kebijakan ini menjelaskan data apa yang kami kumpulkan, bagaimana kami menggunakannya, dan hak-hak Anda."
+    },
+    "collect": {
+      "heading": "Apa yang kami kumpulkan",
+      "items": {
+        "0": {
+          "term": "Data sesi Telegram",
+          "desc": "Token sesi terenkripsi disimpan di server kami agar Anda tetap terhubung di antara permintaan. Token ini dihapus saat Anda memutuskan koneksi."
+        },
+        "1": {
+          "term": "Log penggunaan",
+          "desc": "Kami mencatat alat MCP mana yang dipanggil (mis. \"list-chats\", \"read-messages\"), stempel waktu, dan ID pengguna Telegram Anda. Kami <em>tidak</em> mencatat isi pesan, nama obrolan, atau data pribadi apa pun dari obrolan Anda."
+        },
+        "2": {
+          "term": "Token OAuth",
+          "desc": "Token sementara untuk mengautentikasi klien AI Anda (Claude/ChatGPT) ke server kami. Disimpan di memori, tidak dipertahankan secara permanen."
+        }
+      }
+    },
+    "analytics": {
+      "heading": "Analitik situs web",
+      "body": "Situs web publik kami (bukan konektor MCP itu sendiri) menggunakan <metrikaHref>Yandex.Metrika</metrikaHref> dan <gaHref>Google Analytics</gaHref> untuk memahami bagaimana pengunjung menggunakan situs. Alat-alat ini menyetel cookie dan dapat merekam penggunaan yang dianonimkan. <strong>Alat-alat ini hanya berjalan setelah Anda menerima banner persetujuan</strong> — jika Anda menolak, tidak ada skrip analitik yang dimuat dan tidak ada cookie yang disetel.",
+      "items": {
+        "0": {
+          "term": "Apa yang dicakup",
+          "desc": "Hanya situs web pemasaran/dokumentasi. Data Telegram dan permintaan MCP Anda tidak pernah dikirim ke layanan analitik mana pun."
+        },
+        "1": {
+          "term": "Yandex.Metrika",
+          "desc": "Termasuk Webvisor (pemutaran ulang sesi yang dianonimkan dari interaksi halaman) dan peta klik. Bidang formulir disamarkan secara default; halaman kami tidak memuat formulir input dengan data pribadi."
+        },
+        "2": {
+          "term": "Memilih keluar",
+          "desc": "Tolak banner persetujuan, hapus cookie/localStorage <strong>mcpt-consent</strong> agar ditanya lagi, atau blokir domain analitik di browser Anda."
+        }
+      }
+    },
+    "notCollect": {
+      "heading": "Apa yang TIDAK kami kumpulkan",
+      "items": {
+        "0": "Isi pesan, berkas media, atau riwayat obrolan",
+        "1": "Nomor telepon, daftar kontak, atau data profil",
+        "2": "Kata sandi atau kode 2FA Telegram"
+      }
+    },
+    "dataFlow": {
+      "heading": "Bagaimana data Anda mengalir",
+      "body": "Saat Anda meminta Claude atau ChatGPT membaca pesan Telegram Anda, klien AI mengirim permintaan ke server kami. Server kami mengambil data dari API Telegram menggunakan sesi Anda, mengembalikannya ke klien AI, dan tidak menyimpannya. Isi pesan melewati server kami tetapi <strong>tidak disimpan atau dicatat</strong>."
+    },
+    "retention": {
+      "heading": "Penyimpanan data",
+      "items": {
+        "0": {
+          "term": "Token sesi",
+          "desc": "Dihapus saat Anda memutuskan koneksi atau setelah tidak aktif."
+        },
+        "1": {
+          "term": "Log penggunaan",
+          "desc": "Disimpan untuk analitik dan pembatasan laju. Tanpa konten pribadi."
+        },
+        "2": {
+          "term": "Data OAuth",
+          "desc": "Hanya di memori, dihapus saat server dimulai ulang."
+        }
+      }
+    },
+    "thirdParties": {
+      "heading": "Pihak ketiga",
+      "body": "Kami tidak menjual, membagikan, atau mentransfer data Telegram Anda kepada pihak ketiga. Data Telegram Anda hanya diakses melalui API MTProto Telegram resmi atas nama Anda. Klien AI (Anthropic/OpenAI) menerima data Telegram Anda sebagai bagian dari percakapan — kebijakan privasi mereka berlaku untuk pemrosesan tersebut. Penyedia analitik situs web (Yandex, Google) hanya menerima data penggunaan situs yang dianonimkan, tidak pernah data Telegram Anda."
+    },
+    "security": {
+      "heading": "Keamanan",
+      "body": "Semua koneksi menggunakan TLS (HTTPS). Sesi Telegram dienkripsi. Server berjalan di infrastruktur khusus dengan akses yang dibatasi hanya untuk operator. Kami mengikuti praktik keamanan terbaik untuk manajemen sesi dan penyimpanan kredensial."
+    },
+    "rights": {
+      "heading": "Hak-hak Anda",
+      "items": {
+        "0": {
+          "term": "Putuskan koneksi kapan saja",
+          "desc": "Hapus konektor di pengaturan Claude/ChatGPT. Sesi Anda dihapus seketika."
+        },
+        "1": {
+          "term": "Penghapusan data",
+          "desc": "Hubungi kami untuk meminta penghapusan penuh atas data tersimpan apa pun."
+        },
+        "2": {
+          "term": "Opsi swahosting",
+          "desc": "Gunakan <repo>versi sumber terbuka</repo> untuk menjalankan semuanya di mesin Anda sendiri tanpa data apa pun meninggalkan perangkat Anda."
+        }
+      }
+    },
+    "openSource": {
+      "heading": "Sumber terbuka",
+      "body": "Server ini bersifat sumber terbuka di bawah lisensi MIT di <repo>{repoLabel}</repo>. Anda dapat memeriksa dengan tepat data apa yang diakses dan bagaimana caranya."
+    },
+    "contact": {
+      "heading": "Kontak",
+      "body": "Ada pertanyaan tentang kebijakan ini? Hubungi kami melalui <issues>{issuesLabel}</issues>",
+      "telegram": "atau Telegram <tg>@{handle}</tg>",
+      "email": "atau email <mail>{address}</mail>"
     }
   }
 }
