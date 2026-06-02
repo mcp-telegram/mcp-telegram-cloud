@@ -17,6 +17,9 @@ export const Layout: FC<LayoutProps> = (props) => {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Functional-only host: keep out of search indexes (defense-in-depth
+            alongside the global X-Robots-Tag header). */}
+        <meta name="robots" content="noindex, nofollow" />
         <title>{props.title}</title>
         {props.description && <meta name="description" content={props.description} />}
         {props.canonicalUrl && <link rel="canonical" href={props.canonicalUrl} />}

@@ -16,6 +16,12 @@ export function createStaticRoutes({ sessions }: StaticRoutesDeps): Hono {
     config.openaiAppsChallenge ? c.text(config.openaiAppsChallenge) : c.notFound(),
   );
 
+  // Functional-only host — disallow all crawlers. Pairs with the
+  // `X-Robots-Tag: noindex` header set globally in server.tsx.
+  app.get("/robots.txt", (c) =>
+    c.text("User-agent: *\nDisallow: /\n", 200, { "Content-Type": "text/plain; charset=utf-8" }),
+  );
+
   app.get("/health", (c) => {
     const body = {
       status: isDraining() ? "draining" : "ok",
