@@ -1,0 +1,56 @@
+import type { Messages } from "../types.js";
+
+/** Russian — tier-1, hand-translated. */
+export const ru: Messages = {
+  common: {
+    brandName: "MCP Telegram",
+    languageLabel: "Язык",
+    loading: "Загрузка…",
+    retry: "Обновите страницу, чтобы повторить.",
+  },
+  login: {
+    title: "Подключите свой аккаунт Telegram",
+    usernameLabel: "Ваше имя пользователя",
+    usernamePlaceholder: "your_username",
+    startButton: "Войти по QR-коду",
+    step1: "Введите имя пользователя",
+    step2: "Отсканируйте QR-код в Telegram",
+    step3: "Откройте Telegram › Настройки › Устройства › Подключить устройство",
+    connecting: "Подключение…",
+    connected: "Подключено!",
+    sessionSaved: "Сессия сохранена. Можете закрыть эту страницу.",
+    connectionLost: "Соединение потеряно. Обновите страницу, чтобы повторить.",
+  },
+  settings: {
+    title: "Настройки",
+    subtitle: "Управление подключением",
+    accountSection: "Аккаунт",
+    save: "Сохранить",
+    saved: "Сохранено",
+    disconnect: "Отключить",
+    disconnectConfirm: "Это выйдет из Telegram на этом сервере. Продолжить?",
+  },
+  uploads: {
+    title: "Загрузки",
+    subtitle: "Файлы, подготовленные для отправки через ИИ",
+    dropzone: "Перетащите файл сюда или нажмите, чтобы выбрать",
+    uploading: "Загрузка…",
+    delete: "Удалить",
+    empty: "Пока нет загрузок.",
+    quota: "Квота",
+    expires: "Истекает",
+  },
+  audit: {
+    title: "Активность",
+    subtitle: "Недавние вызовы инструментов на вашем аккаунте",
+    empty: "Пока нет активности.",
+    tool: "Инструмент",
+    client: "Клиент",
+    when: "Когда",
+  },
+  addAccount: {
+    title: "Добавить ещё аккаунт",
+    subtitle: "Привязать второй аккаунт Telegram",
+    scanPrompt: "Отсканируйте QR-код аккаунтом Telegram, который хотите добавить.",
+  },
+};

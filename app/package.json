@@ -1,0 +1,26 @@
+{
+  "name": "mcp-telegram-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test src/__tests__/",
+    "lint": "biome check src",
+    "gen-i18n-types": "bun scripts/gen-i18n-types.ts"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@types/react": "19.2.16",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "6.0.3",
+    "vite": "^8.0.16"
+  }
+}
