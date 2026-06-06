@@ -6,7 +6,7 @@
       "name": "mcp-telegram-cloud",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
-        "@overpod/mcp-telegram": "^1.36.5",
+        "@overpod/mcp-telegram": "^1.37.0",
         "dotenv": "^17.4.2",
         "hono": "^4.12.23",
         "undici": "^8.3.0",
@@ -15,7 +15,7 @@
       "devDependencies": {
         "@biomejs/biome": "^2.4.16",
         "@types/bun": "^1.3.14",
-        "@types/node": "^25.9.1",
+        "@types/node": "^25.9.2",
         "husky": "^9.1.7",
         "typescript": "^6.0.3",
       },
@@ -29,7 +29,7 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^2.4.16",
-        "@types/react": "19.2.16",
+        "@types/react": "19.2.17",
         "@types/react-dom": "19.2.3",
         "@vitejs/plugin-react": "^6.0.2",
         "typescript": "6.0.3",
@@ -47,8 +47,8 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^2.4.16",
-        "@types/node": "^25.9.1",
-        "@types/react": "19.2.16",
+        "@types/node": "^25.9.2",
+        "@types/react": "19.2.17",
         "@types/react-dom": "19.2.3",
         "typescript": "6.0.3",
       },
@@ -167,7 +167,7 @@
 
     "@next/swc-win32-x64-msvc": ["@next/swc-win32-x64-msvc@16.2.7", "", { "os": "win32", "cpu": "x64" }, "sha512-J4WlM72NMk076Qsg0jTdK3SNXatlSdnjW7L7oNGLst1tAGjHrJh/FYi+pw9wyIjEtGRKDNzD0zuiY16oWYWVaw=="],
 
-    "@overpod/mcp-telegram": ["@overpod/mcp-telegram@1.36.5", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.29.0", "big-integer": "^1.6.52", "dotenv": "^17.4.2", "qrcode": "^1.5.4", "telegram": "^2.26.22", "zod": "^4.4.3" }, "bin": { "mcp-telegram": "dist/cli.js", "mcp-telegram-manifest": "dist/manifest.js" } }, "sha512-7qmkxtqeBs5wL6a7oRFgdpFscq2JiAbHn/xvem1R137AH0zUfSbc52X/ppXxn3+kXHXxhpVZyrEleNvtdQk3LQ=="],
+    "@overpod/mcp-telegram": ["@overpod/mcp-telegram@1.37.0", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.29.0", "big-integer": "^1.6.52", "dotenv": "^17.4.2", "qrcode": "^1.5.4", "telegram": "^2.26.22", "zod": "^4.4.3" }, "bin": { "mcp-telegram": "dist/cli.js", "mcp-telegram-manifest": "dist/manifest.js" } }, "sha512-8ddPavO8WlNeUzJGZy7eIZnapAr79bOnmFwrSVhK4cgTcZEAu0NjJr2TkwM0lOkrh4gvzZFJsjLZ2tPQW90gig=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.133.0", "", {}, "sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA=="],
 
@@ -265,9 +265,9 @@
 
     "@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
 
-    "@types/node": ["@types/node@25.9.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg=="],
+    "@types/node": ["@types/node@25.9.2", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-G05zqtJhcDLb8uslf5EjCxXg9G1KQxiV8OS0R26IC//Eoyitzqe8z37I7cqvnZlrlSfgocQRfSn/AHBZJJFyGw=="],
 
-    "@types/react": ["@types/react@19.2.16", "", { "dependencies": { "csstype": "^3.2.2" } }, "sha512-esJiCAnl0kfpNdE69f3So4WJUXy95dLZydX0KwK46riIHDzHM7O9Vtf9xCHW0PXIqvgqNrswl522kA/5yx+F4w=="],
+    "@types/react": ["@types/react@19.2.17", "", { "dependencies": { "csstype": "^3.2.2" } }, "sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw=="],
 
     "@types/react-dom": ["@types/react-dom@19.2.3", "", { "peerDependencies": { "@types/react": "^19.2.0" } }, "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ=="],
 
@@ -694,6 +694,8 @@
     "zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "zod-to-json-schema": ["zod-to-json-schema@3.25.2", "", { "peerDependencies": { "zod": "^3.25.28 || ^4" } }, "sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA=="],
+
+    "bun-types/@types/node": ["@types/node@25.9.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg=="],
 
     "next/postcss": ["postcss@8.4.31", "", { "dependencies": { "nanoid": "^3.3.6", "picocolors": "^1.0.0", "source-map-js": "^1.0.2" } }, "sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ=="],
 
