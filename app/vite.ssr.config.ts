@@ -27,6 +27,7 @@ export default defineConfig({
         "add-account": "src/pages/add-account.tsx",
         login: "src/pages/login.tsx",
         authorize: "src/pages/authorize.tsx",
+        observability: "src/pages/observability.tsx",
       },
       output: { format: "esm", entryFileNames: "[name].js" },
     },
