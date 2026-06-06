@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
 
@@ -137,4 +137,34 @@ export function _selfTest(sample = "round-trip"): boolean {
   const a = Buffer.from(back);
   const b = Buffer.from(sample);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// ── Token hashing (one-way, at rest) ────────────────────────────────────────
+//
+// OAuth access/refresh tokens, auth codes, and client secrets are only ever COMPARED
+// (lookup `WHERE token = ?`), never read back — so a one-way hash is strictly safer than
+// encryption: a stolen cloud.db yields hashes that cannot be reversed even WITH the key,
+// and there is no key to lose. Tokens are 32 random bytes (256 bits of entropy), so a
+// bare SHA-256 needs no salt — there is nothing to brute-force or rainbow-table.
+//
+// CRITICAL — the `h1:` prefix is load-bearing: a legacy plaintext token is
+// `randomBytes(32).toString("hex")` = 64 hex chars, and a SHA-256 digest is ALSO 64 hex
+// chars, so the two are indistinguishable by shape. Prefixing the stored hash with `h1:`
+// makes "already hashed" detectable, so the migration never double-hashes and dual-read
+// can match either form unambiguously.
+//
+// Lookups become `WHERE token = hashToken(incoming) OR token = incoming` (dual-read):
+// the client always sends its original plaintext, we hash it to match migrated rows and
+// also match any not-yet-migrated legacy row. Migration is transparent to clients.
+
+const HASH_VERSION = "h1";
+
+/** Versioned SHA-256 of a token: `h1:<64-hex>`. Stored in place of the plaintext token. */
+export function hashToken(token: string): string {
+  return `${HASH_VERSION}:${createHash("sha256").update(token).digest("hex")}`;
+}
+
+/** True if `stored` is one of our versioned token hashes (vs a legacy plaintext token). */
+export function isHashedToken(stored: string): boolean {
+  return /^h\d+:[0-9a-f]{64}$/.test(stored);
 }
