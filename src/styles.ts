@@ -118,23 +118,6 @@ export const scope = css`
 `;
 
 // ─── Status blocks ───────────────────────────────────────────────────
-export const successBlock = css`
-  background: ${tg.tertiaryBg};
-  border: 1px solid ${tg.link};
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
-  & h2 { color: ${tg.link}; font-size: 20px; margin-bottom: 8px; }
-`;
-
-export const errorBlock = css`
-  background: ${tg.tertiaryBg};
-  border: 1px solid ${tg.destructive};
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
-`;
-
 export const errorInline = css`
   background: ${tg.tertiaryBg};
   border: 1px solid ${tg.destructive};
