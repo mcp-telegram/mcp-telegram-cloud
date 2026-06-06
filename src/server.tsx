@@ -152,6 +152,24 @@ setTimeout(() => {
         event: "sessions.encrypt_backfill_failed",
       });
     }
+    // OAuth secrets (access/refresh tokens, codes, client_secret) → SHA-256 hashes.
+    // Same deferral rationale as the session sweep: past the old task's drain so its
+    // plaintext lookups don't miss mid-rollout.
+    try {
+      const m = oauth.migrateTokenHashes();
+      if (m > 0) {
+        logger.info(`Hashed ${m} legacy plaintext OAuth secret(s) at rest`, {
+          component: "oauth",
+          event: "oauth.hash_backfill",
+          count: m,
+        });
+      }
+    } catch (e) {
+      logger.error(`OAuth token hash backfill failed: ${(e as Error).message}`, {
+        component: "oauth",
+        event: "oauth.hash_backfill_failed",
+      });
+    }
   });
 }, 120_000);
 

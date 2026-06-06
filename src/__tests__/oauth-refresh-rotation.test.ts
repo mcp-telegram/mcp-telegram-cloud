@@ -14,6 +14,10 @@ process.env.MCP_TELEGRAM_TELEMETRY ??= "off";
 
 const { Database } = await import("bun:sqlite");
 const { OAuthProvider } = await import("../oauth.js");
+// Tokens are stored as SHA-256 hashes (v2.41.0). These tests reach into the DB directly to
+// assert chain/revoke state, so they must hash the plaintext token the public API returned
+// before matching the stored column. `hashToken` is the same helper oauth.ts uses.
+const { hashToken } = await import("../crypto.js");
 
 const ISSUER = "https://mcp-telegram.com";
 
@@ -64,7 +68,12 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
 
     const row = db
       .prepare("SELECT expires_at, chain_id, revoked, replaced_by FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(pair.refresh_token) as { expires_at: number; chain_id: string; revoked: number; replaced_by: string | null };
+      .get(hashToken(pair.refresh_token)) as {
+      expires_at: number;
+      chain_id: string;
+      revoked: number;
+      replaced_by: string | null;
+    };
 
     assert.equal(row.expires_at, 0, "refresh token must have expires_at = 0 (never expires)");
     assert.ok(row.chain_id, "chain_id must be set on initial issue");
@@ -76,7 +85,9 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
     const { oauth, db, clientId } = setupProviderWithClient();
     const initial = obtainInitialPair(oauth, clientId, "user_b");
     const initialChain = (
-      db.prepare("SELECT chain_id FROM oauth_refresh_tokens WHERE refresh_token = ?").get(initial.refresh_token) as {
+      db
+        .prepare("SELECT chain_id FROM oauth_refresh_tokens WHERE refresh_token = ?")
+        .get(hashToken(initial.refresh_token)) as {
         chain_id: string;
       }
     ).chain_id;
@@ -88,13 +99,17 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
 
     const oldRow = db
       .prepare("SELECT revoked, replaced_by FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(initial.refresh_token) as { revoked: number; replaced_by: string | null };
+      .get(hashToken(initial.refresh_token)) as { revoked: number; replaced_by: string | null };
     assert.equal(oldRow.revoked, 1, "old refresh token must be marked revoked");
-    assert.equal(oldRow.replaced_by, refreshed.refresh_token, "old token must point at its successor");
+    assert.equal(
+      oldRow.replaced_by,
+      hashToken(refreshed.refresh_token),
+      "old token must point at its successor (stored hashed)",
+    );
 
     const newRow = db
       .prepare("SELECT chain_id, expires_at, revoked FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(refreshed.refresh_token) as { chain_id: string; expires_at: number; revoked: number };
+      .get(hashToken(refreshed.refresh_token)) as { chain_id: string; expires_at: number; revoked: number };
     assert.equal(newRow.chain_id, initialChain, "rotated token stays in the same chain");
     assert.equal(newRow.expires_at, 0, "rotated token also never expires");
     assert.equal(newRow.revoked, 0);
@@ -110,7 +125,7 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
     // not the benign-retry shortcut.
     db.prepare("UPDATE oauth_refresh_tokens SET revoked_at = ? WHERE refresh_token = ?").run(
       Math.floor(Date.now() / 1000) - 60,
-      initial.refresh_token,
+      hashToken(initial.refresh_token),
     );
 
     // Attacker (or buggy client) replays the original refresh token.
@@ -163,7 +178,7 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
 
     const newRow = db
       .prepare("SELECT expires_at, chain_id FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(refreshed.refresh_token) as { expires_at: number; chain_id: string };
+      .get(hashToken(refreshed.refresh_token)) as { expires_at: number; chain_id: string };
     assert.equal(newRow.expires_at, 0, "rotated legacy token is upgraded to never-expires");
     assert.ok(newRow.chain_id, "a fresh chain_id is allocated for legacy tokens that had none");
   });
@@ -195,7 +210,7 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
       .prepare("SELECT refresh_token FROM oauth_refresh_tokens WHERE user_id = ?")
       .all("user_g") as Array<{ refresh_token: string }>;
     const tokens = survivors.map((r) => r.refresh_token);
-    assert.ok(tokens.includes(initial.refresh_token), "never-expiring token must survive cleanup");
+    assert.ok(tokens.includes(hashToken(initial.refresh_token)), "never-expiring token must survive cleanup");
     assert.ok(!tokens.includes(staleLegacy), "stale legacy token must be removed by cleanup");
   });
 
@@ -241,7 +256,7 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
     // Forge the timestamp to be outside the concurrent-retry window so we hit the replay path.
     db.prepare("UPDATE oauth_refresh_tokens SET revoked_at = ? WHERE refresh_token = ?").run(
       Math.floor(Date.now() / 1000) - 60,
-      generations[2],
+      hashToken(generations[2]),
     );
     const replay = oauth.refreshAccessToken({ refreshToken: generations[2], clientId });
     assert.equal(replay, null, "interior-chain replay must be rejected");
@@ -271,12 +286,16 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
     assert.ok(upgraded, "legacy token must rotate cleanly");
 
     const upgradedChain = (
-      db.prepare("SELECT chain_id FROM oauth_refresh_tokens WHERE refresh_token = ?").get(upgraded.refresh_token) as {
+      db
+        .prepare("SELECT chain_id FROM oauth_refresh_tokens WHERE refresh_token = ?")
+        .get(hashToken(upgraded.refresh_token)) as {
         chain_id: string;
       }
     ).chain_id;
     assert.ok(upgradedChain, "rotated leaf must have a chain_id");
 
+    // legacyRefresh was inserted as plaintext (simulating a pre-v2.41 row) and is matched via
+    // dual-read; it is NOT re-hashed by a refresh, so look it up by its plaintext value.
     const legacyAfter = db
       .prepare("SELECT chain_id FROM oauth_refresh_tokens WHERE refresh_token = ?")
       .get(legacyRefresh) as { chain_id: string };
@@ -292,7 +311,7 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
 
     const upgradedRow = db
       .prepare("SELECT revoked FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(upgraded.refresh_token) as { revoked: number };
+      .get(hashToken(upgraded.refresh_token)) as { revoked: number };
     assert.equal(upgradedRow.revoked, 1, "the upgraded chain leaf must be revoked by replay of the legacy token");
   });
 
@@ -313,7 +332,7 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
     // The freshly issued chain leaf must remain valid (not revoked).
     const leafRow = db
       .prepare("SELECT revoked FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(first.refresh_token) as { revoked: number };
+      .get(hashToken(first.refresh_token)) as { revoked: number };
     assert.equal(leafRow.revoked, 0, "live leaf must NOT be revoked by a concurrent retry");
 
     // The user's access tokens are also untouched.
@@ -325,13 +344,13 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
     // After we age the revoked_at past the window, replay does revoke the chain.
     db.prepare("UPDATE oauth_refresh_tokens SET revoked_at = ? WHERE refresh_token = ?").run(
       Math.floor(Date.now() / 1000) - 60,
-      initial.refresh_token,
+      hashToken(initial.refresh_token),
     );
     const lateReplay = oauth.refreshAccessToken({ refreshToken: initial.refresh_token, clientId });
     assert.equal(lateReplay, null);
     const leafAfter = db
       .prepare("SELECT revoked FROM oauth_refresh_tokens WHERE refresh_token = ?")
-      .get(first.refresh_token) as { revoked: number };
+      .get(hashToken(first.refresh_token)) as { revoked: number };
     assert.equal(leafAfter.revoked, 1, "post-window replay must revoke the live leaf");
   });
 
@@ -347,8 +366,8 @@ describe("OAuthProvider — refresh rotation + replay detection (v2.23.0)", () =
       .prepare("SELECT refresh_token, revoked FROM oauth_refresh_tokens WHERE user_id = ?")
       .all("user_cleanup_revoked") as Array<{ refresh_token: string; revoked: number }>;
     const tokens = surviving.map((r) => r.refresh_token);
-    assert.ok(tokens.includes(initial.refresh_token), "revoked but never-expiring row must survive cleanup");
-    assert.ok(tokens.includes(refreshed.refresh_token), "live leaf must survive cleanup");
+    assert.ok(tokens.includes(hashToken(initial.refresh_token)), "revoked but never-expiring row must survive cleanup");
+    assert.ok(tokens.includes(hashToken(refreshed.refresh_token)), "live leaf must survive cleanup");
   });
 
   it("schema migration is idempotent: constructing OAuthProvider twice on the same DB does not throw", () => {

@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { createHash, randomBytes } from "node:crypto";
+import { hashToken, isHashedToken } from "./crypto.js";
 import { logger, logUser } from "./logger.js";
 
 /** OAuth 2.0 Authorization Server for MCP (RFC 8414, RFC 7591, RFC 7636) */
@@ -152,9 +153,12 @@ export class OAuthProvider {
     const clientId = randomBytes(16).toString("hex");
     const clientSecret = randomBytes(32).toString("hex");
 
+    // Store the hash only. The plaintext secret is returned once to the client below (RFC
+    // 7591). Our token endpoint uses PKCE — client_secret is currently never verified — but
+    // hashing it keeps a stolen cloud.db free of any reusable secret regardless.
     this.db
       .prepare("INSERT INTO oauth_clients (client_id, client_secret, redirect_uris, client_name) VALUES (?, ?, ?, ?)")
-      .run(clientId, clientSecret, JSON.stringify(body.redirect_uris), body.client_name ?? "");
+      .run(clientId, hashToken(clientSecret), JSON.stringify(body.redirect_uris), body.client_name ?? "");
 
     logger.info(`OAuth client registered: ${body.client_name || clientId}`, {
       component: "oauth",
@@ -190,12 +194,15 @@ export class OAuthProvider {
     const code = randomBytes(32).toString("hex");
     const expiresAt = Math.floor(Date.now() / 1000) + AUTH_CODE_TTL_SECONDS;
 
+    // Store the hash; the plaintext code is returned to the client and matched via dual-read
+    // on exchange. Codes are single-use and short-lived (10 min) but hashing keeps the
+    // at-rest invariant uniform across all OAuth secrets.
     this.db
       .prepare(
         "INSERT INTO oauth_codes (code, client_id, user_id, redirect_uri, code_challenge, code_challenge_method, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
       .run(
-        code,
+        hashToken(code),
         params.clientId,
         params.userId,
         params.redirectUri,
@@ -214,12 +221,15 @@ export class OAuthProvider {
     codeVerifier: string;
     redirectUri: string;
   }): { access_token: string; token_type: string; expires_in: number; refresh_token: string } | null {
-    const row = this.db.prepare("SELECT * FROM oauth_codes WHERE code = ?").get(params.code) as AuthCode | undefined;
+    // Dual-read: hashed row (current) or legacy plaintext. Client sends the plaintext code.
+    const row = this.db
+      .prepare("SELECT * FROM oauth_codes WHERE code = ? OR code = ?")
+      .get(hashToken(params.code), params.code) as AuthCode | undefined;
 
     if (!row) return null;
 
-    // Delete used code (one-time use)
-    this.db.prepare("DELETE FROM oauth_codes WHERE code = ?").run(params.code);
+    // Delete used code (one-time use) — by the value actually stored.
+    this.db.prepare("DELETE FROM oauth_codes WHERE code = ?").run(row.code);
 
     // Check expiry
     if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
@@ -290,11 +300,13 @@ export class OAuthProvider {
       | { kind: "reject" }
       | { kind: "not_found" };
 
+    const hashedRefresh = hashToken(params.refreshToken);
     const outcome: Outcome = this.db
       .transaction((): Outcome => {
+        // Dual-read: hashed row (current) or legacy plaintext. Client sends plaintext.
         const row = this.db
-          .prepare("SELECT * FROM oauth_refresh_tokens WHERE refresh_token = ?")
-          .get(params.refreshToken) as Row | undefined;
+          .prepare("SELECT * FROM oauth_refresh_tokens WHERE refresh_token = ? OR refresh_token = ?")
+          .get(hashedRefresh, params.refreshToken) as Row | undefined;
         if (!row) return { kind: "not_found" };
         if (row.client_id !== params.clientId) return { kind: "reject" };
 
@@ -320,11 +332,14 @@ export class OAuthProvider {
         // matched rows because revoked is already 1, and falls into the !claimed branch below.
         // The outer transaction is started with `.immediate()` (BEGIN IMMEDIATE) so all writes
         // serialize at the database level rather than relying on optimistic deferred locking.
+        // `replaced_by` is hashed too — it points at the successor refresh_token, which is
+        // stored hashed by issueTokenPair, so the pointer matches the column it references.
+        // WHERE matches the value actually stored (row.refresh_token from the dual-read above).
         const claimed = this.db
           .prepare(
             "UPDATE oauth_refresh_tokens SET revoked = 1, replaced_by = ?, revoked_at = ?, chain_id = ? WHERE refresh_token = ? AND revoked = 0 RETURNING refresh_token",
           )
-          .get(newRefresh, now, chainId, params.refreshToken) as { refresh_token: string } | undefined;
+          .get(hashToken(newRefresh), now, chainId, row.refresh_token) as { refresh_token: string } | undefined;
 
         if (!claimed) {
           // Lost the race against another concurrent caller that already rotated this row.
@@ -464,9 +479,11 @@ export class OAuthProvider {
     const accessToken = randomBytes(32).toString("hex");
     const refreshToken = presetRefreshToken ?? randomBytes(32).toString("hex");
 
+    // Store only the SHA-256 hash; the plaintext is returned to the client below and never
+    // persisted. Lookups hash the incoming token to match (see dual-read helpers).
     this.db
       .prepare("INSERT INTO oauth_tokens (access_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)")
-      .run(accessToken, clientId, userId, Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECONDS);
+      .run(hashToken(accessToken), clientId, userId, Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECONDS);
 
     // expires_at = 0 ⇒ never expires. Lifetime is bounded by rotation, replay revoke, or
     // explicit /oauth/revoke; cleanup() leaves these rows alone.
@@ -474,7 +491,7 @@ export class OAuthProvider {
       .prepare(
         "INSERT INTO oauth_refresh_tokens (refresh_token, client_id, user_id, expires_at, chain_id) VALUES (?, ?, ?, 0, ?)",
       )
-      .run(refreshToken, clientId, userId, chainId);
+      .run(hashToken(refreshToken), clientId, userId, chainId);
 
     logger.info(`OAuth token issued for ${logUser(userId)}`, {
       component: "oauth",
@@ -494,13 +511,15 @@ export class OAuthProvider {
 
   /** Validate Bearer token, return userId and clientName or null */
   validateToken(token: string): { userId: string; clientName: string } | null {
-    const row = this.db.prepare("SELECT * FROM oauth_tokens WHERE access_token = ?").get(token) as
-      | AccessToken
-      | undefined;
+    // Dual-read: match the hashed row (current scheme) OR a not-yet-migrated legacy
+    // plaintext row. The client always sends plaintext; we hash to match the stored hash.
+    const row = this.db
+      .prepare("SELECT * FROM oauth_tokens WHERE access_token = ? OR access_token = ?")
+      .get(hashToken(token), token) as AccessToken | undefined;
 
     if (!row) return null;
     if (row.expires_at < Math.floor(Date.now() / 1000)) {
-      this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(token);
+      this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(row.access_token);
       return null;
     }
 
@@ -513,13 +532,15 @@ export class OAuthProvider {
    * RFC 7009 — Token Revocation.
    */
   revokeToken(token: string): string | null {
-    const row = this.db.prepare("SELECT user_id FROM oauth_tokens WHERE access_token = ?").get(token) as
-      | { user_id: string }
-      | undefined;
+    // Dual-read; delete by the value actually stored (hashed or legacy plaintext).
+    const hashed = hashToken(token);
+    const row = this.db
+      .prepare("SELECT access_token, user_id FROM oauth_tokens WHERE access_token = ? OR access_token = ?")
+      .get(hashed, token) as { access_token: string; user_id: string } | undefined;
 
     if (!row) return null;
 
-    this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(token);
+    this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(row.access_token);
     logger.info(`OAuth token revoked for ${logUser(row.user_id)}`, {
       component: "oauth",
       event: "oauth.token.revoke",
@@ -574,5 +595,61 @@ export class OAuthProvider {
     this.db.prepare("DELETE FROM oauth_codes WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_tokens WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE expires_at != 0 AND expires_at < ?").run(now);
+  }
+
+  /**
+   * One-time backfill: replace any legacy plaintext OAuth secrets with their `h1:` hashes.
+   *
+   * Covers access_token, refresh_token (+ its `replaced_by` pointer), auth codes, and
+   * client_secret. Transparent to clients: they keep sending the same plaintext token and
+   * dual-read hashes it on the way in — so an already-migrated row and a not-yet-migrated row
+   * both resolve until this sweep finishes the dormant tail.
+   *
+   * TIMING (same constraint as session encryption): during a `start-first` rolling update the
+   * OLD container looks up tokens by raw plaintext and shares this volume. Hashing a row makes
+   * the old container's `WHERE token = <plaintext>` miss → spurious "needs auth" for ~drain
+   * window. server.tsx defers this ~2 min post-boot, past the old task's 90s drain. New code's
+   * dual-read tolerates either form, so no request fails once the new container serves.
+   *
+   * @returns count of secrets hashed across all tables.
+   */
+  migrateTokenHashes(): number {
+    let migrated = 0;
+
+    const hashColumn = (table: string, col: string, pk: string): void => {
+      const rows = this.db.prepare(`SELECT ${pk} AS pk, ${col} AS val FROM ${table}`).all() as Array<{
+        pk: string;
+        val: string | null;
+      }>;
+      const upd = this.db.prepare(`UPDATE ${table} SET ${col} = ? WHERE ${pk} = ?`);
+      for (const r of rows) {
+        if (!r.val || isHashedToken(r.val)) continue;
+        upd.run(hashToken(r.val), r.pk);
+        migrated++;
+      }
+    };
+
+    this.db.transaction(() => {
+      hashColumn("oauth_tokens", "access_token", "access_token");
+      hashColumn("oauth_refresh_tokens", "refresh_token", "refresh_token");
+      hashColumn("oauth_codes", "code", "code");
+      hashColumn("oauth_clients", "client_secret", "client_id");
+      // `replaced_by` points at a successor refresh_token (now stored hashed). Upgrade any
+      // legacy plaintext pointer so chain forensics stays consistent. Keyed by refresh_token
+      // (already hashed by the sweep above, so match on the hashed PK).
+      const ptrs = this.db
+        .prepare(
+          "SELECT refresh_token AS pk, replaced_by AS val FROM oauth_refresh_tokens WHERE replaced_by IS NOT NULL",
+        )
+        .all() as Array<{ pk: string; val: string }>;
+      const updPtr = this.db.prepare("UPDATE oauth_refresh_tokens SET replaced_by = ? WHERE refresh_token = ?");
+      for (const r of ptrs) {
+        if (!r.val || isHashedToken(r.val)) continue;
+        updPtr.run(hashToken(r.val), r.pk);
+        migrated++;
+      }
+    })();
+
+    return migrated;
   }
 }
