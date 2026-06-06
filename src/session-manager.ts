@@ -743,9 +743,8 @@ export class SessionManager {
       migrated++;
     }
 
-    if (migrated > 0) {
-      console.log(`[sessions] Encrypted ${migrated} legacy plaintext session string(s) at rest`);
-    }
+    // Caller (server.tsx) emits the structured logger.info — no console.log here to avoid
+    // a duplicate line in the log stream.
     return migrated;
   }
 
