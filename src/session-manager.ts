@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite";
 import { randomBytes } from "node:crypto";
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import { config } from "./config.js";
+import { decryptSecret, encryptionEnabled, encryptSecret, isEncrypted } from "./crypto.js";
 import { logUser } from "./logger.js";
 
 interface UserSession {
@@ -185,7 +186,7 @@ export class SessionManager {
       | undefined;
 
     if (row?.session_string) {
-      telegram.setSessionString(row.session_string);
+      telegram.setSessionString(decryptSecret(row.session_string));
     }
 
     const connected = await telegram.connect();
@@ -204,7 +205,8 @@ export class SessionManager {
     return telegram;
   }
 
-  /** Save a user's session string to SQLite for persistence across restarts */
+  /** Save a user's session string to SQLite for persistence across restarts.
+   *  Encrypted at rest via {@link encryptSecret} (passthrough when no key is set). */
   saveSessionString(userId: string, sessionString: string): void {
     this.db
       .prepare(
@@ -212,7 +214,7 @@ export class SessionManager {
        VALUES (?, ?, datetime('now'))
        ON CONFLICT(user_id) DO UPDATE SET session_string = excluded.session_string, updated_at = datetime('now')`,
       )
-      .run(userId, sessionString);
+      .run(userId, encryptSecret(sessionString));
   }
 
   getSession(userId: string): TelegramService | undefined {
@@ -404,7 +406,7 @@ export class SessionManager {
 
     try {
       const telegram = this.telegramFactory(this.apiId, this.apiHash);
-      telegram.setSessionString(row.session_string);
+      telegram.setSessionString(decryptSecret(row.session_string));
       await telegram.connect();
 
       if (telegram.isConnected()) {
@@ -553,12 +555,13 @@ export class SessionManager {
       .prepare("SELECT account_id FROM telegram_accounts WHERE owner_user_id = ? AND telegram_user_id = ?")
       .get(ownerUserId, telegramUserId) as { account_id: number } | undefined;
 
+    const encrypted = encryptSecret(sessionString);
     if (existing) {
       this.db
         .prepare(
           "UPDATE telegram_accounts SET session_string = ?, label = ?, last_used_at = datetime('now') WHERE account_id = ?",
         )
-        .run(sessionString, label, existing.account_id);
+        .run(encrypted, label, existing.account_id);
       return existing.account_id;
     }
 
@@ -566,7 +569,7 @@ export class SessionManager {
       .prepare(
         "INSERT INTO telegram_accounts (owner_user_id, telegram_user_id, session_string, label) VALUES (?, ?, ?, ?)",
       )
-      .run(ownerUserId, telegramUserId, sessionString, label);
+      .run(ownerUserId, telegramUserId, encrypted, label);
     return Number(result.lastInsertRowid);
   }
 
@@ -624,7 +627,7 @@ export class SessionManager {
         return this.getOrCreateSession(ownerUserId);
       }
       const telegram = this.telegramFactory(this.apiId, this.apiHash);
-      telegram.setSessionString(row.session_string);
+      telegram.setSessionString(decryptSecret(row.session_string));
       const connected = await telegram.connect();
       if (connected) {
         this.sessions.set(key, { telegram, connectedAt: new Date(), lastActivity: new Date() });
@@ -696,6 +699,54 @@ export class SessionManager {
 
   getDb(): Database {
     return this.db;
+  }
+
+  /**
+   * One-time backfill: re-encrypt any legacy plaintext `session_string` rows in place.
+   *
+   * Lazy re-encryption already happens on every write (saveSessionString / addAccount run
+   * the value through {@link encryptSecret}), so an active user migrates on their next
+   * disconnect/reconnect. This sweep finishes the long tail of dormant rows.
+   *
+   * TIMING (why this is NOT called from the constructor): during a `start-first` rolling
+   * update the OLD container — which has no decrypt path — keeps serving from the SAME
+   * volume for up to its 90s drain. If we re-encrypted on boot, the old container would
+   * read a `v1:` envelope, feed it verbatim to GramJS, and break live sessions. Callers
+   * MUST defer this until the old task is gone (server.tsx schedules it ~2 min post-boot).
+   * No-op in passthrough mode (no key) — nothing to upgrade to.
+   *
+   * @returns count of rows re-encrypted across both tables.
+   */
+  migratePlaintextSessions(): number {
+    if (!encryptionEnabled()) return 0;
+    let migrated = 0;
+
+    const userRows = this.db.prepare("SELECT user_id, session_string FROM user_sessions").all() as Array<{
+      user_id: string;
+      session_string: string;
+    }>;
+    const upUser = this.db.prepare("UPDATE user_sessions SET session_string = ? WHERE user_id = ?");
+    for (const r of userRows) {
+      if (isEncrypted(r.session_string)) continue;
+      upUser.run(encryptSecret(r.session_string), r.user_id);
+      migrated++;
+    }
+
+    const acctRows = this.db.prepare("SELECT account_id, session_string FROM telegram_accounts").all() as Array<{
+      account_id: number;
+      session_string: string;
+    }>;
+    const upAcct = this.db.prepare("UPDATE telegram_accounts SET session_string = ? WHERE account_id = ?");
+    for (const r of acctRows) {
+      if (isEncrypted(r.session_string)) continue;
+      upAcct.run(encryptSecret(r.session_string), r.account_id);
+      migrated++;
+    }
+
+    if (migrated > 0) {
+      console.log(`[sessions] Encrypted ${migrated} legacy plaintext session string(s) at rest`);
+    }
+    return migrated;
   }
 
   /**
