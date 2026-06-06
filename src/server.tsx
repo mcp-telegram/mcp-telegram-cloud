@@ -129,6 +129,32 @@ purgeUrlFetchOrphans(0)
     });
   });
 
+// Deferred one-time backfill: re-encrypt any legacy plaintext session_string rows at rest.
+// Delayed 2 min — safely past the OLD container's 90s drain during a `start-first` rolling
+// update (stacks/mcp-telegram.yml). The old task has no decrypt path and shares this volume,
+// so re-encrypting while it still serves would feed it `v1:` envelopes and break live
+// sessions. By +2 min the old task is gone. No-op in passthrough mode (no key set).
+// Active users also migrate lazily on their next write (saveSessionString/addAccount encrypt).
+setTimeout(() => {
+  runDetached(() => {
+    try {
+      const n = sessions.migratePlaintextSessions();
+      if (n > 0) {
+        logger.info(`Encrypted ${n} legacy plaintext session string(s) at rest`, {
+          component: "sessions",
+          event: "sessions.encrypt_backfill",
+          count: n,
+        });
+      }
+    } catch (e) {
+      logger.error(`Session encryption backfill failed: ${(e as Error).message}`, {
+        component: "sessions",
+        event: "sessions.encrypt_backfill_failed",
+      });
+    }
+  });
+}, 120_000);
+
 setInterval(() => {
   // Detach so background purge logs don't pollute whatever HTTP trace was
   // active when the timer fired. `runDetached` returns the inner promise

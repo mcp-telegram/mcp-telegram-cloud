@@ -82,6 +82,12 @@ export const config = {
   openaiAppsChallenge: optional(process.env.OPENAI_APPS_CHALLENGE, ""),
   adminToken: process.env.ADMIN_TOKEN ?? "",
 
+  /** 32-byte key (64 hex or 44-char base64) that encrypts `session_string` at rest in
+   * cloud.db. Injected from a GitHub Secret at deploy time → held only in RAM, never on
+   * disk, so a stolen volume/backup yields ciphertext without the key. Empty = PASSTHROUGH
+   * (self-host/dev/OSS store plaintext + a startup warning). See {@link ./crypto.ts}. */
+  sessionEncryptionKey: optional(process.env.SESSION_ENCRYPTION_KEY, ""),
+
   telegramApiId: Number(required("TELEGRAM_API_ID", process.env.TELEGRAM_API_ID)),
   telegramApiHash: required("TELEGRAM_API_HASH", process.env.TELEGRAM_API_HASH),
 
