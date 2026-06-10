@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.41.0",
+  "version": "2.41.1",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -37,10 +37,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@overpod/mcp-telegram": "^1.37.0",
+    "@overpod/mcp-telegram": "^1.38.0",
     "dotenv": "^17.4.2",
-    "hono": "^4.12.23",
-    "undici": "^8.3.0",
+    "hono": "^4.12.25",
+    "undici": "^8.4.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -52,6 +52,7 @@
   },
   "overrides": {
     "fast-uri@<3.1.2": ">=3.1.2",
-    "ip-address@<10.2.0": ">=10.2.0"
+    "ip-address@<10.2.0": ">=10.2.0",
+    "postcss": ">=8.5.10"
   }
 }
