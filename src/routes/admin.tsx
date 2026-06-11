@@ -1,7 +1,8 @@
 import { Hono } from "hono";
+import { checkIntegrity, listUsers } from "../admin-inspect.js";
 import { isAdminAuthorized } from "../auth/admin.js";
 import { config } from "../config.js";
-import { logUser } from "../logger.js";
+import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
 import { ObservabilityPage } from "../pages/ObservabilityPage.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
@@ -35,6 +36,57 @@ export function createAdminRoutes({ oauth, sessions, usage }: AdminRoutesDeps): 
       peakHours: usage.getHourlyStats(days),
       ...(userId ? { tools: usage.getToolBreakdown(userId, days) } : {}),
     });
+  });
+
+  // All registered users with activity (usage_log) and OAuth token state.
+  // Primary input for the "who is dead" audit: sort by inactiveDays.
+  app.get("/users", (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const users = listUsers(sessions.getDb());
+    return c.json({ total: users.length, users });
+  });
+
+  // Read-only anomaly sweep: plaintext leftovers, expired-token garbage,
+  // orphan rows across user_sessions / telegram_accounts / oauth_* / usage_log.
+  app.get("/integrity", (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    return c.json(checkIntegrity(sessions.getDb()));
+  });
+
+  // Admin-side full disconnect — mirrors the user-initiated OAuth revoke path
+  // (routes/oauth.tsx /revoke): Telegram logOut + purge from RAM/SQLite, then
+  // revoke every OAuth token. Irreversible: the user must re-QR to come back.
+  app.delete("/users/:id", async (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const userId = c.req.param("id");
+    const exists = sessions.getDb().prepare("SELECT 1 FROM user_sessions WHERE user_id = ?").get(userId);
+    if (!exists) {
+      return c.json({ error: "user not found" }, 404);
+    }
+    logger.info(`Admin delete: destroying session for ${logUser(userId)}`, {
+      component: "admin",
+      userId: logUser(userId),
+      event: "admin.user.delete",
+    });
+    // Dead users are typically NOT in the RAM pool, and destroyUserSession only
+    // calls Telegram logOut for pooled sessions — without this warm-up the auth
+    // key would stay valid on Telegram's side after we drop the row. Connect
+    // first so logOut actually revokes it; if the session is already invalid
+    // upstream, fall through and just purge our copy.
+    try {
+      await sessions.getOrCreateSession(userId);
+    } catch {
+      // Session string broken/expired on Telegram's side — nothing to log out of.
+    }
+    const { loggedOut } = await sessions.destroyUserSession(userId);
+    const revokedTokens = oauth.revokeAllUserTokens(userId);
+    return c.json({ ok: true, userId, loggedOut, revokedTokens });
   });
 
   app.get("/observability", async (c) => {
