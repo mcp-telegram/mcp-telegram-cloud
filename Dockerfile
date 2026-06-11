@@ -55,14 +55,12 @@ COPY --from=app-builder /build/dist-ssr ./app/dist-ssr
 COPY app/src ./app/src
 COPY app/package.json ./app/package.json
 # Run as a non-root user (audit H3): a container RCE no longer lands as root.
-# oven/bun:alpine ships UID 0 by default. `app` owns the app tree + the data
-# dir. NOTE: /app/data is a Swarm bind-mount in prod — its ownership comes from
-# the HOST path, not this layer, so the deploy must `chown` the host dir to this
-# uid/gid (1000:1000) when pre-creating it. See infra deploy.yml.
-RUN addgroup -S -g 1000 app && adduser -S -u 1000 -G app app \
- && mkdir -p /app/data \
- && chown -R app:app /app
-USER app
+# oven/bun:alpine ships a built-in `bun` user (uid/gid 1000) — reuse it rather
+# than creating our own (gid 1000 is already taken by that user). `bun` owns the
+# app tree + data dir. NOTE: the prod `data` volume is root-owned from earlier
+# root containers, so the infra deploy chowns it to 1000:1000 (see deploy.yml).
+RUN mkdir -p /app/data && chown -R bun:bun /app
+USER bun
 ENV NODE_ENV=production
 # Cloud distribution policy: opt-in upstream tools that are read-only and zero-cost
 # are pre-enabled in the cloud image. Self-hosters can override these per-feature.
