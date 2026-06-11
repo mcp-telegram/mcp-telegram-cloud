@@ -575,12 +575,16 @@ export class OAuthProvider {
 
   /** PKCE S256 verification */
   private verifyPKCE(codeVerifier: string, codeChallenge: string, method: string): boolean {
-    if (method === "S256") {
-      const hash = createHash("sha256").update(codeVerifier).digest("base64url");
-      return hash === codeChallenge;
-    }
-    // plain (not recommended, but spec-compliant)
-    return codeVerifier === codeChallenge;
+    // S256 only. The `plain` method is deliberately unsupported: with `plain`
+    // the challenge equals the verifier, so a leaked authorization code (referer,
+    // logs, redirect interception) defeats PKCE entirely. Our metadata advertises
+    // only S256 (getMetadata) and /authorize rejects anything else up front; this
+    // is the defense-in-depth backstop. An empty challenge/verifier never passes
+    // because both must be present and the SHA-256 of "" won't equal "".
+    if (method !== "S256") return false;
+    if (!codeVerifier || !codeChallenge) return false;
+    const hash = createHash("sha256").update(codeVerifier).digest("base64url");
+    return hash === codeChallenge;
   }
 
   /**
