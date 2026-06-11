@@ -89,6 +89,14 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       return c.text("Invalid redirect_uri", 400);
     }
 
+    // PKCE is mandatory and S256-only (matches advertised metadata). Reject a
+    // missing or `plain` challenge here, before any code is minted — `plain`
+    // gives no protection if the auth code leaks.
+    if (!codeChallenge || codeChallengeMethod !== "S256") {
+      incr(OAUTH_FLOW, { step: "authorize", outcome: "bad_pkce" });
+      return c.text("PKCE required: code_challenge with code_challenge_method=S256", 400);
+    }
+
     // Fast path: if we have a cookie hint and session is valid, skip QR entirely (HTTP 302)
     const userIdHint = getUserIdHint(c);
 
@@ -162,6 +170,13 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     if (!matchRedirectUri(allowedUris, redirectUri)) {
       incr(OAUTH_FLOW, { step: "authorize_qr", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
+    }
+
+    // PKCE is mandatory and S256-only (see /authorize). Reject before the QR
+    // stream so a code is never minted for a no-PKCE / plain flow.
+    if (!codeChallenge || codeChallengeMethod !== "S256") {
+      incr(OAUTH_FLOW, { step: "authorize_qr", outcome: "bad_pkce" });
+      return c.text("PKCE required: code_challenge with code_challenge_method=S256", 400);
     }
 
     const userIdHint = getUserIdHint(c);

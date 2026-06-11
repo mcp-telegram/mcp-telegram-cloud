@@ -39,6 +39,13 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
     let userId: string | null = null;
     let clientName = "";
 
+    // Identity comes ONLY from a validated OAuth Bearer token. Never trust a
+    // request header for the user id: userId is a *public* identifier (Telegram
+    // username / numeric id), so any header-derived identity would let an
+    // unauthenticated caller name an arbitrary victim and drive their Telegram
+    // session — a full pre-auth account takeover that bypasses OAuth, PKCE and
+    // at-rest encryption (the server decrypts on demand for whatever id it's
+    // handed). See security audit 2026-06-11.
     const auth = c.req.header("Authorization");
     if (auth?.startsWith("Bearer ")) {
       const tokenInfo = oauth.validateToken(auth.slice(7));
@@ -46,10 +53,6 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
         userId = tokenInfo.userId;
         clientName = tokenInfo.clientName;
       }
-    }
-
-    if (!userId) {
-      userId = c.req.header("X-User-Id") || null;
     }
 
     if (!userId) {
