@@ -1,8 +1,11 @@
 import type { Context, Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
+import { config } from "../config.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
 import { handleMcpRequest } from "../mcp-handler.js";
 import type { OAuthProvider } from "../oauth.js";
+import { mcpRateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
 import type { UsageTracker } from "../usage.js";
@@ -34,6 +37,13 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
 
   app.use("/mcp", corsMiddleware);
   app.use("/mcp/", corsMiddleware);
+  // Per-token rate limit + request body cap (audit M1 / /mcp throttle). CORS
+  // runs first so preflight OPTIONS short-circuits before these.
+  app.use("/mcp", mcpRateLimit);
+  app.use("/mcp/", mcpRateLimit);
+  const mcpBodyLimit = bodyLimit({ maxSize: config.maxJsonBodyBytes });
+  app.use("/mcp", mcpBodyLimit);
+  app.use("/mcp/", mcpBodyLimit);
 
   const handler = async (c: Context) => {
     let userId: string | null = null;

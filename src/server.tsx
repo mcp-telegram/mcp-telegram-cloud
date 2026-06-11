@@ -10,6 +10,7 @@ import { getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mc
 import { accessLog } from "./middleware/access-log.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { noindex } from "./middleware/noindex.js";
+import { securityHeaders } from "./middleware/security-headers.js";
 import { OAuthProvider } from "./oauth.js";
 import { installRateLimiterEventListener } from "./rate-limiter-events.js";
 import { createAccountsRoutes } from "./routes/accounts.js";
@@ -211,6 +212,10 @@ setInterval(() => {
 const app = new Hono({ strict: false });
 
 app.use("*", accessLog);
+// Security response headers (HSTS, CSP, frame-ancestors, nosniff) on every
+// response — the backend serves HTML OAuth/login/my pages that render
+// client-supplied values. See middleware/security-headers.ts (audit H1).
+app.use("*", securityHeaders);
 // This host is functional-only (OAuth/login/my/mcp) — keep it out of search
 // indexes. Header form covers redirects and non-HTML responses too.
 app.use("*", noindex);

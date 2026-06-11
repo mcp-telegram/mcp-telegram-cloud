@@ -36,16 +36,23 @@ export interface RateLimitOptions {
   windowMs: number;
   /** Label used in log events and bucket keys. */
   scope: string;
+  /**
+   * Per-request bucket discriminator. Defaults to the client IP. Override to
+   * rate-limit by something else — e.g. the Bearer token on /mcp, so one
+   * abusive token can't hammer Telegram MTProto regardless of source IP.
+   * Returning null/empty falls back to the IP.
+   */
+  keyOf?: (c: Context) => string | null | undefined;
 }
 
 export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
-  const { limit, windowMs, scope } = opts;
+  const { limit, windowMs, scope, keyOf } = opts;
   return async (c, next) => {
     if (limit <= 0 || windowMs <= 0) return next();
 
-    const ip = getClientIp(c);
+    const discriminator = (keyOf?.(c) || "").trim() || getClientIp(c);
     const now = Date.now();
-    const key = `${scope}:${ip}`;
+    const key = `${scope}:${discriminator}`;
     const existing = buckets.get(key);
 
     if (!existing || existing.resetAt <= now) {
@@ -76,4 +83,30 @@ export const oauthRateLimit = rateLimit({
   limit: config.oauthRateLimit,
   windowMs: config.oauthRateWindowMs,
   scope: "oauth",
+});
+
+/**
+ * Stricter limiter for unauthenticated dynamic client registration (RFC 7591).
+ * Real clients register once; a low cap blunts the client-table flooding that
+ * produced 145 rows for 19 users in prod (audit H2).
+ */
+export const registerRateLimit = rateLimit({
+  limit: config.registerRateLimit,
+  windowMs: config.registerRateWindowMs,
+  scope: "oauth_register",
+});
+
+/**
+ * Per-token limiter for /mcp. Keys by the Bearer token (falling back to IP when
+ * absent) so one token can't flood the backend / downstream Telegram MTProto
+ * and trigger FLOOD_WAIT bans. /mcp is already Bearer-gated; this caps volume.
+ */
+export const mcpRateLimit = rateLimit({
+  limit: config.mcpRateLimit,
+  windowMs: config.mcpRateWindowMs,
+  scope: "mcp",
+  keyOf: (c) => {
+    const auth = c.req.header("authorization");
+    return auth?.startsWith("Bearer ") ? auth.slice(7) : null;
+  },
 });
