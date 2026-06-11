@@ -141,6 +141,25 @@ export const config = {
   oauthRateLimit: intOr(process.env.OAUTH_RATE_LIMIT, 30),
   /** OAuth IP rate-limit window in milliseconds. */
   oauthRateWindowMs: intOr(process.env.OAUTH_RATE_WINDOW_MS, 60_000),
+
+  /**
+   * Dynamic client registration (RFC 7591) is unauthenticated, so it gets a
+   * much stricter per-IP cap than the general OAuth limit — real clients
+   * register once. Default 5 per hour per IP. 0 disables. (Audit H2.)
+   */
+  registerRateLimit: intOr(process.env.REGISTER_RATE_LIMIT, 5),
+  registerRateWindowMs: intOr(process.env.REGISTER_RATE_WINDOW_MS, 60 * 60_000),
+  /** Hard ceiling on total oauth_clients rows; registration past this is rejected. 0 disables. */
+  maxOauthClients: intOr(process.env.MAX_OAUTH_CLIENTS, 5000),
+  /** Prune oauth_clients with zero successful authorizations older than N days. 0 disables. */
+  unusedClientTtlDays: intOr(process.env.UNUSED_CLIENT_TTL_DAYS, 30),
+
+  /** Per-token rate-limit on /mcp: max requests per window per Bearer token. 0 disables. */
+  mcpRateLimit: intOr(process.env.MCP_RATE_LIMIT, 240),
+  mcpRateWindowMs: intOr(process.env.MCP_RATE_WINDOW_MS, 60_000),
+
+  /** Max request body bytes for JSON API routes (/oauth/*, /mcp). Default 1 MiB. */
+  maxJsonBodyBytes: intOr(process.env.MAX_JSON_BODY_BYTES, 1024 * 1024),
 };
 
 export const iconUrl = `${config.issuer}/icon.svg`;

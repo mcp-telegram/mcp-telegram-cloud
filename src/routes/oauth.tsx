@@ -1,12 +1,13 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
 import { decideTgUserCookie } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
-import { oauthRateLimit } from "../rate-limit.js";
+import { oauthRateLimit, registerRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import { matchRedirectUri } from "../redirect-uri-matcher.js";
 import type { SessionManager } from "../session-manager.js";
@@ -57,13 +58,26 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
   const app = new Hono();
 
   app.use("/*", oauthRateLimit);
+  // Small JSON/form bodies only — token/register/revoke payloads are KBs.
+  // Caps the parser allocation on these unauthenticated endpoints (audit M1).
+  app.use("/*", bodyLimit({ maxSize: config.maxJsonBodyBytes }));
 
-  // RFC 7591 — Dynamic Client Registration
-  app.post("/register", async (c) => {
+  // RFC 7591 — Dynamic Client Registration. Unauthenticated, so it carries a
+  // stricter per-IP limit than the rest of /oauth/* and a hard total-clients
+  // ceiling (audit H2).
+  app.post("/register", registerRateLimit, async (c) => {
+    if (oauth.clientCount() >= config.maxOauthClients && config.maxOauthClients > 0) {
+      incr(OAUTH_FLOW, { step: "register", outcome: "capacity" });
+      return c.json({ error: "registration temporarily unavailable" }, 503);
+    }
     const body = await c.req.json();
-    if (!body.redirect_uris || !Array.isArray(body.redirect_uris)) {
+    if (!body.redirect_uris || !Array.isArray(body.redirect_uris) || body.redirect_uris.length === 0) {
       incr(OAUTH_FLOW, { step: "register", outcome: "error" });
       return c.json({ error: "redirect_uris required" }, 400);
+    }
+    if (body.redirect_uris.length > 10) {
+      incr(OAUTH_FLOW, { step: "register", outcome: "error" });
+      return c.json({ error: "too many redirect_uris" }, 400);
     }
     const client = oauth.registerClient(body);
     incr(OAUTH_FLOW, { step: "register", outcome: "ok" });

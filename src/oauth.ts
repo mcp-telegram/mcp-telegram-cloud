@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { createHash, randomBytes } from "node:crypto";
+import { config } from "./config.js";
 import { hashToken, isHashedToken } from "./crypto.js";
 import { logger, logUser } from "./logger.js";
 
@@ -181,6 +182,42 @@ export class OAuthProvider {
     return this.db.prepare("SELECT * FROM oauth_clients WHERE client_id = ?").get(clientId) as
       | RegisteredClient
       | undefined;
+  }
+
+  /** Total registered clients — used to enforce the registration ceiling. */
+  clientCount(): number {
+    return (this.db.prepare("SELECT COUNT(*) AS n FROM oauth_clients").get() as { n: number }).n;
+  }
+
+  /**
+   * Prune clients that registered more than `olderThanDays` ago and never
+   * obtained a token (no row in oauth_tokens / oauth_refresh_tokens / oauth_codes
+   * references them). Unauthenticated DCR lets bots flood this table — most rows
+   * are never used (audit H2). Returns the number deleted.
+   *
+   * A client with any live or historical token is kept: a user who authorized
+   * months ago and still holds a refresh token must keep their client row.
+   */
+  pruneUnusedClients(olderThanDays: number): number {
+    if (olderThanDays <= 0) return 0;
+    const cutoff = `-${Math.floor(olderThanDays)} days`;
+    const result = this.db
+      .prepare(
+        `DELETE FROM oauth_clients
+         WHERE created_at < datetime('now', ?)
+           AND client_id NOT IN (SELECT client_id FROM oauth_tokens)
+           AND client_id NOT IN (SELECT client_id FROM oauth_refresh_tokens)
+           AND client_id NOT IN (SELECT client_id FROM oauth_codes)`,
+      )
+      .run(cutoff);
+    if (result.changes > 0) {
+      logger.info(`Pruned ${result.changes} unused oauth_clients (older than ${olderThanDays}d, never authorized)`, {
+        component: "oauth",
+        event: "oauth.clients.pruned",
+        count: result.changes,
+      });
+    }
+    return result.changes;
   }
 
   /** Create authorization code (after user approves) */
@@ -599,6 +636,9 @@ export class OAuthProvider {
     this.db.prepare("DELETE FROM oauth_codes WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_tokens WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE expires_at != 0 AND expires_at < ?").run(now);
+    // Reap abandoned client registrations (DCR flood). Runs after token cleanup
+    // so a client whose only tokens just expired becomes eligible immediately.
+    this.pruneUnusedClients(config.unusedClientTtlDays);
   }
 
   /**
