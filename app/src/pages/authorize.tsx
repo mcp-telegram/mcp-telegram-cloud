@@ -44,6 +44,7 @@ function AuthorizePage(props: AuthorizeProps) {
         data-auto="1"
         data-sse-url={sseUrl}
         data-cookie-url="/oauth/authorize/qr/cookie"
+        data-password-url="/qr/password"
         data-msg-connected={t("login.connected")}
         data-msg-redirecting={t("common.redirecting")}
         data-msg-lost={t("login.connectionLost")}
@@ -57,7 +58,15 @@ function AuthorizePage(props: AuthorizeProps) {
           {t("login.title")}
         </p>
 
-        <QrSection loadingText={t("login.connecting")} />
+        <QrSection
+          loadingText={t("login.connecting")}
+          twoFactor={{
+            title: t("twoFactor.title"),
+            description: t("twoFactor.description"),
+            passwordLabel: t("twoFactor.passwordLabel"),
+            submit: t("twoFactor.submit"),
+          }}
+        />
       </main>
     </Layout>
   );

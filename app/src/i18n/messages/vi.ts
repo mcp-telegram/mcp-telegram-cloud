@@ -24,6 +24,12 @@ export const vi: Messages = {
     sessionSaved: "Đã lưu phiên. Bạn có thể đóng trang này.",
     connectionLost: "Mất kết nối. Làm mới để thử lại.",
   },
+  twoFactor: {
+    title: "Xác thực hai yếu tố",
+    description: "Tài khoản này được bảo vệ bằng mật khẩu đám mây Telegram. Nhập mật khẩu để hoàn tất đăng nhập.",
+    passwordLabel: "Mật khẩu đám mây",
+    submit: "Xác nhận",
+  },
   settings: {
     title: "Cài đặt",
     subtitle: "Quản lý kết nối của bạn",

@@ -2,6 +2,7 @@ import type { FC } from "hono/jsx";
 import { config } from "../config.js";
 import { button, card, hidden, input, label, qrContainer, spinner, status, step, subtitle, title } from "../styles.js";
 import { Layout } from "./Layout.js";
+import { TwoFactorBlock, twoFactorSetupScript } from "./qr-2fa-inline.js";
 
 const clientScript = `
   let eventSource = null;
@@ -15,6 +16,7 @@ const clientScript = `
     document.getElementById('startBtn').disabled = true;
 
     eventSource = new EventSource('/login/qr?userId=' + encodeURIComponent(userId));
+    window.__setupTwoFactor(eventSource);
 
     eventSource.addEventListener('qr', (e) => {
       const data = JSON.parse(e.data);
@@ -94,11 +96,13 @@ export const LoginPage: FC = () => {
           <div class={status} id="status">
             Connecting...
           </div>
+          <TwoFactorBlock />
         </div>
 
         <div id="result" class={hidden} />
       </div>
 
+      <script dangerouslySetInnerHTML={{ __html: twoFactorSetupScript }} />
       <script dangerouslySetInnerHTML={{ __html: clientScript }} />
     </Layout>
   );

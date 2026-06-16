@@ -8,15 +8,17 @@
  *   - data-auto         : "1" to open the SSE immediately on load; absent → wait
  *                         for a #startBtn click (Login enters a username first).
  *   - data-cookie-url    : (Authorize only) POST endpoint to set the tg_user hint
+ *   - data-password-url  : POST endpoint that delivers the 2FA cloud password
  *   - data-msg-connected : localized success heading
  *   - data-msg-added     : localized "account added" heading
  *   - data-msg-redirecting / data-msg-lost / data-msg-saved
  *
  * SSE events handled: `qr`, `status`, `connected` (login), `added` (add-account),
- * `redirect` (authorize → sets cookie then navigates), `error_msg`.
+ * `redirect` (authorize → sets cookie then navigates), `password_needed` (2FA
+ * cloud password), `error_msg`.
  *
  * The DOM contract matches the SSR markup: #qr-container, #status, #qr-section,
- * #intro/#login-form, #result.
+ * #intro/#login-form, #result, #password-section/#tfa-password/#tfa-submit.
  */
 type Dict = Record<string, string>;
 
@@ -38,7 +40,11 @@ if (root) {
   const intro = $("intro");
   const loginForm = $("login-form");
   const result = $("result");
+  const passwordSection = $("password-section");
+  const passwordInput = root.querySelector<HTMLInputElement>("#tfa-password");
+  const passwordSubmit = $("tfa-submit");
   let es: EventSource | null = null;
+  let loginId = "";
 
   const hide = (el: HTMLElement | null) => {
     if (el) el.style.display = "none";
@@ -48,11 +54,37 @@ if (root) {
   };
   const showResult = (html: string) => {
     hide(qrSection);
+    hide(passwordSection);
     if (result) {
       result.style.display = "block";
       result.innerHTML = html;
     }
   };
+
+  const setPasswordEnabled = (enabled: boolean) => {
+    if (passwordInput) passwordInput.disabled = !enabled;
+    if (passwordSubmit) {
+      if (enabled) passwordSubmit.removeAttribute("disabled");
+      else passwordSubmit.setAttribute("disabled", "");
+    }
+  };
+
+  function submitPassword(): void {
+    const value = passwordInput?.value ?? "";
+    if (!value || !loginId) return;
+    setPasswordEnabled(false);
+    void fetch(d.passwordUrl ?? "/qr/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ loginId, password: value }),
+      credentials: "same-origin",
+    }).catch(() => {
+      // Network hiccup — let the user retry. The server re-prompts on a wrong
+      // password via another `password_needed`, but a failed POST never reaches
+      // it, so re-enable here.
+      setPasswordEnabled(true);
+    });
+  }
   const ok = (heading: string, body: string, note: string) =>
     `<div style="background:#F4F4F7;border:1px solid #007AFF;border-radius:12px;padding:20px;margin:20px 0">` +
     `<h2 style="color:#007AFF;font-size:20px;margin-bottom:8px">${heading}</h2><p>${body}</p>` +
@@ -83,6 +115,16 @@ if (root) {
     es.addEventListener("status", (e) => {
       const data = jsonData(e);
       if (statusEl) statusEl.textContent = data.message ?? "";
+    });
+    es.addEventListener("password_needed", (e) => {
+      const data = jsonData(e);
+      loginId = data.loginId ?? "";
+      // The QR has already been scanned; swap it for the password prompt.
+      hide(qrContainer);
+      show(passwordSection);
+      if (passwordInput) passwordInput.value = "";
+      setPasswordEnabled(true);
+      passwordInput?.focus();
     });
     es.addEventListener("connected", (e) => {
       const data = jsonData(e);
@@ -125,6 +167,12 @@ if (root) {
       if (statusEl) statusEl.textContent = d.msgLost ?? "Connection lost. Refresh to retry.";
     };
   }
+
+  // 2FA password submit — wired once; the prompt is revealed by `password_needed`.
+  passwordSubmit?.addEventListener("click", submitPassword);
+  passwordInput?.addEventListener("keydown", (e) => {
+    if ((e as KeyboardEvent).key === "Enter") submitPassword();
+  });
 
   if (d.auto === "1") {
     start();

@@ -14,6 +14,7 @@ import {
   title,
 } from "../styles.js";
 import { Layout } from "./Layout.js";
+import { TwoFactorBlock, twoFactorSetupScript } from "./qr-2fa-inline.js";
 
 interface AuthorizePageProps {
   clientId: string;
@@ -37,6 +38,7 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
       });
 
       const es = new EventSource('/oauth/authorize/qr?' + qs.toString());
+      window.__setupTwoFactor(es);
 
       es.addEventListener('qr', (e) => {
         const data = JSON.parse(e.data);
@@ -114,6 +116,7 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
           <div class={status} id="status">
             Connecting...
           </div>
+          <TwoFactorBlock />
           <div class={step}>
             <strong>Step 1:</strong> Open Telegram on your phone
           </div>
@@ -130,6 +133,7 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
         <p class={scope}>Scope: read-only access to chats, messages, contacts</p>
       </div>
 
+      <script dangerouslySetInnerHTML={{ __html: twoFactorSetupScript }} />
       <script dangerouslySetInnerHTML={{ __html: clientScript }} />
     </Layout>
   );

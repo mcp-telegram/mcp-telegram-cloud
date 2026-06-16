@@ -2,6 +2,7 @@ import type { FC } from "hono/jsx";
 import { config } from "../config.js";
 import { button, card, hidden, qrContainer, spinner, status, step, subtitle, title } from "../styles.js";
 import { Layout } from "./Layout.js";
+import { TwoFactorBlock, twoFactorSetupScript } from "./qr-2fa-inline.js";
 
 const clientScript = (token: string) => `
   let eventSource = null;
@@ -11,6 +12,7 @@ const clientScript = (token: string) => `
     document.getElementById('qr-section').style.display = 'block';
 
     eventSource = new EventSource('/accounts/add/${token}/qr');
+    window.__setupTwoFactor(eventSource);
 
     eventSource.addEventListener('qr', (e) => {
       const data = JSON.parse(e.data);
@@ -94,11 +96,13 @@ export const AddAccountPage: FC<AddAccountPageProps> = ({ token, label }) => {
           <div class={status} id="status">
             Loading QR code...
           </div>
+          <TwoFactorBlock />
         </div>
 
         <div id="result" class={hidden} />
       </div>
 
+      <script dangerouslySetInnerHTML={{ __html: twoFactorSetupScript }} />
       <script dangerouslySetInnerHTML={{ __html: clientScript(token) }} />
     </Layout>
   );

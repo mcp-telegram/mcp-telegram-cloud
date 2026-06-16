@@ -24,6 +24,12 @@ export const ja: Messages = {
     sessionSaved: "セッションを保存しました。このページを閉じてかまいません。",
     connectionLost: "接続が切断されました。再試行するには更新してください。",
   },
+  twoFactor: {
+    title: "二段階認証",
+    description: "このアカウントは Telegram のクラウドパスワードで保護されています。ログインを完了するには入力してください。",
+    passwordLabel: "クラウドパスワード",
+    submit: "確認",
+  },
   settings: {
     title: "設定",
     subtitle: "接続を管理",

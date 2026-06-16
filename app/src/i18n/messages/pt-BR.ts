@@ -24,6 +24,12 @@ export const ptBR: Messages = {
     sessionSaved: "Sessão salva. Você pode fechar esta página.",
     connectionLost: "Conexão perdida. Atualize para tentar novamente.",
   },
+  twoFactor: {
+    title: "Autenticação de dois fatores",
+    description: "Esta conta está protegida por uma senha na nuvem do Telegram. Digite-a para concluir o login.",
+    passwordLabel: "Senha na nuvem",
+    submit: "Confirmar",
+  },
   settings: {
     title: "Configurações",
     subtitle: "Gerencie sua conexão",

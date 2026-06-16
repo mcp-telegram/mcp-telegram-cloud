@@ -24,6 +24,12 @@ export const zhTW: Messages = {
     sessionSaved: "工作階段已儲存。你可以關閉此頁面。",
     connectionLost: "連線已中斷。重新整理以重試。",
   },
+  twoFactor: {
+    title: "兩步驟驗證",
+    description: "此帳號受 Telegram 雲端密碼保護。請輸入以完成登入。",
+    passwordLabel: "雲端密碼",
+    submit: "確認",
+  },
   settings: {
     title: "設定",
     subtitle: "管理你的連線",

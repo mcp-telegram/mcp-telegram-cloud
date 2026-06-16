@@ -24,6 +24,12 @@ export const tr: Messages = {
     sessionSaved: "Oturum kaydedildi. Bu sayfayı kapatabilirsiniz.",
     connectionLost: "Bağlantı koptu. Yeniden denemek için sayfayı yenileyin.",
   },
+  twoFactor: {
+    title: "İki adımlı doğrulama",
+    description: "Bu hesap bir Telegram bulut parolasıyla korunuyor. Girişi tamamlamak için parolanı gir.",
+    passwordLabel: "Bulut parolası",
+    submit: "Onayla",
+  },
   settings: {
     title: "Ayarlar",
     subtitle: "Bağlantınızı yönetin",

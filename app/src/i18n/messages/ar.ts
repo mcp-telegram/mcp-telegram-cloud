@@ -24,6 +24,12 @@ export const ar: Messages = {
     sessionSaved: "تم حفظ الجلسة. يمكنك إغلاق هذه الصفحة.",
     connectionLost: "انقطع الاتصال. حدّث الصفحة للمحاولة مرة أخرى.",
   },
+  twoFactor: {
+    title: "المصادقة الثنائية",
+    description: "هذا الحساب محمي بكلمة مرور سحابية من تيليجرام. أدخلها لإكمال تسجيل الدخول.",
+    passwordLabel: "كلمة المرور السحابية",
+    submit: "تأكيد",
+  },
   settings: {
     title: "الإعدادات",
     subtitle: "إدارة اتصالك",

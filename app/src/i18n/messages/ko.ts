@@ -24,6 +24,12 @@ export const ko: Messages = {
     sessionSaved: "세션이 저장되었습니다. 이 페이지를 닫아도 됩니다.",
     connectionLost: "연결이 끊겼습니다. 다시 시도하려면 새로고침하세요.",
   },
+  twoFactor: {
+    title: "2단계 인증",
+    description: "이 계정은 Telegram 클라우드 비밀번호로 보호되어 있습니다. 로그인을 완료하려면 입력하세요.",
+    passwordLabel: "클라우드 비밀번호",
+    submit: "확인",
+  },
   settings: {
     title: "설정",
     subtitle: "연결 관리",
