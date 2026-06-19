@@ -139,6 +139,34 @@ describe("qr-login-core", () => {
     assert.equal(hooks.requested, 3);
   });
 
+  it("unwinds a pending password wait when the attempt is aborted mid-entry", async () => {
+    // Regression: the 5-minute deadline (and external abort) must cancel a
+    // password wait too — destroying the GramJS client alone does not reject the
+    // requestPassword() promise, so without threading the attempt signal through
+    // the hook the whole flow would hang until PASSWORD_ENTRY_TIMEOUT_MS.
+    const ac = new AbortController();
+    let sawSignal: AbortSignal | undefined;
+    const hooks: QrLoginHooks = {
+      onQr() {},
+      onStatus() {},
+      // Honour the attempt signal exactly like the real awaitPassword does:
+      // reject when it fires instead of resolving with a password.
+      requestPassword: (_hint, signal) =>
+        new Promise<string>((_resolve, reject) => {
+          sawSignal = signal;
+          if (signal.aborted) return reject(new Error("aborted"));
+          signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+          // Simulate the user navigating away / deadline firing shortly after prompt.
+          ac.abort();
+        }),
+    };
+    const outcome = await runQrLogin(hooks, ac.signal, fakeFactory({ needs2fa: true, correctPassword: "x" }));
+    assert.equal(outcome.ok, false);
+    assert.match(outcome.message ?? "", /abort/i);
+    // The hook actually received an attempt-scoped signal (not undefined).
+    assert.ok(sawSignal instanceof AbortSignal);
+  });
+
   it("returns aborted without creating a client when the signal is already aborted", async () => {
     const hooks = collectingHooks([]);
     const ac = new AbortController();

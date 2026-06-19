@@ -21,11 +21,14 @@ type Send = (event: string, data: unknown) => void;
  * qr-password-channel.ts). Status strings are English, surfaced verbatim like
  * the other SSE `status` events.
  */
-function sseQrHooks(send: Send, loginId: string, signal: AbortSignal): QrLoginHooks {
+function sseQrHooks(send: Send, loginId: string): QrLoginHooks {
   return {
     onQr: (dataUrl) => send("qr", { dataUrl }),
     onStatus: (message) => send("status", { message }),
-    requestPassword: (hint) => {
+    // `signal` is the attempt-scoped signal from runQrLogin — it already fires on
+    // SSE abort AND on the 5-minute deadline, so the password wait unwinds with
+    // the rest of the attempt instead of lingering until its own 2-min timeout.
+    requestPassword: (hint, signal) => {
       send("password_needed", { loginId, hint: hint ?? "" });
       return awaitPassword(loginId, signal, PASSWORD_ENTRY_TIMEOUT_MS);
     },
@@ -90,7 +93,7 @@ export async function handleQrLogin(
         send("status", { message: "Starting QR login..." });
 
         const loginId = newLoginId();
-        const outcome = await runQrLogin(sseQrHooks(send, loginId, signal), signal);
+        const outcome = await runQrLogin(sseQrHooks(send, loginId), signal);
 
         if (outcome.ok && outcome.sessionString) {
           // Reconnect a live client from the new session, confirm identity, then
@@ -225,7 +228,7 @@ export async function handleOAuthQrLogin(
         send("status", { message: "Scan the QR code with Telegram" });
 
         const loginId = newLoginId();
-        const outcome = await runQrLogin(sseQrHooks(send, loginId, signal), signal);
+        const outcome = await runQrLogin(sseQrHooks(send, loginId), signal);
 
         if (outcome.ok && outcome.sessionString) {
           const telegram = await connectFromSession(sessions, outcome.sessionString);
@@ -337,7 +340,7 @@ export async function handleAddAccountQr(
         send("status", { message: "Scan the QR code with the Telegram account you want to add" });
 
         const loginId = newLoginId();
-        const outcome = await runQrLogin(sseQrHooks(send, loginId, signal), signal);
+        const outcome = await runQrLogin(sseQrHooks(send, loginId), signal);
 
         if (!outcome.ok || !outcome.sessionString) {
           send("error_msg", { message: outcome.message ?? "QR login failed" });

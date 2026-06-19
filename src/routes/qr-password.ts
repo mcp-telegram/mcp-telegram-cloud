@@ -22,17 +22,30 @@ export function createQrPasswordRoutes(): Hono {
   app.use("/*", bodyLimit({ maxSize: 4096 }));
 
   app.post("/password", async (c) => {
-    // CSRF defense-in-depth: same-origin only when an Origin header is present.
+    // CSRF: fail-closed. A genuine same-origin browser fetch always carries
+    // either an `Origin` header or `Sec-Fetch-Site: same-origin`; a cross-site
+    // form/script POST can forge neither (Origin is set by the browser, not JS;
+    // Sec-Fetch-* are forbidden header names). We accept the request only if at
+    // least one of those positively proves same-origin, and reject when both are
+    // absent — closing the old `if (origin)` fail-open gap for header-stripping
+    // clients.
     const origin = c.req.header("origin");
+    const fetchSite = c.req.header("sec-fetch-site");
+    let sameOrigin = false;
     if (origin) {
       try {
-        if (new URL(origin).origin !== new URL(config.issuer).origin) {
-          return c.text("forbidden", 403);
-        }
+        sameOrigin = new URL(origin).origin === new URL(config.issuer).origin;
       } catch {
-        return c.text("forbidden", 403);
+        sameOrigin = false;
       }
+      if (!sameOrigin) return c.text("forbidden", 403);
+    } else if (fetchSite === "same-origin" || fetchSite === "none") {
+      // No Origin (some same-origin GET-turned-POST cases) but the browser
+      // vouches the request did not come from another site. `none` = a
+      // user-initiated load (e.g. typed/bookmarked) — not a cross-site forgery.
+      sameOrigin = true;
     }
+    if (!sameOrigin) return c.text("forbidden", 403);
 
     const body = (await c.req.json().catch(() => null)) as { loginId?: unknown; password?: unknown } | null;
 

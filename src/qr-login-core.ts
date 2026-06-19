@@ -37,8 +37,11 @@ export interface QrLoginHooks {
    *  browser like the rest of the SSE `status` events). */
   onStatus?: (message: string) => void;
   /** Telegram requires the 2FA cloud password. Resolve with the password the
-   *  user supplied. Reject/throw to abort the login (e.g. on timeout/cancel). */
-  requestPassword: (hint: string | undefined) => Promise<string>;
+   *  user supplied. Reject/throw to abort the login (e.g. on timeout/cancel).
+   *  `signal` fires when the overall QR-login attempt is torn down (external
+   *  abort OR the 5-minute deadline) — the implementation MUST stop waiting and
+   *  reject when it fires, otherwise the deadline can't unwind a password wait. */
+  requestPassword: (hint: string | undefined, signal: AbortSignal) => Promise<string>;
   /** A submitted password was rejected by Telegram; another `requestPassword`
    *  is about to be issued so the UI can show a "try again" hint. */
   onPasswordRejected?: () => void;
@@ -134,9 +137,16 @@ export async function runQrLogin(
   let attempts = 0;
   let lastQrUrl = "";
 
-  // Tear the client down on abort or deadline; both make any in-flight GramJS
-  // invoke reject, which unwinds signInUserWithQrCode into our catch below.
+  // Single source of "this attempt is over" — fires on external abort OR the
+  // deadline. We hand its signal to the password hook so a password wait unwinds
+  // too: destroying the GramJS client only rejects in-flight network invokes,
+  // NOT a pending requestPassword() promise (which lives on the SSE side), so
+  // without this the deadline would tear down the client yet leave the flow
+  // blocked on the password until PASSWORD_ENTRY_TIMEOUT_MS — see the password
+  // hook below.
+  const attempt = new AbortController();
   const onAbort = () => {
+    if (!attempt.signal.aborted) attempt.abort();
     client.destroy().catch(() => {});
   };
   signal.addEventListener("abort", onAbort, { once: true });
@@ -175,7 +185,7 @@ export async function runQrLogin(
           throw new Error(captured);
         }
         hooks.onStatus?.("Two-factor authentication enabled — enter your cloud password");
-        return hooks.requestPassword(hint);
+        return hooks.requestPassword(hint, attempt.signal);
       },
       onError: async (err) => {
         const msg = (err as { errorMessage?: string }).errorMessage ?? err.message ?? "";

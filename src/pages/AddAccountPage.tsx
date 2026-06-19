@@ -31,11 +31,11 @@ const clientScript = (token: string) => `
       document.getElementById('qr-section').style.display = 'none';
       const result = document.getElementById('result');
       result.style.display = 'block';
-      const labelPart = data.label ? ' — ' + data.label : '';
+      const labelPart = data.label ? ' — ' + window.__esc(data.label) : '';
       result.innerHTML =
         '<div style="background:#F4F4F7;border:1px solid #007AFF;border-radius:12px;padding:20px;margin:20px 0">' +
         '<h2 style="color:#007AFF;font-size:20px;margin-bottom:8px">Account added</h2>' +
-        '<p>' + (data.name || '') + ' (@' + (data.username || 'unknown') + ')' + labelPart + '</p>' +
+        '<p>' + window.__esc(data.name || '') + ' (@' + window.__esc(data.username || 'unknown') + ')' + labelPart + '</p>' +
         '<p style="margin-top:12px;font-size:13px;color:#707579">It is now the active account in your AI client. You can close this tab.</p>' +
         '</div>';
     });
@@ -48,7 +48,7 @@ const clientScript = (token: string) => `
       result.style.display = 'block';
       result.innerHTML =
         '<div style="background:#F4F4F7;border:1px solid #E53935;border-radius:12px;padding:20px;margin:20px 0">' +
-        '<p>' + data.message + '</p>' +
+        '<p>' + window.__esc(data.message) + '</p>' +
         '<p style="margin-top:12px;font-size:13px;color:#707579">Return to your AI client and run telegram-accounts-add again to get a fresh link.</p>' +
         '</div>';
     });

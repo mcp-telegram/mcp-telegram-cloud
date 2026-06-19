@@ -38,6 +38,15 @@ export const TwoFactorBlock: FC = () => {
  */
 export const twoFactorSetupScript = `
   window.__qrLoginId = '';
+  // Shared HTML-escape for values interpolated into innerHTML by the legacy
+  // result cards (Telegram display name / username / account label come from
+  // getMe()/user input and may contain markup). Lives here because all three
+  // legacy QR pages already include this script.
+  window.__esc = function (s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
   window.__setupTwoFactor = function (es) {
     var pwSection = document.getElementById('password-section');
     var pwInput = document.getElementById('tfa-password');

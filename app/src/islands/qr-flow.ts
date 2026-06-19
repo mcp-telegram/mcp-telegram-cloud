@@ -30,6 +30,18 @@ function jsonData(e: Event): Dict {
   }
 }
 
+/** Escape text destined for innerHTML. The Telegram display name / username come
+ *  from getMe() and can contain `<`, `>`, `&`, quotes — interpolating them raw
+ *  would let a crafted first name inject markup into the success card. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const root = document.querySelector<HTMLElement>('[data-island="qr-flow"]');
 if (root) {
   const d = root.dataset;
@@ -92,7 +104,7 @@ if (root) {
   const fail = (msg: string) =>
     `<div style="background:#F4F4F7;border:1px solid #E53935;border-radius:12px;padding:20px;margin:20px 0"><p>${msg}</p></div>`;
 
-  const peer = (data: Dict) => `${data.name || ""} (@${data.username || "unknown"})`;
+  const peer = (data: Dict) => `${esc(data.name || "")} (@${esc(data.username || "unknown")})`;
 
   function start(): void {
     // Login builds its SSE URL from the typed username; other flows have a
@@ -134,7 +146,7 @@ if (root) {
     es.addEventListener("added", (e) => {
       const data = jsonData(e);
       es?.close();
-      const label = data.label ? ` — ${data.label}` : "";
+      const label = data.label ? ` — ${esc(data.label)}` : "";
       showResult(ok(d.msgAdded ?? "Account added", peer(data) + label, d.msgSaved ?? ""));
     });
     es.addEventListener("redirect", (e) => {
