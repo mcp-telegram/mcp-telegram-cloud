@@ -470,7 +470,8 @@
         "0": "Message content, media files, or chat history",
         "1": "Phone numbers, contact lists, or profile data",
         "2": "Passwords or Telegram 2FA codes"
-      }
+      },
+      "twoFactorNote": "If your account uses a Telegram cloud password (2FA), that password is used <strong>only</strong> to complete the login — it passes through our server in memory for the duration of the sign-in check and is <strong>never stored or logged</strong>."
     },
     "dataFlow": {
       "heading": "How your data flows",

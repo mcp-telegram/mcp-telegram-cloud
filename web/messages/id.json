@@ -478,7 +478,8 @@
         "0": "Isi pesan, berkas media, atau riwayat obrolan",
         "1": "Nomor telepon, daftar kontak, atau data profil",
         "2": "Kata sandi atau kode 2FA Telegram"
-      }
+      },
+      "twoFactorNote": "Jika akun Anda menggunakan kata sandi cloud Telegram (2FA), kata sandi tersebut hanya digunakan <strong>untuk</strong> menyelesaikan proses masuk — kata sandi melewati server kami di memori selama pemeriksaan dan <strong>tidak pernah disimpan atau dicatat</strong>."
     },
     "dataFlow": {
       "heading": "Bagaimana data Anda mengalir",

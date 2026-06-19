@@ -478,7 +478,8 @@
         "0": "Treści wiadomości, plików multimedialnych ani historii czatów",
         "1": "Numerów telefonów, list kontaktów ani danych profilowych",
         "2": "Haseł ani kodów 2FA Telegram"
-      }
+      },
+      "twoFactorNote": "Jeśli Twoje konto korzysta z hasła w chmurze Telegrama (2FA), to hasło jest używane <strong>wyłącznie</strong> do dokończenia logowania — przechodzi przez nasz serwer w pamięci na czas weryfikacji i <strong>nigdy nie jest przechowywane ani zapisywane w logach</strong>."
     },
     "dataFlow": {
       "heading": "Jak przepływają Twoje dane",

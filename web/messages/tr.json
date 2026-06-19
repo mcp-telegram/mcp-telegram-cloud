@@ -478,7 +478,8 @@
         "0": "Mesaj içeriği, medya dosyaları veya sohbet geçmişi",
         "1": "Telefon numaraları, kişi listeleri veya profil verileri",
         "2": "Parolalar veya Telegram 2FA kodları"
-      }
+      },
+      "twoFactorNote": "Hesabınız bir Telegram bulut parolası (2FA) kullanıyorsa, bu parola <strong>yalnızca</strong> oturum açmayı tamamlamak için kullanılır — doğrulama süresince sunucumuzdan bellekte geçer ve <strong>asla saklanmaz veya günlüğe kaydedilmez</strong>."
     },
     "dataFlow": {
       "heading": "Verileriniz nasıl akar",

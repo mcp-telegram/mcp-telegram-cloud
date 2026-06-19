@@ -478,7 +478,8 @@
         "0": "Nội dung tin nhắn, tệp phương tiện hoặc lịch sử trò chuyện",
         "1": "Số điện thoại, danh sách liên hệ hoặc dữ liệu hồ sơ",
         "2": "Mật khẩu hoặc mã 2FA của Telegram"
-      }
+      },
+      "twoFactorNote": "Nếu tài khoản của bạn dùng mật khẩu đám mây Telegram (2FA), mật khẩu đó <strong>chỉ</strong> được dùng để hoàn tất đăng nhập — nó đi qua máy chủ của chúng tôi trong bộ nhớ trong suốt quá trình kiểm tra và <strong>không bao giờ được lưu trữ hay ghi log</strong>."
     },
     "dataFlow": {
       "heading": "Cách dữ liệu của bạn luân chuyển",

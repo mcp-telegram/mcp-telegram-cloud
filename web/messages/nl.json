@@ -478,7 +478,8 @@
         "0": "Berichtinhoud, mediabestanden of chatgeschiedenis",
         "1": "Telefoonnummers, contactenlijsten of profielgegevens",
         "2": "Wachtwoorden of Telegram 2FA-codes"
-      }
+      },
+      "twoFactorNote": "Als je account een Telegram-cloudwachtwoord (2FA) gebruikt, wordt dat wachtwoord <strong>alleen</strong> gebruikt om het inloggen te voltooien — het passeert onze server in het geheugen tijdens de controle en wordt <strong>nooit opgeslagen of gelogd</strong>."
     },
     "dataFlow": {
       "heading": "Hoe je gegevens stromen",

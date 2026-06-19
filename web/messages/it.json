@@ -478,7 +478,8 @@
         "0": "Contenuto dei messaggi, file multimediali o cronologia delle chat",
         "1": "Numeri di telefono, elenchi di contatti o dati del profilo",
         "2": "Password o codici 2FA di Telegram"
-      }
+      },
+      "twoFactorNote": "Se il tuo account usa una password cloud di Telegram (2FA), quella password viene usata <strong>solo</strong> per completare l'accesso — transita dal nostro server in memoria per la durata del controllo e <strong>non viene mai memorizzata né registrata nei log</strong>."
     },
     "dataFlow": {
       "heading": "Come fluiscono i tuoi dati",

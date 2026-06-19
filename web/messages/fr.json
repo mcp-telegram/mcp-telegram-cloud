@@ -478,7 +478,8 @@
         "0": "Le contenu des messages, les fichiers multimédias ou l'historique des conversations",
         "1": "Les numéros de téléphone, les listes de contacts ou les données de profil",
         "2": "Les mots de passe ou les codes 2FA Telegram"
-      }
+      },
+      "twoFactorNote": "Si votre compte utilise un mot de passe cloud Telegram (2FA), ce mot de passe sert <strong>uniquement</strong> à finaliser la connexion — il transite par notre serveur en mémoire le temps de la vérification et n'est <strong>jamais stocké ni journalisé</strong>."
     },
     "dataFlow": {
       "heading": "Comment vos données circulent",

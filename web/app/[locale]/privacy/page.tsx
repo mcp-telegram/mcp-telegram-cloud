@@ -94,6 +94,7 @@ export default async function PrivacyPage({ params }: PageProps) {
         <li>{t("notCollect.items.1")}</li>
         <li>{t("notCollect.items.2")}</li>
       </ul>
+      <p className={s.p}>{t.rich("notCollect.twoFactorNote", { strong })}</p>
 
       <h2 className={s.h2}>{t("dataFlow.heading")}</h2>
       <p className={s.p}>{t.rich("dataFlow.body", { strong })}</p>

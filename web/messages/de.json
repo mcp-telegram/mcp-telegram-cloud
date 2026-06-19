@@ -478,7 +478,8 @@
         "0": "Nachrichteninhalte, Mediendateien oder Chat-Verlauf",
         "1": "Telefonnummern, Kontaktlisten oder Profildaten",
         "2": "Passwörter oder Telegram-2FA-Codes"
-      }
+      },
+      "twoFactorNote": "Wenn Ihr Konto ein Telegram-Cloud-Passwort (2FA) verwendet, wird dieses Passwort <strong>ausschließlich</strong> zum Abschluss der Anmeldung genutzt — es durchläuft unseren Server im Arbeitsspeicher für die Dauer der Anmeldeprüfung und wird <strong>niemals gespeichert oder protokolliert</strong>."
     },
     "dataFlow": {
       "heading": "Wie Ihre Daten fließen",
