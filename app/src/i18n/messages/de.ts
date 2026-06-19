@@ -26,7 +26,8 @@ export const de: Messages = {
   },
   twoFactor: {
     title: "Zwei-Faktor-Authentifizierung",
-    description: "Dieses Konto ist durch ein Telegram-Cloud-Passwort geschützt. Gib es ein, um die Anmeldung abzuschließen.",
+    description:
+      "Dieses Konto ist durch ein Telegram-Cloud-Passwort geschützt. Gib es ein, um die Anmeldung abzuschließen.",
     passwordLabel: "Cloud-Passwort",
     submit: "Bestätigen",
   },

@@ -26,7 +26,8 @@ export const ja: Messages = {
   },
   twoFactor: {
     title: "二段階認証",
-    description: "このアカウントは Telegram のクラウドパスワードで保護されています。ログインを完了するには入力してください。",
+    description:
+      "このアカウントは Telegram のクラウドパスワードで保護されています。ログインを完了するには入力してください。",
     passwordLabel: "クラウドパスワード",
     submit: "確認",
   },

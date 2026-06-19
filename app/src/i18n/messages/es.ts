@@ -26,7 +26,8 @@ export const es: Messages = {
   },
   twoFactor: {
     title: "Autenticación de dos factores",
-    description: "Esta cuenta está protegida con una contraseña en la nube de Telegram. Introdúcela para completar el inicio de sesión.",
+    description:
+      "Esta cuenta está protegida con una contraseña en la nube de Telegram. Introdúcela para completar el inicio de sesión.",
     passwordLabel: "Contraseña en la nube",
     submit: "Confirmar",
   },
