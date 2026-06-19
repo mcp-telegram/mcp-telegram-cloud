@@ -24,6 +24,12 @@ export const pl: Messages = {
     sessionSaved: "Sesja zapisana. Możesz zamknąć tę stronę.",
     connectionLost: "Utracono połączenie. Odśwież, aby spróbować ponownie.",
   },
+  twoFactor: {
+    title: "Uwierzytelnianie dwuskładnikowe",
+    description: "To konto jest chronione hasłem w chmurze Telegrama. Wpisz je, aby dokończyć logowanie.",
+    passwordLabel: "Hasło w chmurze",
+    submit: "Potwierdź",
+  },
   settings: {
     title: "Ustawienia",
     subtitle: "Zarządzaj połączeniem",

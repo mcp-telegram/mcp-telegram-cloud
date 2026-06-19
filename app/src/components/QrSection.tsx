@@ -1,14 +1,23 @@
 export type QrSectionProps = {
   /** Localized "Loading QR code…" status text. */
   loadingText: string;
+  /** Localized strings for the 2FA cloud-password step (revealed by the island
+   *  when Telegram requires a password). */
+  twoFactor: {
+    title: string;
+    description: string;
+    passwordLabel: string;
+    submit: string;
+  };
 };
 
 /**
  * The QR display block shared by Login, Add-Account, and OAuth Authorize.
  * Hidden until the qr-flow island reveals it. DOM ids match the island's
- * contract (#qr-section, #qr-container, #status, #result).
+ * contract (#qr-section, #qr-container, #status, #result, and the 2FA block
+ * #password-section / #tfa-password / #tfa-submit).
  */
-export function QrSection({ loadingText }: QrSectionProps) {
+export function QrSection({ loadingText, twoFactor }: QrSectionProps) {
   return (
     <>
       <div id="qr-section" style={{ display: "none", textAlign: "center" }}>
@@ -20,6 +29,27 @@ export function QrSection({ loadingText }: QrSectionProps) {
         </div>
         <div id="status" className="muted" style={{ marginTop: 12 }}>
           {loadingText}
+        </div>
+
+        {/* 2FA cloud-password step — hidden until the island receives a
+            `password_needed` event, then revealed below the status line. */}
+        <div id="password-section" style={{ display: "none", marginTop: 16, textAlign: "start" }}>
+          <h2 style={{ fontSize: 18, marginBottom: 6 }}>{twoFactor.title}</h2>
+          <p className="muted" style={{ marginBottom: 12 }}>
+            {twoFactor.description}
+          </p>
+          <label htmlFor="tfa-password" style={{ fontSize: 14, fontWeight: 600 }}>
+            {twoFactor.passwordLabel}
+          </label>
+          <input
+            id="tfa-password"
+            type="password"
+            autoComplete="off"
+            style={{ display: "block", width: "100%", margin: "8px 0 12px" }}
+          />
+          <button type="button" id="tfa-submit">
+            {twoFactor.submit}
+          </button>
         </div>
       </div>
       <div id="result" style={{ display: "none" }} />

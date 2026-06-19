@@ -29,6 +29,7 @@ function AddAccountPage(props: AddAccountProps) {
         style={{ maxWidth: 520, textAlign: "center" }}
         data-island="qr-flow"
         data-sse-url={`/accounts/add/${token}/qr`}
+        data-password-url="/qr/password"
         data-msg-added={t("addAccount.added")}
         data-msg-saved={t("addAccount.accountActive")}
         data-msg-lost={t("common.connectionLost")}
@@ -51,7 +52,15 @@ function AddAccountPage(props: AddAccountProps) {
           </button>
         </div>
 
-        <QrSection loadingText={t("common.qrLoading")} />
+        <QrSection
+          loadingText={t("common.qrLoading")}
+          twoFactor={{
+            title: t("twoFactor.title"),
+            description: t("twoFactor.description"),
+            passwordLabel: t("twoFactor.passwordLabel"),
+            submit: t("twoFactor.submit"),
+          }}
+        />
       </main>
     </Layout>
   );

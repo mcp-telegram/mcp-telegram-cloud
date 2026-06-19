@@ -32,6 +32,12 @@ export const en = {
     sessionSaved: "Session saved. You can close this page.",
     connectionLost: "Connection lost. Refresh to retry.",
   },
+  twoFactor: {
+    title: "Two-factor authentication",
+    description: "This account is protected by a Telegram cloud password. Enter it to finish signing in.",
+    passwordLabel: "Cloud password",
+    submit: "Confirm",
+  },
   settings: {
     title: "Settings",
     subtitle: "Manage your connection",

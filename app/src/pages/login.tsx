@@ -26,6 +26,7 @@ function LoginPage(props: LoginProps) {
         style={{ maxWidth: 480, textAlign: "center" }}
         data-island="qr-flow"
         data-sse-url-template="/login/qr?userId={userId}"
+        data-password-url="/qr/password"
         data-msg-connected={t("login.connected")}
         data-msg-saved={t("login.sessionSaved")}
         data-msg-lost={t("login.connectionLost")}
@@ -58,7 +59,15 @@ function LoginPage(props: LoginProps) {
           <div className="step">3. {t("login.step3")}</div>
         </div>
 
-        <QrSection loadingText={t("login.connecting")} />
+        <QrSection
+          loadingText={t("login.connecting")}
+          twoFactor={{
+            title: t("twoFactor.title"),
+            description: t("twoFactor.description"),
+            passwordLabel: t("twoFactor.passwordLabel"),
+            submit: t("twoFactor.submit"),
+          }}
+        />
       </main>
     </Layout>
   );

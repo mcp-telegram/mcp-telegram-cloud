@@ -24,6 +24,12 @@ export const nl: Messages = {
     sessionSaved: "Sessie opgeslagen. Je kunt deze pagina sluiten.",
     connectionLost: "Verbinding verbroken. Vernieuw om opnieuw te proberen.",
   },
+  twoFactor: {
+    title: "Tweestapsverificatie",
+    description: "Dit account is beveiligd met een Telegram-cloudwachtwoord. Voer het in om het inloggen te voltooien.",
+    passwordLabel: "Cloudwachtwoord",
+    submit: "Bevestigen",
+  },
   settings: {
     title: "Instellingen",
     subtitle: "Beheer je verbinding",

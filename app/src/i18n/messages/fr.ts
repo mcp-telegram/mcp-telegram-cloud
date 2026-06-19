@@ -24,6 +24,12 @@ export const fr: Messages = {
     sessionSaved: "Session enregistrée. Vous pouvez fermer cette page.",
     connectionLost: "Connexion perdue. Actualisez pour réessayer.",
   },
+  twoFactor: {
+    title: "Authentification à deux facteurs",
+    description: "Ce compte est protégé par un mot de passe cloud Telegram. Saisissez-le pour terminer la connexion.",
+    passwordLabel: "Mot de passe cloud",
+    submit: "Confirmer",
+  },
   settings: {
     title: "Paramètres",
     subtitle: "Gérez votre connexion",

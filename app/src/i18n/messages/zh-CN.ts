@@ -24,6 +24,12 @@ export const zhCN: Messages = {
     sessionSaved: "会话已保存。你可以关闭此页面。",
     connectionLost: "连接已断开。刷新以重试。",
   },
+  twoFactor: {
+    title: "两步验证",
+    description: "此账号受 Telegram 云端密码保护。请输入以完成登录。",
+    passwordLabel: "云端密码",
+    submit: "确认",
+  },
   settings: {
     title: "设置",
     subtitle: "管理你的连接",

@@ -24,6 +24,12 @@ export const id: Messages = {
     sessionSaved: "Sesi disimpan. Anda dapat menutup halaman ini.",
     connectionLost: "Koneksi terputus. Segarkan untuk mencoba lagi.",
   },
+  twoFactor: {
+    title: "Autentikasi dua faktor",
+    description: "Akun ini dilindungi oleh kata sandi cloud Telegram. Masukkan untuk menyelesaikan proses masuk.",
+    passwordLabel: "Kata sandi cloud",
+    submit: "Konfirmasi",
+  },
   settings: {
     title: "Pengaturan",
     subtitle: "Kelola koneksi Anda",

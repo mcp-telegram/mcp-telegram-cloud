@@ -1,10 +1,52 @@
 import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
+import { type QrLoginHooks, runQrLogin } from "./qr-login-core.js";
+import { awaitPassword, newLoginId } from "./qr-password-channel.js";
 import type { SessionManager } from "./session-manager.js";
 
 // SSE comment-frame interval. Long enough to be cheap, short enough to stay under
 // the ~15s HTTP/2 idle threshold we observed empirically against Traefik+Bun.serve.
 const SSE_HEARTBEAT_INTERVAL_MS = 5000;
+
+// How long the user has to type the 2FA cloud password after we prompt before
+// the login attempt gives up. The SSE heartbeat keeps the stream warm meanwhile.
+const PASSWORD_ENTRY_TIMEOUT_MS = 2 * 60 * 1000;
+
+type Send = (event: string, data: unknown) => void;
+
+/**
+ * Wire the GramJS QR+2FA login to an SSE `send`. The cloud-password step is
+ * bridged over a side channel: we emit `password_needed` with an unguessable
+ * `loginId` and await the matching POST to `/qr/password` (see
+ * qr-password-channel.ts). Status strings are English, surfaced verbatim like
+ * the other SSE `status` events.
+ */
+function sseQrHooks(send: Send, loginId: string): QrLoginHooks {
+  return {
+    onQr: (dataUrl) => send("qr", { dataUrl }),
+    onStatus: (message) => send("status", { message }),
+    // `signal` is the attempt-scoped signal from runQrLogin — it already fires on
+    // SSE abort AND on the 5-minute deadline, so the password wait unwinds with
+    // the rest of the attempt instead of lingering until its own 2-min timeout.
+    requestPassword: (hint, signal) => {
+      send("password_needed", { loginId, hint: hint ?? "" });
+      return awaitPassword(loginId, signal, PASSWORD_ENTRY_TIMEOUT_MS);
+    },
+    onPasswordRejected: () => send("status", { message: "Incorrect cloud password — please try again" }),
+  };
+}
+
+/**
+ * Materialize a freshly-obtained session string into a live `TelegramService`.
+ * GramJS already destroyed its login client in `runQrLogin`, so reconnecting a
+ * new client from the same StringSession is safe (no auth-key duplication).
+ */
+async function connectFromSession(sessions: SessionManager, sessionString: string) {
+  const telegram = sessions.createTempTelegram();
+  telegram.setSessionString(sessionString);
+  await telegram.connect();
+  return telegram;
+}
 
 /** Handle QR login via SSE stream */
 export async function handleQrLogin(
@@ -16,7 +58,7 @@ export async function handleQrLogin(
 
   return new ReadableStream({
     async start(controller) {
-      const send = (event: string, data: unknown) => {
+      const send: Send = (event, data) => {
         if (signal.aborted) return;
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
@@ -50,31 +92,20 @@ export async function handleQrLogin(
 
         send("status", { message: "Starting QR login..." });
 
-        const result = await telegram.startQrLogin(
-          // onQrDataUrl
-          (dataUrl: string) => {
-            if (!signal.aborted) {
-              send("qr", { dataUrl });
-            }
-          },
-          // onQrUrl
-          (_url: string) => {
-            if (!signal.aborted) {
-              send("status", { message: "Scan the QR code in Telegram app" });
-            }
-          },
-        );
+        const loginId = newLoginId();
+        const outcome = await runQrLogin(sseQrHooks(send, loginId), signal);
 
-        if (result.success) {
-          // Save the new session string
-          const sessionString = telegram.getSessionString();
-          if (sessionString) {
-            sessions.saveSessionString(userId, sessionString);
-          }
-          const me = await telegram.getMe();
+        if (outcome.ok && outcome.sessionString) {
+          // Reconnect a live client from the new session, confirm identity, then
+          // persist + adopt — so a flaky reconnect never installs a broken pool
+          // entry under this userId.
+          const fresh = await connectFromSession(sessions, outcome.sessionString);
+          const me = await fresh.getMe();
+          sessions.saveSessionString(userId, outcome.sessionString);
+          await sessions.adoptSession(userId, fresh);
           send("connected", { name: me.firstName, username: me.username, id: me.id });
         } else {
-          send("error_msg", { message: result.message });
+          send("error_msg", { message: outcome.message ?? "QR login failed" });
         }
       } catch (err) {
         send("error_msg", { message: (err as Error).message });
@@ -105,7 +136,7 @@ export async function handleOAuthQrLogin(
 
   return new ReadableStream({
     async start(controller) {
-      const send = (event: string, data: unknown) => {
+      const send: Send = (event, data) => {
         if (signal.aborted) return;
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
@@ -186,36 +217,26 @@ export async function handleOAuthQrLogin(
         }
 
         // No hint or hint failed — proceed with QR login (slow path: waits on user scan,
-        // typically 5–30 seconds). Install the SSE heartbeat now so the HTTP/2 stream
-        // stays warm through Telegram's confirmation round-trip.
+        // typically 5–30 seconds, longer if a 2FA password is required). Install the SSE
+        // heartbeat now so the HTTP/2 stream stays warm through the confirmation round-trip.
         logger.info("Starting QR login (no valid session hint)", {
           component: "oauth-qr",
           event: "qr.start",
         });
         installHeartbeat();
-        const telegram = sessions.createTempTelegram();
-        await telegram.connect();
 
         send("status", { message: "Scan the QR code with Telegram" });
 
-        const result = await telegram.startQrLogin(
-          (dataUrl: string) => {
-            if (!signal.aborted) send("qr", { dataUrl });
-          },
-          (_url: string) => {
-            if (!signal.aborted) send("status", { message: "Scan the QR code in Telegram app" });
-          },
-        );
+        const loginId = newLoginId();
+        const outcome = await runQrLogin(sseQrHooks(send, loginId), signal);
 
-        if (result.success) {
+        if (outcome.ok && outcome.sessionString) {
+          const telegram = await connectFromSession(sessions, outcome.sessionString);
           const me = await telegram.getMe();
           const userId = me.username ?? String(me.id);
 
           // Save Telegram session
-          const sessionString = telegram.getSessionString();
-          if (sessionString) {
-            sessions.saveSessionString(userId, sessionString);
-          }
+          sessions.saveSessionString(userId, outcome.sessionString);
 
           // Create OAuth auth code
           const code = oauth.createAuthCode({
@@ -248,10 +269,10 @@ export async function handleOAuthQrLogin(
             id: me.id,
           });
 
-          // Adopt the temp client into the session pool — avoids creating a duplicate Telegram session
+          // Adopt the live client into the session pool — avoids a duplicate Telegram session.
           await sessions.adoptSession(userId, telegram);
         } else {
-          send("error_msg", { message: result.message ?? "QR login failed" });
+          send("error_msg", { message: outcome.message ?? "QR login failed" });
         }
       } catch (err) {
         logger.error(`QR login error: ${(err as Error).message}`, { component: "oauth-qr", event: "user.login.error" });
@@ -268,14 +289,15 @@ export async function handleOAuthQrLogin(
 /**
  * v2.32.0 multi-account add-account QR flow.
  *
- * Wraps a fresh temporary `TelegramService` around the standard QR-login UX,
- * then on success calls `sessions.addAccount(ownerUserId, …)` instead of
- * saving to `user_sessions`. The new account is auto-switched to active so the
- * next MCP tool call uses it immediately. No OAuth token rotation, no
- * impact on the primary account's session.
+ * Wraps the standard QR-login UX (now including the 2FA cloud-password step),
+ * then on success calls `sessions.addAccount(ownerUserId, …)` instead of saving
+ * to `user_sessions`. The new account is auto-switched to active so the next
+ * MCP tool call uses it immediately. No OAuth token rotation, no impact on the
+ * primary account's session.
  *
- * Sends SSE events: `qr` (data URL), `status`, `added` (success with username),
- * `error_msg`. Heartbeat lazily installed for the slow QR-wait path.
+ * Sends SSE events: `qr` (data URL), `status`, `password_needed` (2FA),
+ * `added` (success with username), `error_msg`. Heartbeat lazily installed for
+ * the slow QR-wait path.
  */
 export async function handleAddAccountQr(
   sessions: SessionManager,
@@ -287,7 +309,7 @@ export async function handleAddAccountQr(
 
   return new ReadableStream({
     async start(controller) {
-      const send = (event: string, data: unknown) => {
+      const send: Send = (event, data) => {
         if (signal.aborted) return;
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
@@ -315,24 +337,17 @@ export async function handleAddAccountQr(
 
       try {
         installHeartbeat();
-        const telegram = sessions.createTempTelegram();
-        await telegram.connect();
         send("status", { message: "Scan the QR code with the Telegram account you want to add" });
 
-        const result = await telegram.startQrLogin(
-          (dataUrl: string) => {
-            if (!signal.aborted) send("qr", { dataUrl });
-          },
-          (_url: string) => {
-            if (!signal.aborted) send("status", { message: "Scan the QR code in Telegram app" });
-          },
-        );
+        const loginId = newLoginId();
+        const outcome = await runQrLogin(sseQrHooks(send, loginId), signal);
 
-        if (!result.success) {
-          send("error_msg", { message: result.message ?? "QR login failed" });
+        if (!outcome.ok || !outcome.sessionString) {
+          send("error_msg", { message: outcome.message ?? "QR login failed" });
           return;
         }
 
+        const telegram = await connectFromSession(sessions, outcome.sessionString);
         const me = await telegram.getMe();
         const telegramUserId = me.username ?? String(me.id);
 
@@ -349,13 +364,7 @@ export async function handleAddAccountQr(
           return;
         }
 
-        const sessionString = telegram.getSessionString();
-        if (!sessionString) {
-          send("error_msg", { message: "Telegram returned no session string — please retry." });
-          return;
-        }
-
-        const accountId = sessions.addAccount(ownerUserId, telegramUserId, sessionString, label);
+        const accountId = sessions.addAccount(ownerUserId, telegramUserId, outcome.sessionString, label);
         sessions.setActiveAccount(ownerUserId, accountId);
 
         logger.info(`Added secondary Telegram account #${accountId}`, {
@@ -374,8 +383,8 @@ export async function handleAddAccountQr(
           label: label ?? "",
         });
 
-        // Hand the live TelegramService off so the user's next tool call uses
-        // the in-memory client instead of paying a reconnect cost.
+        // We persisted the session string; the live temp client is no longer
+        // needed — the next tool call reconnects from `telegram_accounts`.
         telegram.disconnect().catch(() => {});
       } catch (err) {
         logger.error(`Add-account QR error: ${(err as Error).message}`, {

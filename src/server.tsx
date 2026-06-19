@@ -19,6 +19,7 @@ import { createLoginRoutes } from "./routes/login.js";
 import { registerMcpRoutes } from "./routes/mcp.js";
 import { createMyRoutes } from "./routes/my.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
+import { createQrPasswordRoutes } from "./routes/qr-password.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
 import { flushMetrics, registerGauge, startMetricsFlush, stopMetricsFlush } from "./telemetry/metrics.js";
@@ -227,6 +228,8 @@ registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
+// Shared 2FA cloud-password back-channel for all QR flows (POST /qr/password).
+app.route("/qr", createQrPasswordRoutes());
 
 // Register process-wide gauges before flush starts so the first OTLP push
 // already carries values (otelcol won't synthesize zero data points for us).

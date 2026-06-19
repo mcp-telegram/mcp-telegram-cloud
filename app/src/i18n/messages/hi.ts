@@ -24,6 +24,12 @@ export const hi: Messages = {
     sessionSaved: "सत्र सहेजा गया। आप यह पेज बंद कर सकते हैं।",
     connectionLost: "कनेक्शन टूट गया। पुनः प्रयास के लिए रिफ़्रेश करें।",
   },
+  twoFactor: {
+    title: "दो-चरणीय प्रमाणीकरण",
+    description: "यह खाता Telegram क्लाउड पासवर्ड से सुरक्षित है। साइन इन पूरा करने के लिए इसे दर्ज करें।",
+    passwordLabel: "क्लाउड पासवर्ड",
+    submit: "पुष्टि करें",
+  },
   settings: {
     title: "सेटिंग्स",
     subtitle: "अपना कनेक्शन प्रबंधित करें",
