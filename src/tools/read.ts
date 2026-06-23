@@ -232,14 +232,28 @@ export const READ_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-download-media",
-    description: "Download media (photo, video, document) from a Telegram message and return it inline",
+    description:
+      "Download media (photo, video, document) from a Telegram message. By default returns a small thumbnail preview to keep the response cheap — pass full:true only when you need the full-resolution image (which can be large and costly in context). Non-image media returns metadata only.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().describe("Message ID containing media"),
+      full: z
+        .boolean()
+        .optional()
+        .describe(
+          "Fetch the full-resolution image instead of a thumbnail. Default false. A full image can be hundreds of KB of base64 in the response — only set true when the thumbnail is not enough (e.g. reading fine text/details).",
+        ),
     },
     annotations: READ_ONLY,
-    handler: async ({ chatId, messageId }, { telegram }) => {
-      const { buffer, mimeType } = await telegram.downloadMediaAsBuffer(chatId, messageId);
+    handler: async ({ chatId, messageId, full }, { telegram }) => {
+      // Default to the smallest thumbnail (thumb: 0). The buffer inlines as
+      // base64 into the LLM context, so a full image costs proportionally more
+      // tokens — a single ~950KB photo is ~hundreds of thousands of tokens.
+      const { buffer, mimeType, isThumb } = await telegram.downloadMediaAsBuffer(
+        chatId,
+        messageId,
+        full ? undefined : { thumb: 0 },
+      );
 
       if (mimeType.startsWith("image/")) {
         if (buffer.length > MAX_INLINE_MEDIA) {
@@ -247,7 +261,15 @@ export const READ_TOOLS: ToolDefinition[] = [
             `Image too large for inline display (${(buffer.length / 1024).toFixed(0)} KB, limit ~950 KB). The image is a ${mimeType} file. Try asking for a specific smaller photo or use telegram-read-messages to see the text content.`,
           );
         }
-        return { content: [{ type: "image", data: buffer.toString("base64"), mimeType }] };
+        const note = isThumb
+          ? `Thumbnail preview (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}). Pass full:true for the full-resolution image if you need finer detail.`
+          : `Full image (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}).`;
+        return {
+          content: [
+            { type: "image", data: buffer.toString("base64"), mimeType },
+            { type: "text", text: note },
+          ],
+        };
       }
 
       return textResult(
