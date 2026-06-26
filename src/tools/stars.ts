@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { errorResult, formatPeer, READ_ONLY, sanitize, textResult, WRITE } from "./_helpers.js";
+import { errorResult, formatPeer, READ_ONLY, sanitize, textResult, WRITE } from "./helpers.js";
 
 const STARS_ENV = "MCP_TELEGRAM_ENABLE_STARS";
 

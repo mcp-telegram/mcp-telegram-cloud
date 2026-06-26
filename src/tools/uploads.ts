@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
 import type { ToolDefinition, ToolDeps } from "../tool-registry.js";
-import { errorResult, replyTargetFields, safeOpt, sanitize, textResult, WRITE } from "./_helpers.js";
+import { errorResult, replyTargetFields, safeOpt, sanitize, textResult, WRITE } from "./helpers.js";
 
 /**
  * Phase X — FS-bound media tools backed by user-provided uploads or HTTPS URLs.

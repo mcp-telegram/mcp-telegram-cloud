@@ -8,6 +8,23 @@ export function sanitize(text: string): string {
 /** Sanitize an optional free-text field, preserving `undefined` so spread-args don't clobber defaults. */
 export const safeOpt = (v: string | undefined): string | undefined => (v === undefined ? undefined : sanitize(v));
 
+/**
+ * Derive a human-readable tool title from its kebab-case name.
+ * `telegram-send-message` → `Send Message`. The leading `telegram-` namespace
+ * prefix is dropped (every tool carries it; the directory shows it as noise).
+ * The Claude Connectors Directory requires a `title` on every tool; deriving it
+ * keeps all tools covered without per-tool boilerplate, while individual tools
+ * can still pass an explicit `title` to override (e.g. acronyms like "2FA").
+ */
+export function deriveTitle(name: string): string {
+  return name
+    .replace(/^telegram-/, "")
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 /** Standard `replyTo` + `topicId` optional zod fields used by every "send-*" tool. */
 export const replyTargetFields = {
   replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),

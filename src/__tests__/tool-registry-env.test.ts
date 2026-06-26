@@ -25,16 +25,18 @@ function makeTool(overrides: Partial<ToolDefinition> = {}): ToolDefinition {
   };
 }
 
-function makeServer(): { server: McpServer; registered: Set<string> } {
+function makeServer(): { server: McpServer; registered: Set<string>; titles: Map<string, unknown> } {
   const server = new McpServer({ name: "test", version: "0.0.0" });
   const registered = new Set<string>();
+  const titles = new Map<string, unknown>();
   const original = server.registerTool.bind(server);
   server.registerTool = ((name: string, ...rest: unknown[]) => {
     registered.add(name);
+    titles.set(name, (rest[0] as { title?: unknown } | undefined)?.title);
     // biome-ignore lint/suspicious/noExplicitAny: relaying SDK call as-is
     return original(name, ...(rest as [any, any]));
   }) as typeof server.registerTool;
-  return { server, registered };
+  return { server, registered, titles };
 }
 
 const FAKE_DEPS = {
@@ -88,5 +90,19 @@ describe("tool-registry requiresEnv", () => {
     } finally {
       delete process.env.MCP_TELEGRAM_ENABLE_TEST_FLAG;
     }
+  });
+});
+
+describe("tool-registry title", () => {
+  it("derives a title from the tool name when none is given", () => {
+    const { server, titles } = makeServer();
+    registerAllTools(server, [makeTool({ name: "telegram-send-message" })], FAKE_DEPS);
+    assert.equal(titles.get("telegram-send-message"), "Send Message");
+  });
+
+  it("passes an explicit title through unchanged", () => {
+    const { server, titles } = makeServer();
+    registerAllTools(server, [makeTool({ name: "telegram-set-2fa", title: "Set 2FA Password" })], FAKE_DEPS);
+    assert.equal(titles.get("telegram-set-2fa"), "Set 2FA Password");
   });
 });

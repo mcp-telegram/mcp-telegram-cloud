@@ -8,7 +8,7 @@ import {
   renderMessage,
   sanitize,
   textResult,
-} from "./_helpers.js";
+} from "./helpers.js";
 
 export const READ_TOOLS: ToolDefinition[] = [
   {

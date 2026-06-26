@@ -6,6 +6,7 @@ import { logger } from "./logger.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION } from "./telemetry/metrics.js";
 import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js";
+import { deriveTitle } from "./tools/helpers.js";
 import type { UploadStore } from "./upload-store.js";
 import type { fetchUrlSafely } from "./url-fetcher.js";
 
@@ -49,6 +50,12 @@ type Args<TShape extends ZodRawShapeCompat> = ShapeOutput<TShape>;
 export interface ToolDefinition<TShape extends ZodRawShapeCompat = ZodRawShapeCompat> {
   name: string;
   description: string;
+  /**
+   * Optional human-readable display title (MCP `tool.title`). The Claude Connectors
+   * Directory requires every tool to carry one. When omitted, the registry derives it
+   * from `name` via {@link deriveTitle}; set this only to override (e.g. acronyms).
+   */
+  title?: string;
   inputSchema?: TShape;
   annotations: ToolAnnotations;
   /** Skip requireConnection() — tool handles disconnected state itself (e.g. telegram-status). */
@@ -148,10 +155,12 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
     }
 
     const config: {
+      title: string;
       description: string;
       annotations: ToolAnnotations;
       inputSchema?: ZodRawShapeCompat;
     } = {
+      title: tool.title ?? deriveTitle(tool.name),
       description: tool.description,
       annotations: tool.annotations,
     };

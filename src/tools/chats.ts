@@ -9,7 +9,7 @@ import {
   sanitize,
   textResult,
   WRITE,
-} from "./_helpers.js";
+} from "./helpers.js";
 
 export const CHATS_TOOLS: ToolDefinition[] = [
   {

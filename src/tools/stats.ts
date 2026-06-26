@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { formatPeer, READ_ONLY, sanitize, textResult } from "./_helpers.js";
+import { formatPeer, READ_ONLY, sanitize, textResult } from "./helpers.js";
 
 export const STATS_TOOLS: ToolDefinition[] = [
   {

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { errorResult, READ_ONLY, textResult, WRITE } from "./_helpers.js";
+import { errorResult, READ_ONLY, textResult, WRITE } from "./helpers.js";
 
 /**
  * v2.32.0 multi-account tools.

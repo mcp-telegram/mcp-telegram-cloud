@@ -11,7 +11,7 @@ import {
   sanitize,
   textResult,
   WRITE,
-} from "./_helpers.js";
+} from "./helpers.js";
 
 export const MESSAGING_TOOLS: ToolDefinition[] = [
   {

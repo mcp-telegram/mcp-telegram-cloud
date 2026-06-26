@@ -488,8 +488,9 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 - **2026-04-30** — **Phase 2.0.6 — `tools.ts` split refactor** (cloud
   v2.10.0). Pure code-quality cleanup, **mandatory before Wave 2.5**.
   `src/tools.ts` 3354 → 54 lines (barrel) + new `src/tools/` directory
-  with 7 domain modules and one helpers module: `_helpers.ts` (171 lines,
-  shared `sanitize`/render-functions/annotation constants/error mappers),
+  with 7 domain modules and one helpers module: `helpers.ts` (171 lines,
+  shared `sanitize`/render-functions/annotation constants/error mappers;
+  renamed from `_helpers.ts` later),
   `read.ts` (39 read-only tools), `messaging.ts` (20 send/edit/forward/
   reactions/drafts), `chats.ts` (20 moderation/folders), `profile.ts`
   (24 profile/business/privacy/emoji writes), `stories.ts` (7),
