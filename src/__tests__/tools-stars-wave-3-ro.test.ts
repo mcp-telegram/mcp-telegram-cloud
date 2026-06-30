@@ -87,6 +87,50 @@ describe("Wave 3 RO Stars — read-only Stars wallet/gifts/subscriptions (opt-in
     }
   });
 
+  // Token-optimization Tier 1: get-stars-status / get-stars-transactions now
+  // return curated text, NOT a raw JSON.stringify dump. Lock the format so a
+  // future change can't silently regress back to a verbose JSON blob.
+  it("get-stars-status renders curated text (not raw JSON)", async () => {
+    const tool = TOOLS.find((t) => t.name === "telegram-get-stars-status");
+    assert.ok(tool?.handler);
+    if (!tool?.handler) return;
+    const stub = {
+      getStarsStatus: async () => ({
+        balance: { amount: "1500", nanos: 0 },
+        history: [
+          {
+            id: "txn_a",
+            stars: { amount: "100", nanos: 0 },
+            date: 1782700000,
+            peer: { kind: "premiumBot" },
+            title: "Sub",
+          },
+          {
+            id: "txn_b",
+            stars: { amount: "25", nanos: 500000000 },
+            date: 1782600000,
+            peer: { kind: "peer", peer: { kind: "user", id: "117799143" } },
+            gift: true,
+            pending: false,
+          },
+        ],
+        nextOffset: "cur1",
+      }),
+    } as unknown as TelegramService;
+    const res = await tool.handler({ peer: "me" } as never, { telegram: stub } as never);
+    const text = res.content[0]?.type === "text" ? res.content[0].text : "";
+    // Not JSON
+    assert.throws(() => JSON.parse(text), "curated output must not be valid JSON");
+    // Curated essentials present
+    assert.match(text, /balance=1500⭐/);
+    assert.match(text, /transactions \(2\):/);
+    assert.match(text, /\[txn_a\] 100⭐ premiumBot date=2026-/); // ISO date, not unix
+    assert.match(text, /25\.5⭐ user:117799143/); // nanos fraction + peer
+    assert.match(text, /\[gift\]/);
+    assert.doesNotMatch(text, /pending/, "falsy flags must be dropped");
+    assert.match(text, /nextOffset=cur1/);
+  });
+
   it("Stars RO tools are registered when MCP_TELEGRAM_ENABLE_STARS=1", () => {
     const prev = process.env.MCP_TELEGRAM_ENABLE_STARS;
     process.env.MCP_TELEGRAM_ENABLE_STARS = "1";

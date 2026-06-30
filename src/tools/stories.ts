@@ -12,6 +12,24 @@ import {
   WRITE,
 } from "./helpers.js";
 
+/** Curated text for the multi-step report flow result (ReportResultSummary).
+ * Replaces a raw JSON dump. The base64 `option` bytes are preserved VERBATIM —
+ * the caller passes them back as `option` on the next step. */
+function renderReportResult(
+  r:
+    | { kind: "reported" }
+    | { kind: "chooseOption"; title?: string; options: Array<{ text: string; option: string }> }
+    | { kind: "addComment"; optional?: boolean },
+): string {
+  if (r.kind === "reported") return "Report submitted.";
+  if (r.kind === "addComment") {
+    return `Add a comment to continue the report${r.optional ? " (optional)" : " (required)"} — call again with your message.`;
+  }
+  const lines = [r.title ? `Choose a report reason — ${r.title}:` : "Choose a report reason:"];
+  for (const o of r.options) lines.push(`  - ${o.text} → option=${o.option}`);
+  return lines.join("\n");
+}
+
 export const STORIES_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-all-stories",
@@ -240,7 +258,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
     annotations: WRITE,
     handler: async ({ chatId, ids, option, message }, { telegram }) => {
       const result = await telegram.reportStory(chatId, ids, option, sanitize(message));
-      return textResult(JSON.stringify(result));
+      return textResult(sanitize(renderReportResult(result)));
     },
   },
 
