@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, describe, it } from "node:test";
 import { fetchUrlSafely, isPrivateAddress } from "../url-fetcher.js";
 
 describe("isPrivateAddress — IPv4 ranges", () => {
@@ -130,5 +130,96 @@ describe("fetchUrlSafely — DNS-failure path", () => {
     assert.equal(res.ok, false);
     if (res.ok) return;
     assert.equal(res.reason, "dns_failure");
+  });
+});
+
+// REGRESSION COVERAGE for "dispatcher.close is not a function" (reported by a
+// cloud user, 2026-06-29). Every prior fetchUrlSafely test stopped at a deny
+// path (bad_scheme / private_address / dns_failure) and NEVER reached doFetch,
+// so the success-path dispatcher.close() crash shipped unnoticed. These tests
+// stub the global `fetch` and use a PUBLIC IP literal (skips DNS) to reach the
+// fetch path deterministically, offline.
+describe("fetchUrlSafely — fetch path (stubbed global fetch)", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it("returns bytes + mime on 200 without throwing (the dispatcher.close regression)", async () => {
+    const payload = new TextEncoder().encode("hello-world");
+    let pinnedUrlSeen = "";
+    let sniSeen: string | undefined;
+    let hostHeaderSeen: string | null = null;
+    globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+      pinnedUrlSeen = String(input);
+      sniSeen = (init as { tls?: { serverName?: string } })?.tls?.serverName;
+      hostHeaderSeen = new Headers(init?.headers).get("host");
+      return Promise.resolve(new Response(payload, { status: 200, headers: { "content-type": "image/png" } }));
+    }) as unknown as typeof fetch;
+
+    const res = await fetchUrlSafely("https://93.184.215.14/file.png", { maxBytes: 1_000_000 });
+    assert.equal(res.ok, true);
+    if (!res.ok) return;
+    assert.equal(res.mime, "image/png");
+    assert.deepEqual(new Uint8Array(res.bytes), payload);
+    // IP pin: URL targets the literal; SNI + Host carry the original host.
+    assert.match(pinnedUrlSeen, /^https:\/\/93\.184\.215\.14\//);
+    assert.equal(sniSeen, "93.184.215.14");
+    assert.equal(hostHeaderSeen, "93.184.215.14");
+  });
+
+  it("enforces the Content-Length size cap before streaming", async () => {
+    globalThis.fetch = (() =>
+      Promise.resolve(
+        new Response(new Uint8Array(100), {
+          status: 200,
+          headers: { "content-type": "application/octet-stream", "content-length": "100" },
+        }),
+      )) as unknown as typeof fetch;
+    const res = await fetchUrlSafely("https://93.184.215.14/big.bin", { maxBytes: 50 });
+    assert.equal(res.ok, false);
+    if (res.ok) return;
+    assert.equal(res.reason, "too_large");
+  });
+
+  it("enforces the size cap mid-stream when Content-Length is absent", async () => {
+    globalThis.fetch = (() => {
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new Uint8Array(40));
+          controller.enqueue(new Uint8Array(40));
+          controller.close();
+        },
+      });
+      return Promise.resolve(new Response(stream, { status: 200 }));
+    }) as unknown as typeof fetch;
+    const res = await fetchUrlSafely("https://93.184.215.14/stream.bin", { maxBytes: 50 });
+    assert.equal(res.ok, false);
+    if (res.ok) return;
+    assert.equal(res.reason, "too_large");
+  });
+
+  it("maps an upstream 4xx/5xx to non_2xx", async () => {
+    globalThis.fetch = (() => Promise.resolve(new Response("nope", { status: 404 }))) as unknown as typeof fetch;
+    const res = await fetchUrlSafely("https://93.184.215.14/missing", { maxBytes: 1024 });
+    assert.equal(res.ok, false);
+    if (res.ok) return;
+    assert.equal(res.reason, "non_2xx");
+  });
+
+  it("flags a redirect missing its Location header", async () => {
+    globalThis.fetch = (() => Promise.resolve(new Response(null, { status: 302 }))) as unknown as typeof fetch;
+    const res = await fetchUrlSafely("https://93.184.215.14/r", { maxBytes: 1024 });
+    assert.equal(res.ok, false);
+    if (res.ok) return;
+    assert.equal(res.reason, "redirect_missing_location");
+  });
+
+  it("maps a fetch rejection to fetch_failed (not an unhandled throw)", async () => {
+    globalThis.fetch = (() => Promise.reject(new Error("ECONNRESET"))) as unknown as typeof fetch;
+    const res = await fetchUrlSafely("https://93.184.215.14/x", { maxBytes: 1024 });
+    assert.equal(res.ok, false);
+    if (res.ok) return;
+    assert.equal(res.reason, "fetch_failed");
   });
 });

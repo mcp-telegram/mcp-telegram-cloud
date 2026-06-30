@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.48.0",
+  "version": "2.49.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -42,7 +42,6 @@
     "hono": "^4.12.27",
     "qrcode": "^1.5.4",
     "telegram": "^2.26.22",
-    "undici": "^8.5.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

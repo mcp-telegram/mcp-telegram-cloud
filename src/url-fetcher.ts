@@ -14,9 +14,11 @@ import { isIP } from "node:net";
  * 1. **Scheme allow-list** — `https:` only. No `file:`, `data:`, `gopher:`, `http:`.
  * 2. **Hostname pre-resolve** — DNS lookup before `fetch()`. Reject the URL if
  *    any resolved address is private/loopback/link-local/multicast.
- * 3. **DNS-rebinding pin** — `fetch()` is given a custom `dispatcher` that
- *    connects to the pre-resolved IP, not the hostname. A rebind between
- *    lookup and fetch can't redirect us to a different IP.
+ * 3. **DNS-rebinding pin** — `fetch()` is pointed at the pre-resolved IP (the
+ *    hostname in the URL is swapped for the IP literal), while the original
+ *    hostname is carried in `tls.serverName` (SNI) and the `Host` header so TLS
+ *    and virtual hosting still work. A rebind between lookup and fetch can't
+ *    redirect us to a different IP, because we never resolve the hostname again.
  * 4. **Redirect re-validation** — `redirect: "manual"`; we follow at most
  *    {@link MAX_REDIRECTS} hops, re-running steps 1-3 on each `Location`.
  * 5. **Size cap during stream** — abort once `Content-Length` (if known) or
@@ -26,9 +28,14 @@ import { isIP } from "node:net";
  * Out of scope (intentionally): authenticated fetches (no `Authorization`
  * passthrough), HTTP/0.9 oddities, FTP. If users need those, they upload via
  * `/my/upload` instead.
+ *
+ * Runtime note: we use Bun's global `fetch`, NOT undici's `Agent`/`dispatcher`.
+ * Bun ships a stub `undici` module whose `Agent` is an empty EventEmitter — its
+ * `dispatcher` is silently ignored by `fetch` (so the IP pin never applied) and
+ * it has no `.close()` (so cleanup threw `dispatcher.close is not a function`).
+ * Bun's native `fetch` supports `tls.serverName`, which lets us pin by IP while
+ * keeping SNI/Host correct — the same SSRF guarantee without the broken Agent.
  */
-
-import { Agent, fetch as undiciFetch } from "undici";
 
 /** Maximum redirect hops we'll follow. Each is independently SSRF-revalidated. */
 const MAX_REDIRECTS = 3;
@@ -124,23 +131,11 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
     const validated = await validateAndPin(currentUrl);
     if (!validated.ok) return validated;
 
-    // Per-hop dispatcher with IP pinning. Allocated here (not inside doFetch) so
-    // its lifetime spans both the request AND the body stream — closing it inside
-    // doFetch's finally would race with streamBody's reader, producing flaky
-    // socket-closed errors on success-path large bodies.
-    const dispatcher = makePinnedDispatcher(validated.pinnedIp);
-    let releasedDispatcher = false;
-    const releaseDispatcher = () => {
-      if (releasedDispatcher) return;
-      releasedDispatcher = true;
-      dispatcher.close().catch(() => {});
-    };
-
-    const response = await doFetch(validated.url, dispatcher, timeoutMs);
-    if (!response.ok) {
-      releaseDispatcher();
-      return response;
-    }
+    // IP pin via native fetch: hit the pre-resolved IP, carry the original host
+    // in SNI + Host header. No per-connection cleanup needed — Bun's fetch owns
+    // the socket lifecycle, so there's nothing to close.
+    const response = await doFetch(validated, timeoutMs);
+    if (!response.ok) return response;
     const res = response.response;
 
     if (res.status >= 300 && res.status < 400) {
@@ -151,7 +146,6 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
       } catch {
         // Body cancel may fail on already-closed streams; safe to ignore.
       }
-      releaseDispatcher();
       if (!loc) {
         return {
           ok: false,
@@ -159,6 +153,8 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
           message: `Redirect ${res.status} without Location header`,
         };
       }
+      // Resolve relative redirects against the ORIGINAL hostname URL, not the
+      // IP-pinned one, so the next hop re-validates the real host.
       currentUrl = new URL(loc, validated.url).toString();
       continue;
     }
@@ -169,33 +165,33 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
       } catch {
         // ignore (see above)
       }
-      releaseDispatcher();
       return { ok: false, reason: "non_2xx", message: `Upstream returned HTTP ${res.status}` };
     }
 
-    try {
-      return await streamBody(res, currentUrl, opts.maxBytes);
-    } finally {
-      releaseDispatcher();
-    }
+    return await streamBody(res, currentUrl, opts.maxBytes);
   }
   return { ok: false, reason: "redirect_limit", message: `Too many redirects (>${MAX_REDIRECTS})` };
 }
 
-/** Per-call dispatcher that pins outbound socket connect to the pre-validated IP.
- * Host header still reflects the original hostname (TLS SNI + virtual hosting work). */
-function makePinnedDispatcher(pinnedIp: string): Agent {
-  return new Agent({
-    connect: {
-      lookup: (
-        _hostname: string,
-        _options: unknown,
-        cb: (err: Error | null, address: string, family: number) => void,
-      ) => {
-        cb(null, pinnedIp, isIP(pinnedIp) === 6 ? 6 : 4);
-      },
-    },
-  });
+interface PinnedRequest {
+  /** URL with hostname replaced by the pinned IP literal. */
+  pinnedUrl: string;
+  /** Original host (with :port if present) — for the Host header. */
+  host: string;
+  /** Original hostname (no port, no brackets) — for SNI (tls.serverName). */
+  serverName: string;
+}
+
+/** Builds the IP-pinned request shape for native fetch: the URL targets the
+ * pre-validated IP, while SNI + Host header preserve the original hostname so
+ * TLS and virtual hosting keep working. IPv6 literals are bracket-wrapped. */
+function buildPinnedRequest(originalUrl: string, pinnedIp: string): PinnedRequest {
+  const u = new URL(originalUrl);
+  const host = u.host; // includes :port if present; used for the Host header
+  const hostname = u.hostname; // no port; may have [] around IPv6
+  const serverName = hostname.startsWith("[") && hostname.endsWith("]") ? hostname.slice(1, -1) : hostname;
+  u.hostname = isIP(pinnedIp) === 6 ? `[${pinnedIp}]` : pinnedIp;
+  return { pinnedUrl: u.toString(), host, serverName };
 }
 
 interface ValidatedUrl {
@@ -256,19 +252,21 @@ interface FetchResult {
   response: Response;
 }
 
-async function doFetch(url: string, dispatcher: Agent, timeoutMs: number): Promise<FetchResult | FetchDenied> {
+async function doFetch(validated: ValidatedUrl, timeoutMs: number): Promise<FetchResult | FetchDenied> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const { pinnedUrl, host, serverName } = buildPinnedRequest(validated.url, validated.pinnedIp);
   try {
-    const response = await undiciFetch(url, {
+    const response = await fetch(pinnedUrl, {
       method: "GET",
       redirect: "manual",
       signal: controller.signal,
-      dispatcher,
-    });
-    // undici's Response is structurally compatible with the global Response type
-    // for the parts we use (status, headers.get, body.getReader, body.cancel).
-    return { ok: true, response: response as unknown as Response };
+      headers: { Host: host },
+      // Bun-specific: pin the socket to the IP in `pinnedUrl` but present the
+      // real hostname for TLS SNI. Typed via cast — not in the lib DOM RequestInit.
+      tls: { serverName },
+    } as RequestInit & { tls: { serverName: string } });
+    return { ok: true, response };
   } catch (e) {
     const err = e as Error;
     if (err.name === "AbortError") {
