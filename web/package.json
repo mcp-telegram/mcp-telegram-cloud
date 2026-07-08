@@ -12,14 +12,14 @@
     "translate": "bun scripts/translate.ts"
   },
   "dependencies": {
-    "next": "16.2.9",
-    "next-intl": "^4.13.0",
+    "next": "16.2.10",
+    "next-intl": "^4.13.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.1",
-    "@types/node": "^26.0.1",
+    "@biomejs/biome": "^2.5.3",
+    "@types/node": "^26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "typescript": "6.0.3"
