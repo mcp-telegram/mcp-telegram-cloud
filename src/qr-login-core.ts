@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import { TelegramClient } from "telegram";
+import { Logger, LogLevel } from "telegram/extensions/Logger.js";
 import { StringSession } from "telegram/sessions/index.js";
 import { config } from "./config.js";
 
@@ -97,11 +98,29 @@ function resolveUseWSS(proxy: unknown): boolean {
   return useWSS && !proxy;
 }
 
+function resolveBaseLogger(): Logger {
+  const raw = (process.env.TELEGRAM_LOG_LEVEL || "error").toLowerCase();
+  const level =
+    raw === "none"
+      ? LogLevel.NONE
+      : raw === "warn"
+        ? LogLevel.WARN
+        : raw === "info"
+          ? LogLevel.INFO
+          : raw === "debug"
+            ? LogLevel.DEBUG
+            : LogLevel.ERROR;
+  return new Logger(level);
+}
+
 const defaultClientFactory: QrClientFactory = () => {
   const proxy = resolveProxy();
   const client = new TelegramClient(new StringSession(""), config.telegramApiId, config.telegramApiHash, {
     connectionRetries: 5,
     useWSS: resolveUseWSS(proxy),
+    // Cap gramJS's INFO-level reconnect logging so a flaky DC path can't flood
+    // stdout during QR polling. Override via TELEGRAM_LOG_LEVEL when debugging.
+    baseLogger: resolveBaseLogger(),
     ...(proxy && { proxy: proxy as never }),
   });
   return {
