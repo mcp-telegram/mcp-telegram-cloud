@@ -6,7 +6,7 @@ import { StepCard, Stepper } from "@/components/docs/StepCard";
 import { Troubleshooting } from "@/components/docs/Troubleshooting";
 import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
-import { canonicalForLocale, languageAlternates } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
 import s from "../../../doc.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -17,12 +17,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "quickstart" });
   const canonical = canonicalForLocale(locale, PATH);
+  const social = socialMetadata(locale, canonical);
+
   return {
     title: t("claudeMetaTitle"),
     description: t("claudeMetaDescription"),
     alternates: { canonical, languages: languageAlternates(PATH) },
-    openGraph: { url: canonical, title: t("claudeMetaTitle"), description: t("claudeMetaDescription") },
-    twitter: { title: t("claudeMetaTitle"), description: t("claudeMetaDescription") },
+    openGraph: {
+      url: canonical,
+      title: t("claudeMetaTitle"),
+      description: t("claudeMetaDescription"),
+      images: social.openGraph.images,
+    },
+    twitter: { ...social.twitter, title: t("claudeMetaTitle"), description: t("claudeMetaDescription") },
   };
 }
 

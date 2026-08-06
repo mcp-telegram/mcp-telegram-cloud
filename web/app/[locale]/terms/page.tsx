@@ -3,7 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { config } from "@/lib/config";
-import { canonicalForLocale, languageAlternates } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
 import s from "../../legal.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -14,12 +14,14 @@ const DESCRIPTION = `Terms of service for ${config.brandName} hosted Telegram MC
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const canonical = canonicalForLocale(locale, "/terms");
+  const social = socialMetadata(locale, canonical);
+
   return {
     title: TITLE,
     description: DESCRIPTION,
     alternates: { canonical, languages: languageAlternates("/terms") },
-    openGraph: { url: canonical, title: TITLE, description: DESCRIPTION },
-    twitter: { title: TITLE, description: DESCRIPTION },
+    openGraph: { url: canonical, title: TITLE, description: DESCRIPTION, images: social.openGraph.images },
+    twitter: { ...social.twitter, title: TITLE, description: DESCRIPTION },
   };
 }
 

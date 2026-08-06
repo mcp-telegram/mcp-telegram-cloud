@@ -40,3 +40,25 @@ export function languageAlternates(path: string): Record<string, string> {
   out["x-default"] = canonicalForLocale(defaultLocale, path);
   return out;
 }
+
+/** Absolute URL of the generated social card for a locale.
+ *
+ * Routed through `canonicalForLocale` so the default locale gets no prefix:
+ * `/en/opengraph-image` 307s, and preview crawlers frequently don't follow
+ * redirects, which leaves the card blank. */
+export function ogImageForLocale(locale: string): string {
+  return canonicalForLocale(locale, "/opengraph-image");
+}
+
+/** Metadata block every page spreads into its `generateMetadata` return.
+ *
+ * Next.js merges metadata shallowly — a page's own `openGraph`/`twitter`
+ * object replaces the layout's outright, so the image and card type have to
+ * be restated per page or the preview silently degrades to text-only. */
+export function socialMetadata(locale: string, canonical: string) {
+  const image = ogImageForLocale(locale);
+  return {
+    openGraph: { url: canonical, images: [{ url: image, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image" as const, images: [image] },
+  };
+}
