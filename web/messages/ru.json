@@ -9,7 +9,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Быстрый старт",
-    "examples": "Примеры"
+    "examples": "Примеры",
+    "toggleTheme": "Сменить тему",
+    "openMenu": "Открыть меню",
+    "closeMenu": "Закрыть меню"
   },
   "hero": {
     "titleStart": "Ваш Telegram в",
@@ -190,7 +193,8 @@
         "prompt": "Найди все голосовые сообщения в моём group-chat «Coworking» за эту неделю. Транскрибируй каждое и подай хронологическим списком с отправителем и timestamp.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Все"
   },
   "quickstart": {
     "metaTitle": "Быстрый старт — подключить Telegram к Claude AI или ChatGPT",
@@ -272,7 +276,7 @@
     "flowHeading": "Authorization code flow с PKCE",
     "flowLead": "Стандартный поток RFC 6749 §4.1 + RFC 7636. Никаких сюрпризов — если твоя OAuth-библиотека умеет «authorization code + PKCE», всё заработает.",
     "flowStep1Title": "Зарегистрируй клиент",
-    "flowStep1Desc": "POST /oauth/register с { redirect_uris: [\"http://127.0.0.1:<порт>/callback\"], client_name: \"имя-клиента\" }. Сервер вернёт client_id и client_secret (секрет необязателен для публичных PKCE-клиентов, но получить его не помешает).",
+    "flowStep1Desc": "POST /oauth/register с '{' redirect_uris: [\"http://127.0.0.1:«порт»/callback\"], client_name: \"имя-клиента\" '}'. Сервер вернёт client_id и client_secret (секрет необязателен для публичных PKCE-клиентов, но получить его не помешает).",
     "flowStep2Title": "Сгенерируй PKCE-пару",
     "flowStep2Desc": "Сделай случайный code_verifier (43–128 символов), затем посчитай code_challenge = BASE64URL(SHA256(code_verifier)). Сохрани verifier локально для шага 4.",
     "flowStep3Title": "Открой /oauth/authorize в браузере",
@@ -529,5 +533,12 @@
       "telegram": "или в Telegram <tg>@{handle}</tg>",
       "email": "или на почту <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Где эта страница?",
+    "reply": "Такой страницы нет",
+    "title": "Страница не найдена",
+    "desc": "Похоже, она улетела вместе с бумажным самолётиком. Проверьте адрес — или начните с главной.",
+    "home": "На главную"
   }
 }

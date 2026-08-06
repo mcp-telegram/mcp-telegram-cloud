@@ -17,7 +17,10 @@
     "faq": "Preguntas frecuentes",
     "github": "GitHub",
     "quickstart": "Inicio rápido",
-    "examples": "Ejemplos"
+    "examples": "Ejemplos",
+    "toggleTheme": "Cambiar tema",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "hero": {
     "titleStart": "Su Telegram en",
@@ -198,7 +201,8 @@
         "prompt": "Encuentra todos los mensajes de voz enviados en mi chat de grupo \"Coworking\" esta semana. Transcribe cada uno y preséntalos en una lista cronológica con remitente y marca de tiempo.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Todos"
   },
   "quickstart": {
     "metaTitle": "Inicio rápido — Conectar Telegram a Claude AI o ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization code flow con PKCE",
     "flowLead": "Flujo estándar de RFC 6749 §4.1 + RFC 7636. Sin sorpresas — si tu librería de OAuth maneja «authorization code + PKCE», funcionará.",
     "flowStep1Title": "Registra tu cliente",
-    "flowStep1Desc": "POST /oauth/register con { redirect_uris: [\"http://127.0.0.1:<puerto>/callback\"], client_name: \"nombre-de-tu-cliente\" }. El servidor devuelve client_id + client_secret (el secret es opcional para clientes públicos con PKCE, pero recibirlo no hace daño).",
+    "flowStep1Desc": "POST /oauth/register con '{' redirect_uris: [\"http://127.0.0.1:«puerto»/callback\"], client_name: \"nombre-de-tu-cliente\" '}'. El servidor devuelve client_id + client_secret (el secret es opcional para clientes públicos con PKCE, pero recibirlo no hace daño).",
     "flowStep2Title": "Genera el par PKCE",
     "flowStep2Desc": "Genera un code_verifier aleatorio de 43-128 caracteres y luego calcula code_challenge = BASE64URL(SHA256(code_verifier)). Guarda el verifier localmente para el paso 4.",
     "flowStep3Title": "Abre /oauth/authorize en un navegador",
@@ -537,5 +541,12 @@
       "telegram": "o por Telegram <tg>@{handle}</tg>",
       "email": "o por correo electrónico <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "¿Dónde está esta página?",
+    "reply": "No existe esa página",
+    "title": "Página no encontrada",
+    "desc": "Parece que se fue volando con el avión de papel. Revisa la URL o empieza desde el inicio.",
+    "home": "Ir al inicio"
   }
 }

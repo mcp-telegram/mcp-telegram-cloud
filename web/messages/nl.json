@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Snelstart",
-    "examples": "Voorbeelden"
+    "examples": "Voorbeelden",
+    "toggleTheme": "Thema wisselen",
+    "openMenu": "Menu openen",
+    "closeMenu": "Menu sluiten"
   },
   "hero": {
     "titleStart": "Uw Telegram in",
@@ -198,7 +201,8 @@
         "prompt": "Vind alle spraakberichten die deze week in mijn \"Coworking\"-groepschat zijn verstuurd. Transcribeer elk bericht en presenteer ze als een chronologische lijst met afzender en tijdstempel.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Alle"
   },
   "quickstart": {
     "metaTitle": "Snelstart — Verbind Telegram met Claude AI of ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization code flow met PKCE",
     "flowLead": "Standaard RFC 6749 §4.1 + RFC 7636 flow. Geen verrassingen — als je OAuth-bibliotheek \"authorization code + PKCE\" aankan, werkt het gewoon.",
     "flowStep1Title": "Registreer je client",
-    "flowStep1Desc": "POST /oauth/register met { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"jouw-client-naam\" }. De server retourneert client_id + client_secret (het secret is optioneel voor publieke PKCE-clients, maar onschadelijk om te ontvangen).",
+    "flowStep1Desc": "POST /oauth/register met '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"jouw-client-naam\" '}'. De server retourneert client_id + client_secret (het secret is optioneel voor publieke PKCE-clients, maar onschadelijk om te ontvangen).",
     "flowStep2Title": "Genereer een PKCE-paar",
     "flowStep2Desc": "Genereer een willekeurige code_verifier van 43–128 tekens en bereken vervolgens code_challenge = BASE64URL(SHA256(code_verifier)). Sla de verifier lokaal op voor stap 4.",
     "flowStep3Title": "Open /oauth/authorize in een browser",
@@ -537,5 +541,12 @@
       "telegram": "of via Telegram <tg>@{handle}</tg>",
       "email": "of per e-mail <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Waar is deze pagina?",
+    "reply": "Deze pagina bestaat niet",
+    "title": "Pagina niet gevonden",
+    "desc": "Het lijkt erop dat hij is weggevlogen met het papieren vliegtuigje. Controleer de URL of begin op de startpagina.",
+    "home": "Naar de startpagina"
   }
 }

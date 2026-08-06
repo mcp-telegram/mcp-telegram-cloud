@@ -2,11 +2,18 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 22px 24px;
-  border-radius: 12px;
+  padding: 22px;
+  border-radius: 18px;
   background: var(--tg-card-bg);
   border: 1px solid var(--tg-outline);
-  box-shadow: var(--tg-shadow);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--tg-elevated-shadow);
 }
 
 .head {
@@ -17,46 +24,46 @@
 }
 
 .title {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   margin: 0;
   line-height: 1.35;
   color: var(--tg-text);
 }
 
 .badge {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(0, 122, 255, 0.1);
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--tg-code-bg);
   color: var(--tg-link);
+  font-size: 11.5px;
+  font-weight: 700;
   white-space: nowrap;
-  font-weight: 500;
 }
 
 .desc {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--tg-hint);
   margin: 0;
 }
 
+/* Incoming-style bubble: the prompt reads as a message, matching the landing. */
 .prompt {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px;
+  font-family: inherit;
+  font-size: 13.5px;
   line-height: 1.55;
-  background: var(--tg-tertiary-bg);
-  border: 1px solid var(--tg-outline);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-top: 6px;
+  background: var(--tg-bubble-in);
+  border-radius: 14px 14px 14px 4px;
+  padding: 13px 15px;
+  margin-top: 4px;
   white-space: pre-wrap;
   color: var(--tg-text);
 }
 
 .actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
 }

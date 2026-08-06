@@ -1,15 +1,23 @@
 .button {
+  /* 44px keeps the tap target at the a11y minimum — do not shrink. */
   min-height: 44px;
-  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 4px;
   background: transparent;
-  border: 1px solid currentColor;
-  border-radius: 6px;
+  border: none;
   color: var(--tg-link);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.button:hover {
+  text-decoration: underline;
 }
 
 .copied {
   color: var(--tg-green);
+  text-decoration: none;
 }

@@ -3,11 +3,11 @@
   align-items: stretch;
   gap: 0;
   margin: 14px 0 22px;
-  border: 1px solid var(--tg-divider);
-  border-radius: 10px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 12px;
   overflow: hidden;
   max-width: 560px;
-  background: var(--tg-tertiary-bg);
+  background: var(--tg-card-bg);
 }
 
 .label {
@@ -18,7 +18,7 @@
   padding: 0;
   border: 0;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
 }
 
 .url {
@@ -36,22 +36,29 @@
 .btn {
   flex: 0 0 auto;
   padding: 0 16px;
-  background: rgba(0, 122, 255, 0.08);
+  background: var(--tg-code-bg);
   border: none;
-  border-left: 1px solid var(--tg-divider);
+  border-inline-start: 1px solid var(--tg-outline);
   color: var(--tg-link);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
   min-width: 96px;
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.btn:active {
+  opacity: 0.75;
 }
 
 .btn:hover {
-  background: rgba(0, 122, 255, 0.14);
+  background: var(--tg-button);
+  color: var(--tg-button-text);
 }
 
 .btn[data-copied="true"] {
   color: var(--tg-green);
-  background: rgba(49, 209, 88, 0.12);
+  background: var(--tg-code-bg);
 }

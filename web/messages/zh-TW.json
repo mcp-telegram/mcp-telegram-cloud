@@ -17,7 +17,10 @@
     "faq": "常見問題",
     "github": "GitHub",
     "quickstart": "快速入門",
-    "examples": "範例"
+    "examples": "範例",
+    "toggleTheme": "切換主題",
+    "openMenu": "開啟選單",
+    "closeMenu": "關閉選單"
   },
   "hero": {
     "titleStart": "您的 Telegram 在",
@@ -198,7 +201,8 @@
         "prompt": "找出本週在我的「Coworking」群組聊天中發送的所有語音訊息。將每則轉錄為文字,並以時間順序列出,附上發送者與時間戳記。",
         "category": "media"
       }
-    }
+    },
+    "catAll": "全部"
   },
   "quickstart": {
     "metaTitle": "快速入門 — 將 Telegram 連接至 Claude AI 或 ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "搭配 PKCE 的 authorization code 流程",
     "flowLead": "標準的 RFC 6749 §4.1 + RFC 7636 流程。沒有意外——如果你的 OAuth 函式庫能處理「authorization code + PKCE」，它就能正常運作。",
     "flowStep1Title": "註冊你的用戶端",
-    "flowStep1Desc": "POST /oauth/register，內容為 { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"your-client-name\" }。伺服器會回傳 client_id 與 client_secret（對公開 PKCE 用戶端而言 secret 並非必要，但收到也無妨）。",
+    "flowStep1Desc": "POST /oauth/register，內容為 '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"your-client-name\" '}'。伺服器會回傳 client_id 與 client_secret（對公開 PKCE 用戶端而言 secret 並非必要，但收到也無妨）。",
     "flowStep2Title": "產生 PKCE 配對",
     "flowStep2Desc": "產生一個 43–128 字元的隨機 code_verifier，接著計算 code_challenge = BASE64URL(SHA256(code_verifier))。請在本地保存 verifier 以供步驟 4 使用。",
     "flowStep3Title": "在瀏覽器中開啟 /oauth/authorize",
@@ -537,5 +541,12 @@
       "telegram": "或透過 Telegram <tg>@{handle}</tg>",
       "email": "或寄送電子郵件至 <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "這個頁面在哪裡？",
+    "reply": "沒有這個頁面",
+    "title": "頁面未找到",
+    "desc": "它好像和紙飛機一起飛走了。請檢查網址，或從首頁重新開始。",
+    "home": "返回首頁"
   }
 }

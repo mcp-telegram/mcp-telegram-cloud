@@ -1,72 +1,79 @@
+/* Vertical stepper: numbered circles joined by a connector line.
+ *
+ * Steps must be wrapped in `.stepper` — the connector is drawn by every step
+ * except the last one *within that wrapper*. Without it, `:last-child` would
+ * resolve against whatever else follows on the page (headings, accordions) and
+ * the final step would sprout a line running into empty space. */
+
+.stepper {
+  display: flex;
+  flex-direction: column;
+  margin: 28px 0;
+}
+
 .card {
+  position: relative;
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 18px;
-  padding: 24px 28px;
-  border: 1px solid var(--tg-outline);
-  border-radius: 12px;
-  background: var(--tg-card-bg);
-  box-shadow: var(--tg-shadow);
-  margin-bottom: 16px;
+  grid-template-columns: 34px 1fr;
+  gap: 16px;
+  padding-bottom: 30px;
+}
+
+.card:last-child {
+  padding-bottom: 0;
+}
+
+.card:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 16px;
+  top: 40px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--tg-outline);
 }
 
 .num {
-  font-size: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--tg-button);
+  color: var(--tg-button-text);
+  font-size: 15px;
   font-weight: 700;
-  color: var(--tg-link);
-  line-height: 1;
   font-feature-settings: "tnum";
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding-top: 4px;
 }
 
 .title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   margin: 0;
   color: var(--tg-text);
 }
 
 .desc {
   font-size: 15px;
-  line-height: 1.55;
+  line-height: 1.6;
   margin: 0;
   color: var(--tg-hint);
 }
 
 .image {
   margin-top: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid var(--tg-outline);
   display: block;
   width: 100%;
   max-width: 720px;
   height: auto;
-}
-
-.imagePlaceholder {
-  margin-top: 12px;
-  padding: 24px 16px;
-  border: 1px dashed var(--tg-divider);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--tg-secondary-hint);
-  text-align: center;
-  font-style: italic;
-}
-
-@media (max-width: 600px) {
-  .card {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 20px 22px;
-  }
-
-  .num {
-    font-size: 24px;
-  }
 }

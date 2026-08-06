@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Szybki start",
-    "examples": "Przykłady"
+    "examples": "Przykłady",
+    "toggleTheme": "Zmień motyw",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu"
   },
   "hero": {
     "titleStart": "Twój Telegram w",
@@ -198,7 +201,8 @@
         "prompt": "Znajdź wszystkie wiadomości głosowe wysłane w moim grupowym czacie \"Coworking\" w tym tygodniu. Przepisz każdą i przedstaw je jako chronologiczną listę z nadawcą i timestampem.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Wszystkie"
   },
   "quickstart": {
     "metaTitle": "Szybki start — Połącz Telegram z Claude AI lub ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization code flow z PKCE",
     "flowLead": "Standardowy przepływ RFC 6749 §4.1 + RFC 7636. Bez niespodzianek — jeśli twoja biblioteka OAuth obsługuje \"authorization code + PKCE\", zadziała.",
     "flowStep1Title": "Zarejestruj swojego klienta",
-    "flowStep1Desc": "POST /oauth/register z { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"nazwa-twojego-klienta\" }. Serwer zwraca client_id + client_secret (secret jest opcjonalny dla publicznych klientów PKCE, ale jego otrzymanie nie zaszkodzi).",
+    "flowStep1Desc": "POST /oauth/register z '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"nazwa-twojego-klienta\" '}'. Serwer zwraca client_id + client_secret (secret jest opcjonalny dla publicznych klientów PKCE, ale jego otrzymanie nie zaszkodzi).",
     "flowStep2Title": "Wygeneruj parę PKCE",
     "flowStep2Desc": "Wygeneruj losowy code_verifier o długości 43–128 znaków, następnie policz code_challenge = BASE64URL(SHA256(code_verifier)). Zapisz verifier lokalnie na potrzeby kroku 4.",
     "flowStep3Title": "Otwórz /oauth/authorize w przeglądarce",
@@ -537,5 +541,12 @@
       "telegram": "lub na Telegramie <tg>@{handle}</tg>",
       "email": "lub e-mailem <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Gdzie jest ta strona?",
+    "reply": "Nie ma takiej strony",
+    "title": "Nie znaleziono strony",
+    "desc": "Wygląda na to, że odleciała z papierowym samolotem. Sprawdź adres — albo zacznij od strony głównej.",
+    "home": "Strona główna"
   }
 }

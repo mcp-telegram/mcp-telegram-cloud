@@ -17,7 +17,10 @@
     "faq": "SSS",
     "github": "GitHub",
     "quickstart": "Hızlı başlangıç",
-    "examples": "Örnekler"
+    "examples": "Örnekler",
+    "toggleTheme": "Temayı değiştir",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat"
   },
   "hero": {
     "titleStart": "Telegram'ınız",
@@ -198,7 +201,8 @@
         "prompt": "\"Coworking\" grup sohbetimde bu hafta gönderilen tüm sesli mesajları bul. Her birini transkribe et ve gönderen ile zaman damgasıyla birlikte kronolojik bir liste olarak sun.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Tümü"
   },
   "quickstart": {
     "metaTitle": "Hızlı başlangıç — Telegram'ı Claude AI veya ChatGPT'ye bağlayın",
@@ -280,7 +284,7 @@
     "flowHeading": "PKCE ile authorization code akışı",
     "flowLead": "Standart RFC 6749 §4.1 + RFC 7636 akışı. Sürpriz yok — OAuth kütüphanen \"authorization code + PKCE\" destekliyorsa çalışacak.",
     "flowStep1Title": "İstemcini kaydet",
-    "flowStep1Desc": "POST /oauth/register isteğini { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"istemci-adın\" } ile gönder. Sunucu client_id + client_secret döner (secret, public PKCE istemcileri için isteğe bağlıdır ama almakta da bir zarar yoktur).",
+    "flowStep1Desc": "POST /oauth/register isteğini '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"istemci-adın\" '}' ile gönder. Sunucu client_id + client_secret döner (secret, public PKCE istemcileri için isteğe bağlıdır ama almakta da bir zarar yoktur).",
     "flowStep2Title": "PKCE çiftini üret",
     "flowStep2Desc": "43–128 karakterlik rastgele bir code_verifier üret, ardından code_challenge = BASE64URL(SHA256(code_verifier)) hesapla. Verifier'ı 4. adım için yerelde sakla.",
     "flowStep3Title": "Tarayıcıda /oauth/authorize'ı aç",
@@ -537,5 +541,12 @@
       "telegram": "veya Telegram <tg>@{handle}</tg>",
       "email": "veya e-posta <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Bu sayfa nerede?",
+    "reply": "Böyle bir sayfa yok",
+    "title": "Sayfa bulunamadı",
+    "desc": "Görünüşe göre kağıt uçakla birlikte uçup gitti. URL'yi kontrol edin ya da ana sayfadan başlayın.",
+    "home": "Ana sayfaya dön"
   }
 }

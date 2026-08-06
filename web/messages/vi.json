@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Bắt đầu nhanh",
-    "examples": "Ví dụ"
+    "examples": "Ví dụ",
+    "toggleTheme": "Đổi giao diện",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu"
   },
   "hero": {
     "titleStart": "Telegram của bạn trong",
@@ -198,7 +201,8 @@
         "prompt": "Tìm tất cả các tin nhắn thoại được gửi trong cuộc trò chuyện nhóm \"Coworking\" của tôi tuần này. Phiên âm từng tin nhắn và trình bày chúng dưới dạng danh sách theo thứ tự thời gian với người gửi và dấu thời gian.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Tất cả"
   },
   "quickstart": {
     "metaTitle": "Quickstart — Kết nối Telegram với Claude AI hoặc ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization code flow với PKCE",
     "flowLead": "Flow chuẩn RFC 6749 §4.1 + RFC 7636. Không có gì bất ngờ — nếu thư viện OAuth của bạn xử lý được \"authorization code + PKCE\" thì nó sẽ chạy.",
     "flowStep1Title": "Đăng ký client của bạn",
-    "flowStep1Desc": "POST /oauth/register với { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"tên-client-của-bạn\" }. Server trả về client_id + client_secret (secret là tùy chọn với public PKCE client nhưng nhận được cũng không sao).",
+    "flowStep1Desc": "POST /oauth/register với '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"tên-client-của-bạn\" '}'. Server trả về client_id + client_secret (secret là tùy chọn với public PKCE client nhưng nhận được cũng không sao).",
     "flowStep2Title": "Tạo cặp PKCE",
     "flowStep2Desc": "Tạo một code_verifier ngẫu nhiên dài 43–128 ký tự, sau đó tính code_challenge = BASE64URL(SHA256(code_verifier)). Lưu verifier ở local để dùng cho bước 4.",
     "flowStep3Title": "Mở /oauth/authorize trong trình duyệt",
@@ -537,5 +541,12 @@
       "telegram": "hoặc Telegram <tg>@{handle}</tg>",
       "email": "hoặc email <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Trang này ở đâu?",
+    "reply": "Không có trang đó",
+    "title": "Không tìm thấy trang",
+    "desc": "Có vẻ nó đã bay đi cùng chiếc máy bay giấy. Kiểm tra URL — hoặc bắt đầu từ trang chủ.",
+    "home": "Về trang chủ"
   }
 }

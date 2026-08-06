@@ -1,5 +1,8 @@
+/* Shared styles for /docs/* pages (redesign).
+ * Values reference tokens from globals.css so dark mode is a token swap. */
+
 .container {
-  max-width: 760px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 48px 24px 72px;
   color: var(--tg-text);
@@ -7,18 +10,24 @@
 }
 
 .h1 {
-  font-size: clamp(28px, 4vw, 40px);
-  font-weight: 700;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 800;
   margin: 0 0 12px;
-  line-height: 1.2;
-  color: var(--tg-text);
+  line-height: 1.15;
+  letter-spacing: -0.8px;
 }
 
 .h2 {
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 800;
   margin: 48px 0 16px;
-  color: var(--tg-text);
+  letter-spacing: -0.3px;
+}
+
+.h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 24px 0 8px;
 }
 
 .lead {
@@ -27,80 +36,85 @@
   margin: 0 0 36px;
 }
 
-.note {
-  margin-top: 32px;
-  padding: 16px 20px;
-  border-radius: 10px;
-  background: rgba(0, 122, 255, 0.06);
-  border-left: 3px solid var(--tg-link);
-  color: var(--tg-text);
-  font-size: 15px;
-}
-
-.backLink {
-  display: inline-block;
-  margin-bottom: 24px;
-  color: var(--tg-hint);
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.backLink:hover {
-  color: var(--tg-link);
-}
-
-.tsList {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.tsItem {
-  padding: 18px 22px;
-  border-radius: 10px;
-  background: var(--tg-tertiary-bg);
-  border: 1px solid var(--tg-outline);
-}
-
-.tsItem h3 {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 6px;
-  color: var(--tg-text);
-}
-
-.tsItem p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--tg-hint);
-}
-
-.h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 24px 0 8px;
-  color: var(--tg-text);
-}
-
 .desc {
   font-size: 15px;
-  color: var(--tg-text);
   margin: 0 0 12px;
 }
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  color: var(--tg-link);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* Callout note — bulb/lock/clock icon + body. */
+.note {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 16px 20px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 14px;
+  background: var(--tg-bg-alt);
+  font-size: 15px;
+}
+
+.noteAccent {
+  background: var(--tg-code-bg);
+  border-color: transparent;
+}
+
+.noteIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.noteTitle {
+  font-weight: 700;
+  color: var(--tg-link);
+  margin-bottom: 4px;
+}
+
+/* The vertical stepper lives in StepCard.module.css — use <Stepper> + <StepCard>. */
+
+/* ── Prompt bubbles (feature guides) ──────────────────────────── */
+
+.promptList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.promptBubble {
+  align-self: flex-end;
+  max-width: min(100%, 640px);
+  padding: 13px 17px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--tg-bubble-out);
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Plain lists / endpoint stacks (OAuth reference) ──────────── */
+
 .list {
   margin: 0 0 16px;
-  padding-left: 24px;
+  padding-inline-start: 24px;
   font-size: 15px;
-  color: var(--tg-text);
 }
 
 .list li {
   margin: 6px 0;
-}
-
-.list strong {
-  color: var(--tg-text);
 }
 
 .endpoints {
@@ -108,4 +122,30 @@
   flex-direction: column;
   gap: 12px;
   margin: 16px 0;
+}
+
+/* ── Check rows (OAuth standards / verified clients) ──────────── */
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 14px;
+  background: var(--tg-card-bg);
+  font-size: 15px;
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--tg-green);
 }

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CopyableUrl } from "@/components/docs/CopyableUrl";
-import { StepCard } from "@/components/docs/StepCard";
+import { StepCard, Stepper } from "@/components/docs/StepCard";
+import { Troubleshooting } from "@/components/docs/Troubleshooting";
 import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
@@ -62,29 +63,27 @@ function Body() {
       <h1 className={s.h1}>{t("claudeHeading")}</h1>
       <p className={s.lead}>{t("claudeIntro")}</p>
 
-      <StepCard num={1} title={t("claudeStep1Title")} description={t("claudeStep1Desc")} />
-      <StepCard num={2} title={t("claudeStep2Title")} description={t("claudeStep2Desc")} />
-      <StepCard num={3} title={t("claudeStep3Title")} description={t("claudeStep3Desc")}>
-        <CopyableUrl url={mcpUrl} label={t("urlLabel")} copyLabel={t("copyLabel")} copiedLabel={t("copiedLabel")} />
-      </StepCard>
-      <StepCard num={4} title={t("claudeStep4Title")} description={t("claudeStep4Desc")} />
-      <StepCard num={5} title={t("claudeStep5Title")} description={t("claudeStep5Desc")} />
+      <Stepper>
+        <StepCard num={1} title={t("claudeStep1Title")} description={t("claudeStep1Desc")} />
+        <StepCard num={2} title={t("claudeStep2Title")} description={t("claudeStep2Desc")} />
+        <StepCard num={3} title={t("claudeStep3Title")} description={t("claudeStep3Desc")}>
+          <CopyableUrl url={mcpUrl} label={t("urlLabel")} copyLabel={t("copyLabel")} copiedLabel={t("copiedLabel")} />
+        </StepCard>
+        <StepCard num={4} title={t("claudeStep4Title")} description={t("claudeStep4Desc")} />
+        <StepCard num={5} title={t("claudeStep5Title")} description={t("claudeStep5Desc")} />
+      </Stepper>
 
       <h2 className={s.h2}>{t("claudeTroubleshootHeading")}</h2>
-      <div className={s.tsList}>
-        <div className={s.tsItem}>
-          <h3>{t("claudeTroubleshootQRTitle")}</h3>
-          <p>{t("claudeTroubleshootQRDesc")}</p>
-        </div>
-        <div className={s.tsItem}>
-          <h3>{t("claudeTroubleshootDisconnectedTitle")}</h3>
-          <p>{t("claudeTroubleshootDisconnectedDesc")}</p>
-        </div>
-        <div className={s.tsItem}>
-          <h3>{t("claudeTroubleshootChatsTitle")}</h3>
-          <p>{t("claudeTroubleshootChatsDesc")}</p>
-        </div>
-      </div>
+      <Troubleshooting
+        items={[
+          { title: t("claudeTroubleshootQRTitle"), body: t("claudeTroubleshootQRDesc") },
+          {
+            title: t("claudeTroubleshootDisconnectedTitle"),
+            body: t("claudeTroubleshootDisconnectedDesc"),
+          },
+          { title: t("claudeTroubleshootChatsTitle"), body: t("claudeTroubleshootChatsDesc") },
+        ]}
+      />
     </main>
   );
 }

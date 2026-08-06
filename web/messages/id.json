@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Mulai cepat",
-    "examples": "Contoh"
+    "examples": "Contoh",
+    "toggleTheme": "Ganti tema",
+    "openMenu": "Buka menu",
+    "closeMenu": "Tutup menu"
   },
   "hero": {
     "titleStart": "Telegram Anda di",
@@ -198,7 +201,8 @@
         "prompt": "Temukan semua pesan suara yang dikirim di obrolan grup \"Coworking\" saya minggu ini. Transkripsikan masing-masing dan sajikan sebagai daftar kronologis dengan pengirim dan timestamp.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Semua"
   },
   "quickstart": {
     "metaTitle": "Quickstart — Hubungkan Telegram ke Claude AI atau ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization code flow dengan PKCE",
     "flowLead": "Flow standar RFC 6749 §4.1 + RFC 7636. Tanpa kejutan — jika library OAuth Anda menangani \"authorization code + PKCE\", maka akan langsung bekerja.",
     "flowStep1Title": "Daftarkan klien Anda",
-    "flowStep1Desc": "POST /oauth/register dengan { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"nama-klien-anda\" }. Server mengembalikan client_id + client_secret (secret bersifat opsional untuk klien publik PKCE, tapi tidak ada salahnya menerimanya).",
+    "flowStep1Desc": "POST /oauth/register dengan '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"nama-klien-anda\" '}'. Server mengembalikan client_id + client_secret (secret bersifat opsional untuk klien publik PKCE, tapi tidak ada salahnya menerimanya).",
     "flowStep2Title": "Buat pasangan PKCE",
     "flowStep2Desc": "Buat code_verifier acak sepanjang 43–128 karakter, lalu hitung code_challenge = BASE64URL(SHA256(code_verifier)). Simpan verifier secara lokal untuk langkah 4.",
     "flowStep3Title": "Buka /oauth/authorize di browser",
@@ -537,5 +541,12 @@
       "telegram": "atau Telegram <tg>@{handle}</tg>",
       "email": "atau email <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Di mana halaman ini?",
+    "reply": "Halaman itu tidak ada",
+    "title": "Halaman tidak ditemukan",
+    "desc": "Sepertinya halaman ini terbang bersama pesawat kertas. Periksa URL — atau mulai dari beranda.",
+    "home": "Ke beranda"
   }
 }

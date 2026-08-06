@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Швидкий старт",
-    "examples": "Приклади"
+    "examples": "Приклади",
+    "toggleTheme": "Змінити тему",
+    "openMenu": "Відкрити меню",
+    "closeMenu": "Закрити меню"
   },
   "hero": {
     "titleStart": "Ваш Telegram у",
@@ -198,7 +201,8 @@
         "prompt": "Знайди всі голосові повідомлення, надіслані в моєму груповому чаті «Coworking» цього тижня. Транскрибуй кожне й подай їх як хронологічний список з відправником і часовою позначкою.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Усі"
   },
   "quickstart": {
     "metaTitle": "Швидкий старт — під'єднання Telegram до Claude AI або ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization code flow з PKCE",
     "flowLead": "Стандартний потік RFC 6749 §4.1 + RFC 7636. Жодних сюрпризів — якщо твоя OAuth-бібліотека вміє «authorization code + PKCE», усе запрацює.",
     "flowStep1Title": "Зареєструй свій клієнт",
-    "flowStep1Desc": "POST /oauth/register із { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"назва-твого-клієнта\" }. Сервер поверне client_id + client_secret (secret необов'язковий для публічних PKCE-клієнтів, але отримати його не зашкодить).",
+    "flowStep1Desc": "POST /oauth/register із '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"назва-твого-клієнта\" '}'. Сервер поверне client_id + client_secret (secret необов'язковий для публічних PKCE-клієнтів, але отримати його не зашкодить).",
     "flowStep2Title": "Згенеруй PKCE-пару",
     "flowStep2Desc": "Згенеруй випадковий code_verifier на 43–128 символів, потім обчисли code_challenge = BASE64URL(SHA256(code_verifier)). Збережи verifier локально для кроку 4.",
     "flowStep3Title": "Відкрий /oauth/authorize у браузері",
@@ -537,5 +541,12 @@
       "telegram": "або в Telegram <tg>@{handle}</tg>",
       "email": "або електронною поштою <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Де ця сторінка?",
+    "reply": "Такої сторінки немає",
+    "title": "Сторінку не знайдено",
+    "desc": "Схоже, вона полетіла разом із паперовим літачком. Перевірте адресу — або почніть з головної.",
+    "home": "На головну"
   }
 }

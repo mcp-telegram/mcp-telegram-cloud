@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "クイックスタート",
-    "examples": "活用例"
+    "examples": "活用例",
+    "toggleTheme": "テーマを切り替え",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる"
   },
   "hero": {
     "titleStart": "あなたの Telegram を",
@@ -198,7 +201,8 @@
         "prompt": "今週私の \"Coworking\" グループチャットに送られたすべての音声メッセージを見つけてください。それぞれを文字起こしし、送信者とタイムスタンプ付きの時系列リストとして提示してください。",
         "category": "media"
       }
-    }
+    },
+    "catAll": "すべて"
   },
   "quickstart": {
     "metaTitle": "クイックスタート — Telegram を Claude AI または ChatGPT に接続",
@@ -280,7 +284,7 @@
     "flowHeading": "PKCE 付き authorization code フロー",
     "flowLead": "標準的な RFC 6749 §4.1 + RFC 7636 のフローです。サプライズはありません — あなたの OAuth ライブラリが「authorization code + PKCE」を扱えるなら、そのまま動作します。",
     "flowStep1Title": "クライアントを登録する",
-    "flowStep1Desc": "POST /oauth/register に { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"your-client-name\" } を送信します。サーバーは client_id と client_secret を返します（シークレットはパブリック PKCE クライアントでは任意ですが、受け取っても問題ありません）。",
+    "flowStep1Desc": "POST /oauth/register に '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"your-client-name\" '}' を送信します。サーバーは client_id と client_secret を返します（シークレットはパブリック PKCE クライアントでは任意ですが、受け取っても問題ありません）。",
     "flowStep2Title": "PKCE ペアを生成する",
     "flowStep2Desc": "43〜128 文字のランダムな code_verifier を生成し、code_challenge = BASE64URL(SHA256(code_verifier)) を計算します。verifier はステップ 4 のためにローカルに保存しておきます。",
     "flowStep3Title": "ブラウザで /oauth/authorize を開く",
@@ -537,5 +541,12 @@
       "telegram": "または Telegram <tg>@{handle}</tg> まで",
       "email": "またはメール <mail>{address}</mail> まで"
     }
+  },
+  "notFound": {
+    "ask": "このページはどこ？",
+    "reply": "そのページはありません",
+    "title": "ページが見つかりません",
+    "desc": "紙飛行機と一緒に飛んでいったようです。URLを確認するか、ホームからやり直してください。",
+    "home": "ホームへ戻る"
   }
 }

@@ -12,6 +12,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Analytics } from "@/components/Analytics";
 import { ConsentBanner } from "@/components/ConsentBanner";
+import { ThemeScript } from "@/components/ThemeScript";
 import { routing } from "@/i18n/routing";
 import { analytics } from "@/lib/analytics";
 import { config, iconUrl } from "@/lib/config";
@@ -65,7 +66,10 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
   const dir = localeMeta?.rtl ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir={dir} suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body>
         <NextIntlClientProvider locale={locale}>
           {children}

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { TbCircleCheck, TbClockHour4, TbLock } from "react-icons/tb";
 import { CopyableUrl } from "@/components/docs/CopyableUrl";
-import { StepCard } from "@/components/docs/StepCard";
+import { StepCard, Stepper } from "@/components/docs/StepCard";
+import { Troubleshooting } from "@/components/docs/Troubleshooting";
 import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
@@ -50,26 +52,44 @@ function Body() {
 
       <h2 className={s.h2}>{t("rfcHeading")}</h2>
       <p className={s.desc}>{t("rfcLead")}</p>
-      <ul className={s.list}>
-        <li>
-          <strong>RFC 6749</strong> — {t("rfc6749")}
-        </li>
-        <li>
-          <strong>RFC 7591</strong> — {t("rfc7591")}
-        </li>
-        <li>
-          <strong>RFC 7636</strong> — {t("rfc7636")}
-        </li>
-        <li>
-          <strong>RFC 8252</strong> — {t("rfc8252")}
-        </li>
-        <li>
-          <strong>RFC 8414</strong> — {t("rfc8414")}
-        </li>
-        <li>
-          <strong>RFC 9728</strong> — {t("rfc9728")}
-        </li>
-      </ul>
+      <div className={s.checkList}>
+        <div className={s.checkRow}>
+          <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+          <span>
+            <strong>RFC 6749</strong> — {t("rfc6749")}
+          </span>
+        </div>
+        <div className={s.checkRow}>
+          <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+          <span>
+            <strong>RFC 7591</strong> — {t("rfc7591")}
+          </span>
+        </div>
+        <div className={s.checkRow}>
+          <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+          <span>
+            <strong>RFC 7636</strong> — {t("rfc7636")}
+          </span>
+        </div>
+        <div className={s.checkRow}>
+          <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+          <span>
+            <strong>RFC 8252</strong> — {t("rfc8252")}
+          </span>
+        </div>
+        <div className={s.checkRow}>
+          <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+          <span>
+            <strong>RFC 8414</strong> — {t("rfc8414")}
+          </span>
+        </div>
+        <div className={s.checkRow}>
+          <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+          <span>
+            <strong>RFC 9728</strong> — {t("rfc9728")}
+          </span>
+        </div>
+      </div>
 
       <h2 className={s.h2}>{t("endpointsHeading")}</h2>
       <div className={s.endpoints}>
@@ -102,11 +122,13 @@ function Body() {
 
       <h2 className={s.h2}>{t("flowHeading")}</h2>
       <p className={s.desc}>{t("flowLead")}</p>
-      <StepCard num={1} title={t("flowStep1Title")} description={t("flowStep1Desc")} />
-      <StepCard num={2} title={t("flowStep2Title")} description={t("flowStep2Desc")} />
-      <StepCard num={3} title={t("flowStep3Title")} description={t("flowStep3Desc")} />
-      <StepCard num={4} title={t("flowStep4Title")} description={t("flowStep4Desc")} />
-      <StepCard num={5} title={t("flowStep5Title")} description={t("flowStep5Desc")} />
+      <Stepper>
+        <StepCard num={1} title={t("flowStep1Title")} description={t("flowStep1Desc")} />
+        <StepCard num={2} title={t("flowStep2Title")} description={t("flowStep2Desc")} />
+        <StepCard num={3} title={t("flowStep3Title")} description={t("flowStep3Desc")} />
+        <StepCard num={4} title={t("flowStep4Title")} description={t("flowStep4Desc")} />
+        <StepCard num={5} title={t("flowStep5Title")} description={t("flowStep5Desc")} />
+      </Stepper>
 
       <h2 className={s.h2}>{t("redirectUriHeading")}</h2>
       <p className={s.desc}>{t("redirectUriLead")}</p>
@@ -125,44 +147,58 @@ function Body() {
       <h3 className={s.h3}>{t("redirectUriLocalhostTitle")}</h3>
       <p className={s.desc}>{t("redirectUriLocalhostDesc")}</p>
 
-      <h2 className={s.h2}>{t("pkceHeading")}</h2>
-      <p className={s.desc}>{t("pkceDesc")}</p>
+      <div className={`${s.note} ${s.noteAccent}`}>
+        <TbLock size={19} color="var(--tg-link)" className={s.noteIcon} aria-hidden />
+        <span>
+          <span className={s.noteTitle}>{t("pkceHeading")}</span>
+          {t("pkceDesc")}
+        </span>
+      </div>
 
-      <h2 className={s.h2}>{t("tokenLifetimeHeading")}</h2>
-      <p className={s.desc}>{t("tokenLifetimeDesc")}</p>
+      <div className={s.note}>
+        <TbClockHour4 size={19} color="var(--tg-link)" className={s.noteIcon} aria-hidden />
+        <span>
+          <span className={s.noteTitle}>{t("tokenLifetimeHeading")}</span>
+          {t("tokenLifetimeDesc")}
+        </span>
+      </div>
 
       <h2 className={s.h2}>{t("troubleshootHeading")}</h2>
-      <div className={s.tsList}>
-        <div className={s.tsItem}>
-          <h3>{t("troubleshootInvalidRedirectTitle")}</h3>
-          <p>{t("troubleshootInvalidRedirectDesc")}</p>
-        </div>
-        <div className={s.tsItem}>
-          <h3>{t("troubleshootUnknownClientTitle")}</h3>
-          <p>{t("troubleshootUnknownClientDesc")}</p>
-        </div>
-        <div className={s.tsItem}>
-          <h3>{t("troubleshootNeedsAuthTitle")}</h3>
-          <p>{t("troubleshootNeedsAuthDesc")}</p>
-        </div>
-      </div>
+      <Troubleshooting
+        items={[
+          { title: t("troubleshootInvalidRedirectTitle"), body: t("troubleshootInvalidRedirectDesc") },
+          { title: t("troubleshootUnknownClientTitle"), body: t("troubleshootUnknownClientDesc") },
+          { title: t("troubleshootNeedsAuthTitle"), body: t("troubleshootNeedsAuthDesc") },
+        ]}
+      />
 
       <h2 className={s.h2}>{t("testedClientsHeading")}</h2>
       <p className={s.desc}>{t("testedClientsLead")}</p>
-      <ul className={s.list}>
-        <li>{t("testedClientClaude")}</li>
-        <li>{t("testedClientChatGPT")}</li>
-        <li>{t("testedClientHermes")}</li>
-        <li>{t("testedClientCursor")}</li>
-        <li>{t("testedClientGeneric")}</li>
-      </ul>
+      <div className={s.checkList}>
+        {(
+          [
+            "testedClientClaude",
+            "testedClientChatGPT",
+            "testedClientHermes",
+            "testedClientCursor",
+            "testedClientGeneric",
+          ] as const
+        ).map((key) => (
+          <div key={key} className={s.checkRow}>
+            <TbCircleCheck size={19} className={s.checkIcon} aria-hidden />
+            <span>{t(key)}</span>
+          </div>
+        ))}
+      </div>
 
       <h2 className={s.h2}>{t("multiAccountHeading")}</h2>
       <p className={s.desc}>{t("multiAccountLead")}</p>
-      <StepCard num={1} title={t("multiAccountStep1Title")} description={t("multiAccountStep1Desc")} />
-      <StepCard num={2} title={t("multiAccountStep2Title")} description={t("multiAccountStep2Desc")} />
-      <StepCard num={3} title={t("multiAccountStep3Title")} description={t("multiAccountStep3Desc")} />
-      <StepCard num={4} title={t("multiAccountStep4Title")} description={t("multiAccountStep4Desc")} />
+      <Stepper>
+        <StepCard num={1} title={t("multiAccountStep1Title")} description={t("multiAccountStep1Desc")} />
+        <StepCard num={2} title={t("multiAccountStep2Title")} description={t("multiAccountStep2Desc")} />
+        <StepCard num={3} title={t("multiAccountStep3Title")} description={t("multiAccountStep3Desc")} />
+        <StepCard num={4} title={t("multiAccountStep4Title")} description={t("multiAccountStep4Desc")} />
+      </Stepper>
       <p className={s.desc}>{t("multiAccountSecurityNote")}</p>
     </main>
   );

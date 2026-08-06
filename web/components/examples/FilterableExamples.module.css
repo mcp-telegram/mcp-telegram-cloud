@@ -1,0 +1,41 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 28px;
+}
+
+.chip {
+  padding: 9px 17px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 100px;
+  background: var(--tg-card-bg);
+  color: var(--tg-hint);
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+.chip:active {
+  transform: scale(0.96);
+}
+
+.chip:hover {
+  color: var(--tg-text);
+}
+
+.chipActive {
+  background: var(--tg-button);
+  border-color: var(--tg-button);
+  color: var(--tg-button-text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}

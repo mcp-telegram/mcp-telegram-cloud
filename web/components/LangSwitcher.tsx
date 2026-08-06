@@ -8,6 +8,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { getLocale, switchableLocales } from "@/lib/locales";
+import s from "./LangSwitcher.module.css";
 
 const sortedSwitchable = [...switchableLocales].sort((a, b) =>
   a.nameNative.localeCompare(b.nameNative, undefined, { sensitivity: "base" }),
@@ -26,43 +27,12 @@ export function LangSwitcher() {
   const options = inSwitchable || !activeMeta ? sortedSwitchable : [activeMeta, ...sortedSwitchable];
 
   return (
-    <label
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        fontSize: "13px",
-        opacity: 0.85,
-      }}
-    >
-      <span
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          margin: -1,
-          padding: 0,
-          overflow: "hidden",
-          clip: "rect(0, 0, 0, 0)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        {t("switcherLabel")}
-      </span>
+    <label className={s.label}>
+      <span className={s.srOnly}>{t("switcherLabel")}</span>
       <select
+        className={s.select}
         value={currentLocale}
         onChange={(e) => router.replace(pathname, { locale: e.target.value })}
-        style={{
-          background: "transparent",
-          color: "inherit",
-          border: "1px solid var(--tg-divider, currentColor)",
-          borderRadius: 6,
-          padding: "3px 6px",
-          fontSize: 12,
-          cursor: "pointer",
-          maxWidth: 92,
-        }}
       >
         {options.map((l) => (
           <option key={l.code} value={l.code}>
