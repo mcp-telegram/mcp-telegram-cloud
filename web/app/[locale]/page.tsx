@@ -24,7 +24,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
-import { canonicalForLocale, languageAlternates } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
 import s from "../landing.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -35,12 +35,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const t = await getTranslations({ locale, namespace: "metadata" });
   const title = t("siteTitle");
   const description = t("siteDescription");
+  const social = socialMetadata(locale, canonical);
+
   return {
     title,
     description,
     alternates: { canonical, languages: languageAlternates("/") },
-    openGraph: { url: canonical, title, description },
-    twitter: { title, description },
+    openGraph: { url: canonical, title, description, images: social.openGraph.images },
+    twitter: { ...social.twitter, title, description },
   };
 }
 

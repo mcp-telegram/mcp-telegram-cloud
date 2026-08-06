@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { config } from "@/lib/config";
-import { canonicalForLocale, languageAlternates } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
 import s from "../../legal.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -15,12 +15,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonical = canonicalForLocale(locale, "/privacy");
   const title = `${t("title")} — ${config.brandName}`;
   const description = t("metaDescription", { brand: config.brandName });
+  const social = socialMetadata(locale, canonical);
+
   return {
     title,
     description,
     alternates: { canonical, languages: languageAlternates("/privacy") },
-    openGraph: { url: canonical, title, description },
-    twitter: { title, description },
+    openGraph: { url: canonical, title, description, images: social.openGraph.images },
+    twitter: { ...social.twitter, title, description },
   };
 }
 
