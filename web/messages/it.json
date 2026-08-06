@@ -541,5 +541,12 @@
       "telegram": "oppure su Telegram <tg>@{handle}</tg>",
       "email": "oppure via email <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Dov'è questa pagina?",
+    "reply": "Questa pagina non esiste",
+    "title": "Pagina non trovata",
+    "desc": "Sembra che sia volata via con l'aeroplanino di carta. Controlla l'URL o riparti dalla home.",
+    "home": "Torna alla home"
   }
 }

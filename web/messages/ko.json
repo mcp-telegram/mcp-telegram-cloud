@@ -541,5 +541,12 @@
       "telegram": "또는 Telegram <tg>@{handle}</tg>으로 문의하세요",
       "email": "또는 이메일 <mail>{address}</mail>로 문의하세요"
     }
+  },
+  "notFound": {
+    "ask": "이 페이지 어디 있어요?",
+    "reply": "그런 페이지는 없어요",
+    "title": "페이지를 찾을 수 없습니다",
+    "desc": "종이비행기와 함께 날아간 것 같아요. URL을 확인하거나 홈에서 다시 시작하세요.",
+    "home": "홈으로"
   }
 }

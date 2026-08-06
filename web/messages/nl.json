@@ -541,5 +541,12 @@
       "telegram": "of via Telegram <tg>@{handle}</tg>",
       "email": "of per e-mail <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Waar is deze pagina?",
+    "reply": "Deze pagina bestaat niet",
+    "title": "Pagina niet gevonden",
+    "desc": "Het lijkt erop dat hij is weggevlogen met het papieren vliegtuigje. Controleer de URL of begin op de startpagina.",
+    "home": "Naar de startpagina"
   }
 }

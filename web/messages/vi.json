@@ -541,5 +541,12 @@
       "telegram": "hoặc Telegram <tg>@{handle}</tg>",
       "email": "hoặc email <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Trang này ở đâu?",
+    "reply": "Không có trang đó",
+    "title": "Không tìm thấy trang",
+    "desc": "Có vẻ nó đã bay đi cùng chiếc máy bay giấy. Kiểm tra URL — hoặc bắt đầu từ trang chủ.",
+    "home": "Về trang chủ"
   }
 }

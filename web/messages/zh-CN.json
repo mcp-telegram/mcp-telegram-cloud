@@ -541,5 +541,12 @@
       "telegram": "或通过 Telegram <tg>@{handle}</tg>",
       "email": "或发送电子邮件至 <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "这个页面在哪里？",
+    "reply": "没有这个页面",
+    "title": "页面未找到",
+    "desc": "它好像和纸飞机一起飞走了。请检查网址，或从首页重新开始。",
+    "home": "返回首页"
   }
 }

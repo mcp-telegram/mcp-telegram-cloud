@@ -533,5 +533,12 @@
       "telegram": "or Telegram <tg>@{handle}</tg>",
       "email": "or email <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Where is this page?",
+    "reply": "No such page",
+    "title": "Page not found",
+    "desc": "Looks like it flew away with the paper plane. Check the URL — or start from the home page.",
+    "home": "Go home"
   }
 }

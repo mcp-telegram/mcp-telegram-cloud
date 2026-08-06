@@ -541,5 +541,12 @@
       "telegram": "veya Telegram <tg>@{handle}</tg>",
       "email": "veya e-posta <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Bu sayfa nerede?",
+    "reply": "Böyle bir sayfa yok",
+    "title": "Sayfa bulunamadı",
+    "desc": "Görünüşe göre kağıt uçakla birlikte uçup gitti. URL'yi kontrol edin ya da ana sayfadan başlayın.",
+    "home": "Ana sayfaya dön"
   }
 }

@@ -541,5 +541,12 @@
       "telegram": "lub na Telegramie <tg>@{handle}</tg>",
       "email": "lub e-mailem <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Gdzie jest ta strona?",
+    "reply": "Nie ma takiej strony",
+    "title": "Nie znaleziono strony",
+    "desc": "Wygląda na to, że odleciała z papierowym samolotem. Sprawdź adres — albo zacznij od strony głównej.",
+    "home": "Strona główna"
   }
 }

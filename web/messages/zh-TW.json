@@ -541,5 +541,12 @@
       "telegram": "或透過 Telegram <tg>@{handle}</tg>",
       "email": "或寄送電子郵件至 <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "這個頁面在哪裡？",
+    "reply": "沒有這個頁面",
+    "title": "頁面未找到",
+    "desc": "它好像和紙飛機一起飛走了。請檢查網址，或從首頁重新開始。",
+    "home": "返回首頁"
   }
 }

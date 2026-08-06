@@ -541,5 +541,12 @@
       "telegram": "または Telegram <tg>@{handle}</tg> まで",
       "email": "またはメール <mail>{address}</mail> まで"
     }
+  },
+  "notFound": {
+    "ask": "このページはどこ？",
+    "reply": "そのページはありません",
+    "title": "ページが見つかりません",
+    "desc": "紙飛行機と一緒に飛んでいったようです。URLを確認するか、ホームからやり直してください。",
+    "home": "ホームへ戻る"
   }
 }

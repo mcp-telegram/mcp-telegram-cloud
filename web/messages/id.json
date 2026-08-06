@@ -541,5 +541,12 @@
       "telegram": "atau Telegram <tg>@{handle}</tg>",
       "email": "atau email <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "Di mana halaman ini?",
+    "reply": "Halaman itu tidak ada",
+    "title": "Halaman tidak ditemukan",
+    "desc": "Sepertinya halaman ini terbang bersama pesawat kertas. Periksa URL — atau mulai dari beranda.",
+    "home": "Ke beranda"
   }
 }

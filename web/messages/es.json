@@ -541,5 +541,12 @@
       "telegram": "o por Telegram <tg>@{handle}</tg>",
       "email": "o por correo electrónico <mail>{address}</mail>"
     }
+  },
+  "notFound": {
+    "ask": "¿Dónde está esta página?",
+    "reply": "No existe esa página",
+    "title": "Página no encontrada",
+    "desc": "Parece que se fue volando con el avión de papel. Revisa la URL o empieza desde el inicio.",
+    "home": "Ir al inicio"
   }
 }
