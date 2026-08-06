@@ -5,6 +5,14 @@
  * ever rotated. The site additionally defines surface/bubble tokens (--tg-bg-alt,
  * --tg-bubble-*, --tg-code-bg …) and a dark theme, neither of which the backend
  * pages use: those render light-only and are deliberately out of scope here. */
+html {
+  /* Anchor links in the header (#features, #faq) glide instead of jumping.
+   * The reduced-motion block below turns this back off. */
+  scroll-behavior: smooth;
+  /* Keep the sticky header from covering the section a link scrolls to. */
+  scroll-padding-top: 76px;
+}
+
 :root {
   color-scheme: light;
 
