@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — Claude AI ve ChatGPT'de Telegram'ınız",
-    "siteDescription": "Telegram'ınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin ve tepki verin — hepsi tek tıklamayla yapay zekâdan."
+    "siteTitle": "Telegram MCP Server — Claude AI ve ChatGPT'de Telegram'ınız",
+    "siteDescription": "Telegram MCP Server — Telegram'ınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin ve tepki verin — hepsi tek tıklamayla yapay zekâdan."
   },
   "nav": {
     "features": "Özellikler",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "ve",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin, gönderilere tepki verin — hepsi Claude.ai veya ChatGPT içinden. QR kod ile 30 saniyede bağlanın.",
+    "subtitle": "Telegram MCP Server. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin, gönderilere tepki verin — hepsi Claude.ai veya ChatGPT içinden. QR kod ile 30 saniyede bağlanın.",
     "ctaQuickstart": "30 saniyede başlayın"
   },
   "features": {

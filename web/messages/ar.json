@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — تطبيق Telegram الخاص بك في Claude AI و ChatGPT",
-    "siteDescription": "اربط Telegram الخاص بك بـ Claude AI أو ChatGPT. اقرأ الرسائل، وابحث في المحادثات، وأرسل الردود وتفاعل — كل ذلك من الذكاء الاصطناعي بنقرة واحدة."
+    "siteTitle": "Telegram MCP Server — تطبيق Telegram الخاص بك في Claude AI و ChatGPT",
+    "siteDescription": "Telegram MCP Server — اربط Telegram الخاص بك بـ Claude AI أو ChatGPT. اقرأ الرسائل، وابحث في المحادثات، وأرسل الردود وتفاعل — كل ذلك من الذكاء الاصطناعي بنقرة واحدة."
   },
   "nav": {
     "features": "المزايا",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "و",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "اقرأ الرسائل، وابحث في المحادثات، وأرسل الردود، وتفاعل مع المنشورات — كل ذلك من Claude.ai أو ChatGPT. اتصل في 30 ثانية برمز QR.",
+    "subtitle": "Telegram MCP Server. اقرأ الرسائل، وابحث في المحادثات، وأرسل الردود، وتفاعل مع المنشورات — كل ذلك من Claude.ai أو ChatGPT. اتصل في 30 ثانية برمز QR.",
     "ctaQuickstart": "ابدأ خلال 30 ثانية"
   },
   "features": {

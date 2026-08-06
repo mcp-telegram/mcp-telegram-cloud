@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — ваш Telegram у Claude AI та ChatGPT",
-    "siteDescription": "Під'єднайте свій Telegram до Claude AI або ChatGPT. Читайте повідомлення, шукайте в чатах, надсилайте відповіді та реагуйте — усе з ШІ одним кліком."
+    "siteTitle": "Telegram MCP Server — ваш Telegram у Claude AI та ChatGPT",
+    "siteDescription": "Telegram MCP Server — Під'єднайте свій Telegram до Claude AI або ChatGPT. Читайте повідомлення, шукайте в чатах, надсилайте відповіді та реагуйте — усе з ШІ одним кліком."
   },
   "nav": {
     "features": "Можливості",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "та",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Читайте повідомлення, шукайте в чатах, надсилайте відповіді, реагуйте на дописи — усе з Claude.ai або ChatGPT. Під'єднайтеся за 30 секунд через QR-код.",
+    "subtitle": "Telegram MCP Server. Читайте повідомлення, шукайте в чатах, надсилайте відповіді, реагуйте на дописи — усе з Claude.ai або ChatGPT. Під'єднайтеся за 30 секунд через QR-код.",
     "ctaQuickstart": "Почати за 30 секунд"
   },
   "features": {

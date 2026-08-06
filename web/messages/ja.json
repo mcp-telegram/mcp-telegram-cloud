@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — Claude AI と ChatGPT であなたの Telegram を",
-    "siteDescription": "Telegram を Claude AI または ChatGPT に接続。メッセージの読み取り、チャット検索、返信送信、リアクションまで、すべて AI からワンクリックで行えます。"
+    "siteTitle": "Telegram MCP Server — Claude AI と ChatGPT であなたの Telegram を",
+    "siteDescription": "Telegram MCP Server — Telegram を Claude AI または ChatGPT に接続。メッセージの読み取り、チャット検索、返信送信、リアクションまで、すべて AI からワンクリックで行えます。"
   },
   "nav": {
     "features": "機能",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "と",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "メッセージの読み取り、チャット検索、返信送信、投稿へのリアクション — すべて Claude.ai または ChatGPT から。QRコードで30秒で接続できます。",
+    "subtitle": "Telegram MCP Server. メッセージの読み取り、チャット検索、返信送信、投稿へのリアクション — すべて Claude.ai または ChatGPT から。QRコードで30秒で接続できます。",
     "ctaQuickstart": "30秒で始める"
   },
   "features": {

@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "siteTitle": "MCP Telegram — Your Telegram in Claude AI & ChatGPT",
-    "siteDescription": "Connect your Telegram to Claude AI or ChatGPT. Read messages, search chats, send replies and react — all from AI with one click."
+    "siteTitle": "Telegram MCP Server — Your Telegram in Claude & ChatGPT",
+    "siteDescription": "Telegram MCP server that connects your Telegram to Claude AI or ChatGPT. Read messages, search chats, send replies and react — one click."
   },
   "nav": {
     "features": "Features",
@@ -16,7 +16,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Read messages, search chats, send replies, react to posts — all from Claude.ai or ChatGPT. Connect in 30 seconds with a QR code.",
+    "subtitle": "The Telegram MCP server for Claude.ai and ChatGPT — read messages, search chats, send replies, react to posts. Connect in 30 seconds with a QR code.",
     "ctaQuickstart": "Get started in 30 seconds"
   },
   "features": {

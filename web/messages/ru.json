@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "siteTitle": "MCP Telegram — Ваш Telegram в Claude AI и ChatGPT",
-    "siteDescription": "Подключите Telegram к Claude AI или ChatGPT. Читайте сообщения, ищите по чатам, отвечайте и ставьте реакции — прямо из ИИ одним кликом."
+    "siteTitle": "Telegram MCP Server — Ваш Telegram в Claude AI и ChatGPT",
+    "siteDescription": "Telegram MCP Server — Подключите Telegram к Claude AI или ChatGPT. Читайте сообщения, ищите по чатам, отвечайте и ставьте реакции — прямо из ИИ одним кликом."
   },
   "nav": {
     "features": "Возможности",
@@ -16,7 +16,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "и",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Читайте сообщения, ищите по чатам, отвечайте, ставьте реакции — прямо из Claude.ai или ChatGPT. Подключение через QR-код за 30 секунд.",
+    "subtitle": "Telegram MCP Server. Читайте сообщения, ищите по чатам, отвечайте, ставьте реакции — прямо из Claude.ai или ChatGPT. Подключение через QR-код за 30 секунд.",
     "ctaQuickstart": "Начать за 30 секунд"
   },
   "features": {

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — 在 Claude AI 與 ChatGPT 中使用您的 Telegram",
-    "siteDescription": "將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、傳送回覆並送出反應 — 全都由 AI 一鍵完成。"
+    "siteTitle": "Telegram MCP Server — 在 Claude AI 與 ChatGPT 中使用您的 Telegram",
+    "siteDescription": "Telegram MCP Server — 將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、傳送回覆並送出反應 — 全都由 AI 一鍵完成。"
   },
   "nav": {
     "features": "功能",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "與",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "讀取訊息、搜尋聊天、傳送回覆、對貼文送出反應 — 全都在 Claude.ai 或 ChatGPT 內完成。透過 QR 碼,30 秒即可連接。",
+    "subtitle": "Telegram MCP Server. 讀取訊息、搜尋聊天、傳送回覆、對貼文送出反應 — 全都在 Claude.ai 或 ChatGPT 內完成。透過 QR 碼,30 秒即可連接。",
     "ctaQuickstart": "30 秒內開始使用"
   },
   "features": {

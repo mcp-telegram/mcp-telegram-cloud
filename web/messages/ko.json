@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — Claude AI와 ChatGPT에서 사용하는 당신의 Telegram",
-    "siteDescription": "Telegram을 Claude AI 또는 ChatGPT에 연결하세요. 메시지를 읽고, 대화방을 검색하고, 답장을 보내고, 반응까지 — 모두 AI에서 한 번의 클릭으로."
+    "siteTitle": "Telegram MCP Server — Claude AI와 ChatGPT에서 사용하는 당신의 Telegram",
+    "siteDescription": "Telegram MCP Server — Telegram을 Claude AI 또는 ChatGPT에 연결하세요. 메시지를 읽고, 대화방을 검색하고, 답장을 보내고, 반응까지 — 모두 AI에서 한 번의 클릭으로."
   },
   "nav": {
     "features": "기능",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "와",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "메시지 읽기, 대화방 검색, 답장 보내기, 게시물에 반응까지 — 모두 Claude.ai 또는 ChatGPT 안에서. QR 코드로 30초 만에 연결하세요.",
+    "subtitle": "Telegram MCP Server. 메시지 읽기, 대화방 검색, 답장 보내기, 게시물에 반응까지 — 모두 Claude.ai 또는 ChatGPT 안에서. QR 코드로 30초 만에 연결하세요.",
     "ctaQuickstart": "30초 만에 시작하기"
   },
   "features": {

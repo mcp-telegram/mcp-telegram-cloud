@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — Claude AI और ChatGPT में आपका Telegram",
-    "siteDescription": "अपने Telegram को Claude AI या ChatGPT से जोड़ें। संदेश पढ़ें, चैट खोजें, उत्तर भेजें और प्रतिक्रिया दें — सब कुछ एक क्लिक से AI द्वारा।"
+    "siteTitle": "Telegram MCP Server — Claude AI और ChatGPT में आपका Telegram",
+    "siteDescription": "Telegram MCP Server — अपने Telegram को Claude AI या ChatGPT से जोड़ें। संदेश पढ़ें, चैट खोजें, उत्तर भेजें और प्रतिक्रिया दें — सब कुछ एक क्लिक से AI द्वारा।"
   },
   "nav": {
     "features": "विशेषताएँ",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "और",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "संदेश पढ़ें, चैट खोजें, उत्तर भेजें, पोस्ट पर प्रतिक्रिया दें — सब कुछ Claude.ai या ChatGPT से। QR कोड के साथ 30 सेकंड में कनेक्ट करें।",
+    "subtitle": "Telegram MCP Server. संदेश पढ़ें, चैट खोजें, उत्तर भेजें, पोस्ट पर प्रतिक्रिया दें — सब कुछ Claude.ai या ChatGPT से। QR कोड के साथ 30 सेकंड में कनेक्ट करें।",
     "ctaQuickstart": "30 सेकंड में शुरू करें"
   },
   "features": {

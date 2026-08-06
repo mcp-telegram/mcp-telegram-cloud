@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — Uw Telegram in Claude AI en ChatGPT",
-    "siteDescription": "Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats, verstuur antwoorden en reageer — alles vanuit AI met één klik."
+    "siteTitle": "Telegram MCP Server — Uw Telegram in Claude AI en ChatGPT",
+    "siteDescription": "Telegram MCP Server — Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats, verstuur antwoorden en reageer — alles vanuit AI met één klik."
   },
   "nav": {
     "features": "Functies",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Lees berichten, doorzoek chats, verstuur antwoorden, reageer op berichten — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
+    "subtitle": "Telegram MCP Server. Lees berichten, doorzoek chats, verstuur antwoorden, reageer op berichten — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
     "ctaQuickstart": "Begin in 30 seconden"
   },
   "features": {

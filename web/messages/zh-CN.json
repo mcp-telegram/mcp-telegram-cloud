@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — 在 Claude AI 和 ChatGPT 中使用您的 Telegram",
-    "siteDescription": "将您的 Telegram 接入 Claude AI 或 ChatGPT。阅读消息、搜索聊天、发送回复和反应——一键即可在 AI 中完成。"
+    "siteTitle": "Telegram MCP Server — 在 Claude AI 和 ChatGPT 中使用您的 Telegram",
+    "siteDescription": "Telegram MCP Server — 将您的 Telegram 接入 Claude AI 或 ChatGPT。阅读消息、搜索聊天、发送回复和反应——一键即可在 AI 中完成。"
   },
   "nav": {
     "features": "功能",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "和",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "阅读消息、搜索聊天、发送回复、为帖子添加反应——全部在 Claude.ai 或 ChatGPT 中完成。使用二维码 30 秒即可连接。",
+    "subtitle": "Telegram MCP Server. 阅读消息、搜索聊天、发送回复、为帖子添加反应——全部在 Claude.ai 或 ChatGPT 中完成。使用二维码 30 秒即可连接。",
     "ctaQuickstart": "30 秒上手"
   },
   "features": {

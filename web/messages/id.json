@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "sourceSha": "b794801",
+    "sourceSha": "040a578038c49d84",
     "sourceFile": "en.json",
     "translatedAt": "2026-05-10T20:22:30Z",
     "model": "claude-opus-4-7-inline",
@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "MCP Telegram — Telegram Anda di Claude AI & ChatGPT",
-    "siteDescription": "Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, kirim balasan, dan beri reaksi — semuanya dari AI dengan satu klik."
+    "siteTitle": "Telegram MCP Server — Telegram Anda di Claude AI & ChatGPT",
+    "siteDescription": "Telegram MCP Server — Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, kirim balasan, dan beri reaksi — semuanya dari AI dengan satu klik."
   },
   "nav": {
     "features": "Fitur",
@@ -24,7 +24,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Baca pesan, cari obrolan, kirim balasan, beri reaksi pada postingan — semuanya dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
+    "subtitle": "Telegram MCP Server. Baca pesan, cari obrolan, kirim balasan, beri reaksi pada postingan — semuanya dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
     "ctaQuickstart": "Mulai dalam 30 detik"
   },
   "features": {
