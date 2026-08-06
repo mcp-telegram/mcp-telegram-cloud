@@ -17,6 +17,10 @@ export const READ_TOOLS: ToolDefinition[] = [
     annotations: READ_ONLY,
     skipRequireConnection: true,
     handler: async (_args, { telegram }) => {
+      // `skipRequireConnection` means the registry hands us the `undefined`
+      // placeholder when no session is in the pool (see tool-registry.ts).
+      // Reporting that state IS this tool's job, so answer instead of throwing.
+      if (!telegram) return textResult("Not connected. No active Telegram session — please reconnect.");
       if (await telegram.ensureConnected()) {
         const me = await telegram.getMe();
         return textResult(`Connected as ${me.firstName ?? ""} (@${me.username ?? "unknown"}, id: ${me.id})`);
