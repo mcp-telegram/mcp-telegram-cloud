@@ -16,7 +16,12 @@
   transition:
     background 0.15s,
     color 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+.chip:active {
+  transform: scale(0.96);
 }
 
 .chip:hover {

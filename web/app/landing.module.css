@@ -10,6 +10,43 @@
   padding-inline: 24px;
 }
 
+/* Keyframes are declared here, not in globals.css: CSS Modules rewrites
+ * `animation-name` to a scoped identifier, so a globally-defined name would
+ * never match and the animation would silently not run. */
+
+@keyframes tg-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tg-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tg-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
 /* ── Hero ─────────────────────────────────────────────────────── */
 
 .hero {
@@ -21,7 +58,7 @@
 }
 
 .heroCopy {
-  animation: tg-fade-up 0.6s ease;
+  animation: tg-fade-up 0.6s ease both;
 }
 
 .badge {
@@ -127,6 +164,8 @@
 
 /* ── Hero chat demo ───────────────────────────────────────────── */
 
+/* The card itself pops in just after the hero copy starts fading up; the
+ * messages inside then cascade on their own delays (0.5s / 1.2s / 1.9s). */
 .demo {
   justify-self: center;
   width: 100%;
@@ -136,6 +175,8 @@
   background: var(--tg-card-bg);
   box-shadow: var(--tg-elevated-shadow);
   overflow: hidden;
+  animation: tg-pop-in 0.7s ease both;
+  animation-delay: 0.15s;
 }
 
 .demoHead {
@@ -225,7 +266,7 @@
   border-radius: 18px 18px 18px 4px;
   background: var(--tg-card-bg);
   border: 1px solid var(--tg-outline);
-  animation: tg-pop-in 0.7s ease both;
+  animation: tg-pop-in 0.4s ease both;
   animation-delay: 1.9s;
 }
 

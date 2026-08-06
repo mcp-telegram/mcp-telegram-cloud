@@ -155,39 +155,6 @@ button {
   border-radius: 4px;
 }
 
-@keyframes tg-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes tg-pop-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes tg-blink {
-  0%,
-  80%,
-  100% {
-    opacity: 0.25;
-  }
-  40% {
-    opacity: 1;
-  }
-}
-
 /* Respect users who ask for less motion: entrance animations resolve to their
  * final state instead of playing, and the theme cross-fade is dropped.
  * `!important` is load-bearing here — this blanket rule has to win over every

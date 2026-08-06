@@ -44,7 +44,13 @@
   font-weight: 700;
   cursor: pointer;
   min-width: 96px;
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.btn:active {
+  opacity: 0.75;
 }
 
 .btn:hover {
