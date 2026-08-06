@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { ExampleCard } from "@/components/examples/ExampleCard";
-import { LangSwitcher } from "@/components/LangSwitcher";
-import { Link } from "@/i18n/navigation";
-import { config } from "@/lib/config";
+import { type ExampleItem, FilterableExamples } from "@/components/examples/FilterableExamples";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 import s from "../doc.module.css";
-import h from "../docs/header.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
@@ -29,6 +27,9 @@ const ITEMS = [
 ] as const;
 
 type Category = "briefing" | "search" | "analytics" | "extract" | "people" | "media";
+
+/** Filter chip order — matches the categories used by ITEMS above. */
+const CATEGORIES = ["briefing", "search", "extract", "people", "analytics", "media"] as const;
 
 type CategoryKey = `cat_${Category}`;
 
@@ -53,39 +54,41 @@ export default async function ExamplesPage({ params }: PageProps) {
 
 function Body() {
   const t = useTranslations("examplesPage");
+  // "Copied!" lives in the quickstart namespace — the copy button shares it.
+  const tQuick = useTranslations("quickstart");
+
+  const items: ExampleItem[] = ITEMS.map((id) => {
+    const category = t(`items.${id}.category` as `items.morning.category`) as Category;
+    return {
+      id,
+      title: t(`items.${id}.title` as `items.morning.title`),
+      description: t(`items.${id}.description` as `items.morning.description`),
+      prompt: t(`items.${id}.prompt` as `items.morning.prompt`),
+      category,
+      categoryLabel: t(`cat_${category}` as CategoryKey),
+    };
+  });
+
+  const categories = CATEGORIES.map((id) => ({ id, label: t(`cat_${id}` as CategoryKey) }));
 
   return (
     <>
-      <header className={h.header}>
-        <Link href="/" className={h.brand}>
-          {/* biome-ignore lint/performance/noImgElement: served from Hono backend, not next/image-optimised. */}
-          <img src="/icon.svg" alt="" width={24} height={24} />
-          {config.brandName}
-        </Link>
-        <LangSwitcher />
-      </header>
+      <SiteHeader />
 
       <main className={s.container}>
         <h1 className={s.h1}>{t("heading")}</h1>
         <p className={s.lead}>{t("subheading")}</p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 18 }}>
-          {ITEMS.map((id) => {
-            const category = t(`items.${id}.category` as `items.morning.category`) as Category;
-            return (
-              <ExampleCard
-                key={id}
-                title={t(`items.${id}.title` as `items.morning.title`)}
-                description={t(`items.${id}.description` as `items.morning.description`)}
-                prompt={t(`items.${id}.prompt` as `items.morning.prompt`)}
-                category={t(`cat_${category}` as CategoryKey)}
-                copyLabel={t("tryThis")}
-                copiedLabel={t("tryThis")}
-              />
-            );
-          })}
-        </div>
+        <FilterableExamples
+          items={items}
+          categories={categories}
+          allLabel={t("catAll")}
+          copyLabel={t("tryThis")}
+          copiedLabel={tQuick("copiedLabel")}
+        />
       </main>
+
+      <SiteFooter />
     </>
   );
 }

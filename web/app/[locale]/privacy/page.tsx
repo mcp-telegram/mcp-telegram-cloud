@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
 import s from "../../legal.module.css";
@@ -55,98 +57,98 @@ export default async function PrivacyPage({ params }: PageProps) {
     ));
 
   return (
-    <div className={s.container}>
-      <a href="/" className={s.logo}>
-        {/* biome-ignore lint/performance/noImgElement: served from Hono backend, not next/image-optimised. */}
-        <img src="/icon.svg" alt="Telegram" width={24} height={24} />
-        {config.brandName}
-      </a>
+    <>
+      <SiteHeader />
 
-      <h1 className={s.h1}>{t("title")}</h1>
-      <p className={s.updated}>{t("lastUpdated", { date: t("updatedDate") })}</p>
+      <div className={s.container}>
+        <h1 className={s.h1}>{t("title")}</h1>
+        <p className={s.updated}>{t("lastUpdated", { date: t("updatedDate") })}</p>
 
-      <h2 className={s.h2}>{t("overview.heading")}</h2>
-      <p className={s.p}>
-        {t.rich("overview.body", {
-          brand: config.brandName,
-          host: link(config.issuer),
-          hostLabel,
-          strong,
-        })}
-      </p>
+        <h2 className={s.h2}>{t("overview.heading")}</h2>
+        <p className={s.p}>
+          {t.rich("overview.body", {
+            brand: config.brandName,
+            host: link(config.issuer),
+            hostLabel,
+            strong,
+          })}
+        </p>
 
-      <h2 className={s.h2}>{t("collect.heading")}</h2>
-      <ul className={s.ul}>{li("collect.items", 3)}</ul>
+        <h2 className={s.h2}>{t("collect.heading")}</h2>
+        <ul className={s.ul}>{li("collect.items", 3)}</ul>
 
-      <h2 className={s.h2}>{t("analytics.heading")}</h2>
-      <p className={s.p}>
-        {t.rich("analytics.body", {
-          metrikaHref: link("https://yandex.com/legal/confidential/"),
-          gaHref: link("https://policies.google.com/privacy"),
-          strong,
-        })}
-      </p>
-      <ul className={s.ul}>{li("analytics.items", 3)}</ul>
+        <h2 className={s.h2}>{t("analytics.heading")}</h2>
+        <p className={s.p}>
+          {t.rich("analytics.body", {
+            metrikaHref: link("https://yandex.com/legal/confidential/"),
+            gaHref: link("https://policies.google.com/privacy"),
+            strong,
+          })}
+        </p>
+        <ul className={s.ul}>{li("analytics.items", 3)}</ul>
 
-      <h2 className={s.h2}>{t("notCollect.heading")}</h2>
-      <ul className={s.ul}>
-        <li>{t("notCollect.items.0")}</li>
-        <li>{t("notCollect.items.1")}</li>
-        <li>{t("notCollect.items.2")}</li>
-      </ul>
-      <p className={s.p}>{t.rich("notCollect.twoFactorNote", { strong })}</p>
+        <h2 className={s.h2}>{t("notCollect.heading")}</h2>
+        <ul className={s.ul}>
+          <li>{t("notCollect.items.0")}</li>
+          <li>{t("notCollect.items.1")}</li>
+          <li>{t("notCollect.items.2")}</li>
+        </ul>
+        <p className={s.p}>{t.rich("notCollect.twoFactorNote", { strong })}</p>
 
-      <h2 className={s.h2}>{t("dataFlow.heading")}</h2>
-      <p className={s.p}>{t.rich("dataFlow.body", { strong })}</p>
+        <h2 className={s.h2}>{t("dataFlow.heading")}</h2>
+        <p className={s.p}>{t.rich("dataFlow.body", { strong })}</p>
 
-      <h2 className={s.h2}>{t("retention.heading")}</h2>
-      <ul className={s.ul}>{li("retention.items", 3)}</ul>
+        <h2 className={s.h2}>{t("retention.heading")}</h2>
+        <ul className={s.ul}>{li("retention.items", 3)}</ul>
 
-      <h2 className={s.h2}>{t("thirdParties.heading")}</h2>
-      <p className={s.p}>{t.rich("thirdParties.body", { strong })}</p>
+        <h2 className={s.h2}>{t("thirdParties.heading")}</h2>
+        <p className={s.p}>{t.rich("thirdParties.body", { strong })}</p>
 
-      <h2 className={s.h2}>{t("security.heading")}</h2>
-      <p className={s.p}>{t("security.body")}</p>
+        <h2 className={s.h2}>{t("security.heading")}</h2>
+        <p className={s.p}>{t("security.body")}</p>
 
-      <h2 className={s.h2}>{t("rights.heading")}</h2>
-      <ul className={s.ul}>
-        <li>
-          <strong>{t("rights.items.0.term")}</strong> — {t("rights.items.0.desc")}
-        </li>
-        <li>
-          <strong>{t("rights.items.1.term")}</strong> — {t("rights.items.1.desc")}
-        </li>
-        <li>
-          <strong>{t("rights.items.2.term")}</strong> —{" "}
-          {t.rich("rights.items.2.desc", { repo: link(config.sourceRepoUrl) })}
-        </li>
-      </ul>
+        <h2 className={s.h2}>{t("rights.heading")}</h2>
+        <ul className={s.ul}>
+          <li>
+            <strong>{t("rights.items.0.term")}</strong> — {t("rights.items.0.desc")}
+          </li>
+          <li>
+            <strong>{t("rights.items.1.term")}</strong> — {t("rights.items.1.desc")}
+          </li>
+          <li>
+            <strong>{t("rights.items.2.term")}</strong> —{" "}
+            {t.rich("rights.items.2.desc", { repo: link(config.sourceRepoUrl) })}
+          </li>
+        </ul>
 
-      <h2 className={s.h2}>{t("openSource.heading")}</h2>
-      <p className={s.p}>{t.rich("openSource.body", { repo: link(config.sourceRepoUrl), repoLabel })}</p>
+        <h2 className={s.h2}>{t("openSource.heading")}</h2>
+        <p className={s.p}>{t.rich("openSource.body", { repo: link(config.sourceRepoUrl), repoLabel })}</p>
 
-      <h2 className={s.h2}>{t("contact.heading")}</h2>
-      <p className={s.p}>
-        {t.rich("contact.body", { issues: link(config.issuesUrl), issuesLabel: config.issuesLabel })}
-        {config.contactTelegram && (
-          <>
-            {" "}
-            {t.rich("contact.telegram", {
-              tg: link(`https://t.me/${config.contactTelegram}`),
-              handle: config.contactTelegram,
-            })}
-          </>
-        )}
-        {config.contactEmail && (
-          <>
-            {" "}
-            {t.rich("contact.email", {
-              mail: link(`mailto:${config.contactEmail}`),
-              address: config.contactEmail,
-            })}
-          </>
-        )}
-      </p>
-    </div>
+        <h2 className={s.h2}>{t("contact.heading")}</h2>
+        <p className={s.p}>
+          {t.rich("contact.body", { issues: link(config.issuesUrl), issuesLabel: config.issuesLabel })}
+          {config.contactTelegram && (
+            <>
+              {" "}
+              {t.rich("contact.telegram", {
+                tg: link(`https://t.me/${config.contactTelegram}`),
+                handle: config.contactTelegram,
+              })}
+            </>
+          )}
+          {config.contactEmail && (
+            <>
+              {" "}
+              {t.rich("contact.email", {
+                mail: link(`mailto:${config.contactEmail}`),
+                address: config.contactEmail,
+              })}
+            </>
+          )}
+        </p>
+      </div>
+
+      <SiteFooter />
+    </>
   );
 }

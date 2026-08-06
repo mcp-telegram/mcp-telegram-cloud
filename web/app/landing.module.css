@@ -1,290 +1,540 @@
-/* Port of `landing` object from src/styles.ts. CSS classes follow the same
- * names so the visual diff against the Hono original is structural, not
- * stylistic. All values reference design tokens from globals.css. */
+/* Landing page styles (redesign).
+ *
+ * All values reference design tokens from globals.css so light/dark themes are
+ * a token swap, never a per-rule override. Sections alternate --tg-bg and
+ * --tg-bg-alt backgrounds; the alt ones carry hairline borders. */
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 960px;
+.container {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 20px 24px;
+  padding-inline: 24px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.logo img,
-.logo svg {
-  width: 28px;
-  height: 28px;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  font-size: 15px;
-  color: var(--tg-hint);
-}
-
-.nav a {
-  transition: color 0.15s;
-}
-
-.nav a:hover {
-  color: var(--tg-link);
-}
-
-/* On narrow screens, the in-page anchor links (Features/FAQ) collapse. The
- * cross-page links (Quickstart/Examples/GitHub) and LangSwitcher stay so the
- * header remains useful. */
-@media (max-width: 700px) {
-  .header {
-    padding: 16px 20px;
-  }
-  .nav {
-    gap: 14px;
-    font-size: 14px;
-  }
-  .nav a[href^="#"] {
-    display: none;
-  }
-  .navHideMobile {
-    display: none;
-  }
-}
+/* ── Hero ─────────────────────────────────────────────────────── */
 
 .hero {
-  text-align: center;
-  padding: 80px 24px 64px;
-  max-width: 720px;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 56px;
+  align-items: center;
+  padding-block: clamp(36px, 6vw, 72px);
+}
+
+.heroCopy {
+  animation: tg-fade-up 0.6s ease;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  background: var(--tg-code-bg);
+  color: var(--tg-link);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tg-green);
 }
 
 .heroTitle {
-  font-size: 44px;
+  margin-top: 18px;
+  font-size: clamp(34px, 4.4vw, 52px);
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.5px;
-  margin-bottom: 16px;
+  line-height: 1.08;
+  letter-spacing: -1.2px;
 }
 
 .heroTitle span {
   color: var(--tg-link);
 }
 
-@media (max-width: 600px) {
-  .heroTitle {
-    font-size: 32px;
-  }
-}
-
 .heroSubtitle {
-  font-size: 18px;
-  line-height: 28px;
+  margin-top: 18px;
+  max-width: 480px;
+  font-size: 17.5px;
+  line-height: 1.6;
   color: var(--tg-hint);
-  max-width: 520px;
-  margin: 0 auto 32px;
 }
 
-.cta {
-  display: inline-block;
-  padding: 14px 32px;
-  border-radius: 12px;
+.ctaRow {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  padding: 15px 30px;
+  border-radius: 14px;
   background: var(--tg-button);
   color: var(--tg-button-text);
-  font-size: 17px;
-  font-weight: 600;
-  transition: opacity 0.15s ease-out;
+  font-size: 16.5px;
+  font-weight: 700;
+  box-shadow: var(--tg-button-shadow);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
-.cta:hover {
-  opacity: 0.85;
+.ctaPrimary:hover {
+  transform: translateY(-2px);
 }
 
 .ctaSecondary {
-  display: inline-block;
-  padding: 14px 32px;
-  border-radius: 12px;
-  background: var(--tg-tertiary-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 24px;
+  border-radius: 14px;
+  border: 1px solid var(--tg-outline);
+  background: var(--tg-card-bg);
   color: var(--tg-text);
-  font-size: 17px;
+  font-size: 15.5px;
   font-weight: 600;
-  margin-left: 12px;
-  transition: background 0.15s ease-out;
+  transition:
+    transform 0.15s,
+    background 0.15s;
 }
 
 .ctaSecondary:hover {
-  background: var(--tg-secondary-bg);
+  transform: translateY(-2px);
+  background: var(--tg-bg-alt);
 }
 
+.clientChips {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clientChip {
+  padding: 6px 13px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 100px;
+  font-size: 13px;
+  color: var(--tg-hint);
+}
+
+/* ── Hero chat demo ───────────────────────────────────────────── */
+
+.demo {
+  justify-self: center;
+  width: 100%;
+  max-width: 430px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 24px;
+  background: var(--tg-card-bg);
+  box-shadow: var(--tg-elevated-shadow);
+  overflow: hidden;
+}
+
+.demoHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--tg-outline);
+}
+
+.demoTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.demoStatus {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--tg-green);
+}
+
+.demoBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 320px;
+  padding: 18px;
+  background: var(--tg-bg-alt);
+}
+
+.bubbleOut {
+  align-self: flex-end;
+  max-width: 88%;
+  padding: 11px 15px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--tg-bubble-out);
+  color: #ffffff;
+  font-size: 14.5px;
+  line-height: 1.45;
+  animation: tg-pop-in 0.4s ease both;
+  animation-delay: 0.5s;
+}
+
+.toolChip {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 100px;
+  background: var(--tg-card-bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--tg-hint);
+  animation: tg-pop-in 0.4s ease both;
+  animation-delay: 1.2s;
+}
+
+.toolDots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.toolDots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tg-link);
+  animation: tg-blink 1.2s infinite;
+}
+
+.toolDots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.toolDots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.bubbleIn {
+  align-self: flex-start;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 18px 18px 18px 4px;
+  background: var(--tg-card-bg);
+  border: 1px solid var(--tg-outline);
+  animation: tg-pop-in 0.7s ease both;
+  animation-delay: 1.9s;
+}
+
+.digestHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.digestRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.unread {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--tg-button);
+  color: var(--tg-button-text);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.unreadMuted {
+  background: var(--tg-secondary-hint);
+}
+
+.digestDivider {
+  height: 1px;
+  margin: 12px 0;
+  background: var(--tg-outline);
+}
+
+.digestNote {
+  font-size: 13px;
+  color: var(--tg-hint);
+  line-height: 1.45;
+}
+
+/* ── Sections ─────────────────────────────────────────────────── */
+
 .section {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 64px 24px;
+  padding-block: clamp(48px, 6vw, 76px);
+}
+
+.sectionAlt {
+  background: var(--tg-bg-alt);
+  border-top: 1px solid var(--tg-outline);
+  border-bottom: 1px solid var(--tg-outline);
 }
 
 .sectionTitle {
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 800;
   text-align: center;
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 12px;
+  letter-spacing: -0.6px;
 }
 
 .sectionSubtitle {
-  text-align: center;
-  font-size: 15px;
+  margin-top: 10px;
+  font-size: 16px;
   color: var(--tg-hint);
-  margin-bottom: 48px;
+  text-align: center;
 }
+
+.sectionBody {
+  margin-top: 44px;
+}
+
+/* ── Features ─────────────────────────────────────────────────── */
 
 .featureGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 700px) {
-  .featureGrid {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 14px;
 }
 
 .featureCard {
-  background: var(--tg-secondary-bg);
-  border-radius: 20px;
-  padding: 28px 24px;
+  padding: 24px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 18px;
+  background: var(--tg-card-bg);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
-.featureCard h3 {
-  font-size: 17px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.featureCard p {
-  font-size: 15px;
-  line-height: 22px;
-  color: var(--tg-hint);
+.featureCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--tg-elevated-shadow);
 }
 
 .featureIcon {
-  font-size: 32px;
-  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #ffffff;
 }
+
+.featureCard h3 {
+  margin-top: 16px;
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.featureCard p {
+  margin-top: 8px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--tg-hint);
+}
+
+/* ── Example prompts (landing) ────────────────────────────────── */
+
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 26px 40px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.exampleLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tg-hint);
+}
+
+.examplePrompt {
+  margin-top: 10px;
+  margin-inline-start: auto;
+  max-width: 100%;
+  width: fit-content;
+  padding: 13px 17px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--tg-bubble-out);
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.centerCta {
+  margin-top: 36px;
+  text-align: center;
+}
+
+/* ── How it works ─────────────────────────────────────────────── */
 
 .stepsRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 16px;
-  counter-reset: step;
-}
-
-@media (max-width: 700px) {
-  .stepsRow {
-    grid-template-columns: 1fr;
-  }
 }
 
 .stepCard {
-  background: var(--tg-secondary-bg);
-  border-radius: 20px;
-  padding: 28px 24px;
-  position: relative;
-  counter-increment: step;
+  padding: 26px 24px;
+  border: 1px solid var(--tg-outline);
+  border-radius: 18px;
+  background: var(--tg-card-bg);
 }
 
-.stepCard::before {
-  content: counter(step);
-  display: flex;
+.stepNumber {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--tg-link);
+  background: var(--tg-button);
   color: var(--tg-button-text);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
 }
 
 .stepCard h3 {
+  margin-top: 16px;
   font-size: 17px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .stepCard p {
-  font-size: 15px;
-  line-height: 22px;
+  margin-top: 8px;
+  font-size: 14.5px;
+  line-height: 1.55;
   color: var(--tg-hint);
 }
 
-.divider {
-  border: none;
-  border-top: 1px solid var(--tg-outline);
-  margin: 0;
-}
-
-.footer {
-  text-align: center;
-  padding: 32px 24px;
-  font-size: 13px;
-  color: var(--tg-secondary-hint);
-}
-
-.footer a {
-  color: var(--tg-hint);
-  transition: color 0.15s;
-}
-
-.footer a:hover {
-  color: var(--tg-link);
-}
+/* ── FAQ ──────────────────────────────────────────────────────── */
 
 .faqList {
-  max-width: 720px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .faqItem {
-  background: var(--tg-secondary-bg);
+  border: 1px solid var(--tg-outline);
   border-radius: 16px;
-  padding: 24px;
+  background: var(--tg-card-bg);
+  overflow: hidden;
 }
 
-.faqItem h3 {
-  font-size: 17px;
-  font-weight: 600;
-  margin-bottom: 8px;
+.faqQuestion {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: start;
+  transition: background 0.15s;
 }
 
-.faqItem p {
-  font-size: 15px;
-  line-height: 24px;
+.faqQuestion:hover {
+  background: var(--tg-bg-alt);
+}
+
+.faqChevron {
+  flex-shrink: 0;
+  color: var(--tg-link);
+  transition: transform 0.2s;
+}
+
+.faqChevronOpen {
+  transform: rotate(180deg);
+}
+
+.faqAnswer {
+  padding: 0 20px 18px;
+  font-size: 14.5px;
+  line-height: 1.65;
   color: var(--tg-hint);
 }
 
-.faqLink {
+.faqAnswer a {
   color: var(--tg-link);
 }
 
 .faqCode {
-  background: #f0f0f0;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 6px;
+  background: var(--tg-code-bg);
+  color: var(--tg-link);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
 }
 
-.footerSecond {
-  margin-top: 8px;
+/* ── Closing CTA ──────────────────────────────────────────────── */
+
+.finalCta {
+  max-width: 1120px;
+  margin: clamp(48px, 6vw, 76px) auto;
+  padding: clamp(36px, 5vw, 56px) 24px;
+  border-radius: 28px;
+  background: var(--tg-cta-gradient);
+  box-shadow: var(--tg-cta-shadow);
+  text-align: center;
+  color: #ffffff;
+}
+
+.finalCtaTitle {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.finalCtaSubtitle {
+  margin-top: 12px;
+  font-size: 16px;
+  opacity: 0.92;
+}
+
+.finalCtaButton {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 26px;
+  padding: 15px 32px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--tg-cta-text);
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform 0.15s;
+}
+
+.finalCtaButton:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .finalCta {
+    margin-inline: 16px;
+  }
 }

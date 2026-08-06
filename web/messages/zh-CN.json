@@ -17,7 +17,10 @@
     "faq": "常见问题",
     "github": "GitHub",
     "quickstart": "快速开始",
-    "examples": "示例"
+    "examples": "示例",
+    "toggleTheme": "切换主题",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
   },
   "hero": {
     "titleStart": "您的 Telegram 接入",
@@ -198,7 +201,8 @@
         "prompt": "查找本周在我 \"Coworking\" 群组聊天中发送的所有语音消息。将每条转录为文字,并以按时间排序的列表形式呈现,附上发送人和时间戳。",
         "category": "media"
       }
-    }
+    },
+    "catAll": "全部"
   },
   "quickstart": {
     "metaTitle": "快速开始 — 将 Telegram 连接到 Claude AI 或 ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "使用 PKCE 的 authorization code 流程",
     "flowLead": "标准的 RFC 6749 §4.1 + RFC 7636 流程。没有意外 — 如果你的 OAuth 库能处理\"authorization code + PKCE\",它就能正常工作。",
     "flowStep1Title": "注册你的客户端",
-    "flowStep1Desc": "向 POST /oauth/register 发送 { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"your-client-name\" }。服务器返回 client_id 和 client_secret (对公共 PKCE 客户端来说密钥是可选的,但收到也无妨)。",
+    "flowStep1Desc": "向 POST /oauth/register 发送 '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"your-client-name\" '}'。服务器返回 client_id 和 client_secret (对公共 PKCE 客户端来说密钥是可选的,但收到也无妨)。",
     "flowStep2Title": "生成 PKCE 对",
     "flowStep2Desc": "生成一个 43–128 字符的随机 code_verifier,然后计算 code_challenge = BASE64URL(SHA256(code_verifier))。把 verifier 保存在本地,供第 4 步使用。",
     "flowStep3Title": "在浏览器中打开 /oauth/authorize",

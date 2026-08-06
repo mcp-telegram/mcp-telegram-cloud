@@ -1,7 +1,27 @@
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { LangSwitcher } from "@/components/LangSwitcher";
+import {
+  TbBook,
+  TbBrandGithub,
+  TbChartBar,
+  TbChartPie,
+  TbClipboardList,
+  TbIdBadge2,
+  TbMessageCircle,
+  TbPaperclip,
+  TbPencil,
+  TbPhoto,
+  TbSearch,
+  TbSun,
+  TbUserSearch,
+  TbUsers,
+  TbZoom,
+} from "react-icons/tb";
+import { ChatDemo } from "@/components/landing/ChatDemo";
+import { FaqAccordion, type FaqEntry } from "@/components/landing/FaqAccordion";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
@@ -30,14 +50,45 @@ export default async function HomePage({ params }: PageProps) {
   return <HomePageContent />;
 }
 
+/** Feature cards: message key ↔ icon ↔ gradient token. */
+const FEATURES = [
+  { key: "readMessages", Icon: TbMessageCircle, gradient: "var(--tg-grad-read)" },
+  { key: "search", Icon: TbSearch, gradient: "var(--tg-grad-search)" },
+  { key: "analytics", Icon: TbChartBar, gradient: "var(--tg-grad-analytics)" },
+  { key: "media", Icon: TbPhoto, gradient: "var(--tg-grad-media)" },
+  { key: "contacts", Icon: TbUsers, gradient: "var(--tg-grad-contacts)" },
+  { key: "write", Icon: TbPencil, gradient: "var(--tg-grad-write)" },
+  { key: "multiAccount", Icon: TbIdBadge2, gradient: "var(--tg-grad-multi)" },
+  { key: "stories", Icon: TbBook, gradient: "var(--tg-grad-stories)" },
+  { key: "uploads", Icon: TbPaperclip, gradient: "var(--tg-grad-uploads)" },
+] as const;
+
+/** Landing example prompts: message key ↔ icon. */
+const EXAMPLES = [
+  { key: "morning", Icon: TbSun },
+  { key: "find", Icon: TbZoom },
+  { key: "extract", Icon: TbClipboardList },
+  { key: "people", Icon: TbUserSearch },
+  { key: "overview", Icon: TbChartPie },
+  { key: "media", Icon: TbPhoto },
+] as const;
+
+/** "How it works" steps. Spelled out rather than built from an index so
+ * next-intl can type-check each key against messages/en.json. */
+const STEPS = [
+  { title: "step1Title", desc: "step1Desc" },
+  { title: "step2Title", desc: "step2Desc" },
+  { title: "step3Title", desc: "step3Desc" },
+] as const;
+
+const CLIENT_CHIPS = ["Claude.ai", "ChatGPT", "Cursor", "Hermes CLI"];
+
 function HomePageContent() {
-  const tNav = useTranslations("nav");
   const tHero = useTranslations("hero");
   const tFeat = useTranslations("features");
   const tEx = useTranslations("examples");
   const tHow = useTranslations("howItWorks");
   const tFaq = useTranslations("faq");
-  const tFooter = useTranslations("footer");
   const tMeta = useTranslations("metadata");
 
   // Escape `<` so a malicious BRAND_NAME/ISSUER cannot break out of the
@@ -55,235 +106,172 @@ function HomePageContent() {
 
   const repoLabel = config.sourceRepoUrl.replace(/^https?:\/\//, "");
 
+  const faqItems: FaqEntry[] = [
+    { question: tFaq("safeQ"), answer: tFaq("safeA") },
+    {
+      question: tFaq("readQ"),
+      answer: (
+        <>
+          {tFaq("readAStart")} <a href={`${config.sourceRepoUrl}/blob/main/SECURITY.md`}>{tFaq("readALinkLabel")}</a>
+          {tFaq("readAEnd")}
+        </>
+      ),
+    },
+    { question: tFaq("protocolQ"), answer: tFaq("protocolA") },
+    { question: tFaq("disconnectQ"), answer: tFaq("disconnectA") },
+    { question: tFaq("multiAccountQ"), answer: tFaq("multiAccountA") },
+    {
+      question: tFaq("chatgptQ"),
+      answer: (
+        <>
+          {tFaq("chatgptAStart")} <code className={s.faqCode}>{config.mcpBaseUrl}/mcp</code> {tFaq("chatgptAEnd")}
+        </>
+      ),
+    },
+    {
+      question: tFaq("openSourceQ"),
+      answer: (
+        <>
+          {tFaq("openSourceAStart")} <a href={config.sourceRepoUrl}>{repoLabel}</a>
+          {tFaq("openSourceAEnd")}
+        </>
+      ),
+    },
+  ];
+
   return (
     <>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD payload, manually escaped above. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
 
-      <header className={s.header}>
-        <div className={s.logo}>
-          {/* biome-ignore lint/performance/noImgElement: served from Hono backend, not next/image-optimised. */}
-          <img src="/icon.svg" alt="Telegram" width={28} height={28} />
-          {config.brandName}
-        </div>
-        <nav className={s.nav}>
-          <a href="#features">{tNav("features")}</a>
-          <Link href="/docs/quickstart">{tNav("quickstart")}</Link>
-          <Link href="/examples">{tNav("examples")}</Link>
-          <a href="#faq">{tNav("faq")}</a>
-          <a href={config.sourceRepoUrl} className={s.navHideMobile}>
-            {tNav("github")}
-          </a>
-          <LangSwitcher />
-        </nav>
-      </header>
+      <SiteHeader />
 
-      <section className={s.hero}>
-        <h1 className={s.heroTitle}>
-          {tHero("titleStart")} <span>{tHero("titleClaude")}</span> {tHero("titleAnd")}{" "}
-          <span>{tHero("titleChatGPT")}</span>
-        </h1>
-        <p className={s.heroSubtitle}>{tHero("subtitle")}</p>
-        <div>
-          <Link className={s.cta} href="/docs/quickstart">
-            {tHero("ctaQuickstart")}
-          </Link>
-        </div>
-      </section>
+      <div className={s.container}>
+        <section className={s.hero}>
+          <div className={s.heroCopy}>
+            <span className={s.badge}>
+              <span className={s.badgeDot} />
+              MCP · MTProto · Open Source
+            </span>
 
-      <hr className={s.divider} />
+            <h1 className={s.heroTitle}>
+              {tHero("titleStart")} <span>{tHero("titleClaude")}</span> {tHero("titleAnd")}{" "}
+              <span>{tHero("titleChatGPT")}</span>
+            </h1>
 
-      <section className={s.section} id="features">
-        <h2 className={s.sectionTitle}>{tFeat("heading")}</h2>
-        <p className={s.sectionSubtitle}>{tFeat("subheading")}</p>
+            <p className={s.heroSubtitle}>{tHero("subtitle")}</p>
 
-        <div className={s.featureGrid}>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>💬</div>
-            <h3>{tFeat("readMessagesTitle")}</h3>
-            <p>{tFeat("readMessagesDesc")}</p>
+            <div className={s.ctaRow}>
+              <Link className={s.ctaPrimary} href="/docs/quickstart">
+                {tHero("ctaQuickstart")}
+              </Link>
+              <a className={s.ctaSecondary} href={config.sourceRepoUrl}>
+                <TbBrandGithub size={19} aria-hidden />
+                GitHub · MIT
+              </a>
+            </div>
+
+            <div className={s.clientChips}>
+              {CLIENT_CHIPS.map((chip) => (
+                <span key={chip} className={s.clientChip}>
+                  {chip}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>🔍</div>
-            <h3>{tFeat("searchTitle")}</h3>
-            <p>{tFeat("searchDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>📊</div>
-            <h3>{tFeat("analyticsTitle")}</h3>
-            <p>{tFeat("analyticsDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>📷</div>
-            <h3>{tFeat("mediaTitle")}</h3>
-            <p>{tFeat("mediaDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>👥</div>
-            <h3>{tFeat("contactsTitle")}</h3>
-            <p>{tFeat("contactsDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>✍️</div>
-            <h3>{tFeat("writeTitle")}</h3>
-            <p>{tFeat("writeDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>👥</div>
-            <h3>{tFeat("multiAccountTitle")}</h3>
-            <p>{tFeat("multiAccountDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>📖</div>
-            <h3>{tFeat("storiesTitle")}</h3>
-            <p>{tFeat("storiesDesc")}</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>📎</div>
-            <h3>{tFeat("uploadsTitle")}</h3>
-            <p>{tFeat("uploadsDesc")}</p>
+
+          <ChatDemo />
+        </section>
+      </div>
+
+      <section className={`${s.section} ${s.sectionAlt}`} id="features">
+        <div className={s.container}>
+          <h2 className={s.sectionTitle}>{tFeat("heading")}</h2>
+          <p className={s.sectionSubtitle}>{tFeat("subheading")}</p>
+
+          <div className={`${s.featureGrid} ${s.sectionBody}`}>
+            {FEATURES.map(({ key, Icon, gradient }) => (
+              <div key={key} className={s.featureCard}>
+                <div className={s.featureIcon} style={{ background: gradient }}>
+                  <Icon size={23} aria-hidden />
+                </div>
+                <h3>{tFeat(`${key}Title`)}</h3>
+                <p>{tFeat(`${key}Desc`)}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-
-      <hr className={s.divider} />
 
       <section className={s.section}>
-        <h2 className={s.sectionTitle}>{tEx("heading")}</h2>
-        <p className={s.sectionSubtitle}>{tEx("subheading")}</p>
+        <div className={s.container}>
+          <h2 className={s.sectionTitle}>{tEx("heading")}</h2>
+          <p className={s.sectionSubtitle}>{tEx("subheading")}</p>
 
-        <div className={s.featureGrid}>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>☀️</div>
-            <h3>{tEx("morningTitle")}</h3>
-            <p>"{tEx("morningPrompt")}"</p>
+          <div className={`${s.exampleGrid} ${s.sectionBody}`}>
+            {EXAMPLES.map(({ key, Icon }) => (
+              <div key={key}>
+                <div className={s.exampleLabel}>
+                  <Icon size={16} color="var(--tg-link)" aria-hidden />
+                  {tEx(`${key}Title`)}
+                </div>
+                <p className={s.examplePrompt}>“{tEx(`${key}Prompt`)}”</p>
+              </div>
+            ))}
           </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>🔎</div>
-            <h3>{tEx("findTitle")}</h3>
-            <p>"{tEx("findPrompt")}"</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>📋</div>
-            <h3>{tEx("extractTitle")}</h3>
-            <p>"{tEx("extractPrompt")}"</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>👤</div>
-            <h3>{tEx("peopleTitle")}</h3>
-            <p>"{tEx("peoplePrompt")}"</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>📊</div>
-            <h3>{tEx("overviewTitle")}</h3>
-            <p>"{tEx("overviewPrompt")}"</p>
-          </div>
-          <div className={s.featureCard}>
-            <div className={s.featureIcon}>🖼️</div>
-            <h3>{tEx("mediaTitle")}</h3>
-            <p>"{tEx("mediaPrompt")}"</p>
-          </div>
-        </div>
 
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Link href="/examples" className={s.ctaSecondary}>
-            {tEx("ctaSeeAll")} →
-          </Link>
+          <div className={s.centerCta}>
+            <Link href="/examples" className={s.ctaSecondary}>
+              {tEx("ctaSeeAll")} →
+            </Link>
+          </div>
         </div>
       </section>
 
-      <hr className={s.divider} />
+      <section className={`${s.section} ${s.sectionAlt}`} id="how-it-works">
+        <div className={s.container}>
+          <h2 className={s.sectionTitle}>{tHow("heading")}</h2>
+          <p className={s.sectionSubtitle}>{tHow("subheading")}</p>
 
-      <section className={s.section} id="how-it-works">
-        <h2 className={s.sectionTitle}>{tHow("heading")}</h2>
-        <p className={s.sectionSubtitle}>{tHow("subheading")}</p>
+          <div className={`${s.stepsRow} ${s.sectionBody}`}>
+            {STEPS.map((step, i) => (
+              <div key={step.title} className={s.stepCard}>
+                <span className={s.stepNumber}>{i + 1}</span>
+                <h3>{tHow(step.title)}</h3>
+                <p>{tHow(step.desc)}</p>
+              </div>
+            ))}
+          </div>
 
-        <div className={s.stepsRow}>
-          <div className={s.stepCard}>
-            <h3>{tHow("step1Title")}</h3>
-            <p>{tHow("step1Desc")}</p>
+          <div className={s.centerCta}>
+            <Link href="/docs/quickstart" className={s.ctaPrimary}>
+              {tHow("ctaFullGuide")} →
+            </Link>
           </div>
-          <div className={s.stepCard}>
-            <h3>{tHow("step2Title")}</h3>
-            <p>{tHow("step2Desc")}</p>
-          </div>
-          <div className={s.stepCard}>
-            <h3>{tHow("step3Title")}</h3>
-            <p>{tHow("step3Desc")}</p>
-          </div>
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Link href="/docs/quickstart" className={s.cta}>
-            {tHow("ctaFullGuide")} →
-          </Link>
         </div>
       </section>
-
-      <hr className={s.divider} />
 
       <section className={s.section} id="faq">
-        <h2 className={s.sectionTitle}>{tFaq("heading")}</h2>
-        <p className={s.sectionSubtitle}>{tFaq("subheading")}</p>
-
-        <div className={s.faqList}>
-          <div className={s.faqItem}>
-            <h3>{tFaq("safeQ")}</h3>
-            <p>{tFaq("safeA")}</p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>{tFaq("readQ")}</h3>
-            <p>
-              {tFaq("readAStart")}{" "}
-              <a href={`${config.sourceRepoUrl}/blob/main/SECURITY.md`} className={s.faqLink}>
-                {tFaq("readALinkLabel")}
-              </a>
-              {tFaq("readAEnd")}
-            </p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>{tFaq("protocolQ")}</h3>
-            <p>{tFaq("protocolA")}</p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>{tFaq("disconnectQ")}</h3>
-            <p>{tFaq("disconnectA")}</p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>{tFaq("multiAccountQ")}</h3>
-            <p>{tFaq("multiAccountA")}</p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>{tFaq("chatgptQ")}</h3>
-            <p>
-              {tFaq("chatgptAStart")} <code className={s.faqCode}>{config.mcpBaseUrl}/mcp</code> {tFaq("chatgptAEnd")}
-            </p>
-          </div>
-          <div className={s.faqItem}>
-            <h3>{tFaq("openSourceQ")}</h3>
-            <p>
-              {tFaq("openSourceAStart")}{" "}
-              <a href={config.sourceRepoUrl} className={s.faqLink}>
-                {repoLabel}
-              </a>
-              {tFaq("openSourceAEnd")}
-            </p>
+        <div className={s.container}>
+          <h2 className={s.sectionTitle}>{tFaq("heading")}</h2>
+          <p className={s.sectionSubtitle}>{tFaq("subheading")}</p>
+          <div className={s.sectionBody}>
+            <FaqAccordion items={faqItems} />
           </div>
         </div>
       </section>
 
-      <hr className={s.divider} />
+      <div className={s.finalCta}>
+        <h2 className={s.finalCtaTitle}>
+          {tHero("titleStart")} {tHero("titleClaude")} {tHero("titleAnd")} {tHero("titleChatGPT")}
+        </h2>
+        <p className={s.finalCtaSubtitle}>{tHow("subheading")}</p>
+        <Link href="/docs/quickstart" className={s.finalCtaButton}>
+          {tHero("ctaQuickstart")}
+        </Link>
+      </div>
 
-      <footer className={s.footer}>
-        <p>
-          {config.brandName} &mdash; <a href={config.sourceRepoUrl}>{tNav("github")}</a> &middot; {tFooter("mit")}{" "}
-          &middot; <a href={config.issuesUrl}>{config.issuesLabel}</a> &middot;{" "}
-          <Link href="/privacy">{tFooter("privacy")}</Link> &middot; <Link href="/terms">{tFooter("terms")}</Link>
-        </p>
-        <p className={s.footerSecond}>
-          &copy; {new Date().getFullYear()} {config.brandName}. {tFooter("tagline")}
-        </p>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

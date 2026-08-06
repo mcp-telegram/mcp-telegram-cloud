@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CopyableUrl } from "@/components/docs/CopyableUrl";
-import { StepCard } from "@/components/docs/StepCard";
+import { StepCard, Stepper } from "@/components/docs/StepCard";
+import { Troubleshooting } from "@/components/docs/Troubleshooting";
 import { Link } from "@/i18n/navigation";
 import { config } from "@/lib/config";
 import { canonicalForLocale, languageAlternates } from "@/lib/seo";
@@ -61,23 +62,27 @@ function Body() {
       <h1 className={s.h1}>{t("chatgptHeading")}</h1>
       <p className={s.lead}>{t("chatgptIntro")}</p>
 
-      <StepCard num={1} title={t("chatgptStep1Title")} description={t("chatgptStep1Desc")} />
-      <StepCard num={2} title={t("chatgptStep2Title")} description={t("chatgptStep2Desc")}>
-        <CopyableUrl url={mcpUrl} label={t("urlLabel")} copyLabel={t("copyLabel")} copiedLabel={t("copiedLabel")} />
-      </StepCard>
-      <StepCard num={3} title={t("chatgptStep3Title")} description={t("chatgptStep3Desc")} />
+      <Stepper>
+        <StepCard num={1} title={t("chatgptStep1Title")} description={t("chatgptStep1Desc")} />
+        <StepCard num={2} title={t("chatgptStep2Title")} description={t("chatgptStep2Desc")}>
+          <CopyableUrl url={mcpUrl} label={t("urlLabel")} copyLabel={t("copyLabel")} copiedLabel={t("copiedLabel")} />
+        </StepCard>
+        <StepCard num={3} title={t("chatgptStep3Title")} description={t("chatgptStep3Desc")} />
+      </Stepper>
 
       <h2 className={s.h2}>{t("chatgptTroubleshootHeading")}</h2>
-      <div className={s.tsList}>
-        <div className={s.tsItem}>
-          <h3>{t("chatgptTroubleshootDoubleQRTitle")}</h3>
-          <p>{t("chatgptTroubleshootDoubleQRDesc")}</p>
-        </div>
-        <div className={s.tsItem}>
-          <h3>{t("chatgptTroubleshootLinkNotFoundTitle")}</h3>
-          <p>{t("chatgptTroubleshootLinkNotFoundDesc")}</p>
-        </div>
-      </div>
+      <Troubleshooting
+        items={[
+          {
+            title: t("chatgptTroubleshootDoubleQRTitle"),
+            body: t("chatgptTroubleshootDoubleQRDesc"),
+          },
+          {
+            title: t("chatgptTroubleshootLinkNotFoundTitle"),
+            body: t("chatgptTroubleshootLinkNotFoundDesc"),
+          },
+        ]}
+      />
     </main>
   );
 }

@@ -1,0 +1,25 @@
+.footer {
+  background: var(--tg-bg-alt);
+  border-top: 1px solid var(--tg-outline);
+  padding: 36px 24px 44px;
+  text-align: center;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  font-size: 13.5px;
+  color: var(--tg-hint);
+}
+
+.links a:hover {
+  color: var(--tg-link);
+}
+
+.copy {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--tg-secondary-hint);
+}

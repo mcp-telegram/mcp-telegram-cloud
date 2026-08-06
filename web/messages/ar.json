@@ -17,7 +17,10 @@
     "faq": "الأسئلة الشائعة",
     "github": "GitHub",
     "quickstart": "البدء السريع",
-    "examples": "أمثلة"
+    "examples": "أمثلة",
+    "toggleTheme": "تبديل المظهر",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة"
   },
   "hero": {
     "titleStart": "تطبيق Telegram الخاص بك في",
@@ -198,7 +201,8 @@
         "prompt": "ابحث عن كل الرسائل الصوتية المُرسَلة في محادثة \"Coworking\" الجماعية هذا الأسبوع. فرّغ كل واحدة وقدّمها في قائمة زمنية مع المرسل والطابع الزمني.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "الكل"
   },
   "quickstart": {
     "metaTitle": "البدء السريع — اربط Telegram بـ Claude AI أو ChatGPT",
@@ -280,7 +284,7 @@
     "flowHeading": "تدفّق authorization code مع PKCE",
     "flowLead": "تدفّق قياسي وفق RFC 6749 §4.1 + RFC 7636. لا مفاجآت — إذا كانت مكتبة OAuth لديك تتعامل مع «authorization code + PKCE»، فستعمل هنا.",
     "flowStep1Title": "سجّل عميلك",
-    "flowStep1Desc": "أرسل POST /oauth/register بمحتوى { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"your-client-name\" }. سيُعيد الخادم client_id و client_secret (السرّ اختياري للعملاء العموميين الذين يستخدمون PKCE، لكن لا ضرر من استلامه).",
+    "flowStep1Desc": "أرسل POST /oauth/register بمحتوى '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"your-client-name\" '}'. سيُعيد الخادم client_id و client_secret (السرّ اختياري للعملاء العموميين الذين يستخدمون PKCE، لكن لا ضرر من استلامه).",
     "flowStep2Title": "ولّد زوج PKCE",
     "flowStep2Desc": "ولّد code_verifier عشوائياً بطول 43–128 حرفاً، ثم احسب code_challenge = BASE64URL(SHA256(code_verifier)). احفظ verifier محلياً لاستخدامه في الخطوة 4.",
     "flowStep3Title": "افتح /oauth/authorize في المتصفح",

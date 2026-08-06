@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "Schnellstart",
-    "examples": "Beispiele"
+    "examples": "Beispiele",
+    "toggleTheme": "Design wechseln",
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schließen"
   },
   "hero": {
     "titleStart": "Ihr Telegram in",
@@ -198,7 +201,8 @@
         "prompt": "Finde alle Sprachnachrichten, die diese Woche in meinem Gruppen-Chat \"Coworking\" gesendet wurden. Transkribiere jede einzelne und präsentiere sie als chronologische Liste mit Absender und Zeitstempel.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "Alle"
   },
   "quickstart": {
     "metaTitle": "Schnellstart — Telegram mit Claude AI oder ChatGPT verbinden",
@@ -280,7 +284,7 @@
     "flowHeading": "Authorization Code Flow mit PKCE",
     "flowLead": "Standard-Flow nach RFC 6749 §4.1 + RFC 7636. Keine Überraschungen — wenn deine OAuth-Bibliothek „Authorization Code + PKCE\" beherrscht, funktioniert es.",
     "flowStep1Title": "Registriere deinen Client",
-    "flowStep1Desc": "POST /oauth/register mit { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"dein-client-name\" }. Der Server liefert client_id + client_secret zurück (das Secret ist für Public PKCE Clients optional, aber zu erhalten schadet nicht).",
+    "flowStep1Desc": "POST /oauth/register mit '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"dein-client-name\" '}'. Der Server liefert client_id + client_secret zurück (das Secret ist für Public PKCE Clients optional, aber zu erhalten schadet nicht).",
     "flowStep2Title": "Generiere das PKCE-Paar",
     "flowStep2Desc": "Erzeuge einen zufälligen code_verifier mit 43-128 Zeichen und berechne dann code_challenge = BASE64URL(SHA256(code_verifier)). Speichere den Verifier lokal für Schritt 4.",
     "flowStep3Title": "Öffne /oauth/authorize im Browser",

@@ -16,6 +16,12 @@ type Props = {
   children?: ReactNode;
 };
 
+/** Wrapper for a run of StepCards. Required — the connector line between steps
+ * is drawn relative to this element, not to the page. */
+export function Stepper({ children }: { children: ReactNode }) {
+  return <div className={s.stepper}>{children}</div>;
+}
+
 export function StepCard({ num, title, description, image, imageAlt, children }: Props) {
   return (
     <div className={s.card}>

@@ -17,7 +17,10 @@
     "faq": "FAQ",
     "github": "GitHub",
     "quickstart": "빠른 시작",
-    "examples": "예시"
+    "examples": "예시",
+    "toggleTheme": "테마 전환",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기"
   },
   "hero": {
     "titleStart": "당신의 Telegram을",
@@ -198,7 +201,8 @@
         "prompt": "이번 주 제 \"Coworking\" 그룹 대화방에 전송된 모든 음성 메시지를 찾아 주세요. 각각을 받아쓰고, 보낸 사람과 타임스탬프를 포함한 시간순 목록으로 제시해 주세요.",
         "category": "media"
       }
-    }
+    },
+    "catAll": "전체"
   },
   "quickstart": {
     "metaTitle": "빠른 시작 — Telegram을 Claude AI 또는 ChatGPT에 연결",
@@ -280,7 +284,7 @@
     "flowHeading": "PKCE를 사용한 authorization code 플로우",
     "flowLead": "표준 RFC 6749 §4.1 + RFC 7636 플로우입니다. 깜짝 놀랄 일은 없습니다 — 여러분의 OAuth 라이브러리가 \"authorization code + PKCE\"를 처리할 수 있다면 그대로 작동합니다.",
     "flowStep1Title": "클라이언트 등록하기",
-    "flowStep1Desc": "POST /oauth/register에 { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"your-client-name\" }을 전송합니다. 서버는 client_id와 client_secret을 반환합니다 (시크릿은 퍼블릭 PKCE 클라이언트에는 선택 사항이지만 받아도 무방합니다).",
+    "flowStep1Desc": "POST /oauth/register에 '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"your-client-name\" '}'을 전송합니다. 서버는 client_id와 client_secret을 반환합니다 (시크릿은 퍼블릭 PKCE 클라이언트에는 선택 사항이지만 받아도 무방합니다).",
     "flowStep2Title": "PKCE 쌍 생성하기",
     "flowStep2Desc": "43–128자의 랜덤한 code_verifier를 생성한 다음, code_challenge = BASE64URL(SHA256(code_verifier))를 계산합니다. verifier는 4단계를 위해 로컬에 저장하세요.",
     "flowStep3Title": "브라우저에서 /oauth/authorize 열기",

@@ -17,7 +17,10 @@
     "faq": "अक्सर पूछे जाने वाले प्रश्न",
     "github": "GitHub",
     "quickstart": "क्विकस्टार्ट",
-    "examples": "उदाहरण"
+    "examples": "उदाहरण",
+    "toggleTheme": "थीम बदलें",
+    "openMenu": "मेन्यू खोलें",
+    "closeMenu": "मेन्यू बंद करें"
   },
   "hero": {
     "titleStart": "आपका Telegram",
@@ -198,7 +201,8 @@
         "prompt": "इस सप्ताह मेरी \"Coworking\" ग्रुप चैट में भेजे गए सभी वॉइस संदेश ढूँढें। प्रत्येक को ट्रांसक्राइब करें और भेजने वाले व टाइमस्टैम्प के साथ कालक्रमिक सूची के रूप में प्रस्तुत करें।",
         "category": "media"
       }
-    }
+    },
+    "catAll": "सभी"
   },
   "quickstart": {
     "metaTitle": "क्विकस्टार्ट — Telegram को Claude AI या ChatGPT से जोड़ें",
@@ -280,7 +284,7 @@
     "flowHeading": "PKCE के साथ authorization code फ्लो",
     "flowLead": "स्टैंडर्ड RFC 6749 §4.1 + RFC 7636 फ्लो। कोई सरप्राइज नहीं — अगर आपकी OAuth लाइब्रेरी «authorization code + PKCE» को हैंडल करती है, तो यह काम करेगा।",
     "flowStep1Title": "अपने क्लाइंट को रजिस्टर करें",
-    "flowStep1Desc": "POST /oauth/register पर { redirect_uris: [\"http://127.0.0.1:<port>/callback\"], client_name: \"your-client-name\" } भेजें। सर्वर client_id + client_secret लौटाता है (secret पब्लिक PKCE क्लाइंट्स के लिए ऑप्शनल है, लेकिन इसे रिसीव करने में कोई नुकसान नहीं)।",
+    "flowStep1Desc": "POST /oauth/register पर '{' redirect_uris: [\"http://127.0.0.1:«port»/callback\"], client_name: \"your-client-name\" '}' भेजें। सर्वर client_id + client_secret लौटाता है (secret पब्लिक PKCE क्लाइंट्स के लिए ऑप्शनल है, लेकिन इसे रिसीव करने में कोई नुकसान नहीं)।",
     "flowStep2Title": "PKCE पेयर जनरेट करें",
     "flowStep2Desc": "एक रैंडम 43–128 कैरेक्टर का code_verifier जनरेट करें, फिर code_challenge = BASE64URL(SHA256(code_verifier)) कैलकुलेट करें। verifier को स्टेप 4 के लिए लोकली स्टोर रखें।",
     "flowStep3Title": "ब्राउज़र में /oauth/authorize खोलें",
