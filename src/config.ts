@@ -110,7 +110,15 @@ export const issuerUrl = (name: string, value: string): string => {
       `Env var ${name} must be a bare origin (scheme://host[:port]) with no path, query or fragment, got: ${normalized}`,
     );
   }
-  return parsed.origin;
+  // Returns the operator's spelling (minus trailing slashes), NOT `parsed.origin`.
+  // RFC 8414 §2 compares issuer identifiers by exact string, and `URL.origin`
+  // would silently rewrite one: lowercasing the host, punycoding an IDN, and
+  // dropping an explicit :443/:80. A self-hoster configured as
+  // `https://MyHost.com:443` would then publish a different issuer than the one
+  // their clients already cached. Validation is the job here; canonicalisation
+  // is not ours to impose. URL building goes through `rootUrl`, which does
+  // normalise — safe, because that produces a URL, not an identifier.
+  return normalized;
 };
 
 export const config = {

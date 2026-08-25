@@ -73,7 +73,11 @@ describe("issuerUrl", () => {
     assert.throws(() => issuerUrl("ISSUER", "https://host.example.com#frag"), /must be a bare origin/);
   });
 
-  it("normalises to the origin form the rest of the code assumes", () => {
-    assert.equal(issuerUrl("ISSUER", "HTTPS://MCP.Example.COM"), "https://mcp.example.com");
+  it("preserves the operator's exact spelling — an issuer identifier is compared as a string", () => {
+    // RFC 8414 §2: issuer identifiers are compared with simple string equality.
+    // Canonicalising here (lowercasing, punycoding, dropping :443) would publish
+    // a different issuer than the one existing clients cached.
+    assert.equal(issuerUrl("ISSUER", "HTTPS://MCP.Example.COM"), "HTTPS://MCP.Example.COM");
+    assert.equal(issuerUrl("ISSUER", "https://mcp.example.com:443"), "https://mcp.example.com:443");
   });
 });
