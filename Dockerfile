@@ -24,7 +24,7 @@ COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 # the runtime, keeping it lean (React lives only inside the SSR bundles, never
 # in the backend's deps). If this stage's output were ever absent the server
 # falls back to the legacy hono pages (reactPagesAvailable() === false).
-FROM oven/bun:1.3.14-alpine AS app-builder
+FROM oven/bun:1.4.0-alpine AS app-builder
 # Build the app workspace standalone (its package.json is self-contained:
 # react, react-dom, vite, @vitejs/plugin-react). Installing it in isolation
 # avoids pulling the root workspace graph (Next.js/web deps) into this stage and
@@ -40,7 +40,7 @@ COPY app/tsconfig.json app/biome.json app/vite.config.ts app/vite.ssr.config.ts 
 RUN bun run build
 
 # Stage 3: Production runtime — Bun runs .ts directly, no build step
-FROM oven/bun:1.3.14-alpine
+FROM oven/bun:1.4.0-alpine
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
