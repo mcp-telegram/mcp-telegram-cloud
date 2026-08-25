@@ -17,17 +17,22 @@ const optional = (value: string | undefined, fallback: string): string => value?
  * setting `javascript:alert(1)` would otherwise create an XSS sink that
  * fires for every visitor. Exported for unit tests; not for runtime use
  * outside config.ts. */
-export const httpUrl = (name: string, value: string): string => {
+const parseHttpUrl = (name: string, value: string): URL => {
+  let parsed: URL;
   try {
-    const parsed = new URL(value);
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-      throw new Error(`Env var ${name} must be an http(s) URL, got protocol "${parsed.protocol}".`);
-    }
-    return value;
-  } catch (err) {
-    if (err instanceof Error && err.message.startsWith("Env var")) throw err;
+    parsed = new URL(value);
+  } catch {
     throw new Error(`Env var ${name} is not a valid URL: ${value}`);
   }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error(`Env var ${name} must be an http(s) URL, got protocol "${parsed.protocol}".`);
+  }
+  return parsed;
+};
+
+export const httpUrl = (name: string, value: string): string => {
+  parseHttpUrl(name, value);
+  return value;
 };
 
 const DEFAULT_SOURCE_REPO_URL = "https://github.com/mcp-telegram/mcp-telegram-cloud";
@@ -59,10 +64,59 @@ export const parseTelemetryMode = (raw: string | undefined): TelemetryMode => {
   return "local-only";
 };
 
+/**
+ * ISSUER is the most load-bearing URL in the process: OAuth issuer, base for
+ * every absolute link, the `resource` identifier advertised to MCP clients, and
+ * the value embedded in the `WWW-Authenticate` header of a 401. It used to be
+ * the ONLY url-shaped env var that skipped {@link httpUrl}, so `ISSUER=not-a-url`
+ * booted fine and produced broken discovery metadata at runtime instead.
+ *
+ * It must be a bare ORIGIN, and that is enforced rather than assumed. The whole
+ * codebase already treats it as one — every route is mounted at `/`, the RFC 8414
+ * and RFC 9728 documents are served from the root well-known paths, and
+ * `routes/my.tsx` compares `new URL(origin).origin === config.issuer` — so a
+ * path-bearing `https://host/base` silently half-works: some URLs would be built
+ * with the prefix, others without, and the same-origin check would reject valid
+ * requests. Failing at boot is the only honest outcome.
+ *
+ * Checks, and why each exists:
+ *  - raw quote/backslash/whitespace: the value is emitted inside the quoted
+ *    `resource_metadata="..."` parameter of WWW-Authenticate. Inspecting the
+ *    PARSED host is not enough — `https://ho\st.example` parses to host `ho`
+ *    with the rest pushed into the path, so the check would pass while the
+ *    effective issuer silently differs from what the operator configured.
+ *  - userinfo: `https://user:pass@host` would be republished as discovery
+ *    metadata, leaking the credentials to every client that fetches it.
+ *  - path/query/fragment: see above — not an origin.
+ */
+export const issuerUrl = (name: string, value: string): string => {
+  // Control characters are tested by code point rather than as a regex range:
+  // a literal control char inside a regex literal is itself a lint error, and
+  // spelling the bound out is clearer than an escaped range anyway.
+  const hasControlChar = Array.from(value).some((ch) => {
+    const code = ch.codePointAt(0) ?? 0;
+    return code < 0x20 || code === 0x7f;
+  });
+  if (/["\\\s]/.test(value) || hasControlChar) {
+    throw new Error(`Env var ${name} must not contain quotes, backslashes, whitespace or control characters.`);
+  }
+  const normalized = value.replace(/\/+$/, "");
+  const parsed = parseHttpUrl(name, normalized);
+  if (parsed.username || parsed.password) {
+    throw new Error(`Env var ${name} must not contain userinfo (user:pass@) — it is published in OAuth metadata.`);
+  }
+  if (parsed.pathname !== "/" || parsed.search || parsed.hash) {
+    throw new Error(
+      `Env var ${name} must be a bare origin (scheme://host[:port]) with no path, query or fragment, got: ${normalized}`,
+    );
+  }
+  return parsed.origin;
+};
+
 export const config = {
   /** Public origin (scheme + host, no trailing slash) — used in OAuth metadata
    * and absolute URLs in the landing/OAuth pages. */
-  issuer: required("ISSUER", process.env.ISSUER).replace(/\/+$/, ""),
+  issuer: issuerUrl("ISSUER", required("ISSUER", process.env.ISSUER)),
   port: intOr(process.env.PORT, 3000),
   brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
   contactEmail: optional(process.env.CONTACT_EMAIL, ""),

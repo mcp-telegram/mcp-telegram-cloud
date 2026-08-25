@@ -9,6 +9,7 @@ import { mcpRateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
 import type { UsageTracker } from "../usage.js";
+import { MCP_RESOURCE_METADATA_PATH, rootUrl } from "./oauth.js";
 
 export interface McpRoutesDeps {
   oauth: OAuthProvider;
@@ -28,6 +29,15 @@ export interface McpRoutesDeps {
  * with explicit paths is the portable approach.
  */
 export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructive, uploads }: McpRoutesDeps): void {
+  // Wildcard origin is deliberate and safe HERE, because this endpoint is
+  // Bearer-only: identity comes from an OAuth access token in the Authorization
+  // header, never from a cookie (see the handler below). `credentials` is NOT
+  // enabled, so a browser will not attach cookies cross-origin, and a hostile
+  // page still has no way to obtain a token belonging to someone else. The
+  // permissive value is required in practice — MCP clients are an open set
+  // (ChatGPT, Claude, Cursor, Codex, ...) whose origins cannot be enumerated.
+  // cors-wildcard-credentials.test.ts pins the invariant: if anyone ever adds
+  // `credentials: true` next to this wildcard, that test fails.
   const corsMiddleware = cors({
     origin: "*",
     allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
@@ -66,12 +76,19 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
     }
 
     if (!userId) {
+      // MCP authorization spec: a 401 MUST carry WWW-Authenticate pointing at
+      // the resource metadata document, otherwise the client has to guess the
+      // discovery path. Without this header production clients probed two
+      // different well-known layouts ~280 times a day and got 404 on both.
       return c.json(
         {
           error: "unauthorized",
           message: "Bearer token required. Use OAuth 2.0 flow to authenticate.",
         },
         401,
+        {
+          "WWW-Authenticate": `Bearer resource_metadata="${rootUrl(config.issuer, MCP_RESOURCE_METADATA_PATH)}"`,
+        },
       );
     }
 

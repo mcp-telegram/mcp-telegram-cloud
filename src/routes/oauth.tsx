@@ -34,22 +34,74 @@ async function parseTokenParams(c: Context): Promise<Record<string, string>> {
 }
 
 /**
+ * RFC 9728 protected-resource metadata document.
+ *
+ * `resource` must be the canonical identifier of the resource the client is
+ * actually calling. For the MCP transport that is `<issuer>/mcp`, not the bare
+ * issuer — a client that validates the document against the endpoint it is
+ * talking to rejects a mismatched identifier.
+ */
+export function protectedResourceMetadata(resource: string) {
+  return {
+    resource,
+    authorization_servers: [config.issuer],
+    scopes_supported: ["mcp:read"],
+    bearer_methods_supported: ["header"],
+  };
+}
+
+/** Path where a client discovers metadata for the `/mcp` resource (RFC 9728 §3.1). */
+export const MCP_RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource/mcp";
+
+/**
+ * Absolute URL for a path this server mounts at its ROOT, derived from `issuer`.
+ *
+ * Deliberately resolves against the issuer's *origin*, discarding any path
+ * component. ISSUER is only validated as an http(s) URL, so `https://host/base`
+ * is accepted — and naive concatenation would then advertise
+ * `https://host/base/.well-known/...`, which nothing serves, because every route
+ * here is mounted at `/`. Resolving through `URL` also normalises the result, so
+ * a stray quote in the configured value cannot escape the quoted
+ * `resource_metadata="..."` parameter of a WWW-Authenticate header.
+ *
+ * Returns `origin + path`, dropping any userinfo the issuer might carry so it
+ * cannot be republished as discovery metadata. No try/catch fallback on
+ * purpose: `config.issuerUrl` validates ISSUER at boot, so an unparseable value
+ * can never reach here — and a silent concatenating fallback would quietly
+ * reintroduce exactly the malformed URL this function exists to prevent.
+ */
+export function rootUrl(issuer: string, path: string): string {
+  const url = new URL(path, issuer);
+  return `${url.origin}${url.pathname}`;
+}
+
+/**
  * Well-known OAuth metadata (RFC 8414 + RFC 9728). Mounted at root `/`,
  * not `/oauth/*`, because discovery clients fetch these at fixed paths.
+ *
+ * Three protected-resource paths are served on purpose:
+ *  - `/.well-known/oauth-protected-resource` — the original bare path. Kept so
+ *    clients that already discover us here do not regress; its `resource` stays
+ *    the issuer it has always advertised.
+ *  - `/.well-known/oauth-protected-resource/mcp` — RFC 9728 path-insertion for
+ *    resource `<issuer>/mcp`. This is what the MCP spec tells clients to fetch
+ *    and what our 401 now points at.
+ *  - `/mcp/.well-known/oauth-protected-resource` — the pre-RFC layout some
+ *    clients still try first.
+ *
+ * Before this existed both spec-shaped paths 404'd, and production logs showed
+ * ~280 failed discovery attempts a day split across the two.
  */
 export function createOAuthWellKnownRoutes(oauth: OAuthProvider): Hono {
   const app = new Hono();
 
   app.get("/.well-known/oauth-authorization-server", (c) => c.json(oauth.getMetadata()));
 
-  app.get("/.well-known/oauth-protected-resource", (c) =>
-    c.json({
-      resource: config.issuer,
-      authorization_servers: [config.issuer],
-      scopes_supported: ["mcp:read"],
-      bearer_methods_supported: ["header"],
-    }),
-  );
+  app.get("/.well-known/oauth-protected-resource", (c) => c.json(protectedResourceMetadata(config.issuer)));
+
+  const mcpResource = rootUrl(config.issuer, "/mcp");
+  app.get(MCP_RESOURCE_METADATA_PATH, (c) => c.json(protectedResourceMetadata(mcpResource)));
+  app.get("/mcp/.well-known/oauth-protected-resource", (c) => c.json(protectedResourceMetadata(mcpResource)));
 
   return app;
 }

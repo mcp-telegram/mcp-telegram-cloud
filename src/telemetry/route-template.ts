@@ -27,6 +27,8 @@ const STATIC = new Set([
   "/security.txt",
   "/.well-known/oauth-authorization-server",
   "/.well-known/oauth-protected-resource",
+  "/.well-known/oauth-protected-resource/mcp",
+  "/mcp/.well-known/oauth-protected-resource",
   "/oauth/authorize",
   "/oauth/authorize/qr",
   "/oauth/authorize/qr/cookie",
