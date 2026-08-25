@@ -48,9 +48,12 @@ describe("isPrivateAddress — IPv6 ranges", () => {
     "fe80::1", // link-local
     "fec0::1", // deprecated site-local
     "ff02::1", // multicast
-    "::ffff:127.0.0.1", // IPv4-mapped loopback
-    "::ffff:10.0.0.1", // IPv4-mapped private
-    "::ffff:169.254.169.254", // IPv4-mapped metadata
+    "::ffff:127.0.0.1", // IPv4-mapped loopback (decimal)
+    "::ffff:10.0.0.1", // IPv4-mapped private (decimal)
+    "::ffff:169.254.169.254", // IPv4-mapped metadata (decimal)
+    "::ffff:7f00:1", // IPv4-mapped loopback (hex)
+    "::ffff:a00:114", // IPv4-mapped 10.0.1.20 (hex)
+    "::ffff:a9fe:a9fe", // IPv4-mapped 169.254.169.254 (hex)
   ];
   for (const ip of PRIVATE_IPV6) {
     it(`rejects ${ip} as private`, () => {

@@ -155,7 +155,23 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
       }
       // Resolve relative redirects against the ORIGINAL hostname URL, not the
       // IP-pinned one, so the next hop re-validates the real host.
-      currentUrl = new URL(loc, validated.url).toString();
+      //
+      // Guarded because `loc` is attacker-controlled: a hostile upstream can
+      // answer with `Location: https://[::bad`, and an unguarded `new URL`
+      // would throw straight out of this function — breaking the contract
+      // documented above ("never throws on policy violations") and turning a
+      // remote server's response into a 500 on our side.
+      let next: string;
+      try {
+        next = new URL(loc, validated.url).toString();
+      } catch {
+        return {
+          ok: false,
+          reason: "bad_url",
+          message: `Redirect ${res.status} pointed at an unparseable Location: ${truncate(loc, 80)}`,
+        };
+      }
+      currentUrl = next;
       continue;
     }
 
@@ -168,7 +184,7 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
       return { ok: false, reason: "non_2xx", message: `Upstream returned HTTP ${res.status}` };
     }
 
-    return await streamBody(res, currentUrl, opts.maxBytes);
+    return streamBody(res, currentUrl, opts.maxBytes);
   }
   return { ok: false, reason: "redirect_limit", message: `Too many redirects (>${MAX_REDIRECTS})` };
 }
@@ -306,7 +322,23 @@ async function streamBody(res: Response, finalUrl: string, maxBytes: number): Pr
   const chunks: Uint8Array[] = [];
   let total = 0;
   while (true) {
-    const { value, done } = await reader.read();
+    // Guarded because the peer controls this stream: a server that aborts
+    // mid-body makes `read()` reject, and an unguarded await would throw out
+    // of fetchUrlSafely, breaking the "deny envelope is the contract" promise
+    // and surfacing as a 500 instead of a handled upload failure.
+    // Derived from the reader itself: the global DOM type name for this result
+    // is not in scope under this tsconfig's lib set.
+    let chunk: Awaited<ReturnType<typeof reader.read>>;
+    try {
+      chunk = await reader.read();
+    } catch (e) {
+      return {
+        ok: false,
+        reason: "fetch_failed",
+        message: `Upstream aborted the response body: ${truncate((e as Error).message ?? String(e), 120)}`,
+      };
+    }
+    const { value, done } = chunk;
     if (done) break;
     if (!value) continue;
     total += value.byteLength;
@@ -346,12 +378,34 @@ export function isPrivateAddress(addr: string): boolean {
   // IPv6: normalize lowercase, strip brackets if any caller leaked them.
   const norm = addr.toLowerCase().replace(/^\[|\]$/g, "");
 
-  // IPv4-mapped IPv6: ::ffff:1.2.3.4 — apply IPv4 rules to the embedded address
-  // so an attacker can't bypass via mapped form.
+  // IPv4-mapped IPv6: две формы:
+  //   • десятичная ::ffff:1.2.3.4   — Node/browsers сохраняют её как есть
+  //   • hex         ::ffff:a00:114  — node:net.isIP возвращает 6, tail не IPv4
+  // Обе нужно прогнать через isPrivateIPv4, иначе ::ffff:10.0.1.20 проходит.
   if (norm.startsWith("::ffff:")) {
     const tail = norm.slice("::ffff:".length);
     if (isIP(tail) === 4) return isPrivateIPv4(tail);
+    // hex-форма: ровно два hex-слова «aabb:ccdd» → IPv4 aabb>>8.aabb&ff.ccdd>>8.ccdd&ff
+    const hexMatch = tail.match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+    if (hexMatch) {
+      const hi = Number.parseInt(hexMatch[1], 16);
+      const lo = Number.parseInt(hexMatch[2], 16);
+      const ipv4 = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+      return isPrivateIPv4(ipv4);
+    }
+    // ни та, ни другая форма — блокируем на всякий случай (неизвестная структура)
+    return true;
   }
+
+  // ...and the SAME address in hex form. This is the branch that matters in
+  // practice: `new URL()` rewrites `[::ffff:10.0.1.20]` to `[::ffff:a00:114]`
+  // BEFORE any of this runs, so the dotted check above never sees the attack
+  // — the hostname reaching us is already hex. Without this, an internal
+  // address (our own swarm backend lives on 10.0.1.20) sailed through as
+  // "public". Also covers IPv4-compatible ::a00:114 and NAT64 64:ff9b::/96,
+  // which embed an IPv4 destination just as effectively.
+  const embedded = embeddedIPv4(norm);
+  if (embedded !== null) return isPrivateIPv4(embedded);
 
   // Exact unspecified / loopback
   if (norm === "::" || norm === "::1") return true;
@@ -363,6 +417,63 @@ export function isPrivateAddress(addr: string): boolean {
     if (norm.startsWith(prefix)) return true;
   }
   return false;
+}
+
+/**
+ * Expand an IPv6 literal to its 8 numeric groups, or null if it isn't parseable.
+ * Handles `::` compression and a trailing dotted-quad (`::ffff:1.2.3.4`).
+ */
+function expandIPv6(addr: string): number[] | null {
+  let s = addr;
+
+  // Trailing dotted quad -> two hex groups, so one code path handles both forms.
+  const dotted = s.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (dotted) {
+    const o = dotted[1].split(".").map(Number);
+    if (o.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+    const head = ((o[0] << 8) | o[1]).toString(16);
+    const tail = ((o[2] << 8) | o[3]).toString(16);
+    s = `${s.slice(0, -dotted[1].length)}${head}:${tail}`;
+  }
+
+  const halves = s.split("::");
+  if (halves.length > 2) return null;
+  const parse = (part: string): number[] | null => {
+    if (part === "") return [];
+    const out: number[] = [];
+    for (const g of part.split(":")) {
+      if (!/^[0-9a-f]{1,4}$/.test(g)) return null;
+      out.push(Number.parseInt(g, 16));
+    }
+    return out;
+  };
+
+  const head = parse(halves[0]);
+  const tail = halves.length === 2 ? parse(halves[1]) : [];
+  if (head === null || tail === null) return null;
+
+  if (halves.length === 1) return head.length === 8 ? head : null;
+  const fill = 8 - head.length - tail.length;
+  if (fill < 0) return null;
+  return [...head, ...Array<number>(fill).fill(0), ...tail];
+}
+
+/**
+ * If `addr` is an IPv6 form that embeds an IPv4 destination, return that IPv4 as
+ * a dotted quad. Covers IPv4-mapped (::ffff:0:0/96), the deprecated
+ * IPv4-compatible (::/96) and NAT64 (64:ff9b::/96) — all three reach an IPv4
+ * host, so all three must be judged by IPv4 rules.
+ */
+function embeddedIPv4(addr: string): string | null {
+  const g = expandIPv6(addr);
+  if (g === null) return null;
+
+  const isMapped = g[0] === 0 && g[1] === 0 && g[2] === 0 && g[3] === 0 && g[4] === 0 && g[5] === 0xffff;
+  const isCompat = g.slice(0, 6).every((x) => x === 0) && !(g[6] === 0 && (g[7] === 0 || g[7] === 1));
+  const isNat64 = g[0] === 0x64 && g[1] === 0xff9b && g[2] === 0 && g[3] === 0 && g[4] === 0 && g[5] === 0;
+  if (!isMapped && !isCompat && !isNat64) return null;
+
+  return [g[6] >> 8, g[6] & 0xff, g[7] >> 8, g[7] & 0xff].join(".");
 }
 
 function isPrivateIPv4(addr: string): boolean {
