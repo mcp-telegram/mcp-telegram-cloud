@@ -88,6 +88,17 @@ function isAuthError(error: unknown): boolean {
   return AUTH_ERROR_PATTERNS.some((p) => msg.includes(p));
 }
 
+/**
+ * Tools already reported as env-gated in this process. See the dedupe rationale at the
+ * `tool.skipped` call site. Exported only for tests, which must reset it between cases.
+ */
+const loggedSkips = new Set<string>();
+
+/** Test-only: clear the per-process `tool.skipped` dedupe set. */
+export function resetSkipLogDedupe(): void {
+  loggedSkips.clear();
+}
+
 const SESSION_REVOKED_MSG =
   "Telegram session was revoked or expired. Please reconnect: Disconnect → Connect again in your app settings.";
 
@@ -145,12 +156,19 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
 
   for (const tool of tools) {
     if (tool.requiresEnv && process.env[tool.requiresEnv] !== "1") {
-      logger.info(`Skipping tool ${tool.name}: env ${tool.requiresEnv} not set`, {
-        component: "tools",
-        event: "tool.skipped",
-        tool: tool.name,
-        env: tool.requiresEnv,
-      });
+      // Registration runs once per MCP session, but which tools are env-gated is a
+      // process-level constant, so re-logging it per session said nothing new and made
+      // `tool.skipped` ~45% of all log volume (136k records/week against 10k tool calls).
+      // Emit once per process: same diagnostic for self-hosters, no per-session repetition.
+      if (!loggedSkips.has(tool.name)) {
+        loggedSkips.add(tool.name);
+        logger.info(`Skipping tool ${tool.name}: env ${tool.requiresEnv} not set`, {
+          component: "tools",
+          event: "tool.skipped",
+          tool: tool.name,
+          env: tool.requiresEnv,
+        });
+      }
       continue;
     }
 
@@ -213,8 +231,11 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
               telegram = opts.getTelegram();
             } catch (err) {
               if (!tool.skipRequireConnection) throw err;
-              // Dummy placeholder only reachable from handlers that don't dereference
-              // `telegram`; the cast lets us keep `telegram` non-nullable in ToolDeps.
+              // SAFETY: reached only when `tool.skipRequireConnection` is true (guarded on
+              // the line above). Those handlers are contractually barred from dereferencing
+              // `deps.telegram` — they work through `deps.sessions` instead — so the value is
+              // never observed. The cast keeps `telegram` non-nullable in ToolDeps for the
+              // other ~170 tools rather than forcing a null check into every one of them.
               telegram = undefined as unknown as TelegramService;
             }
             const deps: ToolDeps = {

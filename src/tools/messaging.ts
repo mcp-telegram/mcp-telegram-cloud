@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  checkMessageLength,
   DESTRUCTIVE,
   errorResult,
   premiumOnlyOnError,
@@ -253,6 +254,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         ),
     },
     annotations: WRITE,
+    preValidate: ({ text }) => checkMessageLength(text),
     handler: async ({ chatId, text, replyTo, parseMode, topicId, quoteText, effect }, { telegram }) => {
       const extra = quoteText || effect ? { quoteText: safeOpt(quoteText), effect } : undefined;
       const result = await telegram.sendMessage(chatId, sanitize(text), replyTo, parseMode, topicId, extra);
@@ -271,6 +273,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       text: z.string().describe("New message text"),
     },
     annotations: WRITE,
+    preValidate: ({ text }) => checkMessageLength(text),
     handler: async ({ chatId, messageId, text }, { telegram }) => {
       await telegram.editMessage(chatId, messageId, sanitize(text));
       return textResult(`Message ${messageId} edited in ${chatId}`);
@@ -617,7 +620,9 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       parseMode: z.enum(["md", "html"]).optional().describe("Message format: md (Markdown) or html"),
     },
     annotations: WRITE,
-    preValidate: ({ scheduleDate }) => {
+    preValidate: ({ text, scheduleDate }) => {
+      const tooLong = checkMessageLength(text);
+      if (tooLong) return tooLong;
       const nowSec = Math.floor(Date.now() / 1000);
       return scheduleDate <= nowSec ? errorResult("scheduleDate must be a Unix timestamp in the future") : null;
     },

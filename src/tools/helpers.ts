@@ -142,6 +142,34 @@ export function errorResult(text: string) {
 }
 
 /**
+ * Telegram's hard cap for one message's text, in UTF-16 code units — the unit `String.length`
+ * counts and the unit MTProto measures. Media captions are capped lower (1024) and are
+ * enforced separately by the upload tools.
+ */
+export const MAX_MESSAGE_LENGTH = 4096;
+
+/**
+ * `preValidate` guard for message text length.
+ *
+ * Without it an over-long message costs a full MTProto round-trip and comes back as the
+ * opaque `400: MESSAGE_TOO_LONG (caused by messages.SendMessage)` — the single most common
+ * `telegram-send-message` failure in production (18 of 22 errors over 7 days), because LLM
+ * clients have no feel for the 4096 cap. Reporting the measured length and the overshoot
+ * lets the caller fix it in one step instead of guessing.
+ *
+ * Deliberately NOT auto-splitting: silently turning one requested message into three is a
+ * visible, unrequested action in someone else's chat.
+ */
+export function checkMessageLength(text: string, field = "text") {
+  if (text.length <= MAX_MESSAGE_LENGTH) return null;
+  const over = text.length - MAX_MESSAGE_LENGTH;
+  return errorResult(
+    `Message ${field} is ${text.length} characters — Telegram's limit is ${MAX_MESSAGE_LENGTH} (${over} over). ` +
+      "Split it into separate messages, or send it as a file with telegram-send-file.",
+  );
+}
+
+/**
  * Build an `onError` mapper that converts Telegram's PREMIUM/PAYMENT_REQUIRED faults into a
  * single human-readable message. Returns `null` for unrelated errors so the default mapper runs.
  * Use for tools whose only Telegram-side gating is "needs Premium" (e.g. emoji status, stealth mode).
