@@ -254,7 +254,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         ),
     },
     annotations: WRITE,
-    preValidate: ({ text }) => checkMessageLength(text),
+    preValidate: ({ text, parseMode }) => checkMessageLength(text, parseMode),
     handler: async ({ chatId, text, replyTo, parseMode, topicId, quoteText, effect }, { telegram }) => {
       const extra = quoteText || effect ? { quoteText: safeOpt(quoteText), effect } : undefined;
       const result = await telegram.sendMessage(chatId, sanitize(text), replyTo, parseMode, topicId, extra);
@@ -620,8 +620,8 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       parseMode: z.enum(["md", "html"]).optional().describe("Message format: md (Markdown) or html"),
     },
     annotations: WRITE,
-    preValidate: ({ text, scheduleDate }) => {
-      const tooLong = checkMessageLength(text);
+    preValidate: ({ text, parseMode, scheduleDate }) => {
+      const tooLong = checkMessageLength(text, parseMode);
       if (tooLong) return tooLong;
       const nowSec = Math.floor(Date.now() / 1000);
       return scheduleDate <= nowSec ? errorResult("scheduleDate must be a Unix timestamp in the future") : null;

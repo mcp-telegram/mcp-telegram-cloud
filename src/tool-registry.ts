@@ -89,8 +89,8 @@ function isAuthError(error: unknown): boolean {
 }
 
 /**
- * Tools already reported as env-gated in this process. See the dedupe rationale at the
- * `tool.skipped` call site. Exported only for tests, which must reset it between cases.
+ * `tool:env` pairs already reported as env-gated in this process. See the dedupe rationale
+ * at the `tool.skipped` call site.
  */
 const loggedSkips = new Set<string>();
 
@@ -160,8 +160,11 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
       // process-level constant, so re-logging it per session said nothing new and made
       // `tool.skipped` ~45% of all log volume (136k records/week against 10k tool calls).
       // Emit once per process: same diagnostic for self-hosters, no per-session repetition.
-      if (!loggedSkips.has(tool.name)) {
-        loggedSkips.add(tool.name);
+      // Keyed by tool AND env var: two definitions gated on different flags must each be
+      // reported, so the dedupe can never hide a distinct skip reason.
+      const skipKey = `${tool.name}:${tool.requiresEnv}`;
+      if (!loggedSkips.has(skipKey)) {
+        loggedSkips.add(skipKey);
         logger.info(`Skipping tool ${tool.name}: env ${tool.requiresEnv} not set`, {
           component: "tools",
           event: "tool.skipped",

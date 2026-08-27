@@ -102,16 +102,26 @@ export function normalizeArgs(
  * (`MCP error -32602: Input validation error: ...`). So the only way to see a schema
  * rejection is to inspect the RESULT — a `catch` block never fires for it.
  */
-const VALIDATION_ERROR_MARKER = "Input validation error: Invalid arguments for tool";
+function validationErrorPrefix(toolName: string): string {
+  return `MCP error ${ErrorCode.InvalidParams}: Input validation error: Invalid arguments for tool ${toolName}:`;
+}
 
-/** Extract the SDK validation message from a CallToolResult, or undefined if it isn't one. */
-export function readValidationError(result: unknown): string | undefined {
+/**
+ * Extract the SDK validation message from a CallToolResult, or undefined if it isn't one.
+ *
+ * Anchored with `startsWith` on the full prefix — JSON-RPC code, SDK wording, and the tool
+ * name actually being called. A substring search would mislabel any ordinary tool error that
+ * merely quoted that wording (e.g. a Telegram message echoed back into an error string) as a
+ * schema rejection, poisoning the `tool.invalid_args` metric this exists to make trustworthy.
+ */
+export function readValidationError(result: unknown, toolName: string): string | undefined {
   if (!isPlainObject(result) || result.isError !== true) return undefined;
   if (!Array.isArray(result.content)) return undefined;
 
+  const prefix = validationErrorPrefix(toolName);
   for (const block of result.content) {
     if (!isPlainObject(block) || block.type !== "text" || typeof block.text !== "string") continue;
-    if (block.text.includes(VALIDATION_ERROR_MARKER)) return block.text;
+    if (block.text.startsWith(prefix)) return block.text;
   }
   return undefined;
 }
@@ -197,7 +207,7 @@ export function installCallToolInterceptor(server: McpServer, aliases: ArgAliase
     try {
       const result = await inner(effective, extra);
       // Primary path today: the SDK swallows its own InvalidParams and returns it as a result.
-      const validationError = readValidationError(result);
+      const validationError = readValidationError(result, toolName);
       if (validationError) logInvalidArgs(validationError);
       return result;
     } catch (e) {

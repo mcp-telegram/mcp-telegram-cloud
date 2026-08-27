@@ -151,7 +151,26 @@ describe("installCallToolInterceptor", () => {
 
     assert.equal(result.isError, true);
     assert.deepEqual(seen, [], "handler must not run for a schema-invalid call");
-    assert.equal(extractInvalidField(readValidationError(result) ?? ""), "text");
+    assert.equal(extractInvalidField(readValidationError(result, "telegram-send-message") ?? ""), "text");
+  });
+
+  it("does not label an ordinary tool error as a schema rejection", () => {
+    // A tool error that merely quotes the SDK wording must not poison tool.invalid_args.
+    const quoted = {
+      isError: true,
+      content: [{ type: "text", text: "Error: user sent 'Input validation error: Invalid arguments for tool x'" }],
+    };
+    assert.equal(readValidationError(quoted, "telegram-send-message"), undefined);
+  });
+
+  it("does not attribute another tool's validation error to this tool", () => {
+    const other = {
+      isError: true,
+      content: [
+        { type: "text", text: "MCP error -32602: Input validation error: Invalid arguments for tool other-tool: boom" },
+      ],
+    };
+    assert.equal(readValidationError(other, "telegram-send-message"), undefined);
   });
 
   it("leaves a well-formed call byte-identical", async () => {
