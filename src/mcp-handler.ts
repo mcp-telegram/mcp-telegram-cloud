@@ -8,7 +8,8 @@ import { CLIENT_CLASSES, type ClientClass, classifyClient } from "./middleware/c
 import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, RATE_LIMIT_HITS } from "./telemetry/metrics.js";
-import { registerAllAllowedTools } from "./tools.js";
+import { installCallToolInterceptor } from "./tool-call-interceptor.js";
+import { ARG_ALIASES, registerAllAllowedTools } from "./tools.js";
 import type { UploadStore } from "./upload-store.js";
 import { fetchUrlSafely } from "./url-fetcher.js";
 import type { UsageTracker } from "./usage.js";
@@ -511,6 +512,11 @@ export async function handleMcpRequest(
     recordDestructive,
     { userId, uploads, fetchUrl: fetchUrlSafely, sessions, baseUrl: config.issuer },
   );
+
+  // Must run after registration: McpServer installs the `tools/call` handler lazily on the
+  // first registerTool, and this wraps that handler to normalize argument aliases and to
+  // log schema-rejected calls the SDK would otherwise swallow before any of our code runs.
+  installCallToolInterceptor(server, ARG_ALIASES, { userId: logUser(userId), client: clientName });
 
   await server.connect(transport);
   return transport.handleRequest(req);

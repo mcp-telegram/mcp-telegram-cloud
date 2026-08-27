@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import type { SessionManager } from "./session-manager.js";
+import { type ArgAliases, buildArgAliases } from "./tool-call-interceptor.js";
 import {
   type DestructiveCheck,
   type DestructiveRecord,
@@ -36,6 +37,14 @@ export const TOOLS: ToolDefinition[] = [
   ...UPLOAD_TOOLS,
   ...ACCOUNTS_TOOLS,
 ];
+
+/**
+ * Per-tool argument aliases derived from {@link TOOLS}' own input schemas.
+ *
+ * Computed once at module load (the catalog is static) and consumed by
+ * `installCallToolInterceptor` on every MCP session.
+ */
+export const ARG_ALIASES: ArgAliases = buildArgAliases(TOOLS);
 
 /**
  * Register all whitelisted Telegram tools on the given MCP server.

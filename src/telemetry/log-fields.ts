@@ -67,6 +67,19 @@ export type LogFields = Partial<{
   uploadId: string;
   /** Tool name (e.g. `send-message`). */
   tool: string;
+  /**
+   * Name of an input-schema field a tool call referred to — the field that failed
+   * validation (`tool.invalid_args`) or the canonical field an alias resolved to
+   * (`tool.args_normalized`). Schema key, never a value: bounded by our own tool
+   * definitions and free of user content.
+   */
+  field: string;
+  /**
+   * Non-canonical argument key received from a client and renamed to `field`
+   * (e.g. `message` → `text`). Bounded by the alias table in
+   * `tool-call-interceptor.ts`; a schema key, not a value.
+   */
+  alias: string;
   /** OAuth client_id (public token, not user PII). */
   clientId: string;
   /**
