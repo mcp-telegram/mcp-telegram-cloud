@@ -2,16 +2,19 @@
 #
 # One Go regex per line, matched against the repository-relative file path.
 # Keep this list minimal and justified: every entry is a blind spot for this
-# scanner. Gitleaks (the sibling job in security.yml) still scans these files,
-# so nothing here is left completely unscanned.
+# scanner. Gitleaks (the sibling job in security-scan.yml) still scans these
+# same files, so nothing listed here is left completely unscanned.
 #
 # Why these three:
 # Commit 02fe627 ("fix(oauth): serve protected-resource metadata at the spec
-# paths") added literal `https://user:pass@host` strings that exist precisely to
-# prove userinfo is REJECTED (config.ts) and STRIPPED (the two tests). They are
-# fixtures and prose, not credentials. Because a full-history scan re-reads that
-# immutable commit on every run, an inline `trufflehog:ignore` at HEAD cannot
-# clear them — only a path exclusion can.
+# paths") added URL fixtures carrying userinfo, which exist precisely to prove
+# that userinfo is REJECTED (config.ts) and STRIPPED (the two tests). They are
+# fixtures and prose, never credentials. A whole-branch scan re-reads that
+# immutable commit on every run, so an inline `trufflehog:ignore` added at HEAD
+# cannot clear them — only a path exclusion can.
+#
+# NOTE: do not spell a userinfo URL out in this file. The scanner reads this
+# file's own contents too, and a literal example here fails the job (it did).
 ^src/config\.ts$
 ^src/__tests__/config-issuer-url\.test\.ts$
 ^src/__tests__/oauth-resource-discovery\.test\.ts$
