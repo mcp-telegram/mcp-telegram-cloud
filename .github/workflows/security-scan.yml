@@ -72,9 +72,14 @@ jobs:
       # The action injects --fail / --no-update / --github-actions itself; do not duplicate.
       # For push to main, action's auto base/head can resolve to empty strings; scan the
       # whole branch explicitly via base="" + head=ref_name (per upstream docs).
+      #
+      # --exclude-paths: a whole-branch scan re-reads immutable commits, so an inline
+      # `trufflehog:ignore` added at HEAD cannot clear a fixture committed earlier
+      # (commit 02fe627 is where these came from). Each entry is justified inside the
+      # file, and Gitleaks above still scans those same paths.
       - name: TruffleHog
         uses: trufflesecurity/trufflehog@v3.95.2
         with:
           base: ""
           head: ${{ github.ref_name }}
-          extra_args: --results=verified,unknown
+          extra_args: --results=verified,unknown --exclude-paths=.trufflehog-exclude-paths.txt
