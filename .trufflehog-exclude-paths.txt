@@ -14,7 +14,11 @@
 # cannot clear them — only a path exclusion can.
 #
 # NOTE: do not spell a userinfo URL out in this file. The scanner reads this
-# file's own contents too, and a literal example here fails the job (it did).
+# file's own contents too, and a literal example here fails the job (it did:
+# commit 0aa7508 carried one, and history keeps it forever — hence the
+# self-exclusion below, which is safe because this file holds path regexes
+# only and can never legitimately contain a credential).
+^\.trufflehog-exclude-paths\.txt$
 ^src/config\.ts$
 ^src/__tests__/config-issuer-url\.test\.ts$
 ^src/__tests__/oauth-resource-discovery\.test\.ts$
