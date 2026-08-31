@@ -41,7 +41,8 @@ describe("issuerUrl", () => {
   });
 
   it("rejects userinfo — it would be published in OAuth metadata", () => {
-    assert.throws(() => issuerUrl("ISSUER", "https://user:pass@mcp.example.com"), /must not contain userinfo/);
+    // trufflehog:ignore — fake userinfo asserted to be REJECTED, not a credential
+    assert.throws(() => issuerUrl("ISSUER", "https://user:pass@mcp.example.com"), /must not contain userinfo/); // trufflehog:ignore
     assert.throws(() => issuerUrl("ISSUER", "https://user@mcp.example.com"), /must not contain userinfo/);
   });
 

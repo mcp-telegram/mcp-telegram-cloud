@@ -96,7 +96,8 @@ describe("protected-resource discovery", () => {
     });
 
     it("drops userinfo so credentials are never republished as discovery metadata", () => {
-      const url = rootUrl("https://user:pass@host.example/base", MCP_RESOURCE_METADATA_PATH);
+      // trufflehog:ignore — fake userinfo asserted to be STRIPPED, not a credential
+      const url = rootUrl("https://user:pass@host.example/base", MCP_RESOURCE_METADATA_PATH); // trufflehog:ignore
       assert.equal(url, `https://host.example${MCP_RESOURCE_METADATA_PATH}`);
       assert.ok(!url.includes("pass"), `credentials must not survive: ${url}`);
     });

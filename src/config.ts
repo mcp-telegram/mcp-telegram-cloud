@@ -85,8 +85,9 @@ export const parseTelemetryMode = (raw: string | undefined): TelemetryMode => {
  *    PARSED host is not enough — `https://ho\st.example` parses to host `ho`
  *    with the rest pushed into the path, so the check would pass while the
  *    effective issuer silently differs from what the operator configured.
- *  - userinfo: `https://user:pass@host` would be republished as discovery
- *    metadata, leaking the credentials to every client that fetches it.
+ *  - userinfo: `https://user:pass@host` would be republished as discovery — trufflehog:ignore
+ *    metadata, leaking the credentials to every client that fetches it. The
+ *    example above is a rejected input, not a credential.
  *  - path/query/fragment: see above — not an origin.
  */
 export const issuerUrl = (name: string, value: string): string => {
