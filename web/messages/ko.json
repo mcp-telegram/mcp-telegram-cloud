@@ -67,7 +67,12 @@
     "overviewPrompt": "오늘 팀 대화방에서 일어난 일을 요약해 주세요",
     "mediaTitle": "미디어 리뷰",
     "mediaPrompt": "어제 가족 대화방에서 보낸 사진을 보여 주세요",
-    "ctaSeeAll": "모든 예시 보기"
+    "ctaSeeAll": "모든 예시 보기",
+    "demoStatus": "연결됨",
+    "demoChatWork": "팀",
+    "demoChatDesign": "디자인",
+    "demoChatFamily": "가족 ❤️",
+    "demoHighlight": "마감 → 금요일 18:00"
   },
   "howItWorks": {
     "heading": "작동 방식",

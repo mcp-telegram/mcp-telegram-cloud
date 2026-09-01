@@ -67,7 +67,12 @@
     "overviewPrompt": "Berikan saya ringkasan tentang apa yang terjadi di obrolan tim hari ini",
     "mediaTitle": "Tinjau media",
     "mediaPrompt": "Tunjukkan foto yang dikirim di obrolan keluarga kemarin",
-    "ctaSeeAll": "Lihat semua contoh"
+    "ctaSeeAll": "Lihat semua contoh",
+    "demoStatus": "terhubung",
+    "demoChatWork": "Tim",
+    "demoChatDesign": "Desain",
+    "demoChatFamily": "Keluarga ❤️",
+    "demoHighlight": "tenggat → Jumat 18.00"
   },
   "howItWorks": {
     "heading": "Cara kerja",

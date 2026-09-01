@@ -67,7 +67,12 @@
     "overviewPrompt": "Geef me een samenvatting van wat er vandaag in de teamchat is gebeurd",
     "mediaTitle": "Media-overzicht",
     "mediaPrompt": "Laat me de foto's zien die gisteren in de familiechat zijn verstuurd",
-    "ctaSeeAll": "Bekijk alle voorbeelden"
+    "ctaSeeAll": "Bekijk alle voorbeelden",
+    "demoStatus": "verbonden",
+    "demoChatWork": "Team",
+    "demoChatDesign": "Design",
+    "demoChatFamily": "Familie ❤️",
+    "demoHighlight": "deadline → vrijdag 18:00"
   },
   "howItWorks": {
     "heading": "Hoe het werkt",

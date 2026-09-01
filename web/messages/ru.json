@@ -59,7 +59,12 @@
     "overviewPrompt": "Дай саммари того, что происходило в командном чате сегодня",
     "mediaTitle": "Просмотр медиа",
     "mediaPrompt": "Покажи фотографии из семейного чата за вчера",
-    "ctaSeeAll": "Все примеры"
+    "ctaSeeAll": "Все примеры",
+    "demoStatus": "на связи",
+    "demoChatWork": "Команда",
+    "demoChatDesign": "Дизайн",
+    "demoChatFamily": "Семья ❤️",
+    "demoHighlight": "дедлайн → пятница 18:00"
   },
   "howItWorks": {
     "heading": "Как это работает",

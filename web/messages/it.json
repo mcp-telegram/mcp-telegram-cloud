@@ -67,7 +67,12 @@
     "overviewPrompt": "Dammi un riassunto di cosa è successo nella chat del team oggi",
     "mediaTitle": "Rassegna media",
     "mediaPrompt": "Mostrami le foto inviate nella chat di famiglia ieri",
-    "ctaSeeAll": "Vedi tutti gli esempi"
+    "ctaSeeAll": "Vedi tutti gli esempi",
+    "demoStatus": "connesso",
+    "demoChatWork": "Team",
+    "demoChatDesign": "Design",
+    "demoChatFamily": "Famiglia ❤️",
+    "demoHighlight": "scadenza → venerdì 18:00"
   },
   "howItWorks": {
     "heading": "Come funziona",

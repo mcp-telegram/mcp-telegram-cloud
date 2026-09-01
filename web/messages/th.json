@@ -67,7 +67,12 @@
     "overviewPrompt": "สรุปสิ่งที่เกิดขึ้นในแชททีมวันนี้ให้ฉันฟัง",
     "mediaTitle": "ตรวจสอบสื่อ",
     "mediaPrompt": "แสดงรูปภาพที่ส่งในแชทครอบครัวเมื่อวานนี้",
-    "ctaSeeAll": "ดูตัวอย่างทั้งหมด"
+    "ctaSeeAll": "ดูตัวอย่างทั้งหมด",
+    "demoStatus": "เชื่อมต่อแล้ว",
+    "demoChatWork": "ทีม",
+    "demoChatDesign": "ดีไซน์",
+    "demoChatFamily": "ครอบครัว ❤️",
+    "demoHighlight": "เส้นตาย → ศุกร์ 18:00"
   },
   "howItWorks": {
     "heading": "วิธีการทำงาน",

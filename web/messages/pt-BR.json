@@ -67,7 +67,12 @@
     "overviewPrompt": "Me dê um resumo do que aconteceu no chat da equipe hoje",
     "mediaTitle": "Revisão de mídia",
     "mediaPrompt": "Mostre as fotos enviadas no chat da família ontem",
-    "ctaSeeAll": "Ver todos os exemplos"
+    "ctaSeeAll": "Ver todos os exemplos",
+    "demoStatus": "conectado",
+    "demoChatWork": "Equipe",
+    "demoChatDesign": "Design",
+    "demoChatFamily": "Família ❤️",
+    "demoHighlight": "prazo → sexta 18:00"
   },
   "howItWorks": {
     "heading": "Como funciona",

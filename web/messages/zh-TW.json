@@ -67,7 +67,12 @@
     "overviewPrompt": "幫我總結今天團隊聊天裡發生的事情",
     "mediaTitle": "媒體檢視",
     "mediaPrompt": "顯示昨天家庭聊天中傳送的相片",
-    "ctaSeeAll": "查看所有範例"
+    "ctaSeeAll": "查看所有範例",
+    "demoStatus": "已連線",
+    "demoChatWork": "團隊",
+    "demoChatDesign": "設計",
+    "demoChatFamily": "家人 ❤️",
+    "demoHighlight": "截止 → 週五 18:00"
   },
   "howItWorks": {
     "heading": "運作方式",

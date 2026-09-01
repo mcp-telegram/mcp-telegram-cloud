@@ -67,7 +67,12 @@
     "overviewPrompt": "今日チームチャットで起きたことの要約をください",
     "mediaTitle": "メディアの確認",
     "mediaPrompt": "昨日家族チャットで送られた写真を見せてください",
-    "ctaSeeAll": "すべての例を見る"
+    "ctaSeeAll": "すべての例を見る",
+    "demoStatus": "接続済み",
+    "demoChatWork": "チーム",
+    "demoChatDesign": "デザイン",
+    "demoChatFamily": "家族 ❤️",
+    "demoHighlight": "締め切り → 金曜 18:00"
   },
   "howItWorks": {
     "heading": "仕組み",

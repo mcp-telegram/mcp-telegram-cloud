@@ -67,7 +67,12 @@
     "overviewPrompt": "मुझे बताएँ कि आज टीम चैट में क्या हुआ",
     "mediaTitle": "मीडिया समीक्षा",
     "mediaPrompt": "कल फ़ैमिली चैट में भेजी गई फ़ोटो दिखाएँ",
-    "ctaSeeAll": "सभी उदाहरण देखें"
+    "ctaSeeAll": "सभी उदाहरण देखें",
+    "demoStatus": "कनेक्टेड",
+    "demoChatWork": "टीम",
+    "demoChatDesign": "डिज़ाइन",
+    "demoChatFamily": "परिवार ❤️",
+    "demoHighlight": "डेडलाइन → शुक्रवार 18:00"
   },
   "howItWorks": {
     "heading": "यह कैसे काम करता है",

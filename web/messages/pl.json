@@ -67,7 +67,12 @@
     "overviewPrompt": "Daj mi podsumowanie tego, co dziś wydarzyło się w czacie zespołu",
     "mediaTitle": "Przegląd mediów",
     "mediaPrompt": "Pokaż zdjęcia wysłane wczoraj na czacie rodzinnym",
-    "ctaSeeAll": "Zobacz wszystkie przykłady"
+    "ctaSeeAll": "Zobacz wszystkie przykłady",
+    "demoStatus": "połączono",
+    "demoChatWork": "Zespół",
+    "demoChatDesign": "Design",
+    "demoChatFamily": "Rodzina ❤️",
+    "demoHighlight": "termin → piątek 18:00"
   },
   "howItWorks": {
     "heading": "Jak to działa",

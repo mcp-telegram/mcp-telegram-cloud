@@ -59,7 +59,12 @@
     "overviewPrompt": "Give me a summary of what happened in the team chat today",
     "mediaTitle": "Media review",
     "mediaPrompt": "Show me the photos sent in the family chat yesterday",
-    "ctaSeeAll": "See all examples"
+    "ctaSeeAll": "See all examples",
+    "demoStatus": "connected",
+    "demoChatWork": "Team Sync",
+    "demoChatDesign": "Design",
+    "demoChatFamily": "Family ❤️",
+    "demoHighlight": "deadline → Friday 18:00"
   },
   "howItWorks": {
     "heading": "How it works",

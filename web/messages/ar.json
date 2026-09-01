@@ -67,7 +67,12 @@
     "overviewPrompt": "أعطني ملخصًا لما حدث في محادثة الفريق اليوم",
     "mediaTitle": "مراجعة الوسائط",
     "mediaPrompt": "أرني الصور التي أُرسلت في محادثة العائلة أمس",
-    "ctaSeeAll": "عرض جميع الأمثلة"
+    "ctaSeeAll": "عرض جميع الأمثلة",
+    "demoStatus": "متصل",
+    "demoChatWork": "فريق العمل",
+    "demoChatDesign": "التصميم",
+    "demoChatFamily": "العائلة ❤️",
+    "demoHighlight": "الموعد النهائي: الجمعة 18:00"
   },
   "howItWorks": {
     "heading": "كيف يعمل",

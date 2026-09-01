@@ -67,7 +67,12 @@
     "overviewPrompt": "Cho tôi bản tóm tắt những gì đã xảy ra trong cuộc trò chuyện nhóm hôm nay",
     "mediaTitle": "Xem lại phương tiện",
     "mediaPrompt": "Cho tôi xem các bức ảnh được gửi trong cuộc trò chuyện gia đình hôm qua",
-    "ctaSeeAll": "Xem tất cả ví dụ"
+    "ctaSeeAll": "Xem tất cả ví dụ",
+    "demoStatus": "đã kết nối",
+    "demoChatWork": "Nhóm",
+    "demoChatDesign": "Thiết kế",
+    "demoChatFamily": "Gia đình ❤️",
+    "demoHighlight": "hạn chót → thứ Sáu 18:00"
   },
   "howItWorks": {
     "heading": "Cách hoạt động",

@@ -67,7 +67,12 @@
     "overviewPrompt": "给我一份今天团队群聊中发生事情的总结",
     "mediaTitle": "媒体回顾",
     "mediaPrompt": "给我看看昨天家庭群聊中发送的照片",
-    "ctaSeeAll": "查看所有示例"
+    "ctaSeeAll": "查看所有示例",
+    "demoStatus": "已连接",
+    "demoChatWork": "团队",
+    "demoChatDesign": "设计",
+    "demoChatFamily": "家人 ❤️",
+    "demoHighlight": "截止 → 周五 18:00"
   },
   "howItWorks": {
     "heading": "工作原理",

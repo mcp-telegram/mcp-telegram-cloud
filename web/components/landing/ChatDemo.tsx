@@ -2,8 +2,11 @@
  *
  * Illustrative, not live data: the prompt is the real `examples.morningPrompt`
  * string, the digest below it is a mock-up of what a reply looks like. Chat
- * names and counts are invented sample data and stay untranslated on purpose —
- * they read as a screenshot of someone's Telegram, not as UI copy.
+ * names, the status line and the highlight note are invented sample data, but
+ * they are localised too — an English “connected / Team Sync / Family” block
+ * under a Russian or Japanese prompt reads as a half-finished translation, not
+ * as someone else's Telegram. Only the brand line (`Claude ↔ Telegram`) and the
+ * tool name (`telegram-read-messages`) stay in English, as they should.
  *
  * Server component: the cascade is pure CSS animation-delay, no JS timers.
  * `aria-hidden` because it is decorative — the hero copy beside it already
@@ -14,14 +17,14 @@ import { useTranslations } from "next-intl";
 import { TbSunFilled } from "react-icons/tb";
 import s from "@/app/landing.module.css";
 
-const SAMPLE_CHATS = [
-  { name: "Team Sync", unread: 12 },
-  { name: "Design", unread: 5 },
-  { name: "Family ❤️", unread: 3, muted: true },
-];
-
 export function ChatDemo() {
   const t = useTranslations("examples");
+
+  const sampleChats = [
+    { name: t("demoChatWork"), unread: 12 },
+    { name: t("demoChatDesign"), unread: 5 },
+    { name: t("demoChatFamily"), unread: 3, muted: true },
+  ];
 
   return (
     <div className={s.demo} aria-hidden>
@@ -30,7 +33,7 @@ export function ChatDemo() {
         <img src="/icon.svg" alt="" width={26} height={26} />
         <div>
           <div className={s.demoTitle}>Claude ↔ Telegram</div>
-          <div className={s.demoStatus}>● connected</div>
+          <div className={s.demoStatus}>● {t("demoStatus")}</div>
         </div>
       </div>
 
@@ -52,7 +55,7 @@ export function ChatDemo() {
             {t("morningTitle")}
           </div>
 
-          {SAMPLE_CHATS.map((chat) => (
+          {sampleChats.map((chat) => (
             <div key={chat.name} className={s.digestRow}>
               <span>{chat.name}</span>
               <span className={`${s.unread} ${chat.muted ? s.unreadMuted : ""}`}>{chat.unread}</span>
@@ -60,7 +63,9 @@ export function ChatDemo() {
           ))}
 
           <div className={s.digestDivider} />
-          <div className={s.digestNote}>🔥 “deadline → Friday 18:00” · Team Sync</div>
+          <div className={s.digestNote}>
+            🔥 “{t("demoHighlight")}” · {t("demoChatWork")}
+          </div>
         </div>
       </div>
     </div>

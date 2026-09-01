@@ -67,7 +67,12 @@
     "overviewPrompt": "Дай мені підсумок того, що відбувалося в командному чаті сьогодні",
     "mediaTitle": "Огляд медіа",
     "mediaPrompt": "Покажи фото, надіслані вчора в сімейному чаті",
-    "ctaSeeAll": "Переглянути всі приклади"
+    "ctaSeeAll": "Переглянути всі приклади",
+    "demoStatus": "підключено",
+    "demoChatWork": "Команда",
+    "demoChatDesign": "Дизайн",
+    "demoChatFamily": "Сім'я ❤️",
+    "demoHighlight": "дедлайн → п'ятниця 18:00"
   },
   "howItWorks": {
     "heading": "Як це працює",

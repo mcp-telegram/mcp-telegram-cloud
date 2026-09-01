@@ -67,7 +67,12 @@
     "overviewPrompt": "Gib mir eine Zusammenfassung dessen, was heute im Teamchat passiert ist",
     "mediaTitle": "Medien durchsehen",
     "mediaPrompt": "Zeige mir die Fotos, die gestern im Familienchat gesendet wurden",
-    "ctaSeeAll": "Alle Beispiele ansehen"
+    "ctaSeeAll": "Alle Beispiele ansehen",
+    "demoStatus": "verbunden",
+    "demoChatWork": "Team-Sync",
+    "demoChatDesign": "Design",
+    "demoChatFamily": "Familie ❤️",
+    "demoHighlight": "Deadline → Freitag 18:00"
   },
   "howItWorks": {
     "heading": "So funktioniert es",

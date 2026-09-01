@@ -67,7 +67,12 @@
     "overviewPrompt": "Bugün ekip sohbetinde olanların bir özetini ver",
     "mediaTitle": "Medya incelemesi",
     "mediaPrompt": "Aile sohbetinde dün gönderilen fotoğrafları göster",
-    "ctaSeeAll": "Tüm örnekleri gör"
+    "ctaSeeAll": "Tüm örnekleri gör",
+    "demoStatus": "bağlandı",
+    "demoChatWork": "Ekip",
+    "demoChatDesign": "Tasarım",
+    "demoChatFamily": "Aile ❤️",
+    "demoHighlight": "son tarih → Cuma 18:00"
   },
   "howItWorks": {
     "heading": "Nasıl çalışır",
