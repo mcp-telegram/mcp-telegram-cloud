@@ -65,6 +65,9 @@
   border-radius: 14px;
   background: var(--tg-bg-alt);
   font-size: 15px;
+  /* Long unbreakable tokens (code_challenge_method=S256) must wrap rather
+   * than push the callout past the viewport on narrow screens. */
+  overflow-wrap: anywhere;
 }
 
 .noteAccent {
@@ -78,6 +81,11 @@
 }
 
 .noteTitle {
+  /* Must be block: as an inline span its margin-bottom was inert and the body
+   * text ran straight into the title with no separator ("PKCE required" +
+   * "code_challenge_method=S256" rendered as one glued word), which also gave
+   * the callout a min-content width wider than a phone viewport. */
+  display: block;
   font-weight: 700;
   color: var(--tg-link);
   margin-bottom: 4px;

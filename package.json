@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.54.9",
+  "version": "2.54.10",
   "private": true,
   "license": "MIT",
   "type": "module",
