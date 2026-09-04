@@ -52,6 +52,11 @@
   flex-direction: column;
   gap: 6px;
   padding-top: 4px;
+  /* A grid item's implicit min-width is min-content, so an unbreakable token
+   * (long OAuth URL in a description) would blow the 1fr column past the
+   * viewport and give the whole page a horizontal scrollbar on mobile —
+   * Yandex.Webmaster flagged /docs/oauth for exactly this. */
+  min-width: 0;
 }
 
 .title {
@@ -59,6 +64,7 @@
   font-weight: 700;
   margin: 0;
   color: var(--tg-text);
+  overflow-wrap: anywhere;
 }
 
 .desc {
@@ -66,6 +72,9 @@
   line-height: 1.6;
   margin: 0;
   color: var(--tg-hint);
+  /* Break long unbreakable tokens (URLs with query params) instead of
+   * overflowing the card. */
+  overflow-wrap: anywhere;
 }
 
 .image {
