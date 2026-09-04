@@ -13,7 +13,7 @@ name: Bun install flake probe
 
 on:
   push:
-    branches: [chore/full-bun-docker]
+    branches: [feat/bun-only-build]
   workflow_dispatch:
 
 jobs:
