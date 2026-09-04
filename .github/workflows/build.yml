@@ -38,12 +38,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.0
-      # `bun install` hits sporadic IntegrityCheckFailed on shared GH runners
-      # (same flake reproduced locally). npm install reads package.json
-      # deterministically; Bun runtime reads node_modules unchanged.
-      # `--ignore-scripts` skips native compilation for utf-8-validate /
-      # bufferutil (optional speedups for `ws`); JS fallback is identical.
-      - run: npm install --no-audit --no-fund --ignore-scripts
+      # Install from the committed lockfile. The previous `npm install` ran
+      # WITHOUT any lockfile npm could read (bun.lock is not an npm format), so
+      # transitive versions were re-resolved on every run; --frozen-lockfile
+      # makes CI reproducible. `--ignore-scripts` skips native compilation for
+      # utf-8-validate / bufferutil (optional speedups for `ws`); JS fallback
+      # is identical. Historical note: bun install used to hit sporadic
+      # IntegrityCheckFailed here — bun-install-flake-probe.yml measures it.
+      - run: bun install --frozen-lockfile --ignore-scripts
       - run: bun run lint
       - run: bun run typecheck
       - run: bun run test

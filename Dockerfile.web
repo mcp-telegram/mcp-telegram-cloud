@@ -4,27 +4,29 @@
 ## monorepo's `package.json + bun.lock` define the workspace, and `web/` is
 ## the actual Next.js package. We need both for `bun install` to resolve.
 ##
-## Pattern mirrors Dockerfile (cloud backend): npm install in Alpine builder
-## (Bun installer hits sporadic IntegrityCheckFailed on Alpine — see
-## feedback_bun_installer_alpine_flake), then a Bun runtime stage. Build
-## itself uses `next build` which works under Node just fine.
+## Fully Bun: deps via bun install, build via `bunx next build` (Next 16.3+
+## supports it), runtime via Bun's standalone execution. No node:* stages.
 
-# Stage 1: Install all monorepo deps (incl. web's Next + React).
-FROM node:22-alpine AS deps
+# Stage 1: Install workspace deps (root + web + app manifests for full graph).
+# --ignore-scripts skips native compilation of optional ws speedups
+# (utf-8-validate, bufferutil) — they need Python+gcc; the JS fallback is
+# functionally identical.
+FROM oven/bun:1.4.0-alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY web/package.json ./web/
-# --ignore-scripts skips native compilation of optional ws speedups
-# (utf-8-validate, bufferutil) — they need Python+gcc; the JS fallback is
-# functionally identical. Same approach as the cloud backend Dockerfile.
-RUN npm install --no-audit --no-fund --legacy-peer-deps --ignore-scripts
+COPY app/package.json ./app/
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Stage 2: Run `next build` to produce a standalone output.
-FROM node:22-alpine AS builder
+FROM oven/bun:1.4.0-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY package.json bun.lock ./
 COPY web ./web
+# Bun does NOT hoist workspace deps to the root like npm: next/next-intl/react
+# live in web/node_modules, so both trees must come across.
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/web/node_modules ./web/node_modules
 ENV NEXT_TELEMETRY_DISABLED=1
 # Analytics IDs are baked at build time: the content pages are statically
 # prerendered (SSG via generateStaticParams), so `process.env` is read once
@@ -37,11 +39,11 @@ ARG GA4_ID=""
 ENV METRIKA_ID=${METRIKA_ID}
 ENV GA4_ID=${GA4_ID}
 WORKDIR /app/web
-RUN npx next build
+RUN bunx next build
 
 # Stage 3: Production runtime — Bun executes the standalone server.
 # Standalone output bundles the Node-style server.js + a trimmed
-# node_modules; Bun runs server.js as Node-compatible JS without rebuild.
+# node_modules tree. Static assets and public/ live alongside.
 FROM oven/bun:1.4.0-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

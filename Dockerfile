@@ -1,21 +1,25 @@
 # Stage 1: Build mcp-telegram from source (with declarations)
-# Kept on node:22-alpine — upstream mcp-telegram is an npm project (not Bun),
-# and its build emits .d.ts for the cloud's typecheck.
-FROM node:22-alpine AS telegram-lib
-RUN apk add --no-cache git python3 make g++
+# Core lib (mcp-telegram) is npm-native but Bun compiles it fine.
+# `python3 make g++` no longer needed: --ignore-scripts skips native addon build
+# for utf-8-validate/bufferutil; the JS fallback is identical.
+FROM oven/bun:1.4.0-alpine AS telegram-lib
+RUN apk add --no-cache git
 RUN git clone --depth 1 https://github.com/mcp-telegram/mcp-telegram.git /telegram
 WORKDIR /telegram
-RUN npm ci && npm run build
+RUN bun install --frozen-lockfile --ignore-scripts
+RUN bun run build
 
-# Stage 2: Install cloud deps via npm (Bun's lockfile resolver hits sporadic
-# IntegrityCheckFailed on Alpine — track in spike notes). npm reads
-# package.json deterministically; Bun runtime in Stage 3 reads node_modules
-# unchanged. `--ignore-scripts` skips native compilation for `utf-8-validate`
-# and `bufferutil` (optional speedups for `ws`); the JS fallback is identical.
-FROM node:22-alpine AS builder
+# Stage 2: Install cloud deps via bun.
+# IMPORTANT: do NOT copy web/ and app/ manifests here. With workspace manifests
+# present, bun pulls the entire workspace graph (Next, swc, react-icons, sharp
+# ~= 940MB) into its .bun store even under --production. Root-only package.json
+# keeps the backend tree at ~48MB and --frozen-lockfile still holds.
+# `--ignore-scripts` skips native compilation for `utf-8-validate` and
+# `bufferutil` (optional speedups for `ws`); the JS fallback is identical.
+FROM oven/bun:1.4.0-alpine AS builder
 WORKDIR /app
-COPY package.json ./
-RUN npm install --no-audit --no-fund --omit=dev --ignore-scripts
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production --ignore-scripts
 COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 
 # Stage 2b: Build the React backend pages (app/ workspace) — client island
