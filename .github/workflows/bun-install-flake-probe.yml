@@ -1,0 +1,63 @@
+# Measurement harness for the full-Bun Docker migration.
+#
+# The npm stages this branch removes were introduced because `bun install` hit
+# sporadic `IntegrityCheckFailed` on Alpine / shared GH runners. That failure is
+# INTERMITTENT (historically around 1 in 6), so a single green build proves
+# nothing — this workflow runs the install stages N times in parallel on
+# amd64 runners and verifies the result by INSPECTING node_modules rather than
+# trusting the exit code, because bun has been observed to exit 0 while
+# silently omitting packages.
+#
+# Delete this workflow once the migration is settled.
+name: Bun install flake probe
+
+on:
+  push:
+    branches: [chore/full-bun-docker]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    steps:
+      - uses: actions/checkout@v6
+
+      # --no-cache is essential: a cached layer would replay one past install
+      # instead of exercising a fresh resolve each iteration.
+      - name: Build backend deps stage (fresh)
+        run: docker build --no-cache --target builder -f Dockerfile -t probe-backend:${{ matrix.run }} .
+
+      - name: Verify backend deps are actually present
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint sh probe-backend:${{ matrix.run }} -c '
+            set -e
+            for p in hono zod telegram @modelcontextprotocol/sdk @overpod/mcp-telegram; do
+              if [ ! -e "/app/node_modules/$p" ]; then
+                echo "MISSING: $p"; exit 1
+              fi
+            done
+            test -e /app/node_modules/@overpod/mcp-telegram/dist/index.js || {
+              echo "MISSING: core lib dist"; exit 1; }
+            echo "backend deps OK"
+          '
+
+      - name: Build web deps stage (fresh)
+        run: docker build --no-cache --target deps -f Dockerfile.web -t probe-web:${{ matrix.run }} .
+
+      - name: Verify web deps are actually present
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint sh probe-web:${{ matrix.run }} -c '
+            set -e
+            for p in next next-intl react react-dom; do
+              if [ ! -e "/app/web/node_modules/$p" ]; then
+                echo "MISSING: $p"; exit 1
+              fi
+            done
+            echo "web deps OK"
+          '
