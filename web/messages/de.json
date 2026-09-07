@@ -441,10 +441,36 @@
     "title": "Datenschutzerklärung",
     "metaDescription": "Datenschutzerklärung für den gehosteten Telegram-MCP-Connector von {brand}.",
     "lastUpdated": "Zuletzt aktualisiert: {date}",
-    "updatedDate": "2. Juni 2026",
+    "updatedDate": "7. September 2026",
     "overview": {
       "heading": "Überblick",
-      "body": "{brand} (<host>{hostLabel}</host>) ist ein gehosteter Connector, mit dem KI-Assistenten (Claude, ChatGPT) über das MCP-Protokoll auf Ihr Telegram-Konto zugreifen können. Ihre Privatsphäre ist uns wichtig. Diese Erklärung beschreibt, welche Daten wir erheben, wie wir sie verwenden und welche Rechte Sie haben."
+      "body": "{brand} (<host>{hostLabel}</host>) ist ein gehosteter Connector, der KI-Assistenten (Claude, ChatGPT) über das MCP-Protokoll Zugriff auf Ihr Telegram-Konto ermöglicht. Ihre Privatsphäre ist uns wichtig. Diese Richtlinie erläutert, worauf der Connector zugreifen kann, was wir speichern und welche Rechte Sie haben."
+    },
+    "access": {
+      "heading": "Worauf der Connector zugreifen kann",
+      "body": "Der Connector arbeitet über Ihr eigenes Telegram-Konto und kann daher auf dieselben Daten zugreifen wie Ihre Telegram-App. Wenn Sie Ihren KI-Assistenten um etwas bitten, ruft der Connector ab, was für diese Anfrage nötig ist, übergibt es an den KI-Client und behält danach nichts. <strong>Zugriff ist nicht dasselbe wie Speicherung</strong> — die nächsten beiden Abschnitte beschreiben genau, was wir speichern und was wir niemals tun.",
+      "items": {
+        "0": {
+          "term": "Nachrichten und Medien",
+          "desc": "Nachrichtentext und Bildunterschriften, Fotos, Dateien, Sprachnachrichten und deren Transkriptionen aus den Chats, die Ihre Anfrage betrifft."
+        },
+        "1": {
+          "term": "Chats und Kanäle",
+          "desc": "Ihre Chatliste, Details zu Gruppen und Kanälen, Forum-Themen, Zähler ungelesener Nachrichten, Entwürfe und Reaktionen."
+        },
+        "2": {
+          "term": "Kontakte",
+          "desc": "Namen, Benutzernamen und <strong>Telefonnummern</strong> der in Ihrem Telegram-Konto gespeicherten Kontakte, die zurückgegeben werden, wenn Sie Ihre Kontaktliste anfordern."
+        },
+        "3": {
+          "term": "Profil und Einstellungen",
+          "desc": "Ihr eigenes Profil, aktive Sitzungen und Privatsphäre-Einstellungen. Für Chats, in denen Sie Administrator sind, Mitgliederlisten und das Admin-Protokoll."
+        },
+        "4": {
+          "term": "Aktionen, die Sie anfordern",
+          "desc": "Senden, Bearbeiten, Weiterleiten und Löschen von Nachrichten, Reaktionen sowie Chat-Verwaltung. Jede dieser Aktionen wird nur auf Ihre ausdrückliche Anfrage ausgeführt, und unumkehrbare Aktionen bleiben deaktiviert, bis Sie sie aktivieren."
+        }
+      }
     },
     "collect": {
       "heading": "Was wir erheben",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Nutzungsprotokolle",
-          "desc": "Wir protokollieren, welche MCP-Tools aufgerufen werden (z. B. \"list-chats\", \"read-messages\"), den Zeitstempel und Ihre Telegram-Benutzer-ID. Wir protokollieren <em>keine</em> Nachrichteninhalte, Chat-Namen oder personenbezogenen Daten aus Ihren Chats."
+          "desc": "Wir protokollieren, welches MCP-Tool aufgerufen wurde (z. B. „list-chats“, „read-messages“), den Zeitpunkt, welcher KI-Client es aufgerufen hat, und Ihre Telegram-Benutzer-ID. Nutzungsprotokolle enthalten <em>keine</em> Nachrichteninhalte. Sie werden nach 90 Tagen automatisch gelöscht."
         },
         "2": {
           "term": "OAuth-Token",
-          "desc": "Temporäre Token zur Authentifizierung Ihres KI-Clients (Claude/ChatGPT) bei unserem Server. Im Arbeitsspeicher gehalten, nicht dauerhaft gespeichert."
+          "desc": "Die Access- und Refresh-Tokens, mit denen Ihr KI-Client (Claude/ChatGPT) unseren Server erreicht. Sie werden in unserer Datenbank gespeichert und gelöscht, wenn Sie die Verbindung trennen oder wenn sie ablaufen."
+        },
+        "3": {
+          "term": "Protokoll unumkehrbarer Aktionen",
+          "desc": "Wenn Sie unumkehrbare Aktionen aktivieren, wird jeder Versuch aufgezeichnet: der Name des Tools, das Ergebnis und eine kurze Zusammenfassung der Argumente von bis zu 200 Zeichen, die eine Chat-Kennung und die ersten Zeichen einer Nachricht enthalten kann. Der vollständige Eintrag ist für Sie in Ihrem Konto einsehbar und wird nach 90 Tagen gelöscht."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Was wir NICHT erheben",
+      "heading": "Was wir niemals speichern",
       "items": {
-        "0": "Nachrichteninhalte, Mediendateien oder Chat-Verlauf",
-        "1": "Telefonnummern, Kontaktlisten oder Profildaten",
+        "0": "Nachrichteninhalte, Mediendateien oder Chatverläufe — sie durchlaufen unseren Server nur im Arbeitsspeicher und sind verschwunden, sobald die Antwort Ihren KI-Client erreicht hat",
+        "1": "Kontaktlisten und Telefonnummern — sie werden an Ihren KI-Client zurückgegeben, wenn Sie sie anfordern, und niemals in unsere Datenbank geschrieben",
         "2": "Passwörter oder Telegram-2FA-Codes"
       },
       "twoFactorNote": "Wenn Ihr Konto ein Telegram-Cloud-Passwort (2FA) verwendet, wird dieses Passwort <strong>ausschließlich</strong> zum Abschluss der Anmeldung genutzt — es durchläuft unseren Server im Arbeitsspeicher für die Dauer der Anmeldeprüfung und wird <strong>niemals gespeichert oder protokolliert</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Nutzungsprotokolle",
-          "desc": "Werden für Analysen und die Begrenzung der Anfragerate aufbewahrt. Keine personenbezogenen Inhalte."
+          "desc": "Tool-Name, Zeitpunkt, KI-Client und Ihre Benutzer-ID, aufbewahrt für Ratenbegrenzung und Nutzungsstatistiken. Wird nach 90 Tagen automatisch gelöscht."
         },
         "2": {
-          "term": "OAuth-Daten",
-          "desc": "Nur im Arbeitsspeicher, werden beim Neustart des Servers gelöscht."
+          "term": "OAuth-Tokens",
+          "desc": "Werden gelöscht, wenn Sie die Verbindung trennen; abgelaufene Tokens werden automatisch entfernt."
+        },
+        "3": {
+          "term": "Protokoll unumkehrbarer Aktionen",
+          "desc": "Wird 90 Tage lang aufbewahrt, damit Sie prüfen können, was in Ihrem Konto getan wurde, und anschließend automatisch gelöscht."
         }
       }
     },

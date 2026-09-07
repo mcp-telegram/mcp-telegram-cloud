@@ -433,10 +433,36 @@
     "title": "Privacy Policy",
     "metaDescription": "Privacy policy for {brand} hosted Telegram MCP connector.",
     "lastUpdated": "Last updated: {date}",
-    "updatedDate": "June 2, 2026",
+    "updatedDate": "September 7, 2026",
     "overview": {
       "heading": "Overview",
-      "body": "{brand} (<host>{hostLabel}</host>) is a hosted connector that lets AI assistants (Claude, ChatGPT) access your Telegram account via the MCP protocol. Your privacy is important to us. This policy explains what data we collect, how we use it, and your rights."
+      "body": "{brand} (<host>{hostLabel}</host>) is a hosted connector that lets AI assistants (Claude, ChatGPT) access your Telegram account via the MCP protocol. Your privacy is important to us. This policy explains what the connector can reach, what we store, and your rights."
+    },
+    "access": {
+      "heading": "What the connector can access",
+      "body": "The connector works through your own Telegram account, so it can reach the same data your Telegram app can. When you ask your AI assistant something, the connector fetches what that request needs, hands it to the AI client, and keeps nothing afterwards. <strong>Access is not the same as storage</strong> — the next two sections say exactly what we store and what we never do.",
+      "items": {
+        "0": {
+          "term": "Messages and media",
+          "desc": "Message text and captions, photos, files, voice messages and their transcriptions, from the chats your request concerns."
+        },
+        "1": {
+          "term": "Chats and channels",
+          "desc": "Your dialog list, group and channel details, forum topics, unread counters, drafts and reactions."
+        },
+        "2": {
+          "term": "Contacts",
+          "desc": "Names, usernames and <strong>phone numbers</strong> of the contacts saved in your Telegram account, returned when you ask for your contact list."
+        },
+        "3": {
+          "term": "Profile and settings",
+          "desc": "Your own profile, active sessions and privacy settings. For chats where you are an administrator, member lists and the admin log."
+        },
+        "4": {
+          "term": "Actions you ask for",
+          "desc": "Sending, editing, forwarding and deleting messages, reactions, and chat administration. Each one runs only on your explicit request, and irreversible actions stay switched off until you enable them."
+        }
+      }
     },
     "collect": {
       "heading": "What we collect",
@@ -447,11 +473,15 @@
         },
         "1": {
           "term": "Usage logs",
-          "desc": "We log which MCP tools are called (e.g. \"list-chats\", \"read-messages\"), the timestamp, and your Telegram user ID. We do <em>not</em> log message content, chat names, or any personal data from your chats."
+          "desc": "We log which MCP tool was called (e.g. \"list-chats\", \"read-messages\"), the time, which AI client called it, and your Telegram user ID. Usage logs carry <em>no</em> message content. They are deleted automatically after 90 days."
         },
         "2": {
           "term": "OAuth tokens",
-          "desc": "Temporary tokens for authenticating your AI client (Claude/ChatGPT) to our server. Stored in memory, not persisted."
+          "desc": "The access and refresh tokens that let your AI client (Claude/ChatGPT) reach our server. They are stored in our database, and deleted when you disconnect or when they expire."
+        },
+        "3": {
+          "term": "Audit of irreversible actions",
+          "desc": "If you switch on irreversible actions, every attempt is recorded: the tool name, the outcome, and a short summary of the arguments of up to 200 characters, which can include a chat identifier and the first characters of a message. The full record is visible to you in your account, and is deleted after 90 days."
         }
       }
     },
@@ -474,10 +504,10 @@
       }
     },
     "notCollect": {
-      "heading": "What we do NOT collect",
+      "heading": "What we never store",
       "items": {
-        "0": "Message content, media files, or chat history",
-        "1": "Phone numbers, contact lists, or profile data",
+        "0": "Message content, media files or chat history — they pass through our server in memory and are gone once the answer reaches your AI client",
+        "1": "Contact lists and phone numbers — they are returned to your AI client when you ask for them, and never written to our database",
         "2": "Passwords or Telegram 2FA codes"
       },
       "twoFactorNote": "If your account uses a Telegram cloud password (2FA), that password is used <strong>only</strong> to complete the login — it passes through our server in memory for the duration of the sign-in check and is <strong>never stored or logged</strong>."
@@ -495,11 +525,15 @@
         },
         "1": {
           "term": "Usage logs",
-          "desc": "Retained for analytics and rate limiting. No personal content."
+          "desc": "Tool name, time, AI client and your user ID, kept for rate limiting and usage statistics. Deleted automatically after 90 days."
         },
         "2": {
-          "term": "OAuth data",
-          "desc": "In-memory only, cleared on server restart."
+          "term": "OAuth tokens",
+          "desc": "Deleted when you disconnect; expired tokens are purged automatically."
+        },
+        "3": {
+          "term": "Audit of irreversible actions",
+          "desc": "Kept for 90 days so you can check what was done on your account, then deleted automatically."
         }
       }
     },

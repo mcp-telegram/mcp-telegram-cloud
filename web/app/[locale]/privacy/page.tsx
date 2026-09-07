@@ -76,8 +76,12 @@ export default async function PrivacyPage({ params }: PageProps) {
           })}
         </p>
 
+        <h2 className={s.h2}>{t("access.heading")}</h2>
+        <p className={s.p}>{t.rich("access.body", { strong })}</p>
+        <ul className={s.ul}>{li("access.items", 5)}</ul>
+
         <h2 className={s.h2}>{t("collect.heading")}</h2>
-        <ul className={s.ul}>{li("collect.items", 3)}</ul>
+        <ul className={s.ul}>{li("collect.items", 4)}</ul>
 
         <h2 className={s.h2}>{t("analytics.heading")}</h2>
         <p className={s.p}>
@@ -101,7 +105,7 @@ export default async function PrivacyPage({ params }: PageProps) {
         <p className={s.p}>{t.rich("dataFlow.body", { strong })}</p>
 
         <h2 className={s.h2}>{t("retention.heading")}</h2>
-        <ul className={s.ul}>{li("retention.items", 3)}</ul>
+        <ul className={s.ul}>{li("retention.items", 4)}</ul>
 
         <h2 className={s.h2}>{t("thirdParties.heading")}</h2>
         <p className={s.p}>{t.rich("thirdParties.body", { strong })}</p>

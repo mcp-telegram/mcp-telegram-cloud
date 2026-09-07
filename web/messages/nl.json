@@ -441,10 +441,36 @@
     "title": "Privacybeleid",
     "metaDescription": "Privacybeleid voor de gehoste Telegram MCP-connector van {brand}.",
     "lastUpdated": "Laatst bijgewerkt: {date}",
-    "updatedDate": "2 juni 2026",
+    "updatedDate": "7 september 2026",
     "overview": {
       "heading": "Overzicht",
-      "body": "{brand} (<host>{hostLabel}</host>) is een gehoste connector waarmee AI-assistenten (Claude, ChatGPT) toegang krijgen tot je Telegram-account via het MCP-protocol. Je privacy is belangrijk voor ons. Dit beleid legt uit welke gegevens we verzamelen, hoe we ze gebruiken en wat je rechten zijn."
+      "body": "{brand} (<host>{hostLabel}</host>) is een gehoste connector waarmee AI-assistenten (Claude, ChatGPT) via het MCP-protocol toegang krijgen tot je Telegram-account. Je privacy is belangrijk voor ons. Dit beleid legt uit wat de connector kan bereiken, wat we opslaan en welke rechten je hebt."
+    },
+    "access": {
+      "heading": "Waartoe de connector toegang heeft",
+      "body": "De connector werkt via je eigen Telegram-account en kan dus dezelfde gegevens bereiken als je Telegram-app. Wanneer je je AI-assistent iets vraagt, haalt de connector op wat dat verzoek nodig heeft, geeft dit door aan de AI-client en bewaart daarna niets. <strong>Toegang is niet hetzelfde als opslag</strong> — de volgende twee secties beschrijven precies wat we opslaan en wat we nooit doen.",
+      "items": {
+        "0": {
+          "term": "Berichten en media",
+          "desc": "Berichttekst en bijschriften, foto's, bestanden, spraakberichten en hun transcripties, uit de chats waarop je verzoek betrekking heeft."
+        },
+        "1": {
+          "term": "Chats en kanalen",
+          "desc": "Je lijst met dialogen, groeps- en kanaalgegevens, forumonderwerpen, tellers voor ongelezen berichten, concepten en reacties."
+        },
+        "2": {
+          "term": "Contacten",
+          "desc": "Namen, gebruikersnamen en <strong>telefoonnummers</strong> van de contacten die in je Telegram-account zijn opgeslagen, teruggegeven wanneer je om je contactenlijst vraagt."
+        },
+        "3": {
+          "term": "Profiel en instellingen",
+          "desc": "Je eigen profiel, actieve sessies en privacy-instellingen. Voor chats waarin je beheerder bent: ledenlijsten en het beheerderslogboek."
+        },
+        "4": {
+          "term": "Acties waar je om vraagt",
+          "desc": "Berichten verzenden, bewerken, doorsturen en verwijderen, reacties en chatbeheer. Elke actie wordt alleen op jouw uitdrukkelijke verzoek uitgevoerd, en onomkeerbare acties blijven uitgeschakeld totdat je ze inschakelt."
+        }
+      }
     },
     "collect": {
       "heading": "Wat we verzamelen",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Gebruikslogboeken",
-          "desc": "We loggen welke MCP-tools worden aangeroepen (bijv. \"list-chats\", \"read-messages\"), het tijdstip en je Telegram-gebruikers-ID. We loggen <em>geen</em> berichtinhoud, chatnamen of persoonlijke gegevens uit je chats."
+          "desc": "We registreren welke MCP-tool is aangeroepen (bijv. \"list-chats\", \"read-messages\"), het tijdstip, welke AI-client de aanroep deed en je Telegram-gebruikers-ID. Gebruikslogboeken bevatten <em>geen</em> berichtinhoud. Ze worden na 90 dagen automatisch verwijderd."
         },
         "2": {
           "term": "OAuth-tokens",
-          "desc": "Tijdelijke tokens om je AI-client (Claude/ChatGPT) bij onze server te authenticeren. Opgeslagen in het geheugen, niet permanent bewaard."
+          "desc": "De toegangs- en vernieuwingstokens waarmee je AI-client (Claude/ChatGPT) onze server kan bereiken. Ze worden opgeslagen in onze database en verwijderd wanneer je de verbinding verbreekt of wanneer ze verlopen."
+        },
+        "3": {
+          "term": "Audit van onomkeerbare acties",
+          "desc": "Als je onomkeerbare acties inschakelt, wordt elke poging vastgelegd: de naam van de tool, het resultaat en een korte samenvatting van de argumenten van maximaal 200 tekens, die een chat-identificatie en de eerste tekens van een bericht kan bevatten. Het volledige overzicht is voor jou zichtbaar in je account en wordt na 90 dagen verwijderd."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Wat we NIET verzamelen",
+      "heading": "Wat we nooit opslaan",
       "items": {
-        "0": "Berichtinhoud, mediabestanden of chatgeschiedenis",
-        "1": "Telefoonnummers, contactenlijsten of profielgegevens",
+        "0": "Berichtinhoud, mediabestanden of chatgeschiedenis — ze gaan in het geheugen door onze server en zijn verdwenen zodra het antwoord je AI-client bereikt",
+        "1": "Contactenlijsten en telefoonnummers — ze worden aan je AI-client teruggegeven wanneer je erom vraagt en worden nooit in onze database weggeschreven",
         "2": "Wachtwoorden of Telegram 2FA-codes"
       },
       "twoFactorNote": "Als je account een Telegram-cloudwachtwoord (2FA) gebruikt, wordt dat wachtwoord <strong>alleen</strong> gebruikt om het inloggen te voltooien — het passeert onze server in het geheugen tijdens de controle en wordt <strong>nooit opgeslagen of gelogd</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Gebruikslogboeken",
-          "desc": "Bewaard voor analyse en snelheidsbeperking. Geen persoonlijke inhoud."
+          "desc": "Toolnaam, tijdstip, AI-client en je gebruikers-ID, bewaard voor snelheidsbeperking en gebruiksstatistieken. Na 90 dagen automatisch verwijderd."
         },
         "2": {
-          "term": "OAuth-gegevens",
-          "desc": "Alleen in het geheugen, gewist bij herstart van de server."
+          "term": "OAuth-tokens",
+          "desc": "Verwijderd wanneer je de verbinding verbreekt; verlopen tokens worden automatisch opgeruimd."
+        },
+        "3": {
+          "term": "Audit van onomkeerbare acties",
+          "desc": "Wordt 90 dagen bewaard zodat je kunt controleren wat er op je account is gedaan, en daarna automatisch verwijderd."
         }
       }
     },

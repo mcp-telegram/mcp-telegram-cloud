@@ -441,10 +441,36 @@
     "title": "Política de privacidad",
     "metaDescription": "Política de privacidad del conector MCP de Telegram alojado de {brand}.",
     "lastUpdated": "Última actualización: {date}",
-    "updatedDate": "2 de junio de 2026",
+    "updatedDate": "7 de septiembre de 2026",
     "overview": {
       "heading": "Resumen",
-      "body": "{brand} (<host>{hostLabel}</host>) es un conector alojado que permite a los asistentes de IA (Claude, ChatGPT) acceder a tu cuenta de Telegram mediante el protocolo MCP. Tu privacidad es importante para nosotros. Esta política explica qué datos recopilamos, cómo los usamos y cuáles son tus derechos."
+      "body": "{brand} (<host>{hostLabel}</host>) es un conector alojado que permite a los asistentes de IA (Claude, ChatGPT) acceder a tu cuenta de Telegram mediante el protocolo MCP. Tu privacidad es importante para nosotros. Esta política explica a qué puede acceder el conector, qué almacenamos y cuáles son tus derechos."
+    },
+    "access": {
+      "heading": "A qué puede acceder el conector",
+      "body": "El conector funciona a través de tu propia cuenta de Telegram, por lo que puede acceder a los mismos datos que tu aplicación de Telegram. Cuando le pides algo a tu asistente de IA, el conector obtiene lo que esa solicitud necesita, se lo entrega al cliente de IA y no conserva nada después. <strong>Acceder no es lo mismo que almacenar</strong>: las dos secciones siguientes indican exactamente qué almacenamos y qué nunca hacemos.",
+      "items": {
+        "0": {
+          "term": "Mensajes y archivos multimedia",
+          "desc": "El texto y las descripciones de los mensajes, fotos, archivos, mensajes de voz y sus transcripciones, de los chats a los que se refiere tu solicitud."
+        },
+        "1": {
+          "term": "Chats y canales",
+          "desc": "Tu lista de diálogos, los detalles de grupos y canales, los temas de los foros, los contadores de mensajes no leídos, los borradores y las reacciones."
+        },
+        "2": {
+          "term": "Contactos",
+          "desc": "Nombres, nombres de usuario y <strong>números de teléfono</strong> de los contactos guardados en tu cuenta de Telegram, que se devuelven cuando pides tu lista de contactos."
+        },
+        "3": {
+          "term": "Perfil y ajustes",
+          "desc": "Tu propio perfil, tus sesiones activas y tus ajustes de privacidad. En los chats donde eres administrador, las listas de miembros y el registro de acciones de administración."
+        },
+        "4": {
+          "term": "Acciones que solicitas",
+          "desc": "Enviar, editar, reenviar y eliminar mensajes, reacciones y administración de chats. Cada una se ejecuta únicamente a petición explícita tuya, y las acciones irreversibles permanecen desactivadas hasta que las actives."
+        }
+      }
     },
     "collect": {
       "heading": "Qué recopilamos",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Registros de uso",
-          "desc": "Registramos qué herramientas de MCP se invocan (p. ej., \"list-chats\", \"read-messages\"), la marca de tiempo y tu ID de usuario de Telegram. <em>No</em> registramos el contenido de los mensajes, los nombres de los chats ni ningún dato personal de tus conversaciones."
+          "desc": "Registramos qué herramienta MCP se invocó (p. ej., \"list-chats\", \"read-messages\"), la hora, qué cliente de IA la invocó y tu ID de usuario de Telegram. Los registros de uso <em>no</em> contienen contenido de mensajes. Se eliminan automáticamente al cabo de 90 días."
         },
         "2": {
           "term": "Tokens de OAuth",
-          "desc": "Tokens temporales para autenticar tu cliente de IA (Claude/ChatGPT) en nuestro servidor. Se guardan en memoria, no se conservan."
+          "desc": "Los tokens de acceso y de actualización que permiten a tu cliente de IA (Claude/ChatGPT) conectarse a nuestro servidor. Se almacenan en nuestra base de datos y se eliminan cuando te desconectas o cuando caducan."
+        },
+        "3": {
+          "term": "Auditoría de acciones irreversibles",
+          "desc": "Si activas las acciones irreversibles, se registra cada intento: el nombre de la herramienta, el resultado y un breve resumen de los argumentos de hasta 200 caracteres, que puede incluir un identificador de chat y los primeros caracteres de un mensaje. El registro completo es visible para ti en tu cuenta y se elimina al cabo de 90 días."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Qué NO recopilamos",
+      "heading": "Lo que nunca almacenamos",
       "items": {
-        "0": "Contenido de mensajes, archivos multimedia o historial de chat",
-        "1": "Números de teléfono, listas de contactos o datos de perfil",
+        "0": "Contenido de mensajes, archivos multimedia o historial de chats: pasan por nuestro servidor en memoria y desaparecen en cuanto la respuesta llega a tu cliente de IA",
+        "1": "Listas de contactos y números de teléfono: se devuelven a tu cliente de IA cuando los solicitas y nunca se escriben en nuestra base de datos",
         "2": "Contraseñas o códigos de 2FA de Telegram"
       },
       "twoFactorNote": "Si tu cuenta usa una contraseña en la nube de Telegram (2FA), esa contraseña se utiliza <strong>únicamente</strong> para completar el inicio de sesión — pasa por nuestro servidor en memoria durante la verificación y <strong>nunca se almacena ni se registra</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Registros de uso",
-          "desc": "Se conservan para analítica y limitación de la tasa de solicitudes. Sin contenido personal."
+          "desc": "Nombre de la herramienta, hora, cliente de IA y tu ID de usuario, conservados para la limitación de frecuencia y las estadísticas de uso. Se eliminan automáticamente al cabo de 90 días."
         },
         "2": {
-          "term": "Datos de OAuth",
-          "desc": "Solo en memoria, se borran al reiniciar el servidor."
+          "term": "Tokens OAuth",
+          "desc": "Se eliminan cuando te desconectas; los tokens caducados se purgan automáticamente."
+        },
+        "3": {
+          "term": "Auditoría de acciones irreversibles",
+          "desc": "Se conserva durante 90 días para que puedas comprobar qué se hizo en tu cuenta y después se elimina automáticamente."
         }
       }
     },

@@ -441,10 +441,36 @@
     "title": "Kebijakan Privasi",
     "metaDescription": "Kebijakan privasi untuk konektor MCP Telegram yang dihosting {brand}.",
     "lastUpdated": "Terakhir diperbarui: {date}",
-    "updatedDate": "2 Juni 2026",
+    "updatedDate": "7 September 2026",
     "overview": {
       "heading": "Ikhtisar",
-      "body": "{brand} (<host>{hostLabel}</host>) adalah konektor terhosting yang memungkinkan asisten AI (Claude, ChatGPT) mengakses akun Telegram Anda melalui protokol MCP. Privasi Anda penting bagi kami. Kebijakan ini menjelaskan data apa yang kami kumpulkan, bagaimana kami menggunakannya, dan hak-hak Anda."
+      "body": "{brand} (<host>{hostLabel}</host>) adalah konektor terhosting yang memungkinkan asisten AI (Claude, ChatGPT) mengakses akun Telegram Anda melalui protokol MCP. Privasi Anda penting bagi kami. Kebijakan ini menjelaskan apa yang dapat dijangkau konektor, apa yang kami simpan, dan hak-hak Anda."
+    },
+    "access": {
+      "heading": "Apa yang dapat diakses oleh konektor",
+      "body": "Konektor bekerja melalui akun Telegram Anda sendiri, sehingga dapat menjangkau data yang sama dengan yang dapat dijangkau aplikasi Telegram Anda. Saat Anda menanyakan sesuatu kepada asisten AI Anda, konektor mengambil data yang dibutuhkan permintaan tersebut, menyerahkannya ke klien AI, dan tidak menyimpan apa pun setelahnya. <strong>Akses tidak sama dengan penyimpanan</strong> — dua bagian berikutnya menjelaskan secara tepat apa yang kami simpan dan apa yang tidak pernah kami lakukan.",
+      "items": {
+        "0": {
+          "term": "Pesan dan media",
+          "desc": "Teks pesan dan keterangan, foto, file, pesan suara beserta transkripsinya, dari obrolan yang berkaitan dengan permintaan Anda."
+        },
+        "1": {
+          "term": "Obrolan dan saluran",
+          "desc": "Daftar dialog Anda, detail grup dan saluran, topik forum, penghitung belum dibaca, draf, dan reaksi."
+        },
+        "2": {
+          "term": "Kontak",
+          "desc": "Nama, nama pengguna, dan <strong>nomor telepon</strong> dari kontak yang tersimpan di akun Telegram Anda, dikembalikan saat Anda meminta daftar kontak Anda."
+        },
+        "3": {
+          "term": "Profil dan pengaturan",
+          "desc": "Profil Anda sendiri, sesi aktif, dan pengaturan privasi. Untuk obrolan tempat Anda menjadi administrator, daftar anggota dan log admin."
+        },
+        "4": {
+          "term": "Tindakan yang Anda minta",
+          "desc": "Mengirim, mengedit, meneruskan, dan menghapus pesan, reaksi, serta administrasi obrolan. Setiap tindakan hanya dijalankan atas permintaan eksplisit Anda, dan tindakan yang tidak dapat dibatalkan tetap nonaktif sampai Anda mengaktifkannya."
+        }
+      }
     },
     "collect": {
       "heading": "Apa yang kami kumpulkan",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Log penggunaan",
-          "desc": "Kami mencatat alat MCP mana yang dipanggil (mis. \"list-chats\", \"read-messages\"), stempel waktu, dan ID pengguna Telegram Anda. Kami <em>tidak</em> mencatat isi pesan, nama obrolan, atau data pribadi apa pun dari obrolan Anda."
+          "desc": "Kami mencatat alat MCP mana yang dipanggil (mis. \"list-chats\", \"read-messages\"), waktunya, klien AI mana yang memanggilnya, dan ID pengguna Telegram Anda. Log penggunaan <em>tidak</em> memuat konten pesan. Log tersebut dihapus secara otomatis setelah 90 hari."
         },
         "2": {
           "term": "Token OAuth",
-          "desc": "Token sementara untuk mengautentikasi klien AI Anda (Claude/ChatGPT) ke server kami. Disimpan di memori, tidak dipertahankan secara permanen."
+          "desc": "Token akses dan token penyegaran yang memungkinkan klien AI Anda (Claude/ChatGPT) menjangkau server kami. Token ini disimpan di basis data kami, dan dihapus saat Anda memutuskan koneksi atau saat token kedaluwarsa."
+        },
+        "3": {
+          "term": "Audit tindakan yang tidak dapat dibatalkan",
+          "desc": "Jika Anda mengaktifkan tindakan yang tidak dapat dibatalkan, setiap percobaan dicatat: nama alat, hasilnya, dan ringkasan singkat argumen hingga 200 karakter, yang dapat mencakup pengenal obrolan dan karakter pertama dari sebuah pesan. Catatan lengkap dapat Anda lihat di akun Anda, dan dihapus setelah 90 hari."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Apa yang TIDAK kami kumpulkan",
+      "heading": "Apa yang tidak pernah kami simpan",
       "items": {
-        "0": "Isi pesan, berkas media, atau riwayat obrolan",
-        "1": "Nomor telepon, daftar kontak, atau data profil",
+        "0": "Konten pesan, file media, atau riwayat obrolan — semuanya melewati server kami di dalam memori dan hilang begitu jawaban sampai ke klien AI Anda",
+        "1": "Daftar kontak dan nomor telepon — semuanya dikembalikan ke klien AI Anda saat Anda memintanya, dan tidak pernah ditulis ke basis data kami",
         "2": "Kata sandi atau kode 2FA Telegram"
       },
       "twoFactorNote": "Jika akun Anda menggunakan kata sandi cloud Telegram (2FA), kata sandi tersebut hanya digunakan <strong>untuk</strong> menyelesaikan proses masuk — kata sandi melewati server kami di memori selama pemeriksaan dan <strong>tidak pernah disimpan atau dicatat</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Log penggunaan",
-          "desc": "Disimpan untuk analitik dan pembatasan laju. Tanpa konten pribadi."
+          "desc": "Nama alat, waktu, klien AI, dan ID pengguna Anda, disimpan untuk pembatasan laju dan statistik penggunaan. Dihapus secara otomatis setelah 90 hari."
         },
         "2": {
-          "term": "Data OAuth",
-          "desc": "Hanya di memori, dihapus saat server dimulai ulang."
+          "term": "Token OAuth",
+          "desc": "Dihapus saat Anda memutuskan koneksi; token yang kedaluwarsa dibersihkan secara otomatis."
+        },
+        "3": {
+          "term": "Audit tindakan yang tidak dapat dibatalkan",
+          "desc": "Disimpan selama 90 hari agar Anda dapat memeriksa apa yang telah dilakukan pada akun Anda, lalu dihapus secara otomatis."
         }
       }
     },

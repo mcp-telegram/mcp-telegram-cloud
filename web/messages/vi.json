@@ -441,10 +441,36 @@
     "title": "Chính sách quyền riêng tư",
     "metaDescription": "Chính sách quyền riêng tư cho trình kết nối Telegram MCP được lưu trữ {brand}.",
     "lastUpdated": "Cập nhật lần cuối: {date}",
-    "updatedDate": "Ngày 2 tháng 6 năm 2026",
+    "updatedDate": "7 tháng 9, 2026",
     "overview": {
       "heading": "Tổng quan",
-      "body": "{brand} (<host>{hostLabel}</host>) là một trình kết nối được lưu trữ, cho phép các trợ lý AI (Claude, ChatGPT) truy cập tài khoản Telegram của bạn thông qua giao thức MCP. Quyền riêng tư của bạn rất quan trọng đối với chúng tôi. Chính sách này giải thích chúng tôi thu thập dữ liệu gì, sử dụng như thế nào và các quyền của bạn."
+      "body": "{brand} (<host>{hostLabel}</host>) là một trình kết nối được lưu trữ trên máy chủ, cho phép các trợ lý AI (Claude, ChatGPT) truy cập tài khoản Telegram của bạn thông qua giao thức MCP. Quyền riêng tư của bạn rất quan trọng đối với chúng tôi. Chính sách này giải thích trình kết nối có thể tiếp cận những gì, chúng tôi lưu trữ những gì, và các quyền của bạn."
+    },
+    "access": {
+      "heading": "Trình kết nối có thể truy cập những gì",
+      "body": "Trình kết nối hoạt động thông qua tài khoản Telegram của chính bạn, nên nó có thể tiếp cận cùng những dữ liệu mà ứng dụng Telegram của bạn có thể tiếp cận. Khi bạn hỏi trợ lý AI điều gì đó, trình kết nối sẽ lấy những gì yêu cầu đó cần, chuyển cho ứng dụng AI, và sau đó không giữ lại gì. <strong>Truy cập không đồng nghĩa với lưu trữ</strong> — hai phần tiếp theo nêu chính xác những gì chúng tôi lưu trữ và những gì chúng tôi không bao giờ làm.",
+      "items": {
+        "0": {
+          "term": "Tin nhắn và tệp đa phương tiện",
+          "desc": "Nội dung tin nhắn và chú thích, ảnh, tệp, tin nhắn thoại và bản chuyển văn bản của chúng, từ các cuộc trò chuyện liên quan đến yêu cầu của bạn."
+        },
+        "1": {
+          "term": "Cuộc trò chuyện và kênh",
+          "desc": "Danh sách hội thoại của bạn, thông tin chi tiết về nhóm và kênh, chủ đề diễn đàn, bộ đếm tin chưa đọc, bản nháp và cảm xúc."
+        },
+        "2": {
+          "term": "Danh bạ",
+          "desc": "Tên, tên người dùng và <strong>số điện thoại</strong> của các liên hệ được lưu trong tài khoản Telegram của bạn, được trả về khi bạn yêu cầu danh sách liên hệ."
+        },
+        "3": {
+          "term": "Hồ sơ và cài đặt",
+          "desc": "Hồ sơ của chính bạn, các phiên đang hoạt động và cài đặt quyền riêng tư. Đối với các cuộc trò chuyện mà bạn là quản trị viên: danh sách thành viên và nhật ký quản trị."
+        },
+        "4": {
+          "term": "Các hành động bạn yêu cầu",
+          "desc": "Gửi, chỉnh sửa, chuyển tiếp và xóa tin nhắn, cảm xúc, và quản trị cuộc trò chuyện. Mỗi hành động chỉ được thực hiện theo yêu cầu rõ ràng của bạn, và các hành động không thể hoàn tác vẫn bị tắt cho đến khi bạn bật chúng."
+        }
+      }
     },
     "collect": {
       "heading": "Những gì chúng tôi thu thập",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Nhật ký sử dụng",
-          "desc": "Chúng tôi ghi lại những công cụ MCP nào được gọi (ví dụ: \"list-chats\", \"read-messages\"), dấu thời gian và ID người dùng Telegram của bạn. Chúng tôi <em>không</em> ghi lại nội dung tin nhắn, tên cuộc trò chuyện hoặc bất kỳ dữ liệu cá nhân nào từ các cuộc trò chuyện của bạn."
+          "desc": "Chúng tôi ghi lại công cụ MCP nào đã được gọi (ví dụ: \"list-chats\", \"read-messages\"), thời điểm, ứng dụng AI nào đã gọi nó, và ID người dùng Telegram của bạn. Nhật ký sử dụng <em>không</em> chứa nội dung tin nhắn. Chúng bị xóa tự động sau 90 ngày."
         },
         "2": {
           "term": "Mã thông báo OAuth",
-          "desc": "Mã thông báo tạm thời để xác thực ứng dụng AI của bạn (Claude/ChatGPT) với máy chủ của chúng tôi. Được lưu trong bộ nhớ, không được lưu trữ lâu dài."
+          "desc": "Các mã thông báo truy cập và làm mới cho phép ứng dụng AI của bạn (Claude/ChatGPT) kết nối tới máy chủ của chúng tôi. Chúng được lưu trong cơ sở dữ liệu của chúng tôi và bị xóa khi bạn ngắt kết nối hoặc khi chúng hết hạn."
+        },
+        "3": {
+          "term": "Kiểm toán các hành động không thể hoàn tác",
+          "desc": "Nếu bạn bật các hành động không thể hoàn tác, mọi lần thử đều được ghi lại: tên công cụ, kết quả, và một bản tóm tắt ngắn của các tham số tối đa 200 ký tự, có thể bao gồm mã định danh cuộc trò chuyện và các ký tự đầu tiên của một tin nhắn. Bản ghi đầy đủ hiển thị cho bạn trong tài khoản của bạn và bị xóa sau 90 ngày."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Những gì chúng tôi KHÔNG thu thập",
+      "heading": "Những gì chúng tôi không bao giờ lưu trữ",
       "items": {
-        "0": "Nội dung tin nhắn, tệp phương tiện hoặc lịch sử trò chuyện",
-        "1": "Số điện thoại, danh sách liên hệ hoặc dữ liệu hồ sơ",
+        "0": "Nội dung tin nhắn, tệp đa phương tiện hoặc lịch sử trò chuyện — chúng đi qua máy chủ của chúng tôi trong bộ nhớ tạm và biến mất ngay khi câu trả lời đến được ứng dụng AI của bạn",
+        "1": "Danh bạ và số điện thoại — chúng được trả về cho ứng dụng AI của bạn khi bạn yêu cầu, và không bao giờ được ghi vào cơ sở dữ liệu của chúng tôi",
         "2": "Mật khẩu hoặc mã 2FA của Telegram"
       },
       "twoFactorNote": "Nếu tài khoản của bạn dùng mật khẩu đám mây Telegram (2FA), mật khẩu đó <strong>chỉ</strong> được dùng để hoàn tất đăng nhập — nó đi qua máy chủ của chúng tôi trong bộ nhớ trong suốt quá trình kiểm tra và <strong>không bao giờ được lưu trữ hay ghi log</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Nhật ký sử dụng",
-          "desc": "Được lưu giữ để phân tích và giới hạn tốc độ. Không có nội dung cá nhân."
+          "desc": "Tên công cụ, thời điểm, ứng dụng AI và ID người dùng của bạn, được lưu giữ để giới hạn tần suất và thống kê sử dụng. Bị xóa tự động sau 90 ngày."
         },
         "2": {
-          "term": "Dữ liệu OAuth",
-          "desc": "Chỉ trong bộ nhớ, bị xóa khi máy chủ khởi động lại."
+          "term": "Mã thông báo OAuth",
+          "desc": "Bị xóa khi bạn ngắt kết nối; các mã thông báo hết hạn được dọn dẹp tự động."
+        },
+        "3": {
+          "term": "Kiểm toán các hành động không thể hoàn tác",
+          "desc": "Được lưu giữ trong 90 ngày để bạn có thể kiểm tra những gì đã được thực hiện trên tài khoản của mình, sau đó bị xóa tự động."
         }
       }
     },

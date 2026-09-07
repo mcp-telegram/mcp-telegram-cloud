@@ -441,10 +441,36 @@
     "title": "Gizlilik Politikası",
     "metaDescription": "{brand} barındırılan Telegram MCP bağlayıcısı için gizlilik politikası.",
     "lastUpdated": "Son güncelleme: {date}",
-    "updatedDate": "2 Haziran 2026",
+    "updatedDate": "7 Eylül 2026",
     "overview": {
       "heading": "Genel bakış",
-      "body": "{brand} (<host>{hostLabel}</host>), yapay zeka asistanlarının (Claude, ChatGPT) MCP protokolü aracılığıyla Telegram hesabınıza erişmesini sağlayan barındırılan bir bağlayıcıdır. Gizliliğiniz bizim için önemlidir. Bu politika, hangi verileri topladığımızı, bunları nasıl kullandığımızı ve haklarınızı açıklar."
+      "body": "{brand} (<host>{hostLabel}</host>), yapay zeka asistanlarının (Claude, ChatGPT) MCP protokolü üzerinden Telegram hesabınıza erişmesini sağlayan barındırılan bir bağlayıcıdır. Gizliliğiniz bizim için önemlidir. Bu politika, bağlayıcının nelere ulaşabildiğini, neleri sakladığımızı ve haklarınızı açıklar."
+    },
+    "access": {
+      "heading": "Bağlayıcının neye erişebildiği",
+      "body": "Bağlayıcı kendi Telegram hesabınız üzerinden çalışır; bu nedenle Telegram uygulamanızın ulaşabildiği verilere o da ulaşabilir. Yapay zeka asistanınıza bir şey sorduğunuzda bağlayıcı, o isteğin gerektirdiği verileri alır, yapay zeka istemcisine iletir ve sonrasında hiçbir şey saklamaz. <strong>Erişim, saklama ile aynı şey değildir</strong> — sonraki iki bölümde neleri sakladığımız ve neleri asla yapmadığımız tam olarak açıklanmaktadır.",
+      "items": {
+        "0": {
+          "term": "Mesajlar ve medya",
+          "desc": "İsteğinizin ilgili olduğu sohbetlerdeki mesaj metinleri ve açıklamalar, fotoğraflar, dosyalar, sesli mesajlar ve bunların yazıya dökümleri."
+        },
+        "1": {
+          "term": "Sohbetler ve kanallar",
+          "desc": "Sohbet listeniz, grup ve kanal bilgileri, forum konuları, okunmamış sayaçları, taslaklar ve tepkiler."
+        },
+        "2": {
+          "term": "Kişiler",
+          "desc": "Telegram hesabınızda kayıtlı kişilerin adları, kullanıcı adları ve <strong>telefon numaraları</strong>; kişi listenizi istediğinizde döndürülür."
+        },
+        "3": {
+          "term": "Profil ve ayarlar",
+          "desc": "Kendi profiliniz, etkin oturumlarınız ve gizlilik ayarlarınız. Yönetici olduğunuz sohbetlerde üye listeleri ve yönetici günlüğü."
+        },
+        "4": {
+          "term": "Talep ettiğiniz eylemler",
+          "desc": "Mesaj gönderme, düzenleme, iletme ve silme, tepkiler ve sohbet yönetimi. Her biri yalnızca sizin açık talebiniz üzerine çalışır ve geri alınamaz eylemler siz etkinleştirene kadar kapalı kalır."
+        }
+      }
     },
     "collect": {
       "heading": "Neler topluyoruz",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Kullanım günlükleri",
-          "desc": "Hangi MCP araçlarının çağrıldığını (ör. \"list-chats\", \"read-messages\"), zaman damgasını ve Telegram kullanıcı kimliğinizi günlüğe kaydederiz. Mesaj içeriğini, sohbet adlarını veya sohbetlerinizdeki herhangi bir kişisel veriyi günlüğe <em>kaydetmeyiz</em>."
+          "desc": "Hangi MCP aracının çağrıldığını (örn. \"list-chats\", \"read-messages\"), zamanı, hangi yapay zeka istemcisinin çağırdığını ve Telegram kullanıcı kimliğinizi kaydederiz. Kullanım günlükleri <em>hiçbir</em> mesaj içeriği taşımaz. 90 gün sonra otomatik olarak silinirler."
         },
         "2": {
           "term": "OAuth jetonları",
-          "desc": "Yapay zeka istemcinizin (Claude/ChatGPT) sunucumuza kimliğini doğrulamak için kullanılan geçici jetonlar. Bellekte saklanır, kalıcı olarak tutulmaz."
+          "desc": "Yapay zeka istemcinizin (Claude/ChatGPT) sunucumuza ulaşmasını sağlayan erişim ve yenileme belirteçleri. Veritabanımızda saklanır ve bağlantıyı kestiğinizde veya süreleri dolduğunda silinir."
+        },
+        "3": {
+          "term": "Geri alınamaz eylemlerin denetim kaydı",
+          "desc": "Geri alınamaz eylemleri etkinleştirirseniz her deneme kaydedilir: aracın adı, sonuç ve en fazla 200 karakterlik kısa bir argüman özeti; bu özet bir sohbet tanımlayıcısını ve bir mesajın ilk karakterlerini içerebilir. Kaydın tamamı hesabınızda size görünür ve 90 gün sonra silinir."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Neleri toplamıyoruz",
+      "heading": "Asla saklamadıklarımız",
       "items": {
-        "0": "Mesaj içeriği, medya dosyaları veya sohbet geçmişi",
-        "1": "Telefon numaraları, kişi listeleri veya profil verileri",
+        "0": "Mesaj içeriği, medya dosyaları veya sohbet geçmişi — sunucumuzdan bellekte geçerler ve yanıt yapay zeka istemcinize ulaştığında silinmiş olurlar",
+        "1": "Kişi listeleri ve telefon numaraları — bunları istediğinizde yapay zeka istemcinize döndürülür ve asla veritabanımıza yazılmaz",
         "2": "Parolalar veya Telegram 2FA kodları"
       },
       "twoFactorNote": "Hesabınız bir Telegram bulut parolası (2FA) kullanıyorsa, bu parola <strong>yalnızca</strong> oturum açmayı tamamlamak için kullanılır — doğrulama süresince sunucumuzdan bellekte geçer ve <strong>asla saklanmaz veya günlüğe kaydedilmez</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Kullanım günlükleri",
-          "desc": "Analitik ve hız sınırlaması için saklanır. Kişisel içerik yoktur."
+          "desc": "Araç adı, zaman, yapay zeka istemcisi ve kullanıcı kimliğiniz; hız sınırlaması ve kullanım istatistikleri için saklanır. 90 gün sonra otomatik olarak silinir."
         },
         "2": {
-          "term": "OAuth verileri",
-          "desc": "Yalnızca bellekte; sunucu yeniden başlatıldığında temizlenir."
+          "term": "OAuth belirteçleri",
+          "desc": "Bağlantıyı kestiğinizde silinir; süresi dolan belirteçler otomatik olarak temizlenir."
+        },
+        "3": {
+          "term": "Geri alınamaz eylemlerin denetim kaydı",
+          "desc": "Hesabınızda nelerin yapıldığını kontrol edebilmeniz için 90 gün saklanır, ardından otomatik olarak silinir."
         }
       }
     },

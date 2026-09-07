@@ -441,10 +441,36 @@
     "title": "Polityka prywatności",
     "metaDescription": "Polityka prywatności hostowanego konektora Telegram MCP {brand}.",
     "lastUpdated": "Ostatnia aktualizacja: {date}",
-    "updatedDate": "2 czerwca 2026",
+    "updatedDate": "7 września 2026",
     "overview": {
       "heading": "Przegląd",
-      "body": "{brand} (<host>{hostLabel}</host>) to hostowany konektor, który umożliwia asystentom AI (Claude, ChatGPT) dostęp do Twojego konta Telegram za pośrednictwem protokołu MCP. Twoja prywatność jest dla nas ważna. Niniejsza polityka wyjaśnia, jakie dane zbieramy, jak je wykorzystujemy oraz jakie masz prawa."
+      "body": "{brand} (<host>{hostLabel}</host>) to hostowany konektor, który umożliwia asystentom AI (Claude, ChatGPT) dostęp do Twojego konta Telegram za pośrednictwem protokołu MCP. Twoja prywatność jest dla nas ważna. Niniejsza polityka wyjaśnia, do czego konektor ma dostęp, co przechowujemy i jakie masz prawa."
+    },
+    "access": {
+      "heading": "Do czego konektor ma dostęp",
+      "body": "Konektor działa za pośrednictwem Twojego własnego konta Telegram, więc ma dostęp do tych samych danych, co Twoja aplikacja Telegram. Gdy o coś prosisz swojego asystenta AI, konektor pobiera to, czego wymaga dane żądanie, przekazuje to klientowi AI i nie zachowuje niczego po zakończeniu. <strong>Dostęp to nie to samo, co przechowywanie</strong> — dwie kolejne sekcje precyzyjnie opisują, co przechowujemy, a czego nigdy nie robimy.",
+      "items": {
+        "0": {
+          "term": "Wiadomości i multimedia",
+          "desc": "Treść wiadomości i podpisy, zdjęcia, pliki, wiadomości głosowe i ich transkrypcje z czatów, których dotyczy Twoje żądanie."
+        },
+        "1": {
+          "term": "Czaty i kanały",
+          "desc": "Twoja lista czatów, informacje o grupach i kanałach, tematy na forum, liczniki nieprzeczytanych wiadomości, wersje robocze i reakcje."
+        },
+        "2": {
+          "term": "Kontakty",
+          "desc": "Imiona, nazwy użytkowników i <strong>numery telefonów</strong> kontaktów zapisanych na Twoim koncie Telegram, zwracane, gdy poprosisz o listę kontaktów."
+        },
+        "3": {
+          "term": "Profil i ustawienia",
+          "desc": "Twój własny profil, aktywne sesje i ustawienia prywatności. W czatach, w których jesteś administratorem — listy członków i dziennik administratora."
+        },
+        "4": {
+          "term": "Działania, o które prosisz",
+          "desc": "Wysyłanie, edytowanie, przesyłanie dalej i usuwanie wiadomości, reakcje oraz administrowanie czatem. Każde z nich jest wykonywane wyłącznie na Twoje wyraźne żądanie, a działania nieodwracalne pozostają wyłączone, dopóki ich nie włączysz."
+        }
+      }
     },
     "collect": {
       "heading": "Co zbieramy",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Dzienniki użycia",
-          "desc": "Rejestrujemy, które narzędzia MCP są wywoływane (np. \"list-chats\", \"read-messages\"), znacznik czasu oraz Twój identyfikator użytkownika Telegram. <em>Nie</em> rejestrujemy treści wiadomości, nazw czatów ani żadnych danych osobowych z Twoich rozmów."
+          "desc": "Rejestrujemy, które narzędzie MCP zostało wywołane (np. „list-chats”, „read-messages”), czas, który klient AI je wywołał, oraz Twój identyfikator użytkownika Telegram. Dzienniki użycia <em>nie</em> zawierają treści wiadomości. Są usuwane automatycznie po 90 dniach."
         },
         "2": {
           "term": "Tokeny OAuth",
-          "desc": "Tymczasowe tokeny służące do uwierzytelniania Twojego klienta AI (Claude/ChatGPT) na naszym serwerze. Przechowywane w pamięci, nietrwałe."
+          "desc": "Tokeny dostępu i odświeżania, które umożliwiają Twojemu klientowi AI (Claude/ChatGPT) łączenie się z naszym serwerem. Są przechowywane w naszej bazie danych i usuwane, gdy się rozłączysz lub gdy wygasną."
+        },
+        "3": {
+          "term": "Rejestr działań nieodwracalnych",
+          "desc": "Jeśli włączysz działania nieodwracalne, każda próba jest rejestrowana: nazwa narzędzia, wynik oraz krótkie podsumowanie argumentów o długości do 200 znaków, które może zawierać identyfikator czatu i pierwsze znaki wiadomości. Pełny zapis jest dla Ciebie widoczny na Twoim koncie i jest usuwany po 90 dniach."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Czego NIE zbieramy",
+      "heading": "Czego nigdy nie przechowujemy",
       "items": {
-        "0": "Treści wiadomości, plików multimedialnych ani historii czatów",
-        "1": "Numerów telefonów, list kontaktów ani danych profilowych",
+        "0": "Treści wiadomości, plików multimedialnych ani historii czatów — przechodzą przez nasz serwer w pamięci i znikają, gdy tylko odpowiedź dotrze do Twojego klienta AI",
+        "1": "List kontaktów ani numerów telefonów — są zwracane Twojemu klientowi AI, gdy o nie poprosisz, i nigdy nie są zapisywane w naszej bazie danych",
         "2": "Haseł ani kodów 2FA Telegram"
       },
       "twoFactorNote": "Jeśli Twoje konto korzysta z hasła w chmurze Telegrama (2FA), to hasło jest używane <strong>wyłącznie</strong> do dokończenia logowania — przechodzi przez nasz serwer w pamięci na czas weryfikacji i <strong>nigdy nie jest przechowywane ani zapisywane w logach</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Dzienniki użycia",
-          "desc": "Przechowywane na potrzeby analityki i ograniczania liczby żądań. Bez treści osobistych."
+          "desc": "Nazwa narzędzia, czas, klient AI i Twój identyfikator użytkownika, przechowywane na potrzeby ograniczania liczby żądań i statystyk użycia. Usuwane automatycznie po 90 dniach."
         },
         "2": {
-          "term": "Dane OAuth",
-          "desc": "Tylko w pamięci, usuwane przy ponownym uruchomieniu serwera."
+          "term": "Tokeny OAuth",
+          "desc": "Usuwane, gdy się rozłączysz; wygasłe tokeny są czyszczone automatycznie."
+        },
+        "3": {
+          "term": "Rejestr działań nieodwracalnych",
+          "desc": "Przechowywany przez 90 dni, abyś mógł/mogła sprawdzić, co zostało wykonane na Twoim koncie, a następnie usuwany automatycznie."
         }
       }
     },

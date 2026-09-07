@@ -441,10 +441,36 @@
     "title": "Informativa sulla privacy",
     "metaDescription": "Informativa sulla privacy per il connettore MCP Telegram ospitato {brand}.",
     "lastUpdated": "Ultimo aggiornamento: {date}",
-    "updatedDate": "2 giugno 2026",
+    "updatedDate": "7 settembre 2026",
     "overview": {
       "heading": "Panoramica",
-      "body": "{brand} (<host>{hostLabel}</host>) è un connettore ospitato che consente agli assistenti AI (Claude, ChatGPT) di accedere al tuo account Telegram tramite il protocollo MCP. La tua privacy è importante per noi. Questa informativa spiega quali dati raccogliamo, come li utilizziamo e quali sono i tuoi diritti."
+      "body": "{brand} (<host>{hostLabel}</host>) è un connettore in hosting che consente agli assistenti AI (Claude, ChatGPT) di accedere al tuo account Telegram tramite il protocollo MCP. La tua privacy è importante per noi. Questa informativa spiega a cosa può accedere il connettore, cosa conserviamo e quali sono i tuoi diritti."
+    },
+    "access": {
+      "heading": "A cosa può accedere il connettore",
+      "body": "Il connettore funziona tramite il tuo account Telegram, quindi può raggiungere gli stessi dati a cui può accedere la tua app Telegram. Quando chiedi qualcosa al tuo assistente AI, il connettore recupera ciò che serve per quella richiesta, lo consegna al client AI e in seguito non conserva nulla. <strong>Accesso non significa archiviazione</strong>: le due sezioni successive indicano esattamente cosa conserviamo e cosa non facciamo mai.",
+      "items": {
+        "0": {
+          "term": "Messaggi e media",
+          "desc": "Testo dei messaggi e didascalie, foto, file, messaggi vocali e le loro trascrizioni, dalle chat a cui si riferisce la tua richiesta."
+        },
+        "1": {
+          "term": "Chat e canali",
+          "desc": "Il tuo elenco di chat, i dettagli di gruppi e canali, gli argomenti dei forum, i contatori dei non letti, le bozze e le reazioni."
+        },
+        "2": {
+          "term": "Contatti",
+          "desc": "Nomi, nomi utente e <strong>numeri di telefono</strong> dei contatti salvati nel tuo account Telegram, restituiti quando richiedi il tuo elenco di contatti."
+        },
+        "3": {
+          "term": "Profilo e impostazioni",
+          "desc": "Il tuo profilo, le sessioni attive e le impostazioni sulla privacy. Per le chat in cui sei amministratore, gli elenchi dei membri e il registro delle azioni degli amministratori."
+        },
+        "4": {
+          "term": "Azioni che richiedi",
+          "desc": "Invio, modifica, inoltro ed eliminazione di messaggi, reazioni e amministrazione delle chat. Ciascuna viene eseguita solo su tua esplicita richiesta, e le azioni irreversibili restano disattivate finché non le abiliti."
+        }
+      }
     },
     "collect": {
       "heading": "Cosa raccogliamo",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Log di utilizzo",
-          "desc": "Registriamo quali strumenti MCP vengono richiamati (ad es. \"list-chats\", \"read-messages\"), l'orario e il tuo ID utente Telegram. Non registriamo <em>nessun</em> contenuto dei messaggi, nome delle chat o dato personale proveniente dalle tue conversazioni."
+          "desc": "Registriamo quale strumento MCP è stato chiamato (ad es. \"list-chats\", \"read-messages\"), l'ora, quale client AI lo ha chiamato e il tuo ID utente Telegram. I log di utilizzo <em>non</em> contengono alcun contenuto dei messaggi. Vengono eliminati automaticamente dopo 90 giorni."
         },
         "2": {
           "term": "Token OAuth",
-          "desc": "Token temporanei per autenticare il tuo client AI (Claude/ChatGPT) sul nostro server. Conservati in memoria, non resi persistenti."
+          "desc": "I token di accesso e di aggiornamento che consentono al tuo client AI (Claude/ChatGPT) di raggiungere il nostro server. Sono conservati nel nostro database e vengono eliminati quando ti disconnetti o quando scadono."
+        },
+        "3": {
+          "term": "Registro delle azioni irreversibili",
+          "desc": "Se attivi le azioni irreversibili, ogni tentativo viene registrato: il nome dello strumento, l'esito e un breve riepilogo degli argomenti di massimo 200 caratteri, che può includere un identificativo della chat e i primi caratteri di un messaggio. Il registro completo è visibile nel tuo account e viene eliminato dopo 90 giorni."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Cosa NON raccogliamo",
+      "heading": "Cosa non conserviamo mai",
       "items": {
-        "0": "Contenuto dei messaggi, file multimediali o cronologia delle chat",
-        "1": "Numeri di telefono, elenchi di contatti o dati del profilo",
+        "0": "Contenuto dei messaggi, file multimediali o cronologia delle chat: transitano sul nostro server in memoria e scompaiono non appena la risposta raggiunge il tuo client AI",
+        "1": "Elenchi di contatti e numeri di telefono: vengono restituiti al tuo client AI quando li richiedi e non vengono mai scritti nel nostro database",
         "2": "Password o codici 2FA di Telegram"
       },
       "twoFactorNote": "Se il tuo account usa una password cloud di Telegram (2FA), quella password viene usata <strong>solo</strong> per completare l'accesso — transita dal nostro server in memoria per la durata del controllo e <strong>non viene mai memorizzata né registrata nei log</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Log di utilizzo",
-          "desc": "Conservati per analisi e limitazione della frequenza. Nessun contenuto personale."
+          "desc": "Nome dello strumento, ora, client AI e il tuo ID utente, conservati per la limitazione della frequenza delle richieste e le statistiche di utilizzo. Eliminati automaticamente dopo 90 giorni."
         },
         "2": {
-          "term": "Dati OAuth",
-          "desc": "Solo in memoria, cancellati al riavvio del server."
+          "term": "Token OAuth",
+          "desc": "Eliminati quando ti disconnetti; i token scaduti vengono rimossi automaticamente."
+        },
+        "3": {
+          "term": "Registro delle azioni irreversibili",
+          "desc": "Conservato per 90 giorni, così puoi verificare cosa è stato fatto sul tuo account; poi viene eliminato automaticamente."
         }
       }
     },

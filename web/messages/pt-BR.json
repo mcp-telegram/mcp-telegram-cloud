@@ -441,10 +441,36 @@
     "title": "Política de Privacidade",
     "metaDescription": "Política de privacidade do conector MCP do Telegram hospedado pela {brand}.",
     "lastUpdated": "Última atualização: {date}",
-    "updatedDate": "2 de junho de 2026",
+    "updatedDate": "7 de setembro de 2026",
     "overview": {
       "heading": "Visão geral",
-      "body": "A {brand} (<host>{hostLabel}</host>) é um conector hospedado que permite que assistentes de IA (Claude, ChatGPT) acessem sua conta do Telegram por meio do protocolo MCP. Sua privacidade é importante para nós. Esta política explica quais dados coletamos, como os utilizamos e quais são os seus direitos."
+      "body": "{brand} (<host>{hostLabel}</host>) é um conector hospedado que permite que assistentes de IA (Claude, ChatGPT) acessem sua conta do Telegram por meio do protocolo MCP. Sua privacidade é importante para nós. Esta política explica o que o conector pode alcançar, o que armazenamos e quais são os seus direitos."
+    },
+    "access": {
+      "heading": "O que o conector pode acessar",
+      "body": "O conector funciona por meio da sua própria conta do Telegram, então ele pode alcançar os mesmos dados que o seu aplicativo do Telegram alcança. Quando você pede algo ao seu assistente de IA, o conector busca o que essa solicitação precisa, entrega ao cliente de IA e não guarda nada depois. <strong>Acesso não é o mesmo que armazenamento</strong> — as duas seções seguintes dizem exatamente o que armazenamos e o que nunca fazemos.",
+      "items": {
+        "0": {
+          "term": "Mensagens e mídia",
+          "desc": "Texto e legendas das mensagens, fotos, arquivos, mensagens de voz e suas transcrições, dos chats aos quais a sua solicitação se refere."
+        },
+        "1": {
+          "term": "Chats e canais",
+          "desc": "Sua lista de conversas, detalhes de grupos e canais, tópicos de fórum, contadores de não lidas, rascunhos e reações."
+        },
+        "2": {
+          "term": "Contatos",
+          "desc": "Nomes, nomes de usuário e <strong>números de telefone</strong> dos contatos salvos na sua conta do Telegram, retornados quando você pede a sua lista de contatos."
+        },
+        "3": {
+          "term": "Perfil e configurações",
+          "desc": "Seu próprio perfil, sessões ativas e configurações de privacidade. Para chats em que você é administrador, listas de membros e o registro de administradores."
+        },
+        "4": {
+          "term": "Ações que você solicita",
+          "desc": "Enviar, editar, encaminhar e excluir mensagens, reações e administração de chats. Cada uma é executada somente mediante sua solicitação explícita, e as ações irreversíveis permanecem desativadas até que você as ative."
+        }
+      }
     },
     "collect": {
       "heading": "O que coletamos",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Registros de uso",
-          "desc": "Registramos quais ferramentas MCP são chamadas (por exemplo, \"list-chats\", \"read-messages\"), o horário e o seu ID de usuário do Telegram. <em>Não</em> registramos o conteúdo das mensagens, nomes de chats nem quaisquer dados pessoais das suas conversas."
+          "desc": "Registramos qual ferramenta MCP foi chamada (por exemplo, \"list-chats\", \"read-messages\"), o horário, qual cliente de IA a chamou e o seu ID de usuário do Telegram. Os registros de uso <em>não</em> contêm nenhum conteúdo de mensagens. Eles são excluídos automaticamente após 90 dias."
         },
         "2": {
           "term": "Tokens OAuth",
-          "desc": "Tokens temporários para autenticar o seu cliente de IA (Claude/ChatGPT) em nosso servidor. Armazenados na memória, não persistidos."
+          "desc": "Os tokens de acesso e de atualização que permitem que o seu cliente de IA (Claude/ChatGPT) alcance o nosso servidor. Eles são armazenados em nosso banco de dados e excluídos quando você se desconecta ou quando expiram."
+        },
+        "3": {
+          "term": "Auditoria de ações irreversíveis",
+          "desc": "Se você ativar as ações irreversíveis, cada tentativa é registrada: o nome da ferramenta, o resultado e um breve resumo dos argumentos de até 200 caracteres, que pode incluir um identificador de chat e os primeiros caracteres de uma mensagem. O registro completo fica visível para você na sua conta e é excluído após 90 dias."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "O que NÃO coletamos",
+      "heading": "O que nunca armazenamos",
       "items": {
-        "0": "Conteúdo de mensagens, arquivos de mídia ou histórico de conversas",
-        "1": "Números de telefone, listas de contatos ou dados de perfil",
+        "0": "Conteúdo de mensagens, arquivos de mídia ou histórico de chats — eles passam pelo nosso servidor em memória e desaparecem assim que a resposta chega ao seu cliente de IA",
+        "1": "Listas de contatos e números de telefone — eles são retornados ao seu cliente de IA quando você os solicita, e nunca são gravados em nosso banco de dados",
         "2": "Senhas ou códigos de autenticação em duas etapas (2FA) do Telegram"
       },
       "twoFactorNote": "Se a sua conta usa uma senha na nuvem do Telegram (2FA), essa senha é usada <strong>apenas</strong> para concluir o login — passa pelo nosso servidor na memória durante a verificação e <strong>nunca é armazenada nem registrada em logs</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Registros de uso",
-          "desc": "Retidos para análise e limitação de taxa. Nenhum conteúdo pessoal."
+          "desc": "Nome da ferramenta, horário, cliente de IA e o seu ID de usuário, mantidos para limitação de taxa e estatísticas de uso. Excluídos automaticamente após 90 dias."
         },
         "2": {
-          "term": "Dados OAuth",
-          "desc": "Apenas na memória, apagados ao reiniciar o servidor."
+          "term": "Tokens OAuth",
+          "desc": "Excluídos quando você se desconecta; tokens expirados são removidos automaticamente."
+        },
+        "3": {
+          "term": "Auditoria de ações irreversíveis",
+          "desc": "Mantida por 90 dias para que você possa verificar o que foi feito na sua conta, e depois excluída automaticamente."
         }
       }
     },

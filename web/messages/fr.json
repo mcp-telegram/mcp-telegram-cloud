@@ -441,10 +441,36 @@
     "title": "Politique de confidentialité",
     "metaDescription": "Politique de confidentialité du connecteur MCP Telegram hébergé de {brand}.",
     "lastUpdated": "Dernière mise à jour : {date}",
-    "updatedDate": "2 juin 2026",
+    "updatedDate": "7 septembre 2026",
     "overview": {
       "heading": "Aperçu",
-      "body": "{brand} (<host>{hostLabel}</host>) est un connecteur hébergé qui permet aux assistants IA (Claude, ChatGPT) d'accéder à votre compte Telegram via le protocole MCP. Votre vie privée nous tient à cœur. Cette politique explique quelles données nous collectons, comment nous les utilisons et quels sont vos droits."
+      "body": "{brand} (<host>{hostLabel}</host>) est un connecteur hébergé qui permet aux assistants IA (Claude, ChatGPT) d'accéder à votre compte Telegram via le protocole MCP. Votre vie privée est importante pour nous. Cette politique explique ce à quoi le connecteur peut accéder, ce que nous stockons et vos droits."
+    },
+    "access": {
+      "heading": "Ce à quoi le connecteur peut accéder",
+      "body": "Le connecteur fonctionne via votre propre compte Telegram, il peut donc accéder aux mêmes données que votre application Telegram. Lorsque vous demandez quelque chose à votre assistant IA, le connecteur récupère ce dont cette requête a besoin, le transmet au client IA et ne conserve rien ensuite. <strong>L'accès n'est pas la même chose que le stockage</strong> — les deux sections suivantes indiquent précisément ce que nous stockons et ce que nous ne faisons jamais.",
+      "items": {
+        "0": {
+          "term": "Messages et médias",
+          "desc": "Le texte des messages et les légendes, les photos, les fichiers, les messages vocaux et leurs transcriptions, provenant des chats concernés par votre requête."
+        },
+        "1": {
+          "term": "Chats et chaînes",
+          "desc": "Votre liste de dialogues, les informations des groupes et des chaînes, les sujets des forums, les compteurs de messages non lus, les brouillons et les réactions."
+        },
+        "2": {
+          "term": "Contacts",
+          "desc": "Les noms, les noms d'utilisateur et les <strong>numéros de téléphone</strong> des contacts enregistrés dans votre compte Telegram, renvoyés lorsque vous demandez votre liste de contacts."
+        },
+        "3": {
+          "term": "Profil et paramètres",
+          "desc": "Votre propre profil, vos sessions actives et vos paramètres de confidentialité. Pour les chats dont vous êtes administrateur, la liste des membres et le journal d'administration."
+        },
+        "4": {
+          "term": "Actions que vous demandez",
+          "desc": "L'envoi, la modification, le transfert et la suppression de messages, les réactions et l'administration des chats. Chacune de ces actions ne s'exécute que sur votre demande explicite, et les actions irréversibles restent désactivées tant que vous ne les activez pas."
+        }
+      }
     },
     "collect": {
       "heading": "Ce que nous collectons",
@@ -455,11 +481,15 @@
         },
         "1": {
           "term": "Journaux d'utilisation",
-          "desc": "Nous enregistrons quels outils MCP sont appelés (p. ex. \"list-chats\", \"read-messages\"), l'horodatage et votre identifiant utilisateur Telegram. Nous n'enregistrons <em>pas</em> le contenu des messages, les noms des conversations ni aucune donnée personnelle issue de vos conversations."
+          "desc": "Nous journalisons quel outil MCP a été appelé (par ex. « list-chats », « read-messages »), l'heure, quel client IA l'a appelé et votre identifiant utilisateur Telegram. Les journaux d'utilisation ne contiennent <em>aucun</em> contenu de message. Ils sont supprimés automatiquement après 90 jours."
         },
         "2": {
           "term": "Jetons OAuth",
-          "desc": "Jetons temporaires servant à authentifier votre client IA (Claude/ChatGPT) auprès de notre serveur. Conservés en mémoire, non persistés."
+          "desc": "Les jetons d'accès et de rafraîchissement qui permettent à votre client IA (Claude/ChatGPT) d'atteindre notre serveur. Ils sont stockés dans notre base de données et supprimés lorsque vous vous déconnectez ou lorsqu'ils expirent."
+        },
+        "3": {
+          "term": "Audit des actions irréversibles",
+          "desc": "Si vous activez les actions irréversibles, chaque tentative est enregistrée : le nom de l'outil, le résultat et un bref résumé des arguments d'au plus 200 caractères, qui peut inclure un identifiant de chat et les premiers caractères d'un message. L'enregistrement complet est visible par vous dans votre compte et est supprimé après 90 jours."
         }
       }
     },
@@ -482,10 +512,10 @@
       }
     },
     "notCollect": {
-      "heading": "Ce que nous ne collectons PAS",
+      "heading": "Ce que nous ne stockons jamais",
       "items": {
-        "0": "Le contenu des messages, les fichiers multimédias ou l'historique des conversations",
-        "1": "Les numéros de téléphone, les listes de contacts ou les données de profil",
+        "0": "Le contenu des messages, les fichiers médias ou l'historique des chats — ils transitent par notre serveur en mémoire et disparaissent dès que la réponse atteint votre client IA",
+        "1": "Les listes de contacts et les numéros de téléphone — ils sont renvoyés à votre client IA lorsque vous les demandez, et ne sont jamais écrits dans notre base de données",
         "2": "Les mots de passe ou les codes 2FA Telegram"
       },
       "twoFactorNote": "Si votre compte utilise un mot de passe cloud Telegram (2FA), ce mot de passe sert <strong>uniquement</strong> à finaliser la connexion — il transite par notre serveur en mémoire le temps de la vérification et n'est <strong>jamais stocké ni journalisé</strong>."
@@ -503,11 +533,15 @@
         },
         "1": {
           "term": "Journaux d'utilisation",
-          "desc": "Conservés à des fins d'analyse et de limitation du débit. Aucun contenu personnel."
+          "desc": "Nom de l'outil, heure, client IA et votre identifiant utilisateur, conservés pour la limitation de débit et les statistiques d'utilisation. Supprimés automatiquement après 90 jours."
         },
         "2": {
-          "term": "Données OAuth",
-          "desc": "En mémoire uniquement, effacées au redémarrage du serveur."
+          "term": "Jetons OAuth",
+          "desc": "Supprimés lorsque vous vous déconnectez ; les jetons expirés sont purgés automatiquement."
+        },
+        "3": {
+          "term": "Audit des actions irréversibles",
+          "desc": "Conservé pendant 90 jours afin que vous puissiez vérifier ce qui a été fait sur votre compte, puis supprimé automatiquement."
         }
       }
     },
