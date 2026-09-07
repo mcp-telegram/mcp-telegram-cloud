@@ -15,6 +15,10 @@ on:
       - LICENSE
       - "docs/**"
       - "claudedocs/**"
+      # Plugin skills are markdown shipped to the OpenAI submission portal as a
+      # ZIP. The server never loads them, so they cannot affect the image.
+      # Note `*.md` above only matches the repo root, not nested paths.
+      - "skills/**"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -22,6 +26,7 @@ on:
       - LICENSE
       - "docs/**"
       - "claudedocs/**"
+      - "skills/**"
   workflow_dispatch: {}
 
 env:
