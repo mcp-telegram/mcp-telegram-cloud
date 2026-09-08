@@ -221,6 +221,11 @@ export const config = {
   mcpRateLimit: intOr(process.env.MCP_RATE_LIMIT, 240),
   mcpRateWindowMs: intOr(process.env.MCP_RATE_WINDOW_MS, 60_000),
 
+  /** Review-link rate-limit: very strict since real use is once/twice per review.
+   * Default 10 per 15 min per IP — makes brute-force implausible even if entropy drops. */
+  reviewRateLimit: intOr(process.env.REVIEW_RATE_LIMIT, 10),
+  reviewRateWindowMs: intOr(process.env.REVIEW_RATE_WINDOW_MS, 15 * 60_000),
+
   /** Max request body bytes for JSON API routes (/oauth/*, /mcp). Default 1 MiB. */
   maxJsonBodyBytes: intOr(process.env.MAX_JSON_BODY_BYTES, 1024 * 1024),
 };

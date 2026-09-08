@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { randomBytes } from "node:crypto";
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import { config } from "./config.js";
-import { decryptSecret, encryptionEnabled, encryptSecret, isEncrypted } from "./crypto.js";
+import { decryptSecret, encryptionEnabled, encryptSecret, hashToken, isEncrypted } from "./crypto.js";
 import { logUser } from "./logger.js";
 
 interface UserSession {
@@ -138,7 +138,8 @@ export class SessionManager {
       -- connect'. Containment comes from the revoked flag plus a bounded
       -- expires_at, and every use is counted so an unexpected access is visible.
       CREATE TABLE IF NOT EXISTS review_tokens (
-        token TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token_hash TEXT NOT NULL UNIQUE,
         user_id TEXT NOT NULL,
         note TEXT,
         expires_at INTEGER NOT NULL,
@@ -149,6 +150,8 @@ export class SessionManager {
       );
       CREATE INDEX IF NOT EXISTS idx_review_tokens_expires ON review_tokens(expires_at);
     `);
+
+    this.migrateReviewTokensToHashes();
   }
 
   /**
@@ -322,7 +325,12 @@ export class SessionManager {
         console.error(`[sessions] Telegram logOut failed for ${logUser(userId)}:`, error);
         try {
           await session.telegram.disconnect();
-        } catch {}
+        } catch (disconnectError) {
+          // Best-effort cleanup after a failed logOut. We drop the session from
+          // the pool either way, so this cannot be retried — but staying silent
+          // hid the reason a socket was left behind.
+          console.error(`[sessions] disconnect after failed logOut for ${logUser(userId)}:`, disconnectError);
+        }
       }
       this.sessions.delete(userId);
     }
@@ -377,7 +385,9 @@ export class SessionManager {
           console.error(`[sessions] Old session logOut failed for ${logUser(userId)}:`, err);
           try {
             await existing.telegram.disconnect();
-          } catch {}
+          } catch (disconnectError) {
+            console.error(`[sessions] disconnect of replaced session for ${logUser(userId)}:`, disconnectError);
+          }
         }
       })();
     }
@@ -412,7 +422,12 @@ export class SessionManager {
           console.log(`[sessions] tryReconnect: ${logUser(userId)} — pool hit (already connected)`);
           return pooled.telegram;
         }
-      } catch {}
+      } catch (poolError) {
+        // A dead pooled client is expected (revoked session, network drop); we
+        // fall through and rebuild from SQLite below. Logged because a burst of
+        // these is the first sign Telegram is rejecting our auth keys.
+        console.error(`[sessions] pooled client unusable for ${logUser(userId)}, rebuilding:`, poolError);
+      }
     }
 
     // Try to reconnect from SQLite session_string with a fresh TelegramService
@@ -692,42 +707,110 @@ export class SessionManager {
 
   // ── review-access tokens ─────────────────────────────────────────────────
 
+  /**
+   * v2.55.2: review tokens were briefly stored in plaintext, unlike every other
+   * credential in this database. A stolen backup would have handed over working
+   * access, so existing rows are re-keyed to `hashToken` and the plaintext
+   * column is dropped. Links issued before the migration keep working — the
+   * hash of the same token still matches.
+   */
+  private migrateReviewTokensToHashes(): void {
+    const columns = this.db.prepare("PRAGMA table_info(review_tokens)").all() as Array<{ name: string }>;
+    if (!columns.some((c) => c.name === "token")) return;
+
+    const legacy = this.db
+      .prepare("SELECT token, user_id, note, expires_at, revoked, uses, last_used_at, created_at FROM review_tokens")
+      .all() as Array<{
+      token: string;
+      user_id: string;
+      note: string | null;
+      expires_at: number;
+      revoked: number;
+      uses: number;
+      last_used_at: string | null;
+      created_at: string;
+    }>;
+
+    this.db.exec("DROP TABLE review_tokens");
+    this.db.exec(`
+      CREATE TABLE review_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token_hash TEXT NOT NULL UNIQUE,
+        user_id TEXT NOT NULL,
+        note TEXT,
+        expires_at INTEGER NOT NULL,
+        revoked INTEGER NOT NULL DEFAULT 0,
+        uses INTEGER NOT NULL DEFAULT 0,
+        last_used_at TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_review_tokens_expires ON review_tokens(expires_at);
+    `);
+
+    const insert = this.db.prepare(
+      "INSERT INTO review_tokens (token_hash, user_id, note, expires_at, revoked, uses, last_used_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    );
+    for (const row of legacy) {
+      insert.run(
+        hashToken(row.token),
+        row.user_id,
+        row.note,
+        row.expires_at,
+        row.revoked,
+        row.uses,
+        row.last_used_at,
+        row.created_at,
+      );
+    }
+    console.log(`[sessions] review_tokens migrated to hashed storage (${legacy.length} row(s))`);
+  }
+
   /** Issue a review token pointing at an existing session. The token IS the
    *  auth: anyone holding it gets that account's full MCP access until it
    *  expires or is revoked, so only ever point it at a demo account. */
   createReviewToken(userId: string, note: string | null, ttlSeconds: number): string {
+    // 24 random bytes = 192 bits. The server is open source, so the endpoint and
+    // its shape are public by design; all of the protection has to live in this
+    // secret, and none of it in obscurity.
     const token = randomBytes(24).toString("hex");
     const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
     this.db
-      .prepare("INSERT INTO review_tokens (token, user_id, note, expires_at) VALUES (?, ?, ?, ?)")
-      .run(token, userId, note, expiresAt);
+      .prepare("INSERT INTO review_tokens (token_hash, user_id, note, expires_at) VALUES (?, ?, ?, ?)")
+      .run(hashToken(token), userId, note, expiresAt);
     return token;
   }
 
   /** Resolve a review token and count the visit. Returns null when the token is
    *  unknown, revoked or expired. */
   resolveReviewToken(token: string): { userId: string; uses: number } | null {
+    const hash = hashToken(token);
     const row = this.db
-      .prepare("SELECT user_id, expires_at, revoked, uses FROM review_tokens WHERE token = ?")
-      .get(token) as { user_id: string; expires_at: number; revoked: number; uses: number } | undefined;
+      .prepare("SELECT user_id, expires_at, revoked, uses FROM review_tokens WHERE token_hash = ?")
+      .get(hash) as { user_id: string; expires_at: number; revoked: number; uses: number } | undefined;
     if (!row) return null;
     if (row.revoked === 1) return null;
     if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
     this.db
-      .prepare("UPDATE review_tokens SET uses = uses + 1, last_used_at = datetime('now') WHERE token = ?")
-      .run(token);
+      .prepare("UPDATE review_tokens SET uses = uses + 1, last_used_at = datetime('now') WHERE token_hash = ?")
+      .run(hash);
     return { userId: row.user_id, uses: row.uses + 1 };
   }
 
-  /** Revoke a review token. Returns false when the token is already gone. */
-  revokeReviewToken(token: string): boolean {
-    return this.db.prepare("UPDATE review_tokens SET revoked = 1 WHERE token = ?").run(token).changes > 0;
+  /** Revoke a review token, by the token itself or by the id from
+   *  {@link listReviewTokens}. Returns false when nothing matched. */
+  revokeReviewToken(tokenOrId: string | number): boolean {
+    if (typeof tokenOrId === "number") {
+      return this.db.prepare("UPDATE review_tokens SET revoked = 1 WHERE id = ?").run(tokenOrId).changes > 0;
+    }
+    return (
+      this.db.prepare("UPDATE review_tokens SET revoked = 1 WHERE token_hash = ?").run(hashToken(tokenOrId)).changes > 0
+    );
   }
 
-  /** Operator view: every issued token with its state. The token itself is
-   *  truncated so a listing cannot hand out working access. */
+  /** Operator view: every issued token with its state. Only the hash is stored,
+   *  so a listing physically cannot hand out working access; use `id` to revoke. */
   listReviewTokens(): Array<{
-    tokenPrefix: string;
+    id: number;
     userId: string;
     note: string | null;
     expiresAt: number;
@@ -737,10 +820,10 @@ export class SessionManager {
   }> {
     const rows = this.db
       .prepare(
-        "SELECT token, user_id, note, expires_at, revoked, uses, last_used_at FROM review_tokens ORDER BY created_at DESC",
+        "SELECT id, user_id, note, expires_at, revoked, uses, last_used_at FROM review_tokens ORDER BY created_at DESC",
       )
       .all() as Array<{
-      token: string;
+      id: number;
       user_id: string;
       note: string | null;
       expires_at: number;
@@ -749,7 +832,7 @@ export class SessionManager {
       last_used_at: string | null;
     }>;
     return rows.map((r) => ({
-      tokenPrefix: `${r.token.slice(0, 8)}…`,
+      id: r.id,
       userId: r.user_id,
       note: r.note,
       expiresAt: r.expires_at,

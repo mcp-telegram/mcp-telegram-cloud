@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { buildTgUserCookie, REVIEW_HINT_MAX_AGE_SECONDS } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
+import { reviewRateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
 
 export interface ReviewRoutesDeps {
@@ -23,6 +24,10 @@ export interface ReviewRoutesDeps {
 export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
   const app = new Hono();
 
+  // Rate-limit before any logic: brute-force a 192-bit token is implausible,
+  // but limiting makes log-flood attacks impractical and sets a principle.
+  app.use("/*", reviewRateLimit);
+
   app.get("/", async (c) => {
     const token = c.req.query("token") ?? "";
     const resolved = token ? sessions.resolveReviewToken(token) : null;
@@ -30,6 +35,9 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
     if (!resolved) {
       // Same response for missing, unknown, revoked and expired: a token probe
       // must not learn which of those it hit.
+      // No client IP here on purpose: it is personal data, this endpoint is
+      // public, and the rate limiter already contains abuse. The counter in the
+      // limiter is what tells us about a flood.
       logger.warn("Review link rejected", { component: "review", event: "review.link.rejected" });
       return c.html(page("This link is not valid", "The link is unknown, expired or has been revoked."), 404);
     }

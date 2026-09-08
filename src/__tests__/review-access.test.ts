@@ -7,6 +7,7 @@
  *   - REUSABLE on purpose (unlike add-account tokens) — reviewers come back
  *   - revoked and expired tokens stop resolving, and an unknown one never did
  *   - revoking twice reports "nothing changed" the second time
+ *   - tokens are stored hashed, so the database never holds a usable secret
  *   - the listing never leaks a working token
  *   - the hint cookie the link writes carries Secure + HttpOnly + SameSite=Lax,
  *     and refuses a value that could break out of the cookie
@@ -89,6 +90,21 @@ describe("review tokens — resolution", () => {
   });
 });
 
+describe("review tokens — storage", () => {
+  it("stores only a hash, so a leaked database cannot be replayed", () => {
+    const sm = makeManager();
+    const token = sm.createReviewToken("demo_account", null, 30 * DAY);
+    // Reach into the same file the server would leak in a backup.
+    const rows = (sm as unknown as { db: { prepare(q: string): { all(): unknown[] } } }).db
+      .prepare("SELECT * FROM review_tokens")
+      .all() as Array<Record<string, unknown>>;
+    assert.equal(rows.length, 1);
+    const dumped = JSON.stringify(rows[0]);
+    assert.ok(!dumped.includes(token), "plaintext token must not be in the database");
+    assert.match(String(rows[0].token_hash), /^h\d+:[0-9a-f]{64}$/);
+  });
+});
+
 describe("review tokens — revocation", () => {
   it("stops resolving once revoked", () => {
     const sm = makeManager();
@@ -110,9 +126,18 @@ describe("review tokens — listing", () => {
     const token = sm.createReviewToken("demo_account", "OpenAI review", 30 * DAY);
     const [row] = sm.listReviewTokens();
     assert.ok(row);
-    assert.notEqual(row.tokenPrefix, token);
-    assert.ok(token.startsWith(row.tokenPrefix.replace("…", "")));
-    assert.equal(sm.resolveReviewToken(row.tokenPrefix), null);
+    // The listing carries an id, never the secret or any prefix of it.
+    assert.equal(typeof row.id, "number");
+    assert.ok(!JSON.stringify(row).includes(token.slice(0, 8)));
+  });
+
+  it("revokes by the id from the listing, without the token", () => {
+    const sm = makeManager();
+    const token = sm.createReviewToken("demo_account", null, 30 * DAY);
+    const [row] = sm.listReviewTokens();
+    assert.ok(row);
+    assert.equal(sm.revokeReviewToken(row.id), true);
+    assert.equal(sm.resolveReviewToken(token), null);
   });
 
   it("shows usage and revocation state", () => {

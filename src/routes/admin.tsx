@@ -224,9 +224,13 @@ export function createAdminRoutes({ oauth, sessions, usage }: AdminRoutesDeps): 
     if (!isAdminAuthorized(c.req.header("Authorization"))) {
       return c.json({ error: "unauthorized" }, 401);
     }
-    const body = (await c.req.json().catch(() => null)) as { token?: string } | null;
-    if (!body?.token) return c.json({ error: "token required" }, 400);
-    const revoked = sessions.revokeReviewToken(body.token);
+    // Accept the id from GET /review-tokens as well as the token itself. Only
+    // the hash is stored now, so an operator killing a link they no longer hold
+    // a copy of has nothing else to identify it by.
+    const body = (await c.req.json().catch(() => null)) as { token?: string; id?: number } | null;
+    const target = body?.token ?? body?.id;
+    if (target === undefined) return c.json({ error: "token or id required" }, 400);
+    const revoked = sessions.revokeReviewToken(target);
     logger.warn("Review token revoke requested", {
       component: "review",
       event: "review.token.revoked",

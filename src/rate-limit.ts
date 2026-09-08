@@ -110,3 +110,15 @@ export const mcpRateLimit = rateLimit({
     return auth?.startsWith("Bearer ") ? auth.slice(7) : null;
   },
 });
+
+/**
+ * Review-link access limiter. Very strict: real reviewers visit once or twice,
+ * a brute-forcer would flood the endpoint. 10 requests per 15 minutes per IP
+ * is more than enough for legitimate use and makes brute-force implausible
+ * even at 2^192 entropy (which is already implausible).
+ */
+export const reviewRateLimit = rateLimit({
+  limit: config.reviewRateLimit,
+  windowMs: config.reviewRateWindowMs,
+  scope: "review",
+});
