@@ -67,6 +67,22 @@ function AuthorizePage(props: AuthorizeProps) {
             submit: t("twoFactor.submit"),
           }}
         />
+
+        {/*
+          Recovery line for directory reviewers, who cannot scan this code at
+          all: they have no phone signed into the demo account. Their access is
+          granted per browser, so landing here means the authorization opened
+          somewhere the review link was never opened — a private window, a
+          different browser, an in-app webview. Without this line that is a dead
+          end that reads as "the server would not let us in".
+
+          Deliberately English-only and deliberately quiet: it is addressed to a
+          handful of reviewers, not to users, and translating it into all 20
+          locales would spend real effort on an audience that does not exist.
+        */}
+        <p className="muted" style={{ fontSize: "0.8rem", marginTop: "1.5rem", opacity: 0.7 }}>
+          Reviewing this connector? Open your review link in this browser, then try again.
+        </p>
       </main>
     </Layout>
   );

@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { DestructiveGuard } from "./destructive-guard.js";
 import { startDrain } from "./lifecycle.js";
-import { logger } from "./logger.js";
+import { logger, logUser } from "./logger.js";
 import { getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mcp-handler.js";
 import { accessLog } from "./middleware/access-log.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
@@ -105,6 +105,31 @@ if (config.destructiveAuditRetentionDays > 0) {
     });
   }, 24 * 3600_000);
 }
+
+// Daily liveness probe for accounts behind a review link.
+//
+// A review link is only as good as the session it points at, and that session
+// can die on Telegram's side at any time — the account owner logging the device
+// out is enough. Directory review runs for months, so without this the first
+// person to notice would be the reviewer, and they would read it as "the server
+// does not work". The probe is cheap (one reconnect per distinct account, and
+// there is normally exactly one) and turns a silent breakage into an event we
+// can alert on.
+setInterval(() => {
+  runDetached(async () => {
+    const nowSeconds = Date.now() / 1000;
+    const liveTokens = sessions.listReviewTokens().filter((t) => !t.revoked && t.expiresAt > nowSeconds);
+    for (const userId of new Set(liveTokens.map((t) => t.userId))) {
+      const telegram = await sessions.tryReconnectSession(userId);
+      if (telegram) continue;
+      logger.error("Review-link account is not reachable", {
+        component: "review",
+        event: "review.session.unavailable",
+        userId: logUser(userId),
+      });
+    }
+  });
+}, 24 * 3600_000);
 
 // Phase X — periodic purge of expired pending uploads (TTL: config.uploadTtlSeconds).
 // Sweep at 1/4 of TTL so any expired row is gone within ~ttl/4 walltime.
