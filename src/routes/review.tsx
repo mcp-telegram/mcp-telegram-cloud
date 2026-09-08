@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { buildTgUserCookie } from "../cookie-handler.js";
+import { buildTgUserCookie, REVIEW_HINT_MAX_AGE_SECONDS } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
 import type { SessionManager } from "../session-manager.js";
 
@@ -60,13 +60,13 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
       uses: resolved.uses,
     });
 
-    c.header("Set-Cookie", buildTgUserCookie(resolved.userId));
+    c.header("Set-Cookie", buildTgUserCookie(resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS));
     // Never let a shared cache keep a response that carries a session hint.
     c.header("Cache-Control", "no-store");
     return c.html(
       page(
         "Demo access is ready",
-        "You can now add the connector in ChatGPT or Claude. When the client sends you here to authorize, the sign-in completes on its own — no QR code, no phone. If you are asked to scan anything, open this link again first and retry.",
+        "You can now add the connector in ChatGPT or Claude. When the client sends you here to authorize, the sign-in completes on its own — no QR code, no phone. Use the same browser for both steps: access is granted to this browser, so a private window or a different browser will show the QR code instead. If that happens, open this link there and retry.",
       ),
     );
   });

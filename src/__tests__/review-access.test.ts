@@ -148,6 +148,10 @@ describe("GET /review", () => {
     const cookie = res.headers.get("set-cookie") ?? "";
     assert.match(cookie, /tg_user=demo_account/);
     assert.ok(cookie.includes("HttpOnly"));
+    // Review runs for months. A 30-day hint would expire between the reviewer
+    // opening the link and coming back, dropping them on the QR page they have
+    // no way to pass.
+    assert.match(cookie, /Max-Age=31536000/);
     // A hint cookie must never be cached by anything in front of us.
     assert.equal(res.headers.get("cache-control"), "no-store");
   });
