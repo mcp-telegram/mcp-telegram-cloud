@@ -20,6 +20,7 @@ import { registerMcpRoutes } from "./routes/mcp.js";
 import { createMyRoutes } from "./routes/my.js";
 import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js";
 import { createQrPasswordRoutes } from "./routes/qr-password.js";
+import { createReviewRoutes } from "./routes/review.js";
 import { createStaticRoutes } from "./routes/static.js";
 import { SessionManager } from "./session-manager.js";
 import { flushMetrics, registerGauge, startMetricsFlush, stopMetricsFlush } from "./telemetry/metrics.js";
@@ -228,6 +229,9 @@ registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
+// Directory-review access: hands a reviewer the demo session so the OAuth fast
+// path can skip the QR code they have no way to scan.
+app.route("/review", createReviewRoutes({ sessions }));
 // Shared 2FA cloud-password back-channel for all QR flows (POST /qr/password).
 app.route("/qr", createQrPasswordRoutes());
 

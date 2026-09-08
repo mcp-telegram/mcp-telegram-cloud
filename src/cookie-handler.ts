@@ -19,6 +19,21 @@ const TG_USER_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 // The character set also keeps the value cookie-safe (no quoting / CRLF smuggling).
 const TG_USERNAME_RE = /^[A-Za-z][A-Za-z0-9_]{4,31}$/;
 
+/**
+ * Session-hint cookie read back by the OAuth fast path. One builder so the
+ * flags cannot drift between the two issuers (the QR page and the review link)
+ * — a hint that silently lost `Secure` or `HttpOnly` in one of them would be
+ * invisible in tests that only assert the value.
+ *
+ * `userId` is `user_sessions.user_id`: a Telegram username, or the numeric id
+ * as a string for accounts without one. Percent-encoded because the reader
+ * decodes, and rejected outright if it could break out of the cookie value.
+ */
+export function buildTgUserCookie(userId: string, maxAgeSeconds = TG_USER_MAX_AGE_SECONDS): string {
+  if (!/^[A-Za-z0-9_]{1,64}$/.test(userId)) throw new Error("unsafe tg_user value");
+  return `tg_user=${encodeURIComponent(userId)}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax; Secure; HttpOnly`;
+}
+
 export type CookieDecision = { status: 204; setCookie: string } | { status: 400 | 403; body: string };
 
 export function decideTgUserCookie(input: {
@@ -39,8 +54,5 @@ export function decideTgUserCookie(input: {
   if (username === "unknown" || !TG_USERNAME_RE.test(username)) {
     return { status: 400, body: "bad request" };
   }
-  return {
-    status: 204,
-    setCookie: `tg_user=${username}; Path=/; Max-Age=${TG_USER_MAX_AGE_SECONDS}; SameSite=Lax; Secure; HttpOnly`,
-  };
+  return { status: 204, setCookie: buildTgUserCookie(username) };
 }

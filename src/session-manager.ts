@@ -127,6 +127,27 @@ export class SessionManager {
         created_at TEXT DEFAULT (datetime('now'))
       );
       CREATE INDEX IF NOT EXISTS idx_add_account_tokens_expires ON add_account_tokens(expires_at);
+
+      -- Review-access tokens: let a directory reviewer reach a prepared demo
+      -- session without scanning a QR code, which they cannot do (no phone).
+      --
+      -- Deliberately NOT single-use, unlike add_account_tokens: the submission
+      -- form states the credentials are reused for ongoing quality and safety
+      -- testing, and more than one reviewer may open them over months. A
+      -- one-time token would fail on the second visit and read as 'we could not
+      -- connect'. Containment comes from the revoked flag plus a bounded
+      -- expires_at, and every use is counted so an unexpected access is visible.
+      CREATE TABLE IF NOT EXISTS review_tokens (
+        token TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        note TEXT,
+        expires_at INTEGER NOT NULL,
+        revoked INTEGER NOT NULL DEFAULT 0,
+        uses INTEGER NOT NULL DEFAULT 0,
+        last_used_at TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_review_tokens_expires ON review_tokens(expires_at);
     `);
   }
 
@@ -667,6 +688,75 @@ export class SessionManager {
     const result = this.db.prepare("UPDATE add_account_tokens SET used = 1 WHERE token = ? AND used = 0").run(token);
     if (result.changes === 0) return null;
     return peeked;
+  }
+
+  // ── review-access tokens ─────────────────────────────────────────────────
+
+  /** Issue a review token pointing at an existing session. The token IS the
+   *  auth: anyone holding it gets that account's full MCP access until it
+   *  expires or is revoked, so only ever point it at a demo account. */
+  createReviewToken(userId: string, note: string | null, ttlSeconds: number): string {
+    const token = randomBytes(24).toString("hex");
+    const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
+    this.db
+      .prepare("INSERT INTO review_tokens (token, user_id, note, expires_at) VALUES (?, ?, ?, ?)")
+      .run(token, userId, note, expiresAt);
+    return token;
+  }
+
+  /** Resolve a review token and count the visit. Returns null when the token is
+   *  unknown, revoked or expired. */
+  resolveReviewToken(token: string): { userId: string; uses: number } | null {
+    const row = this.db
+      .prepare("SELECT user_id, expires_at, revoked, uses FROM review_tokens WHERE token = ?")
+      .get(token) as { user_id: string; expires_at: number; revoked: number; uses: number } | undefined;
+    if (!row) return null;
+    if (row.revoked === 1) return null;
+    if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
+    this.db
+      .prepare("UPDATE review_tokens SET uses = uses + 1, last_used_at = datetime('now') WHERE token = ?")
+      .run(token);
+    return { userId: row.user_id, uses: row.uses + 1 };
+  }
+
+  /** Revoke a review token. Returns false when the token is already gone. */
+  revokeReviewToken(token: string): boolean {
+    return this.db.prepare("UPDATE review_tokens SET revoked = 1 WHERE token = ?").run(token).changes > 0;
+  }
+
+  /** Operator view: every issued token with its state. The token itself is
+   *  truncated so a listing cannot hand out working access. */
+  listReviewTokens(): Array<{
+    tokenPrefix: string;
+    userId: string;
+    note: string | null;
+    expiresAt: number;
+    revoked: boolean;
+    uses: number;
+    lastUsedAt: string | null;
+  }> {
+    const rows = this.db
+      .prepare(
+        "SELECT token, user_id, note, expires_at, revoked, uses, last_used_at FROM review_tokens ORDER BY created_at DESC",
+      )
+      .all() as Array<{
+      token: string;
+      user_id: string;
+      note: string | null;
+      expires_at: number;
+      revoked: number;
+      uses: number;
+      last_used_at: string | null;
+    }>;
+    return rows.map((r) => ({
+      tokenPrefix: `${r.token.slice(0, 8)}…`,
+      userId: r.user_id,
+      note: r.note,
+      expiresAt: r.expires_at,
+      revoked: r.revoked === 1,
+      uses: r.uses,
+      lastUsedAt: r.last_used_at,
+    }));
   }
 
   /** Periodic cleanup — drop expired / used add-account tokens older than a day. */

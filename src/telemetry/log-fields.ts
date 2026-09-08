@@ -183,4 +183,6 @@ export type LogFields = Partial<{
   enabled: number;
   /** Retention window in days. */
   retentionDays: number;
+  /** How many times a reusable capability (e.g. a review link) has been used. */
+  uses: number;
 }>;

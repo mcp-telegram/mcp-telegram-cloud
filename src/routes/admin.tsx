@@ -175,5 +175,65 @@ export function createAdminRoutes({ oauth, sessions, usage }: AdminRoutesDeps): 
     return c.json({ ok: true, userId });
   });
 
+  // ── review access ────────────────────────────────────────────────────────
+  // Issue, list and revoke the links that let a directory reviewer reach a demo
+  // session without a QR code. Admin-only: the token IS full access to that
+  // account, so it must never be mintable by a logged-in user.
+
+  app.post("/review-token", async (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const body = (await c.req.json().catch(() => null)) as {
+      userId?: string;
+      note?: string;
+      ttlDays?: number;
+    } | null;
+    const userId = body?.userId;
+    if (!userId) return c.json({ error: "userId required" }, 400);
+    if (!sessions.getSavedUserIds().includes(userId)) {
+      // Refuse to mint a link to a session that does not exist: the failure
+      // would otherwise surface to the reviewer, not to us.
+      return c.json({ error: `no stored session for ${userId}` }, 404);
+    }
+
+    const ttlDays = body?.ttlDays ?? 180;
+    if (!Number.isInteger(ttlDays) || ttlDays < 1 || ttlDays > 365) {
+      return c.json({ error: "ttlDays must be an integer between 1 and 365" }, 400);
+    }
+
+    const token = sessions.createReviewToken(userId, body?.note ?? null, ttlDays * 24 * 3600);
+    logger.info("Review token issued", {
+      component: "review",
+      event: "review.token.issued",
+      userId: logUser(userId),
+      retentionDays: ttlDays,
+    });
+    return c.json({ ok: true, url: `${config.issuer}/review?token=${token}`, expiresInDays: ttlDays });
+  });
+
+  app.get("/review-tokens", (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const tokens = sessions.listReviewTokens().map((t) => ({ ...t, userId: logUser(t.userId) }));
+    return c.json({ tokens });
+  });
+
+  app.post("/review-token/revoke", async (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const body = (await c.req.json().catch(() => null)) as { token?: string } | null;
+    if (!body?.token) return c.json({ error: "token required" }, 400);
+    const revoked = sessions.revokeReviewToken(body.token);
+    logger.warn("Review token revoke requested", {
+      component: "review",
+      event: "review.token.revoked",
+      enabled: revoked ? 1 : 0,
+    });
+    return c.json({ ok: revoked });
+  });
+
   return app;
 }
