@@ -272,6 +272,49 @@ revoke). Default `30 / 60_000` = 30 requests per 60 seconds per IP.
 The IP is detected from `X-Real-IP` then `X-Forwarded-For` last hop;
 ensure your reverse proxy sets one of these.
 
+### `REVIEW_RATE_LIMIT` / `REVIEW_RATE_WINDOW_MS`
+
+Per-IP limit on `/review`, the endpoint that redeems a review-access link.
+Default `10 / 900_000` = 10 requests per 15 minutes per IP.
+
+Deliberately much stricter than the OAuth limiter: a genuine visitor opens
+such a link once or twice, so anything beyond that is a probe. The token
+itself is 192 bits, so this is not what stops a guess — it stops the log
+volume and database reads a scripted probe would otherwise generate against a
+public endpoint in an open-source server.
+
+## Review access links (optional)
+
+A review link lets someone reach a **prepared demo account** without Telegram's
+device-link QR code — built for directory reviewers, who have no phone signed
+into the account and whose submission rules forbid requiring one.
+
+The token is the credential: anyone holding the link gets that account's full
+MCP access until it expires or is revoked. Point it at a throwaway account and
+nothing else.
+
+```sh
+# issue (admin only) — returns the URL
+curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"userId":"demo_account","note":"directory review","ttlDays":365}' \
+  https://<host>/api/review-token
+
+# list state (ids, uses, expiry — never the token)
+curl -H "Authorization: Bearer $ADMIN_TOKEN" https://<host>/api/review-tokens
+
+# revoke by id from the listing, or by the token itself
+curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"id":1}' https://<host>/api/review-token/revoke
+```
+
+Only a SHA-256 hash is stored, so a leaked database or backup cannot be
+replayed. Opening the link writes the same `tg_user` session hint the QR page
+writes, valid for a year, and the ordinary OAuth flow takes over from there —
+no separate authentication path exists. Access is granted to that **browser**:
+a private window or a different browser will show the QR page instead.
+
+Without `ADMIN_TOKEN` set, links cannot be issued at all.
+
 ## ChatGPT Apps Directory (optional)
 
 ### `OPENAI_APPS_CHALLENGE`

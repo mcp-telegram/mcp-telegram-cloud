@@ -172,7 +172,8 @@ Cleanup tasks run on `setInterval`:
 
 QR login over SSE. The user scans on their phone; Telegram returns the
 session string straight to the cloud. The browser only ever sees a
-30-day `tg_user` cookie (HttpOnly + Secure + SameSite=Lax) containing
+30-day `tg_user` cookie (a year when written by a review link, so it
+cannot expire mid-review) (HttpOnly + Secure + SameSite=Lax) containing
 the public Telegram `username` — used as a hint to skip the QR step on
 subsequent OAuth flows. The cookie never carries the session string or
 the numeric user id, and is only set when the account has a public
@@ -193,9 +194,57 @@ Standard OAuth 2.0:
   types and return 200). Refresh tokens are still cleared
   transitively whenever an associated access token is revoked, via
   `revokeAllUserTokens()`.
-- Access token (1h) + refresh token (30d).
+- Access token TTL is **10 years** (`ACCESS_TOKEN_TTL_SECONDS`), not one
+  hour: some MCP clients do not persist the refresh token reliably, and a
+  short access TTL turned into "re-authenticate every hour" for them. The
+  trade-off is deliberate but real — a leaked access token stays valid until
+  it is revoked by hand.
+
+**Revocation is not just a token operation.** `POST /oauth/revoke` also calls
+`destroyUserSession()`: the Telegram session is logged out and deleted, so the
+user must scan a new QR code, and *every* client of theirs loses access, not
+only the one whose token was revoked. That is the documented product behaviour
+("remove the connector → your session is deleted immediately"), but it means
+revoke must never be used as a cleanup step after testing.
 
 The cloud **does not** support implicit grant or password grant.
+
+### Review access links
+
+`/review?token=…` redeems a link that points at a prepared demo account. It
+writes the same `tg_user` hint the QR page writes and then steps aside — the
+ordinary OAuth fast path issues the code, so there is no second authentication
+path to audit. Tokens are 192-bit, stored as a SHA-256 hash, reusable (a
+reviewer returns more than once), revocable by id, and rate-limited at the
+endpoint. Issuing requires `ADMIN_TOKEN`. See
+[configuration.md](configuration.md) for the operator commands.
+
+### Tool annotations
+
+Every tool carries MCP hints that clients use to decide what needs a user
+confirmation, so they are classified from behaviour rather than from how risky
+they feel. Two questions decide the class — can the user undo it
+(`destructiveHint`), and can anyone but the account owner see it
+(`openWorldHint`):
+
+| Class | `readOnly` | `destructive` | `openWorld` | Examples |
+| --- | --- | --- | --- | --- |
+| `READ_ONLY` | ✔ | ✘ | ✘ | read, search, download |
+| `LOCAL_WRITE` | ✘ | ✘ | ✘ | read markers, drafts, folders, mute, privacy |
+| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | send/edit/forward, reactions, invites, profile |
+| `DESTRUCTIVE_LOCAL` | ✘ | ✔ | ✘ | clear drafts, delete folder, detach account |
+| `DESTRUCTIVE_PUBLIC` | ✘ | ✔ | ✔ | delete message, ban, kick, revoke link, report |
+
+"Open world" is not "calls an external API" — everything here goes through
+Telegram, so that reading would mark all tools false and say nothing. It is
+whether the effect leaves this account.
+
+Every `destructiveHint: true` tool is gated by `DestructiveGuard`: off by
+default, per-user opt-in at `/my/settings`, its own daily quota, and an audit
+row for each attempt readable at `/my/audit`.
+
+`src/__tests__/tool-annotation-contract.test.ts` pins the class of every tool
+and fails when a new one is added without a decision.
 
 ### Admin auth
 
