@@ -1,6 +1,14 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { errorResult, formatPeer, READ_ONLY, sanitize, textResult, WRITE } from "./helpers.js";
+import {
+  DESTRUCTIVE_PUBLIC,
+  errorResult,
+  formatPeer,
+  OUTBOUND_WRITE,
+  READ_ONLY,
+  sanitize,
+  textResult,
+} from "./helpers.js";
 
 const STARS_ENV = "MCP_TELEGRAM_ENABLE_STARS";
 
@@ -277,7 +285,7 @@ export const STARS_TOOLS: ToolDefinition[] = [
         .describe("Saved gift ID (from telegram-get-saved-star-gifts) — required with chatId for chat gifts"),
       unsave: z.boolean().optional().describe("true = hide the gift from profile; false/omit = show it"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     requiresEnv: STARS_ENV,
     preValidate: ({ msgId, chatId, savedId }) => {
       if (msgId === undefined && !(chatId && savedId)) {
@@ -312,7 +320,7 @@ export const STARS_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Saved gift ID (from telegram-get-saved-star-gifts) — required with chatId for chat gifts"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     requiresEnv: STARS_ENV,
     preValidate: ({ msgId, chatId, savedId }) => {
       if (msgId === undefined && !(chatId && savedId)) {
@@ -345,7 +353,7 @@ export const STARS_TOOLS: ToolDefinition[] = [
       subscriptionId: z.string().min(1).describe("Subscription ID (from telegram-get-stars-subscriptions)"),
       canceled: z.boolean().describe("true = cancel the subscription; false = restore a canceled subscription"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     requiresEnv: STARS_ENV,
     handler: async ({ chatId, subscriptionId, canceled }, { telegram }) => {
       await telegram.changeStarsSubscription(chatId, subscriptionId, canceled);

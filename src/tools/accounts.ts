@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { errorResult, READ_ONLY, textResult, WRITE } from "./helpers.js";
+import { DESTRUCTIVE_LOCAL, errorResult, LOCAL_WRITE, READ_ONLY, textResult } from "./helpers.js";
 
 /**
  * v2.32.0 multi-account tools.
@@ -88,7 +88,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       identifier: z.string().describe("Label, @username, account_id, or 'primary'"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     skipRequireConnection: true,
     handler: async ({ identifier }, { userId, sessions }) => {
       if (!userId || !sessions) return errorResult("Accounts tools require an authenticated MCP session.");
@@ -119,7 +119,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Optional human label so you can switch by name later (e.g. 'testing', 'work')"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     skipRequireConnection: true,
     handler: async ({ label }, { userId, sessions, baseUrl }) => {
       if (!userId || !sessions || !baseUrl) {
@@ -148,7 +148,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       identifier: z.string().describe("Label, @username, or account_id of the secondary to remove"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_LOCAL,
     skipRequireConnection: true,
     handler: async ({ identifier }, { userId, sessions }) => {
       if (!userId || !sessions) return errorResult("Accounts tools require an authenticated MCP session.");

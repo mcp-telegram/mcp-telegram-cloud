@@ -2,13 +2,16 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   businessOnlyOnError,
+  DESTRUCTIVE_LOCAL,
+  DESTRUCTIVE_PUBLIC,
   errorResult,
+  LOCAL_WRITE,
+  OUTBOUND_WRITE,
   premiumOnlyOnError,
   READ_ONLY,
   safeOpt,
   sanitize,
   textResult,
-  WRITE,
 } from "./helpers.js";
 
 export const PROFILE_TOOLS: ToolDefinition[] = [
@@ -21,7 +24,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       lastName: z.string().optional().describe("Last name for the contact"),
       phone: z.string().optional().describe("Phone number for the contact"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ userId, firstName, lastName, phone }, { telegram }) => {
       const sanFirst = sanitize(firstName);
       const sanLast = safeOpt(lastName);
@@ -52,7 +55,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Unix timestamp when status expires. Omit for permanent."),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ documentId, collectibleId }) => {
       if (documentId && collectibleId) return errorResult("Only one of documentId or collectibleId may be set");
       return null;
@@ -71,7 +74,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
     name: "telegram-clear-recent-emoji-statuses",
     description: "Clear your recently-used emoji status list (the 'recent' section in the emoji status picker).",
     inputSchema: {},
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_LOCAL,
     handler: async (_args, { telegram }) => {
       await telegram.clearRecentEmojiStatuses();
       return textResult("Recent emoji statuses cleared");
@@ -128,7 +131,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
           "Custom emoji document ID (stringified long) for profile background pattern (Premium). Omit to remove.",
         ),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ forProfile, color, backgroundEmojiId }, { telegram }) => {
       await telegram.setProfileColor({ forProfile, color, backgroundEmojiId });
       if (color === undefined && !backgroundEmojiId) return textResult("Profile color reset");
@@ -149,7 +152,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       year: z.number().int().min(1900).max(2100).optional().describe("Year (optional — omit to hide age)"),
       clear: z.boolean().optional().describe("Pass true to remove birthday from profile"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ clear, day, month }) => {
       if (!clear && (!day || !month)) return errorResult("day and month are required when not clearing");
       return null;
@@ -170,7 +173,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       channelId: z.string().optional().describe("Channel ID or @username to feature on profile"),
       clear: z.boolean().optional().describe("Pass true to remove personal channel from profile"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ channelId, clear }) => {
       if (!clear && !channelId) return errorResult("channelId is required when not clearing");
       if (clear && channelId) return errorResult("Cannot set channelId and clear=true simultaneously");
@@ -194,7 +197,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .max(100)
         .describe("Array of photo IDs (stringified long) to delete from your profile photo history"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ photoIds }, { telegram }) => {
       const { deleted, missing } = await telegram.deleteProfilePhotos(photoIds);
       const parts = [`Deleted ${deleted.length} profile photo(s): ${deleted.join(", ")}`];
@@ -212,7 +215,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       bio: z.string().optional().describe("New bio/about text (max 70 chars, 300 for Premium)"),
       username: z.string().optional().describe("New username (without @)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ firstName, lastName, bio, username }, { telegram }) => {
       const updates: string[] = [];
       const sanFirst = safeOpt(firstName);
@@ -245,7 +248,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       allowUsers: z.array(z.string()).optional().describe("User IDs/usernames to always allow (exceptions)"),
       disallowUsers: z.array(z.string()).optional().describe("User IDs/usernames to always disallow (exceptions)"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ setting, rule, allowUsers, disallowUsers }, { telegram }) => {
       await telegram.setPrivacy(setting, rule, allowUsers, disallowUsers);
       return textResult(`Privacy: ${setting} set to "${rule}"`);
@@ -291,7 +294,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Only allow users with Telegram Premium to message you if they are not in your contacts (Premium)"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async (
       {
         archiveAndMuteNewNoncontactPeers,
@@ -332,7 +335,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       messageId: z.number().int().positive().describe("Message ID of the channel post"),
       private: z.boolean().describe("true = anonymous on leaderboard, false = show name"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, messageId, private: privateFlag }, { telegram }) => {
       await telegram.togglePaidReactionPrivacy(chatId, messageId, privateFlag);
       return textResult(
@@ -347,7 +350,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
     inputSchema: {
       emoji: z.string().min(1).max(8).describe("Emoji character (e.g. 👍 ❤️ 🔥)"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ emoji }, { telegram }) => {
       await telegram.setDefaultReaction(emoji);
       return textResult(sanitize(`Default reaction set to ${emoji}`));
@@ -395,7 +398,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       title: z.string().max(32).optional().describe("Admin-facing label (not visible to visitors, max 32 chars)"),
       parseMode: z.enum(["md", "html"]).optional().describe("Format message as Markdown or HTML"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ message, title, parseMode }, { telegram }) => {
       const r = await telegram.createBusinessChatLink({
         message: sanitize(message),
@@ -418,7 +421,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       title: z.string().max(32).optional().describe("New admin-facing label (max 32 chars)"),
       parseMode: z.enum(["md", "html"]).optional().describe("Format message as Markdown or HTML"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ slug, message, title, parseMode }, { telegram }) => {
       const r = await telegram.editBusinessChatLink({
         slug,
@@ -438,7 +441,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
     inputSchema: {
       slug: z.string().min(1).describe("Link slug to delete (from t.me/m/<slug>)"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ slug }, { telegram }) => {
       await telegram.deleteBusinessChatLink(slug);
       return textResult(sanitize(`Business chat link '${slug}' deleted`));
@@ -477,7 +480,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .describe("Weekly schedule. Multiple ranges per day are allowed."),
       clear: z.boolean().optional().describe("Pass true to remove business hours entirely"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ clear, timezone, schedule }) => {
       if (!clear && (!timezone || !schedule?.length)) {
         return errorResult("timezone and schedule are required when not clearing");
@@ -502,7 +505,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       longitude: z.number().min(-180).max(180).optional().describe("Geo longitude (-180 to 180)"),
       clear: z.boolean().optional().describe("Pass true to remove business location"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ clear, address, latitude, longitude }) => {
       if (!clear && !address) return errorResult("address is required when not clearing");
       if ((latitude === undefined) !== (longitude === undefined)) {
@@ -555,7 +558,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .describe("Send greeting if user has been inactive for N days"),
       clear: z.boolean().optional().describe("Pass true to disable greeting message"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ clear, shortcutId, includeUsers, excludeUsers }) => {
       if (!clear && shortcutId === undefined) return errorResult("shortcutId is required when not clearing");
       if (includeUsers?.length && excludeUsers?.length) {
@@ -611,7 +614,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       excludeUsers: z.array(z.string()).optional(),
       clear: z.boolean().optional().describe("Pass true to disable away message"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ clear, shortcutId, schedule, customFrom, customTo, includeUsers, excludeUsers }) => {
       if (!clear && shortcutId === undefined) return errorResult("shortcutId is required when not clearing");
       if (schedule === "custom" && (customFrom === undefined || customTo === undefined)) {
@@ -668,7 +671,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .describe("Hex-encoded file_reference bytes (required with stickerId)"),
       clear: z.boolean().optional().describe("Pass true to remove the intro card"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ clear, title, description, stickerId, stickerAccessHash, stickerFileReference }) => {
       if (!clear && (!title || !description)) {
         return errorResult("title and description are required when not clearing");

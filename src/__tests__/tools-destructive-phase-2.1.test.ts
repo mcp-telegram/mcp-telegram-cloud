@@ -23,7 +23,7 @@ const DESTRUCTIVE_TOOLS = [
   "telegram-toggle-forum-mode",
 ] as const;
 
-describe("Phase 2.1 destructive — 11 tools registered with destructiveHint=true", () => {
+describe("Phase 2.1 destructive — server-side gating contract", () => {
   for (const name of DESTRUCTIVE_TOOLS) {
     it(`registers ${name} with DESTRUCTIVE annotation`, () => {
       const tool = TOOLS.find((t) => t.name === name);
@@ -31,7 +31,6 @@ describe("Phase 2.1 destructive — 11 tools registered with destructiveHint=tru
       if (!tool) return;
       assert.equal(tool.annotations.readOnlyHint, false, `${name} must NOT be READ_ONLY`);
       assert.equal(tool.annotations.destructiveHint, true, `${name} must be DESTRUCTIVE`);
-      assert.equal(tool.annotations.openWorldHint, false, `${name} must have openWorldHint=false`);
       assert.equal(
         tool.requiresEnv,
         undefined,
@@ -47,19 +46,6 @@ describe("Phase 2.1 destructive — 11 tools registered with destructiveHint=tru
       const excluded = EXPLICIT_EXCLUDED.find((e) => e.name === name);
       assert.equal(excluded, undefined, `${name} is now exposed via Phase 2.1 and must NOT be in EXPLICIT_EXCLUDED`);
     }
-  });
-
-  it("counts exactly 11 destructive tools across the catalog (no accidental extras or omissions)", () => {
-    const destructiveInCatalog = TOOLS.filter((t) => t.annotations.destructiveHint === true);
-    assert.equal(
-      destructiveInCatalog.length,
-      DESTRUCTIVE_TOOLS.length,
-      `expected exactly ${DESTRUCTIVE_TOOLS.length} destructive tools, got ${destructiveInCatalog.length}: ${destructiveInCatalog
-        .map((t) => t.name)
-        .join(", ")}`,
-    );
-    const names = destructiveInCatalog.map((t) => t.name).sort();
-    assert.deepEqual(names, [...DESTRUCTIVE_TOOLS].sort());
   });
 
   it("clear-drafts preValidate enforces chatId XOR confirmAllChats", () => {

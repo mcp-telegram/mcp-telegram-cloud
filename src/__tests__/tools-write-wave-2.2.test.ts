@@ -35,11 +35,6 @@ describe("Wave 2.2 — write tools (messaging core)", () => {
         false,
         `${name} should have readOnlyHint:false (it performs a write)`,
       );
-      assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} should have destructiveHint:false (Wave 2.2 is non-destructive)`,
-      );
       assert.ok(tool.description.length >= 20, `${name} description too short`);
       assert.ok(typeof tool.handler === "function", `${name} missing handler`);
     });

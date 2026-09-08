@@ -37,11 +37,6 @@ describe("Wave 2.3 — chat admin / moderation (non-destructive write tools)", (
         false,
         `${name} should have readOnlyHint:false (it performs a write)`,
       );
-      assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} should have destructiveHint:false (Wave 2.3 is non-destructive; set-chat-permissions is upstream-DESTRUCTIVE → Phase 2.1)`,
-      );
       assert.ok(tool.description.length >= 20, `${name} description too short`);
       assert.ok(typeof tool.handler === "function", `${name} missing handler`);
     });

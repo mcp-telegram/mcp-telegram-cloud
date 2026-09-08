@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
 import type { ToolDefinition, ToolDeps } from "../tool-registry.js";
-import { errorResult, replyTargetFields, safeOpt, sanitize, textResult, WRITE } from "./helpers.js";
+import { errorResult, OUTBOUND_WRITE, replyTargetFields, safeOpt, sanitize, textResult } from "./helpers.js";
 
 /**
  * Phase X — FS-bound media tools backed by user-provided uploads or HTTPS URLs.
@@ -203,7 +203,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       source: sourceSchema,
       caption: captionField,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, source, caption }, deps) => {
       const r = await resolveSource(source, deps);
       if (!r.ok) return r.error;
@@ -227,7 +227,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       parseMode: parseModeField,
       ...replyTargetFields,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, source, caption, parseMode, replyTo, topicId }, deps) => {
       const r = await resolveSource(source, deps);
       if (!r.ok) return r.error;
@@ -274,7 +274,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         .describe("Frame side length in pixels (square-cropped; Telegram caps at 640)"),
       ...replyTargetFields,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, source, duration, length, replyTo, topicId }, deps) => {
       const r = await resolveSource(source, deps);
       if (!r.ok) return r.error;
@@ -314,7 +314,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       parseMode: parseModeField,
       ...replyTargetFields,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, items, caption, parseMode, replyTo, topicId }, deps) => {
       const resolved: ResolvedSource[] = [];
       try {
@@ -381,7 +381,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       pinned: z.boolean().optional().describe("Pin to profile after expiry"),
       noforwards: z.boolean().optional().describe("Disable forwarding"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ privacy, allowUserIds }) => {
       // Mirror upstream guard (account.js:193-195): privacy='selected' without
       // a non-empty allowUserIds is rejected at the wire; surface it pre-handler.
@@ -434,7 +434,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       videoStartTs: z.number().nonnegative().optional().describe("Seconds into the video to use as the still preview"),
       fallback: z.boolean().describe("If true, set as the public-fallback photo (shown to non-contacts)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ source, isVideo, videoStartTs, fallback }, deps) => {
       const r = await resolveSource(source, deps);
       if (!r.ok) return r.error;

@@ -25,11 +25,6 @@ describe("Wave 2.7 Stars-write — 3 write tools (opt-in via MCP_TELEGRAM_ENABLE
       if (!tool) return;
       assert.equal(tool.annotations.readOnlyHint, false, `${name} must NOT be READ_ONLY (it writes state)`);
       assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} must be non-destructive (Telegram tier=write, reversible while in window)`,
-      );
-      assert.equal(
         tool.requiresEnv,
         "MCP_TELEGRAM_ENABLE_STARS",
         `${name} must be gated by MCP_TELEGRAM_ENABLE_STARS (server-default OFF)`,

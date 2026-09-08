@@ -93,11 +93,6 @@ describe("v2.32.0 accounts tools — registration", () => {
     for (const name of write) {
       const tool = getTool(name);
       assert.equal(tool.annotations.readOnlyHint, false, `${name} must NOT be readOnlyHint=true`);
-      assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} must NOT be destructive — these are local-state mutations, not Telegram-side`,
-      );
     }
   });
 

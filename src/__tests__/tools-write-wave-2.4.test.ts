@@ -72,11 +72,6 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
         false,
         `${name} should have readOnlyHint:false (it performs a write)`,
       );
-      assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} should have destructiveHint:false (Wave 2.4 is non-destructive; clear-drafts deferred → Phase 2.1)`,
-      );
       assert.ok(tool.description.length >= 20, `${name} description too short`);
       assert.ok(typeof tool.handler === "function", `${name} missing handler`);
     });

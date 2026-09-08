@@ -1,14 +1,15 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
-  DESTRUCTIVE,
+  DESTRUCTIVE_LOCAL,
+  DESTRUCTIVE_PUBLIC,
   errorResult,
+  LOCAL_WRITE,
+  OUTBOUND_WRITE,
   premiumOnlyOnError,
-  SAFE_WRITE,
   safeOpt,
   sanitize,
   textResult,
-  WRITE,
 } from "./helpers.js";
 
 export const CHATS_TOOLS: ToolDefinition[] = [
@@ -39,7 +40,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         .describe("Chat IDs/usernames to explicitly exclude (max 100)"),
       pinnedPeers: z.array(z.string()).max(5).optional().describe("Chats to pin at top of this folder (max 5)"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async (
       {
         title,
@@ -97,7 +98,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       excludePeers: z.array(z.string()).max(100).optional().describe("Replace excludePeers list entirely"),
       pinnedPeers: z.array(z.string()).max(5).optional().describe("Replace pinnedPeers list entirely"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async (
       {
         id,
@@ -143,7 +144,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       id: z.number().int().min(2).describe("Folder ID to delete (≥ 2)"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_LOCAL,
     handler: async ({ id }, { telegram }) => {
       await telegram.deleteFolder(id);
       return textResult(`Folder ${id} deleted`);
@@ -160,7 +161,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         .min(1)
         .describe("Ordered list of folder IDs (≥ 2). Obtain IDs from telegram-get-chat-folders"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ order }, { telegram }) => {
       await telegram.reorderFolders(order);
       return textResult(`Folders reordered: [${order.join(", ")}]`);
@@ -174,7 +175,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       enabled: z.boolean().describe("true to enable folder tags, false to disable"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ enabled }, { telegram }) => {
       await telegram.toggleDialogFilterTags(enabled);
       return textResult(`Folder tags ${enabled ? "enabled" : "disabled"}`);
@@ -189,7 +190,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       userId: z.string().describe("User ID or username to kick"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, userId }, { telegram }) => {
       await telegram.kickUser(chatId, userId);
       return textResult(`Kicked ${userId} from ${chatId}`);
@@ -203,7 +204,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       userId: z.string().describe("User ID or username to ban"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, userId }, { telegram }) => {
       await telegram.banUser(chatId, userId);
       return textResult(`Banned ${userId} from ${chatId}`);
@@ -217,7 +218,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       userId: z.string().describe("User ID or username to unban"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, userId }, { telegram }) => {
       await telegram.unbanUser(chatId, userId);
       return textResult(`Unbanned ${userId} in ${chatId}`);
@@ -233,7 +234,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       userId: z.string().describe("User ID or username of the requesting user"),
       approved: z.boolean().describe("true to approve the join request, false to deny"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, userId, approved }, { telegram }) => {
       await telegram.approveChatJoinRequest(chatId, userId, approved);
       return textResult(`${approved ? "Approved" : "Denied"} join request from ${userId} in ${chatId}`);
@@ -248,7 +249,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       userId: z.string().describe("User ID or username to promote"),
       title: z.string().optional().describe("Custom admin title"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, userId, title }, { telegram }) => {
       await telegram.setAdmin(chatId, userId, { title: safeOpt(title) });
       return textResult(`Promoted ${userId} to admin in ${chatId}${title ? ` (${title})` : ""}`);
@@ -262,7 +263,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       userId: z.string().describe("User ID or username to demote"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, userId }, { telegram }) => {
       await telegram.removeAdmin(chatId, userId);
       return textResult(`Removed admin rights from ${userId} in ${chatId}`);
@@ -276,7 +277,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       archive: z.boolean().describe("true to archive, false to unarchive"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, archive }, { telegram }) => {
       await telegram.archiveChat(chatId, archive);
       return textResult(`${archive ? "Archived" : "Unarchived"} ${chatId}`);
@@ -290,7 +291,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       pin: z.boolean().describe("true to pin, false to unpin"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, pin }, { telegram }) => {
       await telegram.pinDialog(chatId, pin);
       return textResult(`${pin ? "Pinned" : "Unpinned"} ${chatId}`);
@@ -304,7 +305,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       unread: z.boolean().describe("true to mark as unread, false to clear the mark"),
     },
-    annotations: SAFE_WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, unread }, { telegram }) => {
       await telegram.markDialogUnread(chatId, unread);
       return textResult(`Marked ${chatId} as ${unread ? "unread" : "read"}`);
@@ -329,7 +330,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         ])
         .describe("Interval in seconds: 0 (off), 10, 30, 60, 300, 900, or 3600"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, seconds }, { telegram }) => {
       await telegram.setSlowMode(chatId, seconds);
       return textResult(
@@ -346,7 +347,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Supergroup ID or username"),
       enabled: z.boolean().describe("true to enable aggressive anti-spam, false to disable"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, enabled }, { telegram }) => {
       await telegram.toggleAntiSpam(chatId, enabled);
       return textResult(`${enabled ? "Enabled" : "Disabled"} aggressive anti-spam in ${chatId}`);
@@ -361,7 +362,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Supergroup ID or username"),
       hidden: z.boolean().describe("true to hide prior history from new members, false to make it visible"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, hidden }, { telegram }) => {
       await telegram.togglePrehistoryHidden(chatId, hidden);
       return textResult(`${hidden ? "Hid" : "Revealed"} prehistory for new members in ${chatId}`);
@@ -372,7 +373,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     name: "telegram-block-user",
     description: "Block a Telegram user. Blocked users cannot send you messages",
     inputSchema: { userId: z.string().describe("User ID or username to block") },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ userId }, { telegram }) => {
       await telegram.blockUser(userId);
       return textResult(`User blocked: ${userId}`);
@@ -383,7 +384,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     name: "telegram-unblock-user",
     description: "Unblock a previously blocked Telegram user",
     inputSchema: { userId: z.string().describe("User ID or username to unblock") },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ userId }, { telegram }) => {
       await telegram.unblockUser(userId);
       return textResult(`User unblocked: ${userId}`);
@@ -394,7 +395,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     name: "telegram-report-spam",
     description: "Report a chat as spam to Telegram",
     inputSchema: { chatId: z.string().describe("Chat ID or username to report") },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId }, { telegram }) => {
       await telegram.reportSpam(chatId);
       return textResult(`Reported as spam: ${chatId}`);
@@ -416,7 +417,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       forum: z.boolean().default(false).describe("Enable topics (requires supergroup)"),
       description: z.string().max(255).optional().describe("Group description"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ supergroup, forum }) =>
       forum && !supergroup ? errorResult("forum=true requires supergroup=true") : null,
     handler: async ({ title, users, supergroup, forum, description }, { telegram }) => {
@@ -445,7 +446,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       title: z.string().min(1).max(255).optional().describe("New group title"),
       description: z.string().max(255).optional().describe("New group description (supergroups only)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ title, description }) =>
       title === undefined && description === undefined
         ? errorResult("Provide at least one of: title, description")
@@ -467,7 +468,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       users: z.array(z.string()).min(1).max(50).describe("Usernames or IDs to invite (1-50 per call)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, users }, { telegram }) => {
       const result = await telegram.inviteToGroup(chatId, users);
       const lines: string[] = [];
@@ -483,7 +484,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       target: z.string().min(1).describe("Username (@group), link (t.me/group), or invite link (t.me/+xxx)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ target }, { telegram }) => {
       const result = await telegram.joinChat(target);
       return textResult(`Joined ${result.type}: ${sanitize(result.title)} (ID: ${result.id})`);
@@ -496,7 +497,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId }, { telegram }) => {
       await telegram.leaveGroup(chatId);
       return textResult(`Left chat ${chatId}`);
@@ -520,7 +521,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       requestApproval: z.boolean().optional().describe("Require admin approval to join"),
       title: z.string().max(32).optional().describe("Label for the invite link (only visible to admins)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, expireDate, memberLimit, requestApproval, title }, { telegram }) => {
       const link = await telegram.exportInviteLink(chatId, {
         expireDate,
@@ -555,7 +556,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Optional custom emoji document ID for the icon (numeric string)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, title, iconColor, iconEmojiId }, { telegram }) => {
       const safeTitle = sanitize(title);
       const topic = await telegram.createForumTopic(chatId, safeTitle, iconColor, iconEmojiId);
@@ -578,7 +579,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       closed: z.boolean().optional().describe("Close (true) or reopen (false) the topic"),
       hidden: z.boolean().optional().describe("Hide (true) or show (false) the General topic"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ title, iconEmojiId, closed, hidden }) =>
       title === undefined && iconEmojiId === undefined && closed === undefined && hidden === undefined
         ? errorResult("Provide at least one of: title, iconEmojiId, closed, hidden")
@@ -607,7 +608,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Channel ID or username"),
       enabled: z.boolean().describe("true to enable author signatures, false to disable"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, enabled }, { telegram }) => {
       await telegram.toggleChannelSignatures(chatId, enabled);
       return textResult(`${enabled ? "Enabled" : "Disabled"} author signatures in ${chatId}`);
@@ -622,7 +623,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       link: z.string().min(1).describe("The invite link to revoke"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, link }, { telegram }) => {
       await telegram.revokeInviteLink(chatId, link);
       return textResult(`Invite link revoked: ${link}`);
@@ -646,7 +647,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       inviteUsers: z.boolean().optional().describe("Allow inviting new members"),
       pinMessages: z.boolean().optional().describe("Allow pinning messages"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     preValidate: ({ chatId: _chatId, ...permissions }) => {
       const provided = Object.values(permissions).filter((v) => v !== undefined);
       if (provided.length === 0) {
@@ -690,7 +691,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         ])
         .describe("Reaction policy for the chat"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, reactions }, { telegram }) => {
       await telegram.setChatAvailableReactions(chatId, reactions);
       const summary =
@@ -714,7 +715,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       enabled: z.boolean().describe("true to enable forum mode, false to disable"),
       confirm: z.boolean().optional().describe("Must be true when disabling — disabling removes ALL topics."),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     preValidate: ({ enabled, confirm }) => {
       if (!enabled && confirm !== true) {
         return errorResult("Disabling forum mode deletes all existing topics. Pass confirm=true to proceed.");
@@ -734,7 +735,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username of the forum supergroup"),
       topicId: z.number().int().positive().describe("Topic ID to delete"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, topicId }, { telegram }) => {
       await telegram.deleteForumTopic(chatId, topicId);
       return textResult(`Deleted topic ${topicId} in ${chatId}`);

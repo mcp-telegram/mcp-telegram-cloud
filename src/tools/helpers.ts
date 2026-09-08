@@ -31,41 +31,62 @@ export const replyTargetFields = {
   topicId: z.number().int().positive().optional().describe("Forum topic ID (groups with Topics enabled)"),
 } as const;
 
-/** Most cloud tools are read-only — annotate accordingly for ChatGPT/Claude */
+// MCP annotation classes.
+//
+// Two independent questions decide the class of every tool, and both are
+// answered from what the tool actually does, not from how risky it feels:
+//
+//   destructiveHint — can the effect be undone by the user?
+//   openWorldHint   — does the effect leave this account?
+//
+// The second one is the easy mistake. "Open world" is not "calls a third-party
+// API": per the MCP annotation guidance it covers changing state other people
+// can see — delivering a message to a recipient, posting to a channel, editing
+// a profile, filing a report. Everything this connector does runs through
+// Telegram, so an "it is all one API, therefore closed" reading would mark all
+// 174 tools false and say nothing. What separates them is whether anyone other
+// than the account owner can observe the result.
+
+/** Reads only. Cannot change any state. */
 export const READ_ONLY = {
   readOnlyHint: true,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
 
-// SAFE_WRITE and WRITE share the same MCP annotation shape; the constants are kept distinct
-// so call-sites self-document the operator-level intent of the side effect:
-//   SAFE_WRITE — local read-state nudges (mark-as-read, mark-dialog-unread). No outbound payload,
-//                no money, no content visible to peers.
-//   WRITE      — outbound side effects visible to peers or that move balances/state on the wire
-//                (reactions, drafts, poll votes, transcription ratings, paid-reaction privacy).
-
-/** Local read-state operations: mark-as-read, mark-dialog-unread. No content reaches peers. */
-export const SAFE_WRITE = {
+/** Reversible, and invisible outside the account: read markers, drafts,
+ * folders, archive/mute, privacy settings, local account bookkeeping. */
+export const LOCAL_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
 
-/** Non-destructive outbound writes: reactions, drafts, votes, ratings, paid-reaction privacy. */
-export const WRITE = {
+/** Reversible, but other people see it: sending and editing messages,
+ * reactions, stories, polls, invites, group and profile changes. */
+export const OUTBOUND_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
-  openWorldHint: false,
+  openWorldHint: true,
 } as const;
 
-/** Irreversible state changes: delete content, revoke invite, change chat-wide
- * settings, edit story, clear drafts. Phase 2.1 — gated server-side by
- * `DestructiveGuard` (per-user opt-in toggle + separate daily quota + audit log). */
-export const DESTRUCTIVE = {
+/** Irreversible, but confined to this account: clearing drafts, deleting a
+ * folder or a not-yet-sent scheduled message, detaching a linked account.
+ * Gated server-side by `DestructiveGuard` (per-user opt-in + daily quota +
+ * audit log). */
+export const DESTRUCTIVE_LOCAL = {
   readOnlyHint: false,
   destructiveHint: true,
   openWorldHint: false,
+} as const;
+
+/** Irreversible and visible to others: deleting sent messages or stories,
+ * banning and kicking, revoking an invite link, filing a report, spending
+ * Stars. Same `DestructiveGuard` gate as above. */
+export const DESTRUCTIVE_PUBLIC = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  openWorldHint: true,
 } as const;
 
 /** Format reactions array into compact text like: [👍×5 ❤️×3(me) 🔥×1] */

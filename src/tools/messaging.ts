@@ -2,16 +2,17 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   checkMessageLength,
-  DESTRUCTIVE,
+  DESTRUCTIVE_LOCAL,
+  DESTRUCTIVE_PUBLIC,
   errorResult,
+  LOCAL_WRITE,
+  OUTBOUND_WRITE,
   premiumOnlyOnError,
   renderMessage,
   replyTargetFields,
-  SAFE_WRITE,
   safeOpt,
   sanitize,
   textResult,
-  WRITE,
 } from "./helpers.js";
 
 /** Curated text for a bot callback answer (messages.GetBotCallbackAnswer).
@@ -40,7 +41,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
     },
-    annotations: SAFE_WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId }, { telegram }) => {
       await telegram.markAsRead(chatId);
       return textResult(`Marked ${chatId} as read`);
@@ -61,7 +62,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Mute duration in seconds (only when muted=true). Omit to mute forever"),
     },
-    annotations: SAFE_WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, muted, duration }, { telegram }) => {
       const MUTE_FOREVER = 2147483647;
       let muteUntil: number;
@@ -94,7 +95,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .nonnegative()
         .describe("Auto-delete period in seconds. 0 = disable. Common: 86400 (1d), 604800 (1w), 2592000 (1mo)"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, period }, { telegram }) => {
       await telegram.setAutoDelete(chatId, period);
       const status = period === 0 ? "disabled" : `set to ${period}s`;
@@ -118,7 +119,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .default(false)
         .describe("If true, add reaction(s) to existing ones instead of replacing"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId, emoji, addToExisting }, { telegram }) => {
       const updated = await telegram.sendReaction(chatId, messageId, emoji, addToExisting);
       const emojiStr = Array.isArray(emoji) ? emoji.join("") : emoji;
@@ -131,6 +132,12 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
   },
 
   {
+    // Spends Telegram Stars, i.e. real money the user bought, and the spend
+    // cannot be undone. Kept behind the same opt-in flag as the rest of the
+    // Stars surface so the hosted deployment does not move balances on a
+    // model's initiative; it had zero calls in the 90 days before this was
+    // gated. Self-hosters can still enable it.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_STARS",
     name: "telegram-send-paid-reaction",
     description:
       "Send a paid reaction (★ Stars) on a channel post. Stars are spent from your balance. Optional private flag controls leaderboard visibility.",
@@ -143,7 +150,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("true = anonymous on leaderboard, false = show name, omit = use account default"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, messageId, count, private: privateFlag }, { telegram }) => {
       await telegram.sendPaidReaction(chatId, messageId, count, { private: privateFlag });
       const privacy = privateFlag === true ? " (anonymous)" : privateFlag === false ? " (public)" : "";
@@ -160,7 +167,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       emoji: z.string().max(8).describe("Reaction emoji. Empty string '' removes the reaction."),
       addToRecent: z.boolean().optional().describe("Add emoji to your recently used reactions"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, storyId, emoji, addToRecent }, { telegram }) => {
       await telegram.sendStoryReaction(chatId, storyId, emoji, addToRecent);
       return textResult(
@@ -178,7 +185,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       text: z.string().describe("Draft text. Empty string clears the draft"),
       replyTo: z.number().int().positive().optional().describe("Message ID this draft replies to"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, text, replyTo }, { telegram }) => {
       await telegram.saveDraft(chatId, text, replyTo);
       return textResult(text === "" ? `Draft cleared for ${chatId}` : `Draft saved for ${chatId}`);
@@ -197,7 +204,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .max(10)
         .describe("Zero-based option indexes. Empty [] retracts vote."),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId, optionIndexes }, { telegram }) => {
       const result = await telegram.sendPollVote(chatId, messageId, optionIndexes);
       if (optionIndexes.length === 0) {
@@ -220,7 +227,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       transcriptionId: z.string().describe("Transcription ID returned by telegram-transcribe-audio"),
       good: z.boolean().describe("true = good quality, false = poor quality"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, messageId, transcriptionId, good }, { telegram }) => {
       await telegram.rateTranscription(chatId, messageId, transcriptionId, good);
       return textResult(
@@ -253,7 +260,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
           "Optional message effect ID (numeric string, up to 19 digits). Premium animated effect attached to the message.",
         ),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ text, parseMode }) => checkMessageLength(text, parseMode),
     handler: async ({ chatId, text, replyTo, parseMode, topicId, quoteText, effect }, { telegram }) => {
       const extra = quoteText || effect ? { quoteText: safeOpt(quoteText), effect } : undefined;
@@ -272,7 +279,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       messageId: z.number().describe("ID of the message to edit"),
       text: z.string().describe("New message text"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ text }) => checkMessageLength(text),
     handler: async ({ chatId, messageId, text }, { telegram }) => {
       await telegram.editMessage(chatId, messageId, sanitize(text));
@@ -288,7 +295,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       toChatId: z.string().describe("Destination chat ID or username"),
       messageIds: z.array(z.number()).describe("Array of message IDs to forward"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ fromChatId, toChatId, messageIds }, { telegram }) => {
       await telegram.forwardMessage(fromChatId, toChatId, messageIds);
       return textResult(`Forwarded ${messageIds.length} message(s) from ${fromChatId} to ${toChatId}`);
@@ -305,7 +312,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .default("typing")
         .describe("Typing action to broadcast"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, action }, { telegram }) => {
       await telegram.sendTyping(chatId, action);
       return textResult(`Typing indicator (${action}) sent to ${chatId}`);
@@ -349,7 +356,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
       topicId: z.number().int().positive().optional().describe("Forum topic ID"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async (
       { chatId, latitude, longitude, accuracyRadius, livePeriod, heading, proximityRadius, replyTo, topicId },
       { telegram },
@@ -385,7 +392,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       venueType: z.string().max(256).optional().describe("Provider-specific venue type category"),
       ...replyTargetFields,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async (
       { chatId, latitude, longitude, title, address, provider, venueId, venueType, replyTo, topicId },
       { telegram },
@@ -419,7 +426,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       vcard: z.string().max(2048).optional().describe("Optional vCard v3.0 text content"),
       ...replyTargetFields,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, phone, firstName, lastName, vcard, replyTo, topicId }, { telegram }) => {
       const safeFirstName = sanitize(firstName);
       const { id } = await telegram.sendContact(chatId, phone, safeFirstName, {
@@ -447,7 +454,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         ),
       ...replyTargetFields,
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, emoji, replyTo, topicId }, { telegram }) => {
       const { id, value } = await telegram.sendDice(chatId, emoji, { replyTo, topicId });
       const rolled = value !== undefined ? `: rolled ${value}` : " (value pending)";
@@ -471,7 +478,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/)
         .describe("ISO 639-1 (e.g. 'en', 'ru') or locale (e.g. 'en-US')"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, messageIds, toLang }, { telegram }) => {
       const translations = await telegram.translateText(chatId, messageIds, toLang);
       const text =
@@ -500,7 +507,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       limit: z.number().default(20).describe("Maximum number of mentions to return"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, limit }, { telegram }) => {
       const messages = await telegram.getUnreadMentions(chatId, limit);
       const text = messages.map(renderMessage).join("\n\n");
@@ -516,7 +523,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       limit: z.number().default(20).describe("Maximum number of messages to return"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, limit }, { telegram }) => {
       const messages = await telegram.getUnreadReactions(chatId, limit);
       const text = messages.map(renderMessage).join("\n\n");
@@ -541,7 +548,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Index of correct answer (0-based, required for quiz mode)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ answers, multipleChoice, quiz, correctAnswer }) => {
       if (multipleChoice && quiz) return errorResult("multipleChoice and quiz are mutually exclusive");
       if (quiz && correctAnswer === undefined) return errorResult("quiz=true requires correctAnswer (0-based index)");
@@ -568,7 +575,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID of the poll to close"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const result = await telegram.closePoll(chatId, messageId);
       return textResult(`Closed poll #${messageId} (final: ${result.totalVoters} voters)`);
@@ -583,7 +590,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       messageId: z.number().int().positive().describe("Message ID to pin"),
       silent: z.boolean().default(false).describe("Pin without notification"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId, silent }, { telegram }) => {
       await telegram.pinMessage(chatId, messageId, silent);
       return textResult(`Message ${messageId} pinned in ${chatId}`);
@@ -597,7 +604,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID to unpin"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId }, { telegram }) => {
       await telegram.unpinMessage(chatId, messageId);
       return textResult(`Message ${messageId} unpinned in ${chatId}`);
@@ -619,7 +626,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
       parseMode: z.enum(["md", "html"]).optional().describe("Message format: md (Markdown) or html"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ text, parseMode, scheduleDate }) => {
       const tooLong = checkMessageLength(text, parseMode);
       if (tooLong) return tooLong;
@@ -652,7 +659,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       hideVia: z.boolean().optional().describe("Hide the 'via @bot' label on the sent message"),
       clearDraft: z.boolean().optional().describe("Clear the chat draft after sending"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, queryId, resultId, replyTo, silent, hideVia, clearDraft }, { telegram }) => {
       const { messageId } = await telegram.sendInlineBotResult(chatId, queryId, resultId, {
         replyTo,
@@ -686,7 +693,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .describe("Button column index (0-based) — required unless data is provided"),
       data: z.string().optional().describe("Raw callback_data as base64 string (escape hatch — prefer row/column)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     preValidate: ({ row, column, data }) => {
       const hasIndex = row !== undefined && column !== undefined;
       const hasPartialIndex = (row !== undefined) !== (column !== undefined);
@@ -714,7 +721,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID of the voice or video note"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const result = await telegram.transcribeAudio(chatId, messageId);
       const trialInfo =
@@ -746,7 +753,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageIds: z.array(z.number().int().positive()).min(1).max(100).describe("Message IDs to delete (1-100)"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, messageIds }, { telegram }) => {
       await telegram.deleteMessages(chatId, messageIds);
       return textResult(`Deleted ${messageIds.length} message(s) in ${chatId}`);
@@ -764,7 +771,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .max(100)
         .describe("Scheduled message IDs to delete (1-100)"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_LOCAL,
     handler: async ({ chatId, messageIds }, { telegram }) => {
       await telegram.deleteScheduledMessages(chatId, messageIds);
       return textResult(`Deleted ${messageIds.length} scheduled message(s) in ${chatId}`);
@@ -781,7 +788,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       text: z.string().min(1).max(1024).describe("Fact-check annotation text (1-1024 chars)"),
       parseMode: z.enum(["md", "html"]).optional().describe("Text format (currently ignored — plain text only)"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId, text, parseMode }, { telegram }) => {
       const safeText = sanitize(text);
       await telegram.editFactCheck(chatId, messageId, safeText, { parseMode });

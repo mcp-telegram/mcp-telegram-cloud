@@ -1,14 +1,15 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
-  DESTRUCTIVE,
+  DESTRUCTIVE_LOCAL,
+  DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
+  OUTBOUND_WRITE,
   READ_ONLY,
   renderGroupCallParticipant,
   sanitize,
   textResult,
-  WRITE,
 } from "./helpers.js";
 
 export const MISC_TOOLS: ToolDefinition[] = [
@@ -106,7 +107,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .describe("Index of the sticker in the set (0-based, get from telegram-get-sticker-set)"),
       replyTo: z.number().int().optional().describe("Message ID to reply to"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, stickerSet, index, replyTo }, { telegram }) => {
       await telegram.sendSticker(chatId, stickerSet, index, replyTo);
       return textResult(sanitize(`Sticker sent from "${stickerSet}" [${index}] to ${chatId}`));
@@ -413,7 +414,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Must be true to wipe drafts across ALL chats when chatId is omitted"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_LOCAL,
     preValidate: ({ chatId, confirmAllChats }) => {
       if (chatId !== undefined && confirmAllChats === true) {
         return errorResult("Pass either chatId or confirmAllChats=true, not both.");
@@ -447,7 +448,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username (channel)"),
       messageId: z.number().int().positive().describe("Message ID whose fact-check to remove"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, messageId }, { telegram }) => {
       await telegram.deleteFactCheck(chatId, messageId);
       return textResult(`Removed fact-check from message #${messageId} in ${chatId}`);

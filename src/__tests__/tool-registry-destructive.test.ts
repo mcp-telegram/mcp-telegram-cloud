@@ -9,7 +9,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 
 const { registerAllTools } = await import("../tool-registry.js");
-const { DESTRUCTIVE, READ_ONLY, WRITE, textResult } = await import("../tools/helpers.js");
+const {
+  DESTRUCTIVE_PUBLIC: DESTRUCTIVE,
+  READ_ONLY,
+  OUTBOUND_WRITE: WRITE,
+  textResult,
+} = await import("../tools/helpers.js");
 
 interface CallableTool {
   callback: (args: unknown) => Promise<{

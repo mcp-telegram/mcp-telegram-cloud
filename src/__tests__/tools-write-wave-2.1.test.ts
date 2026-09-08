@@ -31,22 +31,21 @@ describe("Wave 2.1 — write tools (reactions / drafts / votes)", () => {
         false,
         `${name} should have readOnlyHint:false (it performs a write)`,
       );
-      assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} should have destructiveHint:false (Wave 2.1 is non-destructive)`,
-      );
       assert.ok(tool.description.length >= 20, `${name} description too short`);
       assert.ok(typeof tool.handler === "function", `${name} missing handler`);
     });
   }
 
-  it("none of the Wave 2.1 tools require an opt-in env flag", () => {
+  it("only the Stars-spending tool is behind an opt-in env flag", () => {
     for (const name of WAVE_2_1_TOOLS) {
       const tool = TOOLS.find((t) => t.name === name);
       assert.ok(tool, `${name} is not in TOOLS array`);
       if (!tool) continue;
-      assert.equal(tool.requiresEnv, undefined, `${name} unexpectedly gated by ${tool.requiresEnv}`);
+      // send-paid-reaction moves real money (Stars) irreversibly, so the hosted
+      // deployment keeps it off by default alongside the rest of the Stars
+      // surface. Everything else in this wave is free and reversible.
+      const expected = name === "telegram-send-paid-reaction" ? "MCP_TELEGRAM_ENABLE_STARS" : undefined;
+      assert.equal(tool.requiresEnv, expected, `${name} gating changed unexpectedly`);
     }
   });
 

@@ -1,15 +1,16 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
-  DESTRUCTIVE,
+  DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
+  LOCAL_WRITE,
+  OUTBOUND_WRITE,
   premiumOnlyOnError,
   READ_ONLY,
   renderStorySnippet,
   sanitize,
   textResult,
-  WRITE,
 } from "./helpers.js";
 
 /** Curated text for the multi-step report flow result (ReportResultSummary).
@@ -198,7 +199,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to pin or unpin"),
       pinned: z.boolean().describe("true to pin, false to unpin"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, ids, pinned }, { telegram }) => {
       const result = await telegram.toggleStoryPinned(chatId, ids, pinned);
       const { affected } = result;
@@ -216,7 +217,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       chatId: z.string().default("me").describe("Peer owning the stories"),
       ids: z.array(z.number().int().positive()).max(100).describe("Story IDs to pin to the top row; pass [] to clear"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, ids }, { telegram }) => {
       await telegram.toggleStoryPinnedToTop(chatId, ids);
       return textResult(
@@ -234,7 +235,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Peer whose stories to mark as seen"),
       maxId: z.number().int().positive().describe("Stories up to and including this ID will be marked seen"),
     },
-    annotations: WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, maxId }, { telegram }) => {
       const result = await telegram.readStories(chatId, maxId);
       return textResult(`Marked stories as read up to #${maxId} (${result.ids.length} newly seen)`);
@@ -255,7 +256,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
         .describe("Base64-encoded option bytes from a prior report step, or empty string to start the flow"),
       message: z.string().max(1024).default("").describe("Optional message to accompany the report"),
     },
-    annotations: WRITE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, ids, option, message }, { telegram }) => {
       const result = await telegram.reportStory(chatId, ids, option, sanitize(message));
       return textResult(sanitize(renderReportResult(result)));
@@ -270,7 +271,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       past: z.boolean().optional().describe("Remove your views from stories you already watched"),
       future: z.boolean().optional().describe("Hide your views for the next 25 minutes"),
     },
-    annotations: WRITE,
+    annotations: LOCAL_WRITE,
     preValidate: ({ past, future }) => {
       if (!past && !future) return errorResult("At least one of past or future must be true");
       return null;
@@ -291,7 +292,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to delete (1-100 per request)"),
       confirm: z.literal(true).describe("Pass true to confirm irreversible deletion"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     handler: async ({ chatId, ids }, { telegram }) => {
       const result = await telegram.deleteStories(chatId, ids);
       const { deleted } = result;
@@ -318,7 +319,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Blocked user IDs (ignored for 'selected')"),
     },
-    annotations: DESTRUCTIVE,
+    annotations: DESTRUCTIVE_PUBLIC,
     preValidate: ({ caption, privacy, allowUserIds }) => {
       if (caption === undefined && privacy === undefined) {
         return errorResult("Provide at least one of: caption, privacy.");
