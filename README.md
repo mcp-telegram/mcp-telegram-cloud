@@ -142,6 +142,12 @@ session import) return `401` without it.
 Full reference with required-vs-optional flags and change-impact
 warnings: [`docs/configuration.md`](./docs/configuration.md).
 
+## Changes
+
+User-visible changes to the hosted service — including the ones that alter how
+often your AI client asks for confirmation, and which actions now need an
+opt-in — are in [`CHANGELOG.md`](./CHANGELOG.md).
+
 ## Development
 
 ```bash
