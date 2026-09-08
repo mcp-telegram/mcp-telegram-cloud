@@ -306,10 +306,12 @@ for (const sig of ["SIGTERM", "SIGINT"] as const) {
     logger.info(`Received ${sig}, draining`, { component: "cloud", event: "server.drain.start" });
     // Phase 1: flip /health to 503 + wait out the healthcheck interval so
     // Traefik / Swarm mark this task unhealthy and stop sending new traffic.
-    // Then poll active MCP transport sessions until they hit zero or the
-    // timeout elapses. Defaults (10s health-delay, 60s timeout, 500ms poll)
-    // are tuned for our Swarm `healthcheck.interval: 10s` and the typical
-    // tool-call duration; override via env if traffic shape changes.
+    // Then poll in-flight MCP requests until they hit zero or the timeout
+    // elapses — requests, not open sessions: a connected client keeps a
+    // session open while idle, so waiting for sessions never finished early.
+    // Defaults (10s health-delay, 60s timeout, 500ms poll) are tuned for our
+    // Swarm `healthcheck.interval: 10s` and the typical tool-call duration;
+    // override via env if traffic shape changes.
     const drainHealthDelayMs = Number(process.env.MCP_DRAIN_HEALTH_DELAY_MS ?? 10_000);
     const drainTimeoutMs = Number(process.env.MCP_DRAIN_TIMEOUT_MS ?? 60_000);
     const drainPollMs = Number(process.env.MCP_DRAIN_POLL_MS ?? 500);
@@ -317,8 +319,10 @@ for (const sig of ["SIGTERM", "SIGINT"] as const) {
       healthDelayMs: drainHealthDelayMs,
       timeoutMs: drainTimeoutMs,
       pollMs: drainPollMs,
-      onProgress: (event, activeSessions) => {
-        logger.info(`drain ${event} active=${activeSessions}`, {
+      onProgress: (event, inFlight, activeSessions) => {
+        // Both numbers on purpose: `inFlight` is what the drain waits for,
+        // `sessions` is the connection count that used to be mistaken for it.
+        logger.info(`drain ${event} inFlight=${inFlight} sessions=${activeSessions}`, {
           component: "cloud",
           event: `server.drain.${event}`,
         });

@@ -6,8 +6,18 @@
  *   2. We hold for DRAIN_HEALTH_DELAY_MS so Traefik definitely noticed the
  *      flip (Traefik's default health-check interval is 30s — we use 10s
  *      here matching the Compose `healthcheck.interval: 10s` cadence).
- *   3. We poll active MCP transport sessions every 500ms and exit early
- *      once the count hits zero, OR after DRAIN_TIMEOUT_MS regardless.
+ *   3. We poll in-flight MCP requests every 500ms and exit early once the
+ *      count hits zero, OR after DRAIN_TIMEOUT_MS regardless.
+ *
+ * We wait for in-flight REQUESTS, not for open sessions. A Streamable HTTP
+ * session outlives the request that created it and closes only when the client
+ * disconnects or the idle reaper evicts it, so a connected-but-quiet client
+ * keeps one open indefinitely. Waiting for sessions to reach zero therefore
+ * burned the full timeout on every deploy — measured in production: four
+ * consecutive restarts all ended in `drain timeout active=11` / `active=5` —
+ * and then killed whatever was in flight anyway. Waiting for work to finish
+ * both ends quickly and actually protects a tool call mid-execution; a client
+ * whose session is cut simply reconnects and gets a new one.
  *   4. Caller (`server.tsx`) then proceeds with the existing
  *      `httpServer.stop()` + telemetry flush sequence.
  *
@@ -17,7 +27,7 @@
  * read-side trivially testable without touching either entry point.
  */
 
-import { getActiveSessionsByClient } from "./mcp-handler.js";
+import { getActiveSessionsByClient, getInFlightMcpRequests } from "./mcp-handler.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { DRAIN_OUTCOME, incr } from "./telemetry/metrics.js";
 
@@ -52,9 +62,16 @@ export interface DrainOptions {
   pollMs: number;
   /** Optional logger hook (so tests can observe progress without spinning
    *  up the real logger / SigNoz writer). */
-  onProgress?: (event: "start" | "health-delay-done" | "drained" | "timeout", activeSessions: number) => void;
-  /** Active-session reader. Defaulted to `getActiveMcpSessionsTotal` so callers
-   *  rarely override; tests inject a mock to drive deterministic transitions. */
+  onProgress?: (
+    event: "start" | "health-delay-done" | "drained" | "timeout",
+    inFlight: number,
+    activeSessions: number,
+  ) => void;
+  /** In-flight work reader — what the drain actually waits for. Tests inject a
+   *  mock to drive deterministic transitions. */
+  inFlightRequests?: () => number;
+  /** Open-session reader, reported in progress events for context only. Never
+   *  gates the drain: see the module comment. */
   activeSessions?: () => number;
   /** Sleep primitive. Defaulted to setTimeout-Promise; tests inject fake clock. */
   sleep?: (ms: number) => Promise<void>;
@@ -72,31 +89,32 @@ const defaultSleep = (ms: number): Promise<void> => new Promise((r) => setTimeou
  */
 export async function startDrain(opts: DrainOptions): Promise<{ outcome: "drained" | "timeout"; remaining: number }> {
   const sleep = opts.sleep ?? defaultSleep;
-  const readActive = opts.activeSessions ?? getActiveMcpSessionsTotal;
+  const readInFlight = opts.inFlightRequests ?? getInFlightMcpRequests;
+  const readSessions = opts.activeSessions ?? getActiveMcpSessionsTotal;
   const onProgress = opts.onProgress;
 
   if (draining) {
-    return { outcome: "drained", remaining: readActive() };
+    return { outcome: "drained", remaining: readInFlight() };
   }
   draining = true;
-  onProgress?.("start", readActive());
+  onProgress?.("start", readInFlight(), readSessions());
 
   await sleep(opts.healthDelayMs);
-  onProgress?.("health-delay-done", readActive());
+  onProgress?.("health-delay-done", readInFlight(), readSessions());
 
   const deadline = Date.now() + opts.timeoutMs;
   while (Date.now() < deadline) {
-    const remaining = readActive();
+    const remaining = readInFlight();
     if (remaining === 0) {
-      onProgress?.("drained", 0);
+      onProgress?.("drained", 0, readSessions());
       incr(DRAIN_OUTCOME, { outcome: "drained" });
       return { outcome: "drained", remaining: 0 };
     }
     await sleep(opts.pollMs);
   }
 
-  const finalRemaining = readActive();
-  onProgress?.("timeout", finalRemaining);
+  const finalRemaining = readInFlight();
+  onProgress?.("timeout", finalRemaining, readSessions());
   incr(DRAIN_OUTCOME, { outcome: "timeout" });
   return { outcome: "timeout", remaining: finalRemaining };
 }

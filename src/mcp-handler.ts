@@ -52,6 +52,24 @@ export function getActiveSessionsByClient(client: ClientClass): number {
 }
 
 /**
+ * MCP requests currently being served.
+ *
+ * Distinct from the session counts above, and the distinction is the whole
+ * point: a Streamable HTTP session outlives the request that created it and
+ * only disappears when the client disconnects or the idle reaper evicts it. A
+ * connected-but-quiet client therefore keeps a session open indefinitely.
+ *
+ * Shutdown must wait for work, not for connections. Waiting for sessions to
+ * reach zero meant every deploy burned the full drain timeout and then killed
+ * whatever was in flight anyway.
+ */
+let inFlightRequests = 0;
+
+export function getInFlightMcpRequests(): number {
+  return inFlightRequests;
+}
+
+/**
  * Test-only: simulate session lifecycle without spinning up a full MCP transport.
  * Mirrors the increment/decrement done in `onsessioninitialized`/`onsessionclosed`
  * so tests can assert read-side correctness and decrement-on-zero behavior.
@@ -306,6 +324,26 @@ export function _setReaperSessionsForTest(sessions: SessionManager | null): void
  * Each MCP session gets its own McpServer + Transport pair wired to the user's TelegramService.
  */
 export async function handleMcpRequest(
+  sessions: SessionManager,
+  usage: UsageTracker,
+  oauth: OAuthProvider,
+  destructive: DestructiveGuard,
+  uploads: UploadStore,
+  userId: string,
+  clientName: string,
+  req: Request,
+): Promise<Response> {
+  // Counted around every path below, including the error paths, so a throw
+  // cannot leak a permanently "in-flight" request and block shutdown forever.
+  inFlightRequests++;
+  try {
+    return await handleMcpRequestInner(sessions, usage, oauth, destructive, uploads, userId, clientName, req);
+  } finally {
+    inFlightRequests--;
+  }
+}
+
+async function handleMcpRequestInner(
   sessions: SessionManager,
   usage: UsageTracker,
   oauth: OAuthProvider,
