@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Chatroost — server Chatroost non ufficiale",
-    "siteDescription": "Chatroost — server Chatroost non ufficiale e open source. Collega il tuo Telegram a Claude AI o ChatGPT. Leggi i messaggi, cerca nelle chat, invia risposte e reagisci — tutto dall'IA con un clic."
+    "siteTitle": "Chatroost — server MCP Telegram non ufficiale",
+    "siteDescription": "Chatroost — server MCP Telegram non ufficiale e open source. Collega il tuo Telegram a Claude AI o ChatGPT. Leggi i messaggi, cerca nelle chat, invia risposte e reagisci — tutto dall'IA con un clic."
   },
   "nav": {
     "features": "Funzionalità",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "e",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Chatroost è un server Chatroost non ufficiale. Leggi i messaggi, cerca nelle chat, invia risposte, reagisci ai post — tutto da Claude.ai o ChatGPT. Collegati in 30 secondi con un codice QR.",
+    "subtitle": "Chatroost è un server MCP Telegram non ufficiale. Leggi i messaggi, cerca nelle chat, invia risposte, reagisci ai post — tutto da Claude.ai o ChatGPT. Collegati in 30 secondi con un codice QR.",
     "ctaQuickstart": "Inizia in 30 secondi"
   },
   "features": {
@@ -111,7 +111,7 @@
     "mit": "Licenza MIT",
     "privacy": "Privacy",
     "terms": "Termini",
-    "tagline": "Server Chatroost non ufficiale per Claude AI e ChatGPT.",
+    "tagline": "Server MCP Telegram non ufficiale per Claude AI e ChatGPT.",
     "disclaimer": "Progetto open source indipendente. Non affiliato, approvato o sponsorizzato da Telegram, OpenAI o Anthropic."
   },
   "language": {

@@ -8,8 +8,12 @@ import s from "../../legal.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-const TITLE = `Terms of Service — ${config.brandName}`;
-const DESCRIPTION = `Terms of service for ${config.brandName} hosted Telegram MCP connector.`;
+// The root layout's title template appends the brand, so the page title stays
+// unbranded here — carrying it too rendered as "… — Brand — Brand". Social cards
+// bypass the template and keep the branded form.
+const TITLE = "Terms of Service";
+const SOCIAL_TITLE = `${TITLE} — ${config.brandName}`;
+const DESCRIPTION = `Terms of service for the ${config.brandName} hosted Telegram MCP connector.`;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
@@ -20,8 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: TITLE,
     description: DESCRIPTION,
     alternates: { canonical, languages: languageAlternates("/terms") },
-    openGraph: { url: canonical, title: TITLE, description: DESCRIPTION, images: social.openGraph.images },
-    twitter: { ...social.twitter, title: TITLE, description: DESCRIPTION },
+    openGraph: { url: canonical, title: SOCIAL_TITLE, description: DESCRIPTION, images: social.openGraph.images },
+    twitter: { ...social.twitter, title: SOCIAL_TITLE, description: DESCRIPTION },
   };
 }
 

@@ -13,7 +13,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "privacyPage" });
   const canonical = canonicalForLocale(locale, "/privacy");
-  const title = `${t("title")} — ${config.brandName}`;
+  // The root layout's title template already appends the brand, so the page
+  // title must not carry it too — that rendered as "… — Brand — Brand". Social
+  // cards bypass the template, so they keep the branded form.
+  const title = t("title");
+  const socialTitle = `${title} — ${config.brandName}`;
   const description = t("metaDescription", { brand: config.brandName });
   const social = socialMetadata(locale, canonical);
 
@@ -21,8 +25,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical, languages: languageAlternates("/privacy") },
-    openGraph: { url: canonical, title, description, images: social.openGraph.images },
-    twitter: { ...social.twitter, title, description },
+    openGraph: { url: canonical, title: socialTitle, description, images: social.openGraph.images },
+    twitter: { ...social.twitter, title: socialTitle, description },
   };
 }
 
