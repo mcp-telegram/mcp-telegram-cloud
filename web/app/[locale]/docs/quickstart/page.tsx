@@ -5,7 +5,7 @@ import { SiClaude } from "react-icons/si";
 import { TbBook, TbBrandOpenai, TbBulb, TbIdBadge2, TbPaperclip } from "react-icons/tb";
 import { PlatformTabs } from "@/components/docs/PlatformTabs";
 import { Link } from "@/i18n/navigation";
-import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata, socialTitle } from "@/lib/seo";
 import s from "../../doc.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -22,11 +22,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical, languages: languageAlternates("/docs/quickstart") },
     openGraph: {
       url: canonical,
-      title: t("metaTitle"),
+      title: socialTitle(t("metaTitle")),
       description: t("metaDescription"),
       images: social.openGraph.images,
     },
-    twitter: { ...social.twitter, title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { ...social.twitter, title: socialTitle(t("metaTitle")), description: t("metaDescription") },
   };
 }
 

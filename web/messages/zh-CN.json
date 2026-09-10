@@ -266,7 +266,7 @@
     "oauthDocsLink": "查看开发者 OAuth 参考文档 →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth 开发者参考 — Chatroost",
+    "metaTitle": "OAuth 开发者参考",
     "metaDescription": "为 mcp-telegram.com 构建自定义 MCP 客户端 — 符合 RFC 6749/7591/7636/8252 的 OAuth,支持 PKCE 和 loopback 重定向。",
     "backToQuickstart": "返回 Quickstart",
     "heading": "面向自定义 MCP 客户端的 OAuth",

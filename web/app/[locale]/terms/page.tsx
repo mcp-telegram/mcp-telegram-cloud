@@ -3,7 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { config } from "@/lib/config";
-import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata, socialTitle } from "@/lib/seo";
 import s from "../../legal.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -12,7 +12,6 @@ type PageProps = { params: Promise<{ locale: string }> };
 // unbranded here — carrying it too rendered as "… — Brand — Brand". Social cards
 // bypass the template and keep the branded form.
 const TITLE = "Terms of Service";
-const SOCIAL_TITLE = `${TITLE} — ${config.brandName}`;
 const DESCRIPTION = `Terms of service for the ${config.brandName} hosted Telegram MCP connector.`;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -24,8 +23,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: TITLE,
     description: DESCRIPTION,
     alternates: { canonical, languages: languageAlternates("/terms") },
-    openGraph: { url: canonical, title: SOCIAL_TITLE, description: DESCRIPTION, images: social.openGraph.images },
-    twitter: { ...social.twitter, title: SOCIAL_TITLE, description: DESCRIPTION },
+    openGraph: { url: canonical, title: socialTitle(TITLE), description: DESCRIPTION, images: social.openGraph.images },
+    twitter: { ...social.twitter, title: socialTitle(TITLE), description: DESCRIPTION },
   };
 }
 

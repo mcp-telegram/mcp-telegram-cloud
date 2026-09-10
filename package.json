@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.57.1",
+  "version": "2.57.2",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -29,6 +29,7 @@
     "web:start": "bun --filter mcp-telegram-web start",
     "web:lint": "bun --filter mcp-telegram-web lint",
     "web:typecheck": "bun --filter mcp-telegram-web typecheck",
+    "web:validate-translations": "bun --filter mcp-telegram-web validate-translations",
     "app:dev": "bun --filter mcp-telegram-app dev",
     "app:build": "bun --filter mcp-telegram-app build",
     "app:lint": "bun --filter mcp-telegram-app lint",

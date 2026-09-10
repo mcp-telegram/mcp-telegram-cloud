@@ -266,7 +266,7 @@
     "oauthDocsLink": "Geliştiriciler için OAuth referansına bak →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth Geliştirici Referansı — Chatroost",
+    "metaTitle": "OAuth Geliştirici Referansı",
     "metaDescription": "mcp-telegram.com için özel bir MCP istemcisi geliştir — PKCE ve loopback redirect destekli RFC 6749/7591/7636/8252 OAuth.",
     "backToQuickstart": "Hızlı Başlangıç'a dön",
     "heading": "Özel MCP istemcileri için OAuth",

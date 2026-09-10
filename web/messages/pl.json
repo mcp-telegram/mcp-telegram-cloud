@@ -266,7 +266,7 @@
     "oauthDocsLink": "Zobacz dokumentację OAuth dla programistów →"
   },
   "oauthDocs": {
-    "metaTitle": "Dokumentacja OAuth dla Deweloperów — Chatroost",
+    "metaTitle": "Dokumentacja OAuth dla Deweloperów",
     "metaDescription": "Zbuduj własnego klienta MCP dla mcp-telegram.com — OAuth zgodny z RFC 6749/7591/7636/8252, PKCE i wsparcie dla przekierowań loopback.",
     "backToQuickstart": "Wróć do Quickstart",
     "heading": "OAuth dla własnych klientów MCP",

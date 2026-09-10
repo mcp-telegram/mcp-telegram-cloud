@@ -266,7 +266,7 @@
     "oauthDocsLink": "Bekijk de OAuth-referentie voor ontwikkelaars →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth-ontwikkelaarsreferentie — Chatroost",
+    "metaTitle": "OAuth-ontwikkelaarsreferentie",
     "metaDescription": "Bouw een eigen MCP-client tegen mcp-telegram.com — OAuth volgens RFC 6749/7591/7636/8252 met PKCE en ondersteuning voor loopback-redirects.",
     "backToQuickstart": "Terug naar Quickstart",
     "heading": "OAuth voor eigen MCP-clients",

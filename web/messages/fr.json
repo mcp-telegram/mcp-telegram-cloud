@@ -266,7 +266,7 @@
     "oauthDocsLink": "Voir la référence OAuth pour développeurs →"
   },
   "oauthDocs": {
-    "metaTitle": "Référence OAuth pour développeurs — Chatroost",
+    "metaTitle": "Référence OAuth pour développeurs",
     "metaDescription": "Construis ton propre client MCP pour mcp-telegram.com — OAuth selon RFC 6749/7591/7636/8252 avec PKCE et support des redirections loopback.",
     "backToQuickstart": "Retour au Quickstart",
     "heading": "OAuth pour clients MCP personnalisés",
@@ -440,7 +440,7 @@
   },
   "privacyPage": {
     "title": "Politique de confidentialité",
-    "metaDescription": "Politique de confidentialité du connecteur Chatroost hébergé de {brand}.",
+    "metaDescription": "Politique de confidentialité du connecteur MCP Telegram hébergé de {brand}.",
     "lastUpdated": "Dernière mise à jour : {date}",
     "updatedDate": "7 septembre 2026",
     "overview": {

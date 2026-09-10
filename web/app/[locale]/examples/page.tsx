@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { type ExampleItem, FilterableExamples } from "@/components/examples/FilterableExamples";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata, socialTitle } from "@/lib/seo";
 import s from "../doc.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -45,11 +45,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical, languages: languageAlternates(PATH) },
     openGraph: {
       url: canonical,
-      title: t("metaTitle"),
+      title: socialTitle(t("metaTitle")),
       description: t("metaDescription"),
       images: social.openGraph.images,
     },
-    twitter: { ...social.twitter, title: t("metaTitle"), description: t("metaDescription") },
+    twitter: { ...social.twitter, title: socialTitle(t("metaTitle")), description: t("metaDescription") },
   };
 }
 

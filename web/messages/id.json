@@ -266,7 +266,7 @@
     "oauthDocsLink": "Lihat referensi OAuth untuk pengembang →"
   },
   "oauthDocs": {
-    "metaTitle": "Referensi OAuth untuk Developer — Chatroost",
+    "metaTitle": "Referensi OAuth untuk Developer",
     "metaDescription": "Bangun klien MCP kustom untuk mcp-telegram.com — OAuth sesuai RFC 6749/7591/7636/8252 dengan PKCE dan dukungan redirect loopback.",
     "backToQuickstart": "Kembali ke Quickstart",
     "heading": "OAuth untuk klien MCP kustom",
@@ -440,7 +440,7 @@
   },
   "privacyPage": {
     "title": "Kebijakan Privasi",
-    "metaDescription": "Kebijakan privasi untuk konektor Chatroost yang dihosting {brand}.",
+    "metaDescription": "Kebijakan privasi untuk konektor MCP Telegram yang dihosting {brand}.",
     "lastUpdated": "Terakhir diperbarui: {date}",
     "updatedDate": "7 September 2026",
     "overview": {

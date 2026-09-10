@@ -62,3 +62,19 @@ export function socialMetadata(locale: string, canonical: string) {
     twitter: { card: "summary_large_image" as const, images: [image] },
   };
 }
+
+/** Brand a title for social cards.
+ *
+ * The document `<title>` gets the brand from the root layout's
+ * `template: "%s — <brand>"`, but og:title / twitter:title bypass that template
+ * entirely — a page handing its raw translated title to the card ships a
+ * preview with no brand on it. Page titles therefore stay unbranded (otherwise
+ * the template doubles them) and every card title goes through here.
+ *
+ * Idempotent: a title that already names the brand anywhere is left alone. The
+ * check is `includes`, not `endsWith`, because the homepage's siteTitle opens
+ * with the brand ("Chatroost — unofficial …") — an endsWith check appended it a
+ * second time and shipped a doubled brand on the card. */
+export function socialTitle(title: string): string {
+  return title.includes(config.brandName) ? title : `${title} — ${config.brandName}`;
+}

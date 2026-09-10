@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { config } from "@/lib/config";
-import { canonicalForLocale, languageAlternates, socialMetadata } from "@/lib/seo";
+import { canonicalForLocale, languageAlternates, socialMetadata, socialTitle } from "@/lib/seo";
 import s from "../../legal.module.css";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -17,7 +17,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // title must not carry it too — that rendered as "… — Brand — Brand". Social
   // cards bypass the template, so they keep the branded form.
   const title = t("title");
-  const socialTitle = `${title} — ${config.brandName}`;
   const description = t("metaDescription", { brand: config.brandName });
   const social = socialMetadata(locale, canonical);
 
@@ -25,8 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical, languages: languageAlternates("/privacy") },
-    openGraph: { url: canonical, title: socialTitle, description, images: social.openGraph.images },
-    twitter: { ...social.twitter, title: socialTitle, description },
+    openGraph: { url: canonical, title: socialTitle(title), description, images: social.openGraph.images },
+    twitter: { ...social.twitter, title: socialTitle(title), description },
   };
 }
 

@@ -258,7 +258,7 @@
     "oauthDocsLink": "Смотри OAuth-справочник для разработчиков →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth-справочник для разработчиков — Chatroost",
+    "metaTitle": "OAuth-справочник для разработчиков",
     "metaDescription": "Сделай свой MCP-клиент для mcp-telegram.com — OAuth по RFC 6749/7591/7636/8252 с PKCE и поддержкой loopback-редиректов.",
     "backToQuickstart": "Назад в Quickstart",
     "heading": "OAuth для собственных MCP-клиентов",

@@ -266,7 +266,7 @@
     "oauthDocsLink": "Xem tài liệu OAuth dành cho nhà phát triển →"
   },
   "oauthDocs": {
-    "metaTitle": "Tài liệu OAuth cho lập trình viên — Chatroost",
+    "metaTitle": "Tài liệu OAuth cho lập trình viên",
     "metaDescription": "Xây dựng MCP client tùy chỉnh cho mcp-telegram.com — OAuth theo RFC 6749/7591/7636/8252 với PKCE và hỗ trợ redirect loopback.",
     "backToQuickstart": "Quay lại Quickstart",
     "heading": "OAuth cho MCP client tùy chỉnh",

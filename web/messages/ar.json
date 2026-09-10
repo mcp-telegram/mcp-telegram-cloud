@@ -266,7 +266,7 @@
     "oauthDocsLink": "اطلع على مرجع OAuth للمطورين ←"
   },
   "oauthDocs": {
-    "metaTitle": "مرجع مطوّري OAuth — Chatroost",
+    "metaTitle": "مرجع مطوّري OAuth",
     "metaDescription": "ابنِ عميل MCP مخصصاً يعمل مع mcp-telegram.com — OAuth وفقاً لـ RFC 6749/7591/7636/8252 مع دعم PKCE وإعادة التوجيه عبر loopback.",
     "backToQuickstart": "العودة إلى البدء السريع",
     "heading": "OAuth لعملاء MCP المخصّصين",

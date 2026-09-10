@@ -266,7 +266,7 @@
     "oauthDocsLink": "開発者向けOAuthリファレンスを見る →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth 開発者リファレンス — Chatroost",
+    "metaTitle": "OAuth 開発者リファレンス",
     "metaDescription": "mcp-telegram.com 向けにカスタム MCP クライアントを構築する — PKCE と loopback リダイレクトをサポートする RFC 6749/7591/7636/8252 準拠の OAuth。",
     "backToQuickstart": "Quickstart に戻る",
     "heading": "カスタム MCP クライアント向け OAuth",
