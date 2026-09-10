@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Uw Telegram in Claude AI en ChatGPT",
-    "siteDescription": "Telegram MCP Server — Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats, verstuur antwoorden en reageer — alles vanuit AI met één klik."
+    "siteTitle": "Chatroost — onofficiële Telegram-MCP-server",
+    "siteDescription": "Chatroost — onofficiële opensource-Telegram-MCP-server. Verbind uw Telegram met Claude AI of ChatGPT. Lees berichten, doorzoek chats, verstuur antwoorden en reageer — alles vanuit AI met één klik."
   },
   "nav": {
     "features": "Functies",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Lees berichten, doorzoek chats, verstuur antwoorden, reageer op berichten — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
+    "subtitle": "Chatroost is een onofficiële Telegram-MCP-server. Lees berichten, doorzoek chats, verstuur antwoorden, reageer op berichten — allemaal vanuit Claude.ai of ChatGPT. Verbind in 30 seconden met een QR-code.",
     "ctaQuickstart": "Begin in 30 seconden"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "MIT-gelicentieerd",
     "privacy": "Privacy",
     "terms": "Voorwaarden",
-    "tagline": "Telegram voor Claude AI & ChatGPT."
+    "tagline": "Onofficiële Telegram-MCP-server voor Claude AI & ChatGPT.",
+    "disclaimer": "Onafhankelijk opensourceproject. Niet verbonden aan, goedgekeurd of gesponsord door Telegram, OpenAI of Anthropic."
   },
   "language": {
     "switcherLabel": "Taal"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Bekijk de OAuth-referentie voor ontwikkelaars →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth-ontwikkelaarsreferentie — MCP Telegram",
+    "metaTitle": "OAuth-ontwikkelaarsreferentie — Chatroost",
     "metaDescription": "Bouw een eigen MCP-client tegen mcp-telegram.com — OAuth volgens RFC 6749/7591/7636/8252 met PKCE en ondersteuning voor loopback-redirects.",
     "backToQuickstart": "Terug naar Quickstart",
     "heading": "OAuth voor eigen MCP-clients",

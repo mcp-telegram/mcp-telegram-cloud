@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Claude AI ve ChatGPT'de Telegram'ınız",
-    "siteDescription": "Telegram MCP Server — Telegram'ınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin ve tepki verin — hepsi tek tıklamayla yapay zekâdan."
+    "siteTitle": "Chatroost — resmi olmayan Telegram MCP sunucusu",
+    "siteDescription": "Chatroost — resmi olmayan, açık kaynaklı Telegram MCP sunucusu. Telegram'ınızı Claude AI veya ChatGPT'ye bağlayın. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin ve tepki verin — hepsi tek tıklamayla yapay zekâdan."
   },
   "nav": {
     "features": "Özellikler",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "ve",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin, gönderilere tepki verin — hepsi Claude.ai veya ChatGPT içinden. QR kod ile 30 saniyede bağlanın.",
+    "subtitle": "Chatroost, resmi olmayan bir Telegram MCP sunucusudur. Mesajları okuyun, sohbetlerde arama yapın, yanıt gönderin, gönderilere tepki verin — hepsi Claude.ai veya ChatGPT içinden. QR kod ile 30 saniyede bağlanın.",
     "ctaQuickstart": "30 saniyede başlayın"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "MIT lisanslı",
     "privacy": "Gizlilik",
     "terms": "Şartlar",
-    "tagline": "Claude AI ve ChatGPT için Telegram."
+    "tagline": "Claude AI ve ChatGPT için resmi olmayan Telegram MCP sunucusu.",
+    "disclaimer": "Bağımsız açık kaynak proje. Telegram, OpenAI veya Anthropic ile bağlantılı değildir; onlar tarafından onaylanmamış ve desteklenmemektedir."
   },
   "language": {
     "switcherLabel": "Dil"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Geliştiriciler için OAuth referansına bak →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth Geliştirici Referansı — MCP Telegram",
+    "metaTitle": "OAuth Geliştirici Referansı — Chatroost",
     "metaDescription": "mcp-telegram.com için özel bir MCP istemcisi geliştir — PKCE ve loopback redirect destekli RFC 6749/7591/7636/8252 OAuth.",
     "backToQuickstart": "Hızlı Başlangıç'a dön",
     "heading": "Özel MCP istemcileri için OAuth",

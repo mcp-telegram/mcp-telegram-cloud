@@ -23,3 +23,10 @@
   font-size: 13px;
   color: var(--tg-secondary-hint);
 }
+
+.disclaimer {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tg-secondary-hint);
+}

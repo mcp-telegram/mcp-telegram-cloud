@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Ваш Telegram в Claude AI и ChatGPT",
-    "siteDescription": "Telegram MCP Server — Подключите Telegram к Claude AI или ChatGPT. Читайте сообщения, ищите по чатам, отвечайте и ставьте реакции — прямо из ИИ одним кликом."
+    "siteTitle": "Chatroost — неофициальный MCP-сервер для Telegram",
+    "siteDescription": "Chatroost — неофициальный MCP-сервер для Telegram с открытым кодом. Подключите Telegram к Claude AI или ChatGPT. Читайте сообщения, ищите по чатам, отвечайте и ставьте реакции — прямо из ИИ одним кликом."
   },
   "nav": {
     "features": "Возможности",
@@ -19,7 +19,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "и",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Читайте сообщения, ищите по чатам, отвечайте, ставьте реакции — прямо из Claude.ai или ChatGPT. Подключение через QR-код за 30 секунд.",
+    "subtitle": "Chatroost — неофициальный MCP-сервер для Telegram. Читайте сообщения, ищите по чатам, отвечайте, ставьте реакции — прямо из Claude.ai или ChatGPT. Подключение через QR-код за 30 секунд.",
     "ctaQuickstart": "Начать за 30 секунд"
   },
   "features": {
@@ -103,7 +103,8 @@
     "mit": "Лицензия MIT",
     "privacy": "Приватность",
     "terms": "Условия",
-    "tagline": "Telegram для Claude AI и ChatGPT."
+    "tagline": "Неофициальный MCP-сервер для Telegram в Claude AI и ChatGPT.",
+    "disclaimer": "Независимый проект с открытым кодом. Не связан с Telegram, OpenAI и Anthropic, не одобрен и не спонсируется ими."
   },
   "language": {
     "switcherLabel": "Язык"
@@ -257,7 +258,7 @@
     "oauthDocsLink": "Смотри OAuth-справочник для разработчиков →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth-справочник для разработчиков — MCP Telegram",
+    "metaTitle": "OAuth-справочник для разработчиков — Chatroost",
     "metaDescription": "Сделай свой MCP-клиент для mcp-telegram.com — OAuth по RFC 6749/7591/7636/8252 с PKCE и поддержкой loopback-редиректов.",
     "backToQuickstart": "Назад в Quickstart",
     "heading": "OAuth для собственных MCP-клиентов",

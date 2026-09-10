@@ -46,7 +46,7 @@ const mcpBaseUrl = httpUrl("MCP_BASE_URL", optional(process.env.MCP_BASE_URL, DE
 );
 
 export const config = {
-  brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
+  brandName: optional(process.env.BRAND_NAME, "Chatroost"),
   issuer,
   mcpBaseUrl,
   sourceRepoUrl,

@@ -3,7 +3,7 @@ import type { Messages } from "../types.js";
 /** Arabic — machine-assisted, reviewed. RTL. */
 export const ar: Messages = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "اللغة",
     loading: "جارٍ التحميل…",
     retry: "حدّث الصفحة للمحاولة مرة أخرى.",

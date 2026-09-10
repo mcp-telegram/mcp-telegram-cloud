@@ -3,7 +3,7 @@ import type { Messages } from "../types.js";
 /** Portuguese (Brazil) — machine-assisted, reviewed. */
 export const ptBR: Messages = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "Idioma",
     loading: "Carregando…",
     retry: "Atualize para tentar novamente.",

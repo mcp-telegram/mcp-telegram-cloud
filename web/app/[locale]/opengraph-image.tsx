@@ -14,9 +14,10 @@
 
 import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
+import { BRAND_MARK_WHITE_PNG } from "@/lib/brand-mark";
 import { config } from "@/lib/config";
 
-export const alt = "Telegram MCP Server";
+export const alt = "Chatroost — unofficial Telegram MCP server";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -64,13 +65,10 @@ export default async function OpengraphImage({ params }: Props) {
             marginRight: 20,
           }}
         >
-          {/* Paper plane, inlined: satori cannot fetch assets. No <title> here —
-           * satori renders it as visible text rather than treating it as the
-           * accessible name, which would print a label across the glyph. */}
-          {/* biome-ignore lint/a11y/noSvgWithoutTitle: rendered to a raster image; the card's alt text describes it. */}
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="#ffffff">
-            <path d="M21.9 2.6c.4-.9-.5-1.8-1.4-1.4L1.7 9.4c-1 .4-.9 1.9.2 2.1l4.9 1.2 1.9 6.1c.3.9 1.4 1.1 2 .4l2.7-2.9 4.7 3.5c.7.5 1.7.1 1.9-.7L21.9 2.6zM8.6 13.2l8.8-6.4-6.6 7.3c-.2.2-.3.4-.3.7l-.3 2.7-1.6-4.3z" />
-          </svg>
+          {/* Brand mark, inlined as a data URI: satori cannot fetch assets, so
+           * a referenced /icon.svg would render blank. */}
+          {/* biome-ignore lint/performance/noImgElement: satori renders this card, not the browser. */}
+          <img src={BRAND_MARK_WHITE_PNG} width={38} height={38} alt="" />
         </div>
         <div style={{ display: "flex", fontSize: 34, fontWeight: 700, letterSpacing: -0.5 }}>{config.brandName}</div>
       </div>
@@ -89,7 +87,9 @@ export default async function OpengraphImage({ params }: Props) {
         >
           {`${t("titleStart")} ${t("titleClaude")} ${t("titleAnd")} ${t("titleChatGPT")}`}
         </div>
-        <div style={{ display: "flex", marginTop: 26, fontSize: 30, opacity: 0.92 }}>Telegram MCP Server</div>
+        <div style={{ display: "flex", marginTop: 26, fontSize: 30, opacity: 0.92 }}>
+          Unofficial Telegram MCP server
+        </div>
       </div>
 
       {/* Footer chips */}

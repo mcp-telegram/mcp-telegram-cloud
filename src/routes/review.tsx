@@ -92,7 +92,7 @@ function page(title: string, body: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>${esc(title)} — MCP Telegram</title>
+<title>${esc(title)} — Chatroost</title>
 <style>
   body { font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
          max-width: 34rem; margin: 12vh auto; padding: 0 1.5rem; color: #16202a; }

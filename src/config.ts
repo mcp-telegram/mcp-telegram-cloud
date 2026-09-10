@@ -127,7 +127,7 @@ export const config = {
    * and absolute URLs in the landing/OAuth pages. */
   issuer: issuerUrl("ISSUER", required("ISSUER", process.env.ISSUER)),
   port: intOr(process.env.PORT, 3000),
-  brandName: optional(process.env.BRAND_NAME, "MCP Telegram"),
+  brandName: optional(process.env.BRAND_NAME, "Chatroost"),
   contactEmail: optional(process.env.CONTACT_EMAIL, ""),
   /** Telegram handle without leading @ (stripped once at load). */
   contactTelegram: optional(process.env.CONTACT_TELEGRAM, "").replace(/^@/, ""),

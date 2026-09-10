@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Claude AI और ChatGPT में आपका Telegram",
-    "siteDescription": "Telegram MCP Server — अपने Telegram को Claude AI या ChatGPT से जोड़ें। संदेश पढ़ें, चैट खोजें, उत्तर भेजें और प्रतिक्रिया दें — सब कुछ एक क्लिक से AI द्वारा।"
+    "siteTitle": "Chatroost — अनौपचारिक Telegram MCP सर्वर",
+    "siteDescription": "Chatroost — एक अनौपचारिक, ओपन-सोर्स Telegram MCP सर्वर। अपने Telegram को Claude AI या ChatGPT से जोड़ें। संदेश पढ़ें, चैट खोजें, उत्तर भेजें और प्रतिक्रिया दें — सब कुछ एक क्लिक से AI द्वारा।"
   },
   "nav": {
     "features": "विशेषताएँ",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "और",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. संदेश पढ़ें, चैट खोजें, उत्तर भेजें, पोस्ट पर प्रतिक्रिया दें — सब कुछ Claude.ai या ChatGPT से। QR कोड के साथ 30 सेकंड में कनेक्ट करें।",
+    "subtitle": "Chatroost एक अनौपचारिक Telegram MCP सर्वर है। संदेश पढ़ें, चैट खोजें, उत्तर भेजें, पोस्ट पर प्रतिक्रिया दें — सब कुछ Claude.ai या ChatGPT से। QR कोड के साथ 30 सेकंड में कनेक्ट करें।",
     "ctaQuickstart": "30 सेकंड में शुरू करें"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "MIT लाइसेंसयुक्त",
     "privacy": "गोपनीयता",
     "terms": "शर्तें",
-    "tagline": "Claude AI और ChatGPT के लिए Telegram।"
+    "tagline": "Claude AI और ChatGPT के लिए अनौपचारिक Telegram MCP सर्वर।",
+    "disclaimer": "स्वतंत्र ओपन-सोर्स परियोजना। Telegram, OpenAI या Anthropic से संबद्ध, अनुमोदित या प्रायोजित नहीं।"
   },
   "language": {
     "switcherLabel": "भाषा"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "डेवलपर्स के लिए OAuth संदर्भ देखें →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth डेवलपर रेफरेंस — MCP Telegram",
+    "metaTitle": "OAuth डेवलपर रेफरेंस — Chatroost",
     "metaDescription": "mcp-telegram.com के लिए कस्टम MCP क्लाइंट बनाएं — PKCE और loopback रीडायरेक्ट सपोर्ट के साथ RFC 6749/7591/7636/8252 OAuth।",
     "backToQuickstart": "Quickstart पर वापस जाएं",
     "heading": "कस्टम MCP क्लाइंट्स के लिए OAuth",

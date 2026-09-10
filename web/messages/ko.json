@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Claude AI와 ChatGPT에서 사용하는 당신의 Telegram",
-    "siteDescription": "Telegram MCP Server — Telegram을 Claude AI 또는 ChatGPT에 연결하세요. 메시지를 읽고, 대화방을 검색하고, 답장을 보내고, 반응까지 — 모두 AI에서 한 번의 클릭으로."
+    "siteTitle": "Chatroost — 비공식 Telegram MCP 서버",
+    "siteDescription": "Chatroost — 비공식 오픈소스 Telegram MCP 서버입니다. Telegram을 Claude AI 또는 ChatGPT에 연결하세요. 메시지를 읽고, 대화방을 검색하고, 답장을 보내고, 반응까지 — 모두 AI에서 한 번의 클릭으로."
   },
   "nav": {
     "features": "기능",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "와",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. 메시지 읽기, 대화방 검색, 답장 보내기, 게시물에 반응까지 — 모두 Claude.ai 또는 ChatGPT 안에서. QR 코드로 30초 만에 연결하세요.",
+    "subtitle": "Chatroost는 비공식 Telegram MCP 서버입니다. 메시지 읽기, 대화방 검색, 답장 보내기, 게시물에 반응까지 — 모두 Claude.ai 또는 ChatGPT 안에서. QR 코드로 30초 만에 연결하세요.",
     "ctaQuickstart": "30초 만에 시작하기"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "MIT 라이선스",
     "privacy": "개인정보",
     "terms": "이용약관",
-    "tagline": "Claude AI 및 ChatGPT를 위한 Telegram."
+    "tagline": "Claude AI 및 ChatGPT를 위한 비공식 Telegram MCP 서버.",
+    "disclaimer": "독립적인 오픈소스 프로젝트입니다. Telegram, OpenAI, Anthropic과 제휴하거나 이들의 보증 또는 후원을 받지 않았습니다."
   },
   "language": {
     "switcherLabel": "언어"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "개발자용 OAuth 참조 문서 보기 →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth 개발자 레퍼런스 — MCP Telegram",
+    "metaTitle": "OAuth 개발자 레퍼런스 — Chatroost",
     "metaDescription": "mcp-telegram.com용 커스텀 MCP 클라이언트 만들기 — PKCE 및 loopback 리다이렉트를 지원하는 RFC 6749/7591/7636/8252 OAuth.",
     "backToQuickstart": "Quickstart로 돌아가기",
     "heading": "커스텀 MCP 클라이언트를 위한 OAuth",

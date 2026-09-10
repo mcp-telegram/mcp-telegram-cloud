@@ -3,7 +3,7 @@ import type { Messages } from "../types.js";
 /** Simplified Chinese — machine-assisted, reviewed. */
 export const zhCN: Messages = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "语言",
     loading: "加载中…",
     retry: "刷新以重试。",

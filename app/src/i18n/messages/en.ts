@@ -11,7 +11,7 @@
  */
 export const en = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "Language",
     loading: "Loading…",
     retry: "Refresh to retry.",

@@ -3,7 +3,7 @@ import type { Messages } from "../types.js";
 /** Vietnamese — machine-assisted, reviewed. */
 export const vi: Messages = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "Ngôn ngữ",
     loading: "Đang tải…",
     retry: "Làm mới để thử lại.",

@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Il tuo Telegram in Claude AI e ChatGPT",
-    "siteDescription": "Telegram MCP Server — Collega il tuo Telegram a Claude AI o ChatGPT. Leggi i messaggi, cerca nelle chat, invia risposte e reagisci — tutto dall'IA con un clic."
+    "siteTitle": "Chatroost — server Chatroost non ufficiale",
+    "siteDescription": "Chatroost — server Chatroost non ufficiale e open source. Collega il tuo Telegram a Claude AI o ChatGPT. Leggi i messaggi, cerca nelle chat, invia risposte e reagisci — tutto dall'IA con un clic."
   },
   "nav": {
     "features": "Funzionalità",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "e",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Leggi i messaggi, cerca nelle chat, invia risposte, reagisci ai post — tutto da Claude.ai o ChatGPT. Collegati in 30 secondi con un codice QR.",
+    "subtitle": "Chatroost è un server Chatroost non ufficiale. Leggi i messaggi, cerca nelle chat, invia risposte, reagisci ai post — tutto da Claude.ai o ChatGPT. Collegati in 30 secondi con un codice QR.",
     "ctaQuickstart": "Inizia in 30 secondi"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "Licenza MIT",
     "privacy": "Privacy",
     "terms": "Termini",
-    "tagline": "Telegram per Claude AI e ChatGPT."
+    "tagline": "Server Chatroost non ufficiale per Claude AI e ChatGPT.",
+    "disclaimer": "Progetto open source indipendente. Non affiliato, approvato o sponsorizzato da Telegram, OpenAI o Anthropic."
   },
   "language": {
     "switcherLabel": "Lingua"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Vedi il riferimento OAuth per sviluppatori →"
   },
   "oauthDocs": {
-    "metaTitle": "Riferimento OAuth per Sviluppatori — MCP Telegram",
+    "metaTitle": "Riferimento OAuth per Sviluppatori — Chatroost",
     "metaDescription": "Costruisci un client MCP personalizzato per mcp-telegram.com — OAuth secondo RFC 6749/7591/7636/8252 con PKCE e supporto per redirect loopback.",
     "backToQuickstart": "Torna al Quickstart",
     "heading": "OAuth per client MCP personalizzati",
@@ -439,7 +440,7 @@
   },
   "privacyPage": {
     "title": "Informativa sulla privacy",
-    "metaDescription": "Informativa sulla privacy per il connettore MCP Telegram ospitato {brand}.",
+    "metaDescription": "Informativa sulla privacy per il connettore Chatroost ospitato {brand}.",
     "lastUpdated": "Ultimo aggiornamento: {date}",
     "updatedDate": "7 settembre 2026",
     "overview": {

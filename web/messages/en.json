@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Your Telegram in Claude & ChatGPT",
-    "siteDescription": "Telegram MCP server that connects your Telegram to Claude AI or ChatGPT. Read messages, search chats, send replies and react — one click."
+    "siteTitle": "Chatroost — unofficial Telegram MCP server",
+    "siteDescription": "Chatroost is an unofficial, open-source Telegram MCP server for Claude AI and ChatGPT. Read messages, search chats, send replies and react — one click."
   },
   "nav": {
     "features": "Features",
@@ -19,7 +19,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "The Telegram MCP server for Claude.ai and ChatGPT — read messages, search chats, send replies, react to posts. Connect in 30 seconds with a QR code.",
+    "subtitle": "Chatroost is an unofficial Telegram MCP server for Claude.ai and ChatGPT — read messages, search chats, send replies, react to posts. Connect in 30 seconds with a QR code.",
     "ctaQuickstart": "Get started in 30 seconds"
   },
   "features": {
@@ -103,7 +103,8 @@
     "mit": "MIT licensed",
     "privacy": "Privacy",
     "terms": "Terms",
-    "tagline": "Telegram for Claude AI & ChatGPT."
+    "tagline": "Unofficial Telegram MCP server for Claude AI & ChatGPT.",
+    "disclaimer": "Independent open-source project. Not affiliated with, endorsed by or sponsored by Telegram, OpenAI or Anthropic."
   },
   "language": {
     "switcherLabel": "Language"
@@ -257,7 +258,7 @@
     "oauthDocsLink": "See the OAuth reference for developers →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth Developer Reference — MCP Telegram",
+    "metaTitle": "OAuth Developer Reference — Chatroost",
     "metaDescription": "Build a custom MCP client against mcp-telegram.com — RFC 6749/7591/7636/8252 OAuth with PKCE and loopback redirect support.",
     "backToQuickstart": "Back to Quickstart",
     "heading": "OAuth for custom MCP clients",

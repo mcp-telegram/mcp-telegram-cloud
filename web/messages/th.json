@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Telegram ของคุณใน Claude AI และ ChatGPT",
-    "siteDescription": "Telegram MCP Server — เชื่อมต่อ Telegram ของคุณกับ Claude AI หรือ ChatGPT อ่านข้อความ ค้นหาแชท ส่งคำตอบและแสดงปฏิกิริยา — ทั้งหมดจาก AI ด้วยคลิกเดียว"
+    "siteTitle": "Chatroost — เซิร์ฟเวอร์ Telegram MCP ที่ไม่เป็นทางการ",
+    "siteDescription": "Chatroost — เซิร์ฟเวอร์ Telegram MCP โอเพนซอร์สที่ไม่เป็นทางการ เชื่อมต่อ Telegram ของคุณกับ Claude AI หรือ ChatGPT อ่านข้อความ ค้นหาแชท ส่งคำตอบและแสดงปฏิกิริยา — ทั้งหมดจาก AI ด้วยคลิกเดียว"
   },
   "nav": {
     "features": "คุณสมบัติ",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "และ",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. อ่านข้อความ ค้นหาแชท ส่งคำตอบ แสดงปฏิกิริยาต่อโพสต์ — ทั้งหมดจาก Claude.ai หรือ ChatGPT เชื่อมต่อใน 30 วินาทีด้วยรหัส QR",
+    "subtitle": "Chatroost คือเซิร์ฟเวอร์ Telegram MCP ที่ไม่เป็นทางการ อ่านข้อความ ค้นหาแชท ส่งคำตอบ แสดงปฏิกิริยาต่อโพสต์ — ทั้งหมดจาก Claude.ai หรือ ChatGPT เชื่อมต่อใน 30 วินาทีด้วยรหัส QR",
     "ctaQuickstart": "เริ่มใน 30 วินาที"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "ใบอนุญาต MIT",
     "privacy": "ความเป็นส่วนตัว",
     "terms": "ข้อกำหนด",
-    "tagline": "Telegram สำหรับ Claude AI และ ChatGPT"
+    "tagline": "เซิร์ฟเวอร์ Telegram MCP ที่ไม่เป็นทางการสำหรับ Claude AI และ ChatGPT",
+    "disclaimer": "โครงการโอเพนซอร์สอิสระ ไม่ได้เป็นพันธมิตร ไม่ได้รับการรับรอง และไม่ได้รับการสนับสนุนจาก Telegram, OpenAI หรือ Anthropic"
   },
   "language": {
     "switcherLabel": "ภาษา"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "ดูเอกสารอ้างอิง OAuth สำหรับนักพัฒนา →"
   },
   "oauthDocs": {
-    "metaTitle": "เอกสารอ้างอิง OAuth สำหรับนักพัฒนา — MCP Telegram",
+    "metaTitle": "เอกสารอ้างอิง OAuth สำหรับนักพัฒนา — Chatroost",
     "metaDescription": "สร้าง MCP client ของคุณเองสำหรับ mcp-telegram.com — OAuth ตาม RFC 6749/7591/7636/8252 พร้อม PKCE และรองรับ redirect แบบ loopback",
     "backToQuickstart": "กลับไปที่ Quickstart",
     "heading": "OAuth สำหรับ MCP client ของคุณเอง",

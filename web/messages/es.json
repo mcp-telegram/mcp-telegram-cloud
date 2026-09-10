@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Su Telegram en Claude AI y ChatGPT",
-    "siteDescription": "Telegram MCP Server — Conecte su Telegram a Claude AI o ChatGPT. Lea mensajes, busque en sus chats, envíe respuestas y reaccione — todo desde la IA con un solo clic."
+    "siteTitle": "Chatroost — servidor MCP de Telegram no oficial",
+    "siteDescription": "Chatroost — servidor MCP de Telegram no oficial y de código abierto. Conecte su Telegram a Claude AI o ChatGPT. Lea mensajes, busque en sus chats, envíe respuestas y reaccione — todo desde la IA con un solo clic."
   },
   "nav": {
     "features": "Funciones",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "y",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Lea mensajes, busque en sus chats, envíe respuestas, reaccione a publicaciones — todo desde Claude.ai o ChatGPT. Conéctese en 30 segundos con un código QR.",
+    "subtitle": "Chatroost es un servidor MCP de Telegram no oficial. Lea mensajes, busque en sus chats, envíe respuestas, reaccione a publicaciones — todo desde Claude.ai o ChatGPT. Conéctese en 30 segundos con un código QR.",
     "ctaQuickstart": "Empiece en 30 segundos"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "Licencia MIT",
     "privacy": "Privacidad",
     "terms": "Términos",
-    "tagline": "Telegram para Claude AI y ChatGPT."
+    "tagline": "Servidor MCP de Telegram no oficial para Claude AI y ChatGPT.",
+    "disclaimer": "Proyecto independiente de código abierto. No está afiliado, avalado ni patrocinado por Telegram, OpenAI o Anthropic."
   },
   "language": {
     "switcherLabel": "Idioma"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Ver la referencia OAuth para desarrolladores →"
   },
   "oauthDocs": {
-    "metaTitle": "Referencia de OAuth para desarrolladores — MCP Telegram",
+    "metaTitle": "Referencia de OAuth para desarrolladores — Chatroost",
     "metaDescription": "Crea tu propio cliente MCP para mcp-telegram.com — OAuth según RFC 6749/7591/7636/8252 con PKCE y soporte de redirecciones loopback.",
     "backToQuickstart": "Volver al Quickstart",
     "heading": "OAuth para clientes MCP personalizados",

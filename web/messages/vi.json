@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Telegram của bạn trong Claude AI & ChatGPT",
-    "siteDescription": "Telegram MCP Server — Kết nối Telegram của bạn với Claude AI hoặc ChatGPT. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, gửi trả lời và phản hồi — tất cả từ AI chỉ với một cú nhấp chuột."
+    "siteTitle": "Chatroost — máy chủ Chatroost không chính thức",
+    "siteDescription": "Chatroost — máy chủ Chatroost mã nguồn mở không chính thức. Kết nối Telegram của bạn với Claude AI hoặc ChatGPT. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, gửi trả lời và phản hồi — tất cả từ AI chỉ với một cú nhấp chuột."
   },
   "nav": {
     "features": "Tính năng",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, gửi trả lời, phản hồi bài đăng — tất cả từ Claude.ai hoặc ChatGPT. Kết nối trong 30 giây bằng mã QR.",
+    "subtitle": "Chatroost là máy chủ Chatroost không chính thức. Đọc tin nhắn, tìm kiếm cuộc trò chuyện, gửi trả lời, phản hồi bài đăng — tất cả từ Claude.ai hoặc ChatGPT. Kết nối trong 30 giây bằng mã QR.",
     "ctaQuickstart": "Bắt đầu trong 30 giây"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "Cấp phép MIT",
     "privacy": "Quyền riêng tư",
     "terms": "Điều khoản",
-    "tagline": "Telegram cho Claude AI & ChatGPT."
+    "tagline": "Máy chủ Chatroost không chính thức cho Claude AI & ChatGPT.",
+    "disclaimer": "Dự án mã nguồn mở độc lập. Không liên kết, không được chứng thực hay tài trợ bởi Telegram, OpenAI hoặc Anthropic."
   },
   "language": {
     "switcherLabel": "Ngôn ngữ"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Xem tài liệu OAuth dành cho nhà phát triển →"
   },
   "oauthDocs": {
-    "metaTitle": "Tài liệu OAuth cho lập trình viên — MCP Telegram",
+    "metaTitle": "Tài liệu OAuth cho lập trình viên — Chatroost",
     "metaDescription": "Xây dựng MCP client tùy chỉnh cho mcp-telegram.com — OAuth theo RFC 6749/7591/7636/8252 với PKCE và hỗ trợ redirect loopback.",
     "backToQuickstart": "Quay lại Quickstart",
     "heading": "OAuth cho MCP client tùy chỉnh",

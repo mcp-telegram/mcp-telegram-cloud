@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — ваш Telegram у Claude AI та ChatGPT",
-    "siteDescription": "Telegram MCP Server — Під'єднайте свій Telegram до Claude AI або ChatGPT. Читайте повідомлення, шукайте в чатах, надсилайте відповіді та реагуйте — усе з ШІ одним кліком."
+    "siteTitle": "Chatroost — неофіційний MCP-сервер для Telegram",
+    "siteDescription": "Chatroost — неофіційний MCP-сервер для Telegram з відкритим кодом. Під'єднайте свій Telegram до Claude AI або ChatGPT. Читайте повідомлення, шукайте в чатах, надсилайте відповіді та реагуйте — усе з ШІ одним кліком."
   },
   "nav": {
     "features": "Можливості",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "та",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Читайте повідомлення, шукайте в чатах, надсилайте відповіді, реагуйте на дописи — усе з Claude.ai або ChatGPT. Під'єднайтеся за 30 секунд через QR-код.",
+    "subtitle": "Chatroost — неофіційний MCP-сервер для Telegram. Читайте повідомлення, шукайте в чатах, надсилайте відповіді, реагуйте на дописи — усе з Claude.ai або ChatGPT. Під'єднайтеся за 30 секунд через QR-код.",
     "ctaQuickstart": "Почати за 30 секунд"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "Ліцензія MIT",
     "privacy": "Приватність",
     "terms": "Умови",
-    "tagline": "Telegram для Claude AI та ChatGPT."
+    "tagline": "Неофіційний MCP-сервер для Telegram у Claude AI та ChatGPT.",
+    "disclaimer": "Незалежний проєкт з відкритим кодом. Не пов'язаний із Telegram, OpenAI чи Anthropic, не схвалений і не спонсорований ними."
   },
   "language": {
     "switcherLabel": "Мова"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Дивись OAuth-довідник для розробників →"
   },
   "oauthDocs": {
-    "metaTitle": "Довідник OAuth для розробників — MCP Telegram",
+    "metaTitle": "Довідник OAuth для розробників — Chatroost",
     "metaDescription": "Створи власний MCP-клієнт для mcp-telegram.com — OAuth за RFC 6749/7591/7636/8252 з PKCE та підтримкою loopback-перенаправлень.",
     "backToQuickstart": "Назад до Quickstart",
     "heading": "OAuth для власних MCP-клієнтів",

@@ -3,7 +3,7 @@ import type { Messages } from "../types.js";
 /** Korean — machine-assisted, reviewed. */
 export const ko: Messages = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "언어",
     loading: "불러오는 중…",
     retry: "다시 시도하려면 새로고침하세요.",

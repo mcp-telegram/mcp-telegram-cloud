@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — 在 Claude AI 與 ChatGPT 中使用您的 Telegram",
-    "siteDescription": "Telegram MCP Server — 將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、傳送回覆並送出反應 — 全都由 AI 一鍵完成。"
+    "siteTitle": "Chatroost — 非官方 Telegram MCP 伺服器",
+    "siteDescription": "Chatroost — 非官方開源 Telegram MCP 伺服器。將您的 Telegram 連接到 Claude AI 或 ChatGPT。讀取訊息、搜尋聊天、傳送回覆並送出反應 — 全都由 AI 一鍵完成。"
   },
   "nav": {
     "features": "功能",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "與",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. 讀取訊息、搜尋聊天、傳送回覆、對貼文送出反應 — 全都在 Claude.ai 或 ChatGPT 內完成。透過 QR 碼,30 秒即可連接。",
+    "subtitle": "Chatroost 是非官方的 Telegram MCP 伺服器。讀取訊息、搜尋聊天、傳送回覆、對貼文送出反應 — 全都在 Claude.ai 或 ChatGPT 內完成。透過 QR 碼,30 秒即可連接。",
     "ctaQuickstart": "30 秒內開始使用"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "MIT 授權",
     "privacy": "隱私",
     "terms": "條款",
-    "tagline": "為 Claude AI 與 ChatGPT 而生的 Telegram。"
+    "tagline": "面向 Claude AI 與 ChatGPT 的非官方 Telegram MCP 伺服器。",
+    "disclaimer": "獨立開源專案。與 Telegram、OpenAI、Anthropic 無關聯，亦未獲得其背書或贊助。"
   },
   "language": {
     "switcherLabel": "語言"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "查看開發者 OAuth 參考文件 →"
   },
   "oauthDocs": {
-    "metaTitle": "OAuth 開發者參考 — MCP Telegram",
+    "metaTitle": "OAuth 開發者參考 — Chatroost",
     "metaDescription": "為 mcp-telegram.com 構建自訂 MCP 用戶端 — 遵循 RFC 6749/7591/7636/8252 的 OAuth，支援 PKCE 與 loopback 重新導向。",
     "backToQuickstart": "返回快速入門",
     "heading": "為自訂 MCP 用戶端使用 OAuth",

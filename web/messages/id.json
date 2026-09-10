@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Telegram Anda di Claude AI & ChatGPT",
-    "siteDescription": "Telegram MCP Server — Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, kirim balasan, dan beri reaksi — semuanya dari AI dengan satu klik."
+    "siteTitle": "Chatroost — server Chatroost tidak resmi",
+    "siteDescription": "Chatroost — server Chatroost tidak resmi dan open source. Hubungkan Telegram Anda ke Claude AI atau ChatGPT. Baca pesan, cari obrolan, kirim balasan, dan beri reaksi — semuanya dari AI dengan satu klik."
   },
   "nav": {
     "features": "Fitur",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "&",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Baca pesan, cari obrolan, kirim balasan, beri reaksi pada postingan — semuanya dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
+    "subtitle": "Chatroost adalah server Chatroost tidak resmi. Baca pesan, cari obrolan, kirim balasan, beri reaksi pada postingan — semuanya dari Claude.ai atau ChatGPT. Hubungkan dalam 30 detik dengan kode QR.",
     "ctaQuickstart": "Mulai dalam 30 detik"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "Berlisensi MIT",
     "privacy": "Privasi",
     "terms": "Ketentuan",
-    "tagline": "Telegram untuk Claude AI & ChatGPT."
+    "tagline": "Server Chatroost tidak resmi untuk Claude AI & ChatGPT.",
+    "disclaimer": "Proyek open source independen. Tidak berafiliasi dengan, didukung, atau disponsori oleh Telegram, OpenAI, maupun Anthropic."
   },
   "language": {
     "switcherLabel": "Bahasa"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Lihat referensi OAuth untuk pengembang →"
   },
   "oauthDocs": {
-    "metaTitle": "Referensi OAuth untuk Developer — MCP Telegram",
+    "metaTitle": "Referensi OAuth untuk Developer — Chatroost",
     "metaDescription": "Bangun klien MCP kustom untuk mcp-telegram.com — OAuth sesuai RFC 6749/7591/7636/8252 dengan PKCE dan dukungan redirect loopback.",
     "backToQuickstart": "Kembali ke Quickstart",
     "heading": "OAuth untuk klien MCP kustom",
@@ -439,7 +440,7 @@
   },
   "privacyPage": {
     "title": "Kebijakan Privasi",
-    "metaDescription": "Kebijakan privasi untuk konektor MCP Telegram yang dihosting {brand}.",
+    "metaDescription": "Kebijakan privasi untuk konektor Chatroost yang dihosting {brand}.",
     "lastUpdated": "Terakhir diperbarui: {date}",
     "updatedDate": "7 September 2026",
     "overview": {

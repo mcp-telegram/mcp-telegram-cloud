@@ -21,6 +21,7 @@ export function SiteFooter() {
       <p className={s.copy}>
         &copy; {new Date().getFullYear()} {config.brandName}. {t("tagline")}
       </p>
+      <p className={s.disclaimer}>{t("disclaimer")}</p>
     </footer>
   );
 }

@@ -3,7 +3,7 @@ import type { Messages } from "../types.js";
 /** German — machine-assisted, reviewed. */
 export const de: Messages = {
   common: {
-    brandName: "MCP Telegram",
+    brandName: "Chatroost",
     languageLabel: "Sprache",
     loading: "Wird geladen…",
     retry: "Zum erneuten Versuch aktualisieren.",

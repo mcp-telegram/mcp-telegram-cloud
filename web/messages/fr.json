@@ -8,8 +8,8 @@
     "retranslatedAt": "2026-05-20T18:00:00Z"
   },
   "metadata": {
-    "siteTitle": "Telegram MCP Server — Votre Telegram dans Claude AI et ChatGPT",
-    "siteDescription": "Telegram MCP Server — Connectez votre Telegram à Claude AI ou ChatGPT. Lisez vos messages, cherchez dans vos chats, envoyez des réponses et réagissez — le tout depuis l'IA en un clic."
+    "siteTitle": "Chatroost — serveur Chatroost non officiel",
+    "siteDescription": "Chatroost — serveur Chatroost non officiel et open source. Connectez votre Telegram à Claude AI ou ChatGPT. Lisez vos messages, cherchez dans vos chats, envoyez des réponses et réagissez — le tout depuis l'IA en un clic."
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -27,7 +27,7 @@
     "titleClaude": "Claude AI",
     "titleAnd": "et",
     "titleChatGPT": "ChatGPT",
-    "subtitle": "Telegram MCP Server. Lisez vos messages, cherchez dans vos chats, envoyez des réponses, réagissez aux publications — le tout depuis Claude.ai ou ChatGPT. Connectez-vous en 30 secondes avec un QR code.",
+    "subtitle": "Chatroost est un serveur Chatroost non officiel. Lisez vos messages, cherchez dans vos chats, envoyez des réponses, réagissez aux publications — le tout depuis Claude.ai ou ChatGPT. Connectez-vous en 30 secondes avec un QR code.",
     "ctaQuickstart": "Démarrer en 30 secondes"
   },
   "features": {
@@ -111,7 +111,8 @@
     "mit": "Licence MIT",
     "privacy": "Confidentialité",
     "terms": "Conditions",
-    "tagline": "Telegram pour Claude AI et ChatGPT."
+    "tagline": "Serveur Chatroost non officiel pour Claude AI et ChatGPT.",
+    "disclaimer": "Projet open source indépendant. Sans affiliation avec Telegram, OpenAI ou Anthropic, ni approbation ou parrainage de leur part."
   },
   "language": {
     "switcherLabel": "Langue"
@@ -265,7 +266,7 @@
     "oauthDocsLink": "Voir la référence OAuth pour développeurs →"
   },
   "oauthDocs": {
-    "metaTitle": "Référence OAuth pour développeurs — MCP Telegram",
+    "metaTitle": "Référence OAuth pour développeurs — Chatroost",
     "metaDescription": "Construis ton propre client MCP pour mcp-telegram.com — OAuth selon RFC 6749/7591/7636/8252 avec PKCE et support des redirections loopback.",
     "backToQuickstart": "Retour au Quickstart",
     "heading": "OAuth pour clients MCP personnalisés",
@@ -439,7 +440,7 @@
   },
   "privacyPage": {
     "title": "Politique de confidentialité",
-    "metaDescription": "Politique de confidentialité du connecteur MCP Telegram hébergé de {brand}.",
+    "metaDescription": "Politique de confidentialité du connecteur Chatroost hébergé de {brand}.",
     "lastUpdated": "Dernière mise à jour : {date}",
     "updatedDate": "7 septembre 2026",
     "overview": {
