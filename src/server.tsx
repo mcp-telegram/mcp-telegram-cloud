@@ -15,6 +15,7 @@ import { OAuthProvider } from "./oauth.js";
 import { installRateLimiterEventListener } from "./rate-limiter-events.js";
 import { createAccountsRoutes } from "./routes/accounts.js";
 import { createAdminRoutes } from "./routes/admin.js";
+import { createAdminLoginRoutes } from "./routes/admin-login.js";
 import { createLoginRoutes } from "./routes/login.js";
 import { registerMcpRoutes } from "./routes/mcp.js";
 import { createMyRoutes } from "./routes/my.js";
@@ -44,6 +45,16 @@ if (!config.logUserIds && config.logHashSalt === SENTINEL_LOG_HASH_SALT) {
       component: "config",
       event: "log_hash_salt.sentinel",
     },
+  );
+}
+
+// Admin credentials are required only when SINGLE_OPERATOR_MODE is enabled —
+// this deployment mode is opt-in, so an unset flag must boot exactly like
+// upstream's original multi-tenant server, with no admin-credential demands.
+if (config.singleOperatorMode && (!config.adminUsername || !config.adminPasswordHash)) {
+  throw new Error(
+    "ADMIN_USERNAME and ADMIN_PASSWORD_HASH are required when SINGLE_OPERATOR_MODE=true. " +
+      "Generate the hash with: bun scripts/hash-admin-password.ts",
   );
 }
 
@@ -251,12 +262,17 @@ app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
 registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
+app.route("/admin-login", createAdminLoginRoutes());
 app.route("/login", createLoginRoutes({ sessions }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
-// Directory-review access: hands a reviewer the demo session so the OAuth fast
-// path can skip the QR code they have no way to scan.
-app.route("/review", createReviewRoutes({ sessions }));
+// Directory-review access (routes/review.tsx) only makes sense for
+// upstream's public multi-tenant model — it lets a directory reviewer bypass
+// QR login for a demo Telegram account, a scenario that doesn't apply to a
+// single-operator deployment. Mount it only when SINGLE_OPERATOR_MODE is off.
+if (!config.singleOperatorMode) {
+  app.route("/review", createReviewRoutes({ sessions }));
+}
 // Shared 2FA cloud-password back-channel for all QR flows (POST /qr/password).
 app.route("/qr", createQrPasswordRoutes());
 

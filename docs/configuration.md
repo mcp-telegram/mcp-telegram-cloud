@@ -18,6 +18,9 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `TELEGRAM_API_HASH` | ✅ | — | MTProto hex hash |
 | `ISSUER` | ✅ | — | Public origin (no trailing slash) |
 | `ADMIN_TOKEN` | ⚠️ | empty | Bearer for `/api/*`. Empty → admin endpoints return 401 |
+| `ADMIN_USERNAME` | ⚠️ | empty | Admin login username. Required with `ADMIN_PASSWORD_HASH` when `SINGLE_OPERATOR_MODE=true` |
+| `ADMIN_PASSWORD_HASH` | ⚠️ | empty | Admin login password hash, generated via `bun scripts/hash-admin-password.ts`. Required with `ADMIN_USERNAME` when `SINGLE_OPERATOR_MODE=true` |
+| `SINGLE_OPERATOR_MODE` | | `false` | Gate `/oauth/authorize`, `/login`, `/my/*` behind an admin-login session instead of the public per-visitor Telegram QR flow. See [Single-operator mode](./self-hosting.md#single-operator-mode-optional) |
 | `PORT` | | `3000` | HTTP listen port |
 | `BRAND_NAME` | | `MCP Telegram` | Display name on landing/MCP metadata |
 | `CONTACT_EMAIL` | | empty | Shown on landing/privacy/terms |

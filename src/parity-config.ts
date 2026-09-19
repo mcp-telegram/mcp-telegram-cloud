@@ -63,7 +63,7 @@ export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
   {
     name: "telegram-logout",
     reason:
-      "Cloud uses OAuth `revoke` + `destroyUserSession()` to log a user out. Exposing the upstream tool would let an LLM forcibly log the user out without going through the cloud's session lifecycle.",
+      "Cloud uses its own OAuth `revoke` flow to log a user out (in multi-tenant mode, `revoke` also calls `destroyUserSession()`; in single-operator mode that's reserved for the admin panel's explicit disconnect action). Exposing the upstream tool would let an LLM forcibly log the user out without going through the cloud's session lifecycle.",
   },
   {
     name: "telegram-terminate-session",

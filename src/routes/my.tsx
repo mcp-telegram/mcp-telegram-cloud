@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { isAdminSessionValid } from "../auth/admin.js";
 import { config } from "../config.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
 import { logger, logUser } from "../logger.js";
@@ -18,25 +19,22 @@ export interface MyRoutesDeps {
 }
 
 /**
- * Routes under `/my/*` are user-facing — authenticated by the `tg_user` cookie
- * set during the OAuth/QR flow (see cookie-handler.ts). The cookie value is the
- * Telegram username, which doubles as the userId in cloud's SQLite. We require
- * a matching saved session to confirm the user actually owns that account on
- * this server (cookie alone is not sufficient — same browser switching servers
- * would otherwise inherit a stale username).
+ * Routes under `/my/*` are user-facing, authenticated one of two ways
+ * depending on `config.singleOperatorMode`:
+ *
+ * - Single-operator mode: the admin session cookie (see auth/admin.ts), same
+ *   gate as /oauth/authorize. There is exactly one owner, so a valid admin
+ *   session always maps to the fixed `config.ownerUserId`.
+ * - Multi-tenant (default): upstream's original mechanism — the `tg_user`
+ *   cookie (the Telegram username reported back from QR login), cross-checked
+ *   against saved session ids so a stale/foreign cookie value can't
+ *   impersonate a real user.
  */
 
 function getUsernameFromCookie(c: Context): string | undefined {
   const cookies = c.req.header("cookie") ?? "";
-  // Anchor on start-of-string or `; ` so a cookie named `xtg_user` or one whose
-  // value happens to contain the literal substring `tg_user=victim` doesn't
-  // get picked up first. Defense in depth — typical browsers don't construct
-  // such headers, but adjacent cookie-injection paths shouldn't compromise auth.
   const match = cookies.match(/(?:^|;\s*)tg_user=([^;]+)/);
   if (!match) return undefined;
-  // decodeURIComponent throws URIError on malformed `%xx` sequences; treat that
-  // as missing-cookie so the route returns its normal unauthenticated branch
-  // (401/302) instead of leaking a 500.
   try {
     return decodeURIComponent(match[1]);
   } catch {
@@ -45,6 +43,10 @@ function getUsernameFromCookie(c: Context): string | undefined {
 }
 
 function requireUser(c: Context, sessions: SessionManager): string | null {
+  if (config.singleOperatorMode) {
+    if (!isAdminSessionValid(c.req.header("cookie"))) return null;
+    return config.ownerUserId;
+  }
   const username = getUsernameFromCookie(c);
   if (!username) return null;
   const saved = sessions.getSavedUserIds();
@@ -53,7 +55,7 @@ function requireUser(c: Context, sessions: SessionManager): string | null {
 }
 
 function unauthorizedRedirect(c: Context): Response {
-  return c.redirect(`${config.issuer}/login`, 302);
+  return c.redirect(config.singleOperatorMode ? "/admin-login" : `${config.issuer}/login`, 302);
 }
 
 /** Exact-origin match for CSRF — never use startsWith on URLs (e.g.

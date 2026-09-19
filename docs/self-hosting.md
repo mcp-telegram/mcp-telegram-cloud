@@ -279,3 +279,21 @@ so affected users have somewhere to reach you.
 Security issues: see [`SECURITY.md`](../SECURITY.md).
 
 Everything else: GitHub issues on this repo.
+
+## Single-operator mode (optional)
+
+Set `SINGLE_OPERATOR_MODE=true` (plus `ADMIN_USERNAME` and `ADMIN_PASSWORD_HASH`,
+generated via `bun scripts/hash-admin-password.ts`) to replace the public
+multi-tenant OAuth identity check (anyone scans their own Telegram QR to
+register) with an admin login gate — see
+`docs/superpowers/specs/2026-09-18-single-operator-auth-design.md` for the
+full design. Leave it unset (or `false`) to run exactly like upstream's
+public multi-tenant service.
+
+### Flipping the mode off after running with it on
+
+If this deployment ever ran with `SINGLE_OPERATOR_MODE=true`, the Telegram session is saved under the predictable id `admin:<ADMIN_USERNAME>`. Turning the flag back off without clearing that row (from `user_sessions`, `telegram_accounts`, or `active_account`) leaves that identity reachable through the now-ungated multi-tenant routes — via the `/login/qr?userId=` and `/my/*` cookie vectors, and, sharpest of all, via `/oauth/authorize` itself: a request carrying `Cookie: tg_user=admin:<ADMIN_USERNAME>` hits the restored multi-tenant fast path and mints a working OAuth authorization code with **zero interaction required** — no QR scan, nothing. Either keep the flag on permanently once enabled, or clear the row before flipping it off, using the supported remediation: `POST /api/disconnect-telegram` (admin-token- or admin-session-gated; see `src/routes/admin.tsx`), which tears down the Telegram session and revokes its OAuth tokens in one call.
+
+### Upgrading a deployment that already runs single-operator mode
+
+This flag did not always exist — earlier builds of this fork applied the admin-login gate unconditionally, with no `SINGLE_OPERATOR_MODE` env var to turn it off. If you are running one of those earlier deployments and pull/deploy a newer image built from a codebase that includes this flag, **set `SINGLE_OPERATOR_MODE=true` in that deployment's env BEFORE rolling out the new image.** Without it, the new image boots with the flag at its default (off) and silently restores the original public multi-tenant flow — on a deployment that still has the predictable `admin:<ADMIN_USERNAME>` row from its prior unconditional single-operator operation, which is exactly the zero-interaction `/oauth/authorize` vector described above. If this deployment sits behind an auto-updater (e.g. Watchtower pulling `:latest`), this can happen unattended, with no one around to notice the gate is gone. The fix is purely operational: set the env var first, then roll out the image.

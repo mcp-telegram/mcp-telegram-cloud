@@ -592,8 +592,9 @@ export class OAuthProvider {
    * Hard-deletes both tables (rather than marking `revoked = 1` like rotation/replay paths)
    * because there is no chain to preserve here: a deleted refresh_token returns null at the
    * SELECT step in `refreshAccessToken`, which is the desired outcome — no chain revoke,
-   * no replay alert, just "this token never existed". Used by `/oauth/revoke` and by
-   * server-side session-revoked handlers.
+   * no replay alert, just "this token never existed". Used by `POST /api/disconnect-telegram`
+   * and `DELETE /api/users/:id` (routes/admin.tsx) — NOT by `/oauth/revoke`, which
+   * deliberately leaves the Telegram session and other clients' tokens alone.
    */
   revokeAllUserTokens(userId: string): number {
     const result = this.db.prepare("DELETE FROM oauth_tokens WHERE user_id = ?").run(userId);

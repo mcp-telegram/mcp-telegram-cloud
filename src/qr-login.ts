@@ -1,3 +1,4 @@
+import { config } from "./config.js";
 import { logger, logUser } from "./logger.js";
 import type { OAuthProvider } from "./oauth.js";
 import { type QrLoginHooks, runQrLogin } from "./qr-login-core.js";
@@ -233,7 +234,12 @@ export async function handleOAuthQrLogin(
         if (outcome.ok && outcome.sessionString) {
           const telegram = await connectFromSession(sessions, outcome.sessionString);
           const me = await telegram.getMe();
-          const userId = me.username ?? String(me.id);
+          // Single-operator mode: always save under the fixed owner id, never
+          // the self-reported Telegram identity — that identity is exactly
+          // what single-operator mode replaces as the trust boundary.
+          // Multi-tenant (default): upstream's original behavior, the
+          // self-reported Telegram identity IS the owner id.
+          const userId = config.singleOperatorMode ? config.ownerUserId : (me.username ?? String(me.id));
 
           // Save Telegram session
           sessions.saveSessionString(userId, outcome.sessionString);
@@ -355,13 +361,56 @@ export async function handleAddAccountQr(
         // It is already accessible without going through `telegram_accounts`,
         // and adding it as a secondary would double-bind the same identity
         // and silently steal active routing from the primary slot.
-        if (telegramUserId === ownerUserId) {
+        //
+        // Two checks, because `ownerUserId` lives in different namespaces
+        // depending on mode:
+        //  - Multi-tenant (flag off): `ownerUserId` IS a Telegram handle
+        //    (same namespace as `telegramUserId`), so the plain string
+        //    compare below is upstream's original, still-correct guard and
+        //    is the one that actually fires in this mode.
+        //  - Single-operator mode (flag on): `ownerUserId` is a fixed key
+        //    (`admin:<username>`) from a different namespace entirely, so it
+        //    can never equal `telegramUserId` — the string compare can't
+        //    fire here. Compare against the primary account's actual,
+        //    currently-connected Telegram identity instead: its stable
+        //    numeric `id`, since `.username` can be absent or changed.
+        //
+        // The id-based check requires reconnecting the primary session and
+        // fails open (logs a warning, allows the add) if that can't be
+        // verified — e.g. the primary session is transiently unreachable.
+        // The string compare above runs unconditionally and doesn't depend
+        // on the primary being reachable, so it substantially narrows the
+        // practical impact of that fail-open path in multi-tenant mode.
+        const refuseDuplicatePrimary = () => {
           send("error_msg", {
             message: `This is already your primary account (@${telegramUserId}). Scan a DIFFERENT Telegram account.`,
           });
           // Best-effort: tear down the temp telegram so it doesn't linger.
           telegram.disconnect().catch(() => {});
+        };
+
+        if (telegramUserId === ownerUserId) {
+          refuseDuplicatePrimary();
           return;
+        }
+
+        try {
+          const primaryTelegram = await sessions.getOrCreateSession(ownerUserId);
+          const primaryMe = await primaryTelegram.getMe();
+          if (primaryMe.id === me.id) {
+            refuseDuplicatePrimary();
+            return;
+          }
+        } catch (err) {
+          // Primary session invalid / not yet connected — we can't verify
+          // identity. Don't let that block a legitimate add-account attempt:
+          // log and fall through to the normal add path rather than crashing
+          // or refusing the whole flow.
+          logger.warn(`Add-account guard: could not verify primary identity: ${(err as Error).message}`, {
+            component: "accounts",
+            event: "account.add.guard_check_failed",
+            userId: logUser(ownerUserId),
+          });
         }
 
         const accountId = sessions.addAccount(ownerUserId, telegramUserId, outcome.sessionString, label);

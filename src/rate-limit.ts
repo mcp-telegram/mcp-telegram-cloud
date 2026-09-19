@@ -122,3 +122,18 @@ export const reviewRateLimit = rateLimit({
   windowMs: config.reviewRateWindowMs,
   scope: "review",
 });
+
+/**
+ * /admin-login limiter. Strict, like reviewRateLimit: this gates a
+ * human-typed password verified with blocking scrypt (N=16384, ~50-100ms of
+ * synchronous CPU on Bun's single event-loop thread per attempt), so without
+ * a cap it's both a brute-force surface and a cheap DoS vector — enough
+ * concurrent attempts stall the whole process. Default 10 per 15 min per IP,
+ * matching reviewRateLimit's reasoning. Covers both GET and POST /admin-login
+ * (GET is part of the same login surface even though the real cost is on POST).
+ */
+export const adminLoginRateLimit = rateLimit({
+  limit: config.adminLoginRateLimit,
+  windowMs: config.adminLoginRateWindowMs,
+  scope: "admin_login",
+});
