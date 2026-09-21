@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { isAdminSessionValid } from "../auth/admin.js";
 import { config } from "../config.js";
 import { decideTgUserCookie } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
@@ -18,12 +19,6 @@ export interface OAuthRoutesDeps {
   sessions: SessionManager;
 }
 
-function getUserIdHint(c: Context): string | undefined {
-  const cookies = c.req.header("cookie") ?? "";
-  const match = cookies.match(/tg_user=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : undefined;
-}
-
 async function parseTokenParams(c: Context): Promise<Record<string, string>> {
   const contentType = c.req.header("content-type") ?? "";
   if (contentType.includes("application/x-www-form-urlencoded")) {
@@ -31,6 +26,12 @@ async function parseTokenParams(c: Context): Promise<Record<string, string>> {
     return Object.fromEntries(form.entries()) as Record<string, string>;
   }
   return c.req.json();
+}
+
+function getUserIdHint(c: Context): string | undefined {
+  const cookies = c.req.header("cookie") ?? "";
+  const match = cookies.match(/tg_user=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : undefined;
 }
 
 /**
@@ -163,15 +164,20 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       return c.text("PKCE required: code_challenge with code_challenge_method=S256", 400);
     }
 
-    // Fast path: if we have a cookie hint and session is valid, skip QR entirely (HTTP 302)
-    const userIdHint = getUserIdHint(c);
+    if (config.singleOperatorMode) {
+      if (!isAdminSessionValid(c.req.header("cookie"))) {
+        const returnTo = `${c.req.path}?${new URL(c.req.url).search.slice(1)}`;
+        incr(OAUTH_FLOW, { step: "authorize", outcome: "admin_login_required" });
+        return c.redirect(`/admin-login?returnTo=${encodeURIComponent(returnTo)}`, 302);
+      }
 
-    if (userIdHint) {
-      const telegram = await sessions.tryReconnectSession(userIdHint);
+      // Admin is authenticated. Fast path: if the deployment's one Telegram
+      // account is already connected, skip the QR page entirely.
+      const telegram = await sessions.tryReconnectSession(config.ownerUserId);
       if (telegram) {
         const code = oauth.createAuthCode({
           clientId,
-          userId: userIdHint,
+          userId: config.ownerUserId,
           redirectUri,
           codeChallenge,
           codeChallengeMethod,
@@ -180,14 +186,44 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
         url.searchParams.set("code", code);
         if (state) url.searchParams.set("state", state);
 
-        logger.info(`Fast OAuth redirect for ${logUser(userIdHint)} (302)`, {
+        logger.info(`Fast OAuth redirect for ${logUser(config.ownerUserId)} (302)`, {
           component: "oauth",
           event: "oauth.fast_redirect",
-          userId: logUser(userIdHint),
+          userId: logUser(config.ownerUserId),
         });
 
         incr(OAUTH_FLOW, { step: "authorize", outcome: "fast_redirect" });
         return c.redirect(url.toString(), 302);
+      }
+    } else {
+      // Upstream's original multi-tenant fast path: an optional per-visitor
+      // hint cookie (set after a prior QR login) lets a returning visitor skip
+      // the QR page if their session is still valid. No admin gate — anyone
+      // can reach this far, exactly like upstream.
+      const userIdHint = getUserIdHint(c);
+      if (userIdHint) {
+        const telegram = await sessions.tryReconnectSession(userIdHint);
+        if (telegram) {
+          const code = oauth.createAuthCode({
+            clientId,
+            userId: userIdHint,
+            redirectUri,
+            codeChallenge,
+            codeChallengeMethod,
+          });
+          const url = new URL(redirectUri);
+          url.searchParams.set("code", code);
+          if (state) url.searchParams.set("state", state);
+
+          logger.info(`Fast OAuth redirect for ${logUser(userIdHint)} (302)`, {
+            component: "oauth",
+            event: "oauth.fast_redirect",
+            userId: logUser(userIdHint),
+          });
+
+          incr(OAUTH_FLOW, { step: "authorize", outcome: "fast_redirect" });
+          return c.redirect(url.toString(), 302);
+        }
       }
     }
 
@@ -245,7 +281,15 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       return c.text("PKCE required: code_challenge with code_challenge_method=S256", 400);
     }
 
-    const userIdHint = getUserIdHint(c);
+    let userIdHint: string | undefined;
+    if (config.singleOperatorMode) {
+      if (!isAdminSessionValid(c.req.header("cookie"))) {
+        return c.text("Forbidden", 403);
+      }
+      userIdHint = config.ownerUserId;
+    } else {
+      userIdHint = getUserIdHint(c);
+    }
 
     const stream = await handleOAuthQrLogin(
       sessions,
@@ -324,7 +368,23 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     return c.json({ error: "unsupported_grant_type" }, 400);
   });
 
-  // RFC 7009 — Token Revocation
+  // RFC 7009 — Token Revocation. Scoped to exactly the token presented: this
+  // deployment can have multiple OAuth clients (e.g. Claude.ai + ChatGPT)
+  // sharing one identity, so revoking must NOT cascade into every other
+  // client's tokens — that cascade is a bug in BOTH modes and stays fixed
+  // unconditionally below.
+  //
+  // Whether it ALSO tears down the Telegram session depends on the mode:
+  //  - Multi-tenant (default, flag off): one Telegram identity IS one user
+  //    (no sharing across OAuth clients the way `config.ownerUserId` is
+  //    shared in single-operator mode), so this token revoke is that user's
+  //    only self-service disconnect — `/my/*` has no disconnect route, and
+  //    `/api/disconnect-telegram` is admin-only and hardwired to
+  //    `config.ownerUserId`. Matches upstream's original behavior.
+  //  - Single-operator mode (flag on): multiple OAuth clients share one
+  //    fixed owner id, so a full teardown here would log out every other
+  //    client too. Skip it — use the admin panel's explicit "Disconnect
+  //    Telegram" action instead (routes/admin.tsx).
   app.post("/revoke", async (c) => {
     const params = await parseTokenParams(c);
     const token = params.token;
@@ -341,17 +401,17 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     const userId = oauth.revokeToken(token);
 
     if (userId) {
-      const uid = logUser(userId);
-      logger.info(`Destroying Telegram session for ${uid}`, {
+      if (!config.singleOperatorMode) {
+        await sessions.destroyUserSession(userId);
+        logger.info(`Telegram session destroyed for ${logUser(userId)}`, {
+          component: "oauth",
+          userId: logUser(userId),
+          event: "oauth.revoke.telegram_logout",
+        });
+      }
+      logger.info(`Token revoked for ${logUser(userId)}`, {
         component: "oauth",
-        userId: uid,
-        event: "oauth.revoke.cleanup",
-      });
-      const { loggedOut } = await sessions.destroyUserSession(userId);
-      oauth.revokeAllUserTokens(userId);
-      logger.info(`Full cleanup done for ${uid} (loggedOut=${loggedOut})`, {
-        component: "oauth",
-        userId: uid,
+        userId: logUser(userId),
         event: "oauth.revoke.done",
       });
       incr(OAUTH_FLOW, { step: "revoke", outcome: "ok" });

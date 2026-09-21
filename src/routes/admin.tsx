@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { checkIntegrity, listUsers } from "../admin-inspect.js";
-import { isAdminAuthorized } from "../auth/admin.js";
+import { isAdminAuthorized, isAdminSessionValid } from "../auth/admin.js";
 import { config } from "../config.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
@@ -87,6 +87,41 @@ export function createAdminRoutes({ oauth, sessions, usage }: AdminRoutesDeps): 
     const { loggedOut } = await sessions.destroyUserSession(userId);
     const revokedTokens = oauth.revokeAllUserTokens(userId);
     return c.json({ ok: true, userId, loggedOut, revokedTokens });
+  });
+
+  // Explicit, admin-only Telegram logout for the shared owner id. This is the
+  // ONLY place that tears down the actual Telegram session — /oauth/revoke
+  // (routes/oauth.tsx) intentionally does not, so one OAuth client revoking
+  // its token never logs out the others or the Telegram account itself.
+  //
+  // Also accepts a valid admin session cookie (not just the Bearer ADMIN_TOKEN):
+  // ADMIN_TOKEN is a separate, older, still-optional() credential from
+  // ADMIN_USERNAME/ADMIN_PASSWORD_HASH, and server.tsx's boot-time check only
+  // validates the latter two. Without this, a deployment that never set
+  // ADMIN_TOKEN would have no way to reach the one remaining path that can
+  // log out the Telegram session (Task 5 deliberately removed that from
+  // /oauth/revoke). Every other route in this file stays Bearer-only.
+  app.post("/disconnect-telegram", async (c) => {
+    if (!isAdminAuthorized(c.req.header("Authorization")) && !isAdminSessionValid(c.req.header("cookie"))) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    // Warm up the session pool before destroying so that logOut() is actually
+    // called on the Telegram side; without this, if the pool doesn't have the
+    // session (e.g. after restart), destroyUserSession just deletes the local
+    // row and returns loggedOut=false without revoking the auth key upstream.
+    try {
+      await sessions.getOrCreateSession(config.ownerUserId);
+    } catch {
+      // Session string broken/expired on Telegram's side — nothing to log out of.
+    }
+    const { loggedOut } = await sessions.destroyUserSession(config.ownerUserId);
+    const revokedTokens = oauth.revokeAllUserTokens(config.ownerUserId);
+    logger.warn("Admin-initiated Telegram disconnect", {
+      component: "admin",
+      event: "admin.telegram.disconnect",
+      userId: logUser(config.ownerUserId),
+    });
+    return c.json({ ok: true, loggedOut, revokedTokens });
   });
 
   app.get("/observability", async (c) => {
