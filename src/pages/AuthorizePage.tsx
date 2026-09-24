@@ -169,9 +169,31 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
 
         <p class={scope}>Access: chats, messages, media and contacts, plus the actions you ask for</p>
 
-        {/* Same recovery line as app/src/pages/authorize.tsx — see the comment
-            there. A reviewer who lands here has no phone to scan with. */}
-        <p class={scope}>Reviewing this connector? Open your review link in this browser, then try again.</p>
+        {/* Same review-code form as app/src/pages/authorize.tsx — see the
+            comment there. A reviewer who lands here has no phone to scan with. */}
+        <details id="review-code" style="margin-top:16px;text-align:left;font-size:14px">
+          <summary style="cursor:pointer">Reviewing this app? Enter your review code</summary>
+          <form method="post" action="/oauth/authorize/review" style="margin-top:12px">
+            <input type="hidden" name="client_id" value={props.clientId} />
+            <input type="hidden" name="redirect_uri" value={props.redirectUri} />
+            <input type="hidden" name="state" value={props.state} />
+            <input type="hidden" name="code_challenge" value={props.codeChallenge} />
+            <input type="hidden" name="code_challenge_method" value={props.codeChallengeMethod} />
+            <label for="review-code-input" style="display:block;margin-bottom:6px">
+              Paste the review code or the whole review link from the test instructions.
+            </label>
+            <input
+              id="review-code-input"
+              name="review_code"
+              type="text"
+              required
+              autocomplete="off"
+              spellcheck={false}
+              style="display:block;width:100%;margin:0 0 10px"
+            />
+            <button type="submit">Continue</button>
+          </form>
+        </details>
       </div>
 
       {/* Both scripts are inline by design (this fallback page ships no bundle)

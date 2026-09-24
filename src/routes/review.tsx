@@ -39,7 +39,7 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
       // public, and the rate limiter already contains abuse. The counter in the
       // limiter is what tells us about a flood.
       logger.warn("Review link rejected", { component: "review", event: "review.link.rejected" });
-      return c.html(page("This link is not valid", "The link is unknown, expired or has been revoked."), 404);
+      return c.html(reviewPage("This link is not valid", "The link is unknown, expired or has been revoked."), 404);
     }
 
     // Reconnect before promising anything. If the demo account was logged out
@@ -53,7 +53,7 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
         userId: logUser(resolved.userId),
       });
       return c.html(
-        page(
+        reviewPage(
           "The demo account is temporarily offline",
           "The link is valid, but its Telegram session needs to be restored. Please contact us and we will restore it.",
         ),
@@ -72,7 +72,7 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
     // Never let a shared cache keep a response that carries a session hint.
     c.header("Cache-Control", "no-store");
     return c.html(
-      page(
+      reviewPage(
         "Demo access is ready",
         "You can now add the connector in ChatGPT or Claude. When the client sends you here to authorize, the sign-in completes on its own — no QR code, no phone. Use the same browser for both steps: access is granted to this browser, so a private window or a different browser will show the QR code instead. If that happens, open this link there and retry.",
       ),
@@ -82,9 +82,29 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
   return app;
 }
 
+/**
+ * Pull the review token out of whatever a reviewer pastes into the code field on
+ * the authorize page: the bare token, the whole review link, or the link without
+ * its scheme. Returns "" for anything that does not look like a token, so the
+ * caller answers exactly as it does for an unknown one.
+ *
+ * Pasting the link is the expected case, not an edge case: the test credentials
+ * show the reviewer a link, and asking them to cut the query string out of it
+ * by hand is one more step to get wrong.
+ */
+export function extractReviewToken(raw: string): string {
+  const input = raw.trim();
+  if (!input || input.length > 512) return "";
+  const fromQuery = input.match(/[?&]token=([^&#\s]+)/);
+  const token = fromQuery ? fromQuery[1] : input;
+  // Tokens are hex (createReviewToken); allow a broader URL-safe set so a
+  // future token format does not silently break the field.
+  return /^[A-Za-z0-9_-]{16,128}$/.test(token) ? token : "";
+}
+
 /** Minimal standalone page: this is read by reviewers, not by our users, so it
  *  deliberately carries no navigation, no analytics and no locale machinery. */
-function page(title: string, body: string): string {
+export function reviewPage(title: string, body: string): string {
   const esc = (s: string) => s.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch] as string);
   return `<!doctype html>
 <html lang="en">

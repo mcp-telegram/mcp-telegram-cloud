@@ -100,20 +100,39 @@ function AuthorizePage(props: AuthorizeProps) {
         />
 
         {/*
-          Recovery line for directory reviewers, who cannot scan this code at
-          all: they have no phone signed into the demo account. Their access is
-          granted per browser, so landing here means the authorization opened
-          somewhere the review link was never opened — a private window, a
-          different browser, an in-app webview. Without this line that is a dead
-          end that reads as "the server would not let us in".
+          Way in for directory reviewers, who cannot scan this code at all: they
+          have no phone signed into the demo account. A line telling them to
+          "open your review link first" was here before and was not enough — on
+          2026-09-18 reviewers started from ChatGPT, sat on this page four times
+          and rejected the app as "cannot connect". So the code is entered HERE,
+          and the POST re-runs every OAuth check (see POST /oauth/authorize/review).
 
-          Deliberately English-only and deliberately quiet: it is addressed to a
-          handful of reviewers, not to users, and translating it into all 20
-          locales would spend real effort on an audience that does not exist.
+          A plain form on purpose: it works without the island, in any webview.
+          English-only: it is addressed to a handful of reviewers, not users.
         */}
-        <p className="muted" style={{ fontSize: "0.8rem", marginTop: "1.5rem", opacity: 0.7 }}>
-          Reviewing this connector? Open your review link in this browser, then try again.
-        </p>
+        <details id="review-code" style={{ marginTop: "1.5rem", textAlign: "start", fontSize: "0.9rem" }}>
+          <summary style={{ cursor: "pointer" }}>Reviewing this app? Enter your review code</summary>
+          <form method="post" action="/oauth/authorize/review" style={{ marginTop: 12 }}>
+            <input type="hidden" name="client_id" value={props.clientId} />
+            <input type="hidden" name="redirect_uri" value={props.redirectUri} />
+            <input type="hidden" name="state" value={props.state} />
+            <input type="hidden" name="code_challenge" value={props.codeChallenge} />
+            <input type="hidden" name="code_challenge_method" value={props.codeChallengeMethod} />
+            <label htmlFor="review-code-input" className="muted" style={{ display: "block", marginBottom: 6 }}>
+              Paste the review code or the whole review link from the test instructions.
+            </label>
+            <input
+              id="review-code-input"
+              name="review_code"
+              type="text"
+              required
+              autoComplete="off"
+              spellCheck={false}
+              style={{ display: "block", width: "100%", margin: "0 0 10px" }}
+            />
+            <button type="submit">Continue</button>
+          </form>
+        </details>
       </main>
     </Layout>
   );

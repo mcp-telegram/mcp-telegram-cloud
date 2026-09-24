@@ -2,18 +2,19 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
-import { decideTgUserCookie } from "../cookie-handler.js";
+import { buildTgUserCookie, decideTgUserCookie, REVIEW_HINT_MAX_AGE_SECONDS } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { ConsentPage } from "../pages/ConsentPage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
-import { oauthRateLimit, registerRateLimit } from "../rate-limit.js";
+import { oauthRateLimit, registerRateLimit, reviewRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import { redirectOrigin } from "../redirect-origin.js";
 import { matchRedirectUri } from "../redirect-uri-matcher.js";
 import type { SessionManager } from "../session-manager.js";
 import { incr, OAUTH_FLOW } from "../telemetry/metrics.js";
+import { extractReviewToken, reviewPage } from "./review.js";
 
 export interface OAuthRoutesDeps {
   oauth: OAuthProvider;
@@ -410,6 +411,121 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       clientId,
     });
     incr(OAUTH_FLOW, { step: "approve", outcome: "ok" });
+    return c.redirect(target, 302);
+  });
+
+  /**
+   * Review code entered on the QR page itself.
+   *
+   * Directory reviewers cannot scan the QR: they have no phone signed into the
+   * demo account. The review LINK (GET /review) covers them only if they open it
+   * first, in the same browser that later handles the authorization — and on
+   * 2026-09-18 two reviewers started from ChatGPT instead, waited on the QR page
+   * four times and rejected the app as "cannot connect to your MCP server". This
+   * route puts the way in where they actually get stuck.
+   *
+   * Entering the code is a deliberate act by the person at this page, for the
+   * destination the page names — the same standing as scanning the QR — so it
+   * records the grant and returns the code directly instead of detouring through
+   * the consent screen.
+   *
+   * No new authority: the token only selects the one demo session it was issued
+   * for, which GET /review already hands to anyone holding it. Every OAuth
+   * precondition is re-checked from the form, CSRF is closed by the Origin check
+   * (plus SameSite on everything we set), and the review limiter bounds guessing.
+   */
+  app.post("/authorize/review", reviewRateLimit, async (c) => {
+    if (c.req.header("origin") !== config.issuer) {
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "bad_origin" });
+      return c.text("Forbidden", 403);
+    }
+    c.header("Cache-Control", "no-store");
+
+    const form = await c.req.parseBody().catch(() => null);
+    const field = (name: string): string => {
+      const v = form?.[name];
+      return typeof v === "string" ? v : "";
+    };
+    const clientId = field("client_id");
+    const redirectUri = field("redirect_uri");
+    const state = field("state");
+    const codeChallenge = field("code_challenge");
+    const codeChallengeMethod = field("code_challenge_method") || "S256";
+
+    const client = oauth.getClient(clientId);
+    if (!client) {
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "unknown_client" });
+      return c.text("Unknown client", 400);
+    }
+    if (!matchRedirectUri(parsedRedirectUris(client.redirect_uris), redirectUri)) {
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "bad_redirect" });
+      return c.text("Invalid redirect_uri", 400);
+    }
+    if (!codeChallenge || codeChallengeMethod !== "S256") {
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "bad_pkce" });
+      return c.text("PKCE required: code_challenge with code_challenge_method=S256", 400);
+    }
+    const originKey = redirectOrigin(redirectUri);
+    if (!originKey) {
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "bad_redirect" });
+      return c.text("Invalid redirect_uri", 400);
+    }
+
+    const token = extractReviewToken(field("review_code"));
+    const resolved = token ? sessions.resolveReviewToken(token) : null;
+    if (!resolved) {
+      // Same answer for malformed, unknown, revoked and expired (see GET /review).
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "rejected" });
+      logger.warn("Review code rejected", { component: "review", event: "review.code.rejected" });
+      return c.html(
+        reviewPage(
+          "This review code is not valid",
+          "The code is unknown, expired or has been revoked. Go back, check the code from the test instructions and try again.",
+        ),
+        403,
+      );
+    }
+
+    const telegram = await sessions.tryReconnectSession(resolved.userId);
+    if (!telegram) {
+      incr(OAUTH_FLOW, { step: "review_code", outcome: "session_unavailable" });
+      logger.error("Review code resolved but its session is not connected", {
+        component: "review",
+        event: "review.session.unavailable",
+        userId: logUser(resolved.userId),
+      });
+      return c.html(
+        reviewPage(
+          "The demo account is temporarily offline",
+          "The code is valid, but its Telegram session needs to be restored. Please contact us and we will restore it.",
+        ),
+        503,
+      );
+    }
+
+    oauth.recordGrant(resolved.userId, originKey);
+    const code = oauth.createAuthCode({
+      clientId,
+      userId: resolved.userId,
+      redirectUri,
+      codeChallenge,
+      codeChallengeMethod,
+    });
+    const target = buildCodeRedirect(redirectUri, code, state);
+    if (!target) return c.text("Invalid redirect_uri", 400);
+
+    logger.info("Review code used", {
+      component: "review",
+      event: "review.code.used",
+      userId: logUser(resolved.userId),
+      uses: resolved.uses,
+      clientId,
+    });
+    incr(OAUTH_FLOW, { step: "review_code", outcome: "ok" });
+    // Same hint GET /review writes, so a client that re-authorizes later (token
+    // lost, connector re-added) passes through the fast path instead of landing
+    // on the QR page again.
+    c.header("Set-Cookie", buildTgUserCookie(resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS));
     return c.redirect(target, 302);
   });
 
