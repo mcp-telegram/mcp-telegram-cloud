@@ -596,7 +596,7 @@ async function handleMcpRequestInner(
     checkRateLimit,
     checkDestructive,
     recordDestructive,
-    { userId, uploads, fetchUrl: fetchUrlSafely, sessions, baseUrl: config.issuer, onToolTimeout },
+    { userId, uploads, fetchUrl: fetchUrlSafely, sessions, baseUrl: config.issuer, onToolTimeout, clientName },
   );
 
   // Must run after registration: McpServer installs the `tools/call` handler lazily on the

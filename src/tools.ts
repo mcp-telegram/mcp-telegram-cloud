@@ -71,6 +71,8 @@ export interface RegisterAllowedToolsExtras {
   /** issue #19: drop the caller's in-memory Telegram client after a deadline breach.
    *  Passed through extras rather than as a 10th positional parameter. */
   onToolTimeout?: OnToolTimeout;
+  /** MCP client name, logged on tool.duration / tool.error for per-client attribution. */
+  clientName?: string;
 }
 
 export function registerAllAllowedTools(
@@ -98,5 +100,6 @@ export function registerAllAllowedTools(
     ...(extras?.sessions !== undefined && { sessions: extras.sessions }),
     ...(extras?.baseUrl !== undefined && { baseUrl: extras.baseUrl }),
     ...(extras?.onToolTimeout !== undefined && { onToolTimeout: extras.onToolTimeout }),
+    ...(extras?.clientName !== undefined && { clientName: extras.clientName }),
   });
 }

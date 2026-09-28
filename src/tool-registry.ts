@@ -6,7 +6,7 @@ import { isAuthError } from "./auth-errors.js";
 // Aliased: `config` is shadowed by a local per-tool registration object below.
 import { config as appConfig } from "./config.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
-import { logger } from "./logger.js";
+import { logger, logUser } from "./logger.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION, TOOL_TIMEOUTS } from "./telemetry/metrics.js";
 import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js";
@@ -195,13 +195,36 @@ function timeoutMessage(toolName: string, timeoutMs: number, stage: "connect" | 
   );
 }
 
-function handleToolError(e: unknown, onRevoked: OnSessionRevoked, toolName: string): CallToolResult {
+/**
+ * Who made the call, in the same form `tool.call` already logs it (hashed user + MCP client).
+ *
+ * `tool.duration` / `tool.error` used to carry only the tool name, so slow or failing calls
+ * could not be told apart as "one heavy user" vs "everyone": a single user whose calls queue
+ * behind their own per-user lock routinely pushes 20-35% of all calls over 5s, which made a
+ * tool-latency alert impossible. With these fields the alert can count distinct users.
+ */
+type CallerLogFields = { userId?: string; client?: string };
+
+function callerLogFields(opts: Pick<RegisterAllOptions, "userId" | "clientName">): CallerLogFields {
+  return {
+    ...(opts.userId !== undefined && { userId: logUser(opts.userId) }),
+    ...(opts.clientName !== undefined && { client: opts.clientName }),
+  };
+}
+
+function handleToolError(
+  e: unknown,
+  onRevoked: OnSessionRevoked,
+  toolName: string,
+  caller: CallerLogFields = {},
+): CallToolResult {
   const msg = (e as Error).message ?? String(e);
   if (isAuthError(e)) {
     logger.warn(`Auth error in ${toolName}: ${msg}`, {
       component: "tools",
       event: "tool.auth_error",
       tool: toolName,
+      ...caller,
     });
     onRevoked().catch(() => {});
     return { content: [{ type: "text", text: SESSION_REVOKED_MSG }], isError: true };
@@ -211,6 +234,7 @@ function handleToolError(e: unknown, onRevoked: OnSessionRevoked, toolName: stri
     event: "tool.error",
     tool: toolName,
     error: msg,
+    ...caller,
   });
   return { content: [{ type: "text", text: `Error: ${msg}` }], isError: true };
 }
@@ -229,8 +253,11 @@ export interface RegisterAllOptions {
    * the registry will not call one without the other being meaningful. */
   checkDestructive?: DestructiveCheck;
   recordDestructive?: DestructiveRecord;
-  /** Phase X: piped through to {@link ToolDeps.userId} for upload-backed tools. */
+  /** Phase X: piped through to {@link ToolDeps.userId} for upload-backed tools.
+   *  Also logged (hashed via logUser) on tool.duration / tool.error / tool.auth_error. */
   userId?: string;
+  /** MCP client name ("Claude", "ChatGPT", …), logged on tool.duration / tool.error. */
+  clientName?: string;
   /** Phase X: piped through to {@link ToolDeps.uploads}. */
   uploads?: UploadStore;
   /** Phase X: piped through to {@link ToolDeps.fetchUrl}. */
@@ -248,6 +275,7 @@ export interface RegisterAllOptions {
  */
 export function registerAllTools(server: McpServer, tools: readonly ToolDefinition[], opts: RegisterAllOptions): void {
   const onRevoked = opts.onSessionRevoked ?? (async () => {});
+  const caller = callerLogFields(opts);
 
   for (const tool of tools) {
     if (tool.requiresEnv && process.env[tool.requiresEnv] !== "1") {
@@ -383,6 +411,7 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
               event: "tool.duration",
               tool: tool.name,
               durationMs: duration,
+              ...caller,
             });
             if (isDestructive) {
               // `result.isError === true` is the convention for handler-returned faults;
@@ -406,6 +435,7 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
               tool: tool.name,
               durationMs: duration,
               outcome,
+              ...caller,
             });
             if (isDestructive) {
               opts.recordDestructive?.(tool.name, args, "error");
@@ -419,7 +449,7 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
             }
             const custom = tool.onError?.(e);
             if (custom) return custom;
-            return handleToolError(e, onRevoked, tool.name);
+            return handleToolError(e, onRevoked, tool.name, caller);
           }
         },
       );
