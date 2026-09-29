@@ -29,7 +29,7 @@ const { config } = await import("../config.js");
 const ISSUER = config.issuer;
 const CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 const VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
-const TOKEN = "0b50d0a04dfe62a849eac2ccba1af0825f6590dc3139cff0";
+const TOKEN = "f67e0ca15421689c36cf4cb37705b87d5be54757b6315c83";
 const DEMO = "demo_account";
 const CHATGPT_CB = "https://chatgpt.com/connector/oauth/VvpXtPdK6ukP";
 

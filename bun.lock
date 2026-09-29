@@ -6,7 +6,7 @@
       "name": "mcp-telegram-cloud",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.30.0",
-        "@overpod/mcp-telegram": "^1.43.0",
+        "@overpod/mcp-telegram": "^1.43.1",
         "dotenv": "^17.4.2",
         "hono": "^4.13.8",
         "qrcode": "^1.5.4",
@@ -178,7 +178,7 @@
 
     "@next/swc-win32-x64-msvc": ["@next/swc-win32-x64-msvc@16.3.5", "", { "os": "win32", "cpu": "x64" }, "sha512-LNdCHzgLFc+UeqMS84LzXPaeBRKyqDN9OMyFAr1OrB0XrNw78IRrEVtZvvA7245W/HsaoeVOQX9jPjPk8jojwA=="],
 
-    "@overpod/mcp-telegram": ["@overpod/mcp-telegram@1.43.0", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "big-integer": "^1.6.52", "dotenv": "^17.4.2", "qrcode": "^1.5.4", "telegram": "^2.26.22", "zod": "^4.6.5" }, "bin": { "mcp-telegram": "dist/cli.js", "mcp-telegram-manifest": "dist/manifest.js" } }, "sha512-CiNcjcR01ecg+C6wJZ602bQP/VsthyQ/2OubgfBygZOGdtXBcXU6QWMYVMxvEn1u/aXb4NDzGjQ0bT9s4bQ9yw=="],
+    "@overpod/mcp-telegram": ["@overpod/mcp-telegram@1.43.1", "", { "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "big-integer": "^1.6.52", "dotenv": "^17.4.2", "qrcode": "^1.5.4", "telegram": "^2.26.22", "zod": "^4.6.5" }, "bin": { "mcp-telegram": "dist/cli.js", "mcp-telegram-manifest": "dist/manifest.js" } }, "sha512-EExjs1T7yRG+GYscGz45zxnHrBa6W1B6S+sUcPxtLVFR8kHNi8DyEeCzk0Qm8HhMeybBycUYuO6f9fgfmH6zhw=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.149.0", "", {}, "sha512-Efcc+iF0j3Bf67YjEqIqWXbX5XddXoK/Mw4K1/JuXwRCZ8N16VR7iT23nlCc9XrveFVh/E5Rqs2StT0V8v9LdA=="],
 

@@ -963,6 +963,22 @@ export class SessionManager {
     return { userId: row.user_id, uses: row.uses + 1 };
   }
 
+  /**
+   * True when `userId` is the demo account behind a live (unrevoked, unexpired) review
+   * link. Unlike {@link resolveReviewToken} it does NOT count as a visit.
+   *
+   * Such an account is shared by every directory reviewer, so a single reviewer pressing
+   * "Disconnect" must not log it out of Telegram for everyone else (found 2026-09-29: one
+   * OAuth revoke on 2026-09-25 logged the demo account out and left the review code dead
+   * for the whole of an OpenAI review).
+   */
+  isReviewAccount(userId: string): boolean {
+    const row = this.db
+      .prepare("SELECT 1 FROM review_tokens WHERE user_id = ? AND revoked = 0 AND expires_at > ? LIMIT 1")
+      .get(userId, Math.floor(Date.now() / 1000));
+    return row != null;
+  }
+
   /** Revoke a review token, by the token itself or by the id from
    *  {@link listReviewTokens}. Returns false when nothing matched. */
   revokeReviewToken(tokenOrId: string | number): boolean {

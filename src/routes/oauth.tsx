@@ -314,7 +314,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     // Same gate as GET /authorize, closing the side door: this stream's
     // session-reuse branch also mints a code from the cookie alone. An
     // ungranted destination drops the hint, so the visitor must actually scan
-    // the QR \u2014 a deliberate act \u2014 instead of the code appearing by itself.
+    // the QR — a deliberate act — instead of the code appearing by itself.
     const rawHint = getUserIdHint(c);
     const qrOriginKey = redirectOrigin(redirectUri);
     const userIdHint = rawHint && qrOriginKey && oauth.hasGrant(rawHint, qrOriginKey) ? rawHint : undefined;
@@ -344,8 +344,8 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
    * shown a page for client A must not be able to submit it for client B.
    *
    * CSRF, three independent layers:
-   *   1. POST-only \u2014 no <img>/<link> can trigger it.
-   *   2. Origin must equal the issuer \u2014 a cross-site form post is rejected.
+   *   1. POST-only — no <img>/<link> can trigger it.
+   *   2. Origin must equal the issuer — a cross-site form post is rejected.
    *   3. The tg_user cookie is SameSite=Lax, so it is not even attached to a
    *      cross-site POST; without it there is no session to authorize.
    */
@@ -383,14 +383,14 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     const userId = getUserIdHint(c);
     if (!userId) {
       incr(OAUTH_FLOW, { step: "approve", outcome: "no_session" });
-      return c.text("No active session \u2014 start again from your client", 403);
+      return c.text("No active session — start again from your client", 403);
     }
     // Prove the session is real, exactly like the fast path does. A cookie
     // value alone is a claim, not a credential.
     const telegram = await sessions.tryReconnectSession(userId);
     if (!telegram) {
       incr(OAUTH_FLOW, { step: "approve", outcome: "session_invalid" });
-      return c.text("Session expired \u2014 start again from your client", 403);
+      return c.text("Session expired — start again from your client", 403);
     }
 
     const originKey = redirectOrigin(redirectUri);
@@ -605,7 +605,18 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
 
     const userId = oauth.revokeToken(token);
 
-    if (userId) {
+    if (userId && sessions.isReviewAccount(userId)) {
+      // Shared demo account behind a review link: revoking THIS token is all a reviewer's
+      // "Disconnect" may do. Logging the account out of Telegram (and killing every other
+      // reviewer's token) left the review code dead for everyone — which is exactly what
+      // one revoke did on 2026-09-25, in the middle of an OpenAI directory review.
+      logger.info("Revoke on a review-link account: token revoked, Telegram session kept", {
+        component: "oauth",
+        userId: logUser(userId),
+        event: "oauth.revoke.review_account_kept",
+      });
+      incr(OAUTH_FLOW, { step: "revoke", outcome: "review_kept" });
+    } else if (userId) {
       const uid = logUser(userId);
       logger.info(`Destroying Telegram session for ${uid}`, {
         component: "oauth",
