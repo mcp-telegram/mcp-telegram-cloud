@@ -1,0 +1,2007 @@
+{
+  "$comment": "Tool contract under directory review. Changing a reviewed tool's name, title, annotations, required arguments or removing an argument breaks the reviewer's test cases. Update this file only when a new version is submitted for review, and in the same PR as that submission. See issue #52 (review freeze) and #51.",
+  "review": "ChatGPT plugin directory, Chatroost 1.0.0",
+  "capturedAt": "2026-09-30",
+  "source": "Tool definitions stored for the submission in the OpenAI developer dashboard (continuous review view)",
+  "servedButNotReviewed": [
+    {
+      "name": "telegram-get-saved-music",
+      "reason": "Read-only tool shipped in v2.58.0 (2026-09-16). The 2026-09-24 resubmission kept the earlier tool scan, so the review snapshot does not include it; it has been served since. Keep it as is: removing a tool the reviewer may already see is also a change."
+    }
+  ],
+  "tools": [
+    {
+      "name": "telegram-accounts-add",
+      "title": "Accounts Add",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["label"]
+    },
+    {
+      "name": "telegram-accounts-current",
+      "title": "Accounts Current",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-accounts-list",
+      "title": "Accounts List",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-accounts-remove",
+      "title": "Accounts Remove",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": ["identifier"],
+      "properties": ["identifier"]
+    },
+    {
+      "name": "telegram-accounts-switch",
+      "title": "Accounts Switch",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["identifier"],
+      "properties": ["identifier"]
+    },
+    {
+      "name": "telegram-activate-stealth-mode",
+      "title": "Activate Stealth Mode",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["future", "past"]
+    },
+    {
+      "name": "telegram-add-contact",
+      "title": "Add Contact",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["firstName", "userId"],
+      "properties": ["firstName", "lastName", "phone", "userId"]
+    },
+    {
+      "name": "telegram-approve-join-request",
+      "title": "Approve Join Request",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["approved", "chatId", "userId"],
+      "properties": ["approved", "chatId", "userId"]
+    },
+    {
+      "name": "telegram-archive-chat",
+      "title": "Archive Chat",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["archive", "chatId"],
+      "properties": ["archive", "chatId"]
+    },
+    {
+      "name": "telegram-ban-user",
+      "title": "Ban User",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "userId"],
+      "properties": ["chatId", "userId"]
+    },
+    {
+      "name": "telegram-block-user",
+      "title": "Block User",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["userId"],
+      "properties": ["userId"]
+    },
+    {
+      "name": "telegram-clear-drafts",
+      "title": "Clear Drafts",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["chatId", "confirmAllChats"]
+    },
+    {
+      "name": "telegram-clear-recent-emoji-statuses",
+      "title": "Clear Recent Emoji Statuses",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-close-poll",
+      "title": "Close Poll",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-create-business-chat-link",
+      "title": "Create Business Chat Link",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["message"],
+      "properties": ["message", "parseMode", "title"]
+    },
+    {
+      "name": "telegram-create-folder",
+      "title": "Create Folder",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["title"],
+      "properties": [
+        "bots",
+        "broadcasts",
+        "contacts",
+        "emoticon",
+        "excludeArchived",
+        "excludeMuted",
+        "excludePeers",
+        "excludeRead",
+        "groups",
+        "includePeers",
+        "nonContacts",
+        "pinnedPeers",
+        "title"
+      ]
+    },
+    {
+      "name": "telegram-create-group",
+      "title": "Create Group",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["title", "users"],
+      "properties": ["description", "forum", "supergroup", "title", "users"]
+    },
+    {
+      "name": "telegram-create-invite-link",
+      "title": "Create Invite Link",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "expireDate", "memberLimit", "requestApproval", "title"]
+    },
+    {
+      "name": "telegram-create-poll",
+      "title": "Create Poll",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["answers", "chatId", "question"],
+      "properties": ["answers", "chatId", "correctAnswer", "multipleChoice", "question", "quiz"]
+    },
+    {
+      "name": "telegram-create-topic",
+      "title": "Create Topic",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "title"],
+      "properties": ["chatId", "iconColor", "iconEmojiId", "title"]
+    },
+    {
+      "name": "telegram-delete-business-chat-link",
+      "title": "Delete Business Chat Link",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["slug"],
+      "properties": ["slug"]
+    },
+    {
+      "name": "telegram-delete-fact-check",
+      "title": "Delete Fact Check",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-delete-folder",
+      "title": "Delete Folder",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": ["id"],
+      "properties": ["id"]
+    },
+    {
+      "name": "telegram-delete-message",
+      "title": "Delete Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageIds"],
+      "properties": ["chatId", "messageIds"]
+    },
+    {
+      "name": "telegram-delete-profile-photo",
+      "title": "Delete Profile Photo",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["photoIds"],
+      "properties": ["photoIds"]
+    },
+    {
+      "name": "telegram-delete-scheduled",
+      "title": "Delete Scheduled",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageIds"],
+      "properties": ["chatId", "messageIds"]
+    },
+    {
+      "name": "telegram-delete-stories",
+      "title": "Delete Stories",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["confirm", "ids"],
+      "properties": ["chatId", "confirm", "ids"]
+    },
+    {
+      "name": "telegram-delete-topic",
+      "title": "Delete Topic",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "topicId"],
+      "properties": ["chatId", "topicId"]
+    },
+    {
+      "name": "telegram-download-media",
+      "title": "Download Media",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "full", "messageId"]
+    },
+    {
+      "name": "telegram-edit-business-chat-link",
+      "title": "Edit Business Chat Link",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["message", "slug"],
+      "properties": ["message", "parseMode", "slug", "title"]
+    },
+    {
+      "name": "telegram-edit-fact-check",
+      "title": "Edit Fact Check",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId", "text"],
+      "properties": ["chatId", "messageId", "parseMode", "text"]
+    },
+    {
+      "name": "telegram-edit-folder",
+      "title": "Edit Folder",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["id"],
+      "properties": [
+        "bots",
+        "broadcasts",
+        "contacts",
+        "emoticon",
+        "excludeArchived",
+        "excludeMuted",
+        "excludePeers",
+        "excludeRead",
+        "groups",
+        "id",
+        "includePeers",
+        "nonContacts",
+        "pinnedPeers",
+        "title"
+      ]
+    },
+    {
+      "name": "telegram-edit-group",
+      "title": "Edit Group",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "description", "title"]
+    },
+    {
+      "name": "telegram-edit-message",
+      "title": "Edit Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId", "text"],
+      "properties": ["chatId", "messageId", "text"]
+    },
+    {
+      "name": "telegram-edit-story",
+      "title": "Edit Story",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["storyId"],
+      "properties": ["allowUserIds", "caption", "chatId", "disallowUserIds", "parseMode", "privacy", "storyId"]
+    },
+    {
+      "name": "telegram-edit-topic",
+      "title": "Edit Topic",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "topicId"],
+      "properties": ["chatId", "closed", "hidden", "iconEmojiId", "title", "topicId"]
+    },
+    {
+      "name": "telegram-export-story-link",
+      "title": "Export Story Link",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "storyId"],
+      "properties": ["chatId", "storyId"]
+    },
+    {
+      "name": "telegram-forward-message",
+      "title": "Forward Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["fromChatId", "messageIds", "toChatId"],
+      "properties": ["fromChatId", "messageIds", "toChatId"]
+    },
+    {
+      "name": "telegram-get-admin-log",
+      "title": "Get Admin Log",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit", "q"]
+    },
+    {
+      "name": "telegram-get-all-stories",
+      "title": "Get All Stories",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["hidden", "next", "state"]
+    },
+    {
+      "name": "telegram-get-boosts-list",
+      "title": "Get Boosts List",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "gifts", "limit", "offset"]
+    },
+    {
+      "name": "telegram-get-boosts-status",
+      "title": "Get Boosts Status",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-get-broadcast-stats",
+      "title": "Get Broadcast Stats",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "dark", "includeGraphs"]
+    },
+    {
+      "name": "telegram-get-business-chat-links",
+      "title": "Get Business Chat Links",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-channel-updates",
+      "title": "Get Channel Updates",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "pts"],
+      "properties": ["chatId", "force", "limit", "pts"]
+    },
+    {
+      "name": "telegram-get-chat-folders",
+      "title": "Get Chat Folders",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-chat-info",
+      "title": "Get Chat Info",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-get-chat-members",
+      "title": "Get Chat Members",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit"]
+    },
+    {
+      "name": "telegram-get-contact-requests",
+      "title": "Get Contact Requests",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["limit"]
+    },
+    {
+      "name": "telegram-get-contacts",
+      "title": "Get Contacts",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["limit"]
+    },
+    {
+      "name": "telegram-get-discussion-message",
+      "title": "Get Discussion Message",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-drafts",
+      "title": "Get Drafts",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-fact-check",
+      "title": "Get Fact Check",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageIds"],
+      "properties": ["chatId", "messageIds"]
+    },
+    {
+      "name": "telegram-get-global-privacy-settings",
+      "title": "Get Global Privacy Settings",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-group-call",
+      "title": "Get Group Call",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chat"],
+      "properties": ["chat", "limit"]
+    },
+    {
+      "name": "telegram-get-group-call-participants",
+      "title": "Get Group Call Participants",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chat"],
+      "properties": ["chat", "ids", "limit", "offset", "sources"]
+    },
+    {
+      "name": "telegram-get-groups-for-discussion",
+      "title": "Get Groups For Discussion",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-installed-stickers",
+      "title": "Get Installed Stickers",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-invite-links",
+      "title": "Get Invite Links",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit"]
+    },
+    {
+      "name": "telegram-get-megagroup-stats",
+      "title": "Get Megagroup Stats",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "dark", "includeGraphs"]
+    },
+    {
+      "name": "telegram-get-message-buttons",
+      "title": "Get Message Buttons",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-message-link",
+      "title": "Get Message Link",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId", "thread"]
+    },
+    {
+      "name": "telegram-get-message-read-participants",
+      "title": "Get Message Read Participants",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-my-boosts",
+      "title": "Get My Boosts",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-my-role",
+      "title": "Get My Role",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-get-outbox-read-date",
+      "title": "Get Outbox Read Date",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-paid-reaction-privacy",
+      "title": "Get Paid Reaction Privacy",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-peer-stories",
+      "title": "Get Peer Stories",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-get-poll-results",
+      "title": "Get Poll Results",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-poll-voters",
+      "title": "Get Poll Voters",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "limit", "messageId", "offset", "optionIndex"]
+    },
+    {
+      "name": "telegram-get-profile",
+      "title": "Get Profile",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["userId"],
+      "properties": ["userId"]
+    },
+    {
+      "name": "telegram-get-profile-photo",
+      "title": "Get Profile Photo",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["entityId"],
+      "properties": ["entityId"]
+    },
+    {
+      "name": "telegram-get-quick-replies",
+      "title": "Get Quick Replies",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["hash"]
+    },
+    {
+      "name": "telegram-get-quick-reply-messages",
+      "title": "Get Quick Reply Messages",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["shortcutId"],
+      "properties": ["hash", "ids", "shortcutId"]
+    },
+    {
+      "name": "telegram-get-reactions",
+      "title": "Get Reactions",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-recent-reactions",
+      "title": "Get Recent Reactions",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["limit"]
+    },
+    {
+      "name": "telegram-get-recent-stickers",
+      "title": "Get Recent Stickers",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-replies",
+      "title": "Get Replies",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "limit", "messageId"]
+    },
+    {
+      "name": "telegram-get-saved-dialogs",
+      "title": "Get Saved Dialogs",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["limit"]
+    },
+    {
+      "name": "telegram-get-scheduled",
+      "title": "Get Scheduled",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-get-sessions",
+      "title": "Get Sessions",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-state",
+      "title": "Get State",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-sticker-set",
+      "title": "Get Sticker Set",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["shortName"],
+      "properties": ["shortName"]
+    },
+    {
+      "name": "telegram-get-stories-archive",
+      "title": "Get Stories Archive",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["chatId", "limit", "offsetId"]
+    },
+    {
+      "name": "telegram-get-stories-by-id",
+      "title": "Get Stories By Id",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "ids"],
+      "properties": ["chatId", "ids"]
+    },
+    {
+      "name": "telegram-get-story-views",
+      "title": "Get Story Views",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "storyId"],
+      "properties": ["chatId", "forwardsFirst", "justContacts", "limit", "offset", "q", "reactionsFirst", "storyId"]
+    },
+    {
+      "name": "telegram-get-suggested-folders",
+      "title": "Get Suggested Folders",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-get-top-reactions",
+      "title": "Get Top Reactions",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["limit"]
+    },
+    {
+      "name": "telegram-get-transcription",
+      "title": "Get Transcription",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-get-unread",
+      "title": "Get Unread",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["limit"]
+    },
+    {
+      "name": "telegram-get-unread-mentions",
+      "title": "Get Unread Mentions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit"]
+    },
+    {
+      "name": "telegram-get-unread-reactions",
+      "title": "Get Unread Reactions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit"]
+    },
+    {
+      "name": "telegram-get-updates",
+      "title": "Get Updates",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["date", "pts", "qts"],
+      "properties": ["date", "pts", "ptsLimit", "ptsTotalLimit", "qts"]
+    },
+    {
+      "name": "telegram-get-web-preview",
+      "title": "Get Web Preview",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["url"],
+      "properties": ["url"]
+    },
+    {
+      "name": "telegram-inline-query",
+      "title": "Inline Query",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["bot", "chatId", "query"],
+      "properties": ["bot", "chatId", "offset", "query"]
+    },
+    {
+      "name": "telegram-inline-query-send",
+      "title": "Inline Query Send",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "queryId", "resultId"],
+      "properties": ["chatId", "clearDraft", "hideVia", "queryId", "replyTo", "resultId", "silent"]
+    },
+    {
+      "name": "telegram-invite-to-group",
+      "title": "Invite To Group",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "users"],
+      "properties": ["chatId", "users"]
+    },
+    {
+      "name": "telegram-join-chat",
+      "title": "Join Chat",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["target"],
+      "properties": ["target"]
+    },
+    {
+      "name": "telegram-kick-user",
+      "title": "Kick User",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "userId"],
+      "properties": ["chatId", "userId"]
+    },
+    {
+      "name": "telegram-leave-group",
+      "title": "Leave Group",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-list-chats",
+      "title": "List Chats",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["filterType", "limit", "offsetDate"]
+    },
+    {
+      "name": "telegram-list-emoji-statuses",
+      "title": "List Emoji Statuses",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["kind", "limit"]
+    },
+    {
+      "name": "telegram-list-topics",
+      "title": "List Topics",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit"]
+    },
+    {
+      "name": "telegram-mark-as-read",
+      "title": "Mark As Read",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-mark-dialog-unread",
+      "title": "Mark Dialog Unread",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "unread"],
+      "properties": ["chatId", "unread"]
+    },
+    {
+      "name": "telegram-mute-chat",
+      "title": "Mute Chat",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "muted"],
+      "properties": ["chatId", "duration", "muted"]
+    },
+    {
+      "name": "telegram-pin-chat",
+      "title": "Pin Chat",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "pin"],
+      "properties": ["chatId", "pin"]
+    },
+    {
+      "name": "telegram-pin-message",
+      "title": "Pin Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId", "silent"]
+    },
+    {
+      "name": "telegram-press-button",
+      "title": "Press Button",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "column", "data", "messageId", "row"]
+    },
+    {
+      "name": "telegram-rate-transcription",
+      "title": "Rate Transcription",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "good", "messageId", "transcriptionId"],
+      "properties": ["chatId", "good", "messageId", "transcriptionId"]
+    },
+    {
+      "name": "telegram-react-to-story",
+      "title": "React To Story",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "emoji", "storyId"],
+      "properties": ["addToRecent", "chatId", "emoji", "storyId"]
+    },
+    {
+      "name": "telegram-read-messages",
+      "title": "Read Messages",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "limit", "maxDate", "minDate", "offsetId"]
+    },
+    {
+      "name": "telegram-read-stories",
+      "title": "Read Stories",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "maxId"],
+      "properties": ["chatId", "maxId"]
+    },
+    {
+      "name": "telegram-read-topic-messages",
+      "title": "Read Topic Messages",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "topicId"],
+      "properties": ["chatId", "limit", "offsetId", "topicId"]
+    },
+    {
+      "name": "telegram-remove-admin",
+      "title": "Remove Admin",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "userId"],
+      "properties": ["chatId", "userId"]
+    },
+    {
+      "name": "telegram-reorder-folders",
+      "title": "Reorder Folders",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["order"],
+      "properties": ["order"]
+    },
+    {
+      "name": "telegram-report-spam",
+      "title": "Report Spam",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": ["chatId"]
+    },
+    {
+      "name": "telegram-report-story",
+      "title": "Report Story",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "ids"],
+      "properties": ["chatId", "ids", "message", "option"]
+    },
+    {
+      "name": "telegram-resolve-business-chat-link",
+      "title": "Resolve Business Chat Link",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["slug"],
+      "properties": ["slug"]
+    },
+    {
+      "name": "telegram-revoke-invite-link",
+      "title": "Revoke Invite Link",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "link"],
+      "properties": ["chatId", "link"]
+    },
+    {
+      "name": "telegram-save-draft",
+      "title": "Save Draft",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "text"],
+      "properties": ["chatId", "replyTo", "text"]
+    },
+    {
+      "name": "telegram-search-chats",
+      "title": "Search Chats",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["query"],
+      "properties": ["limit", "query"]
+    },
+    {
+      "name": "telegram-search-global",
+      "title": "Search Global",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["query"],
+      "properties": ["limit", "maxDate", "minDate", "query"]
+    },
+    {
+      "name": "telegram-search-messages",
+      "title": "Search Messages",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "query"],
+      "properties": ["chatId", "limit", "maxDate", "minDate", "query"]
+    },
+    {
+      "name": "telegram-search-sticker-sets",
+      "title": "Search Sticker Sets",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["query"],
+      "properties": ["query"]
+    },
+    {
+      "name": "telegram-send-album",
+      "title": "Send Album",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "items"],
+      "properties": ["caption", "chatId", "items", "parseMode", "replyTo", "topicId"]
+    },
+    {
+      "name": "telegram-send-contact",
+      "title": "Send Contact",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "firstName", "phone"],
+      "properties": ["chatId", "firstName", "lastName", "phone", "replyTo", "topicId", "vcard"]
+    },
+    {
+      "name": "telegram-send-dice",
+      "title": "Send Dice",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": ["chatId", "emoji", "replyTo", "topicId"]
+    },
+    {
+      "name": "telegram-send-file",
+      "title": "Send File",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "source"],
+      "properties": ["caption", "chatId", "source"]
+    },
+    {
+      "name": "telegram-send-location",
+      "title": "Send Location",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "latitude", "longitude"],
+      "properties": [
+        "accuracyRadius",
+        "chatId",
+        "heading",
+        "latitude",
+        "livePeriod",
+        "longitude",
+        "proximityRadius",
+        "replyTo",
+        "topicId"
+      ]
+    },
+    {
+      "name": "telegram-send-message",
+      "title": "Send Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "text"],
+      "properties": ["chatId", "effect", "parseMode", "quoteText", "replyTo", "text", "topicId"]
+    },
+    {
+      "name": "telegram-send-reaction",
+      "title": "Send Reaction",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["addToExisting", "chatId", "emoji", "messageId"]
+    },
+    {
+      "name": "telegram-send-scheduled",
+      "title": "Send Scheduled",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "scheduleDate", "text"],
+      "properties": ["chatId", "parseMode", "replyTo", "scheduleDate", "text"]
+    },
+    {
+      "name": "telegram-send-sticker",
+      "title": "Send Sticker",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "index", "stickerSet"],
+      "properties": ["chatId", "index", "replyTo", "stickerSet"]
+    },
+    {
+      "name": "telegram-send-story",
+      "title": "Send Story",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "privacy", "source"],
+      "properties": [
+        "allowUserIds",
+        "caption",
+        "chatId",
+        "disallowUserIds",
+        "noforwards",
+        "parseMode",
+        "period",
+        "pinned",
+        "privacy",
+        "source",
+        "type"
+      ]
+    },
+    {
+      "name": "telegram-send-typing",
+      "title": "Send Typing",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": ["action", "chatId"]
+    },
+    {
+      "name": "telegram-send-venue",
+      "title": "Send Venue",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["address", "chatId", "latitude", "longitude", "title"],
+      "properties": [
+        "address",
+        "chatId",
+        "latitude",
+        "longitude",
+        "provider",
+        "replyTo",
+        "title",
+        "topicId",
+        "venueId",
+        "venueType"
+      ]
+    },
+    {
+      "name": "telegram-send-video-note",
+      "title": "Send Video Note",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "source"],
+      "properties": ["chatId", "duration", "length", "replyTo", "source", "topicId"]
+    },
+    {
+      "name": "telegram-send-voice",
+      "title": "Send Voice",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "source"],
+      "properties": ["caption", "chatId", "parseMode", "replyTo", "source", "topicId"]
+    },
+    {
+      "name": "telegram-set-admin",
+      "title": "Set Admin",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "userId"],
+      "properties": ["chatId", "title", "userId"]
+    },
+    {
+      "name": "telegram-set-auto-delete",
+      "title": "Set Auto Delete",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "period"],
+      "properties": ["chatId", "period"]
+    },
+    {
+      "name": "telegram-set-birthday",
+      "title": "Set Birthday",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["clear", "day", "month", "year"]
+    },
+    {
+      "name": "telegram-set-business-away",
+      "title": "Set Business Away",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": [
+        "audience",
+        "clear",
+        "customFrom",
+        "customTo",
+        "excludeUsers",
+        "includeUsers",
+        "offlineOnly",
+        "schedule",
+        "shortcutId"
+      ]
+    },
+    {
+      "name": "telegram-set-business-greeting",
+      "title": "Set Business Greeting",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["audience", "clear", "excludeUsers", "includeUsers", "noActivityDays", "shortcutId"]
+    },
+    {
+      "name": "telegram-set-business-hours",
+      "title": "Set Business Hours",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["clear", "openNow", "schedule", "timezone"]
+    },
+    {
+      "name": "telegram-set-business-intro",
+      "title": "Set Business Intro",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["clear", "description", "stickerAccessHash", "stickerFileReference", "stickerId", "title"]
+    },
+    {
+      "name": "telegram-set-business-location",
+      "title": "Set Business Location",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["address", "clear", "latitude", "longitude"]
+    },
+    {
+      "name": "telegram-set-chat-permissions",
+      "title": "Set Chat Permissions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId"],
+      "properties": [
+        "changeInfo",
+        "chatId",
+        "embedLinks",
+        "inviteUsers",
+        "pinMessages",
+        "sendGifs",
+        "sendInline",
+        "sendMedia",
+        "sendMessages",
+        "sendPolls",
+        "sendStickers"
+      ]
+    },
+    {
+      "name": "telegram-set-chat-reactions",
+      "title": "Set Chat Reactions",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "reactions"],
+      "properties": ["chatId", "reactions"]
+    },
+    {
+      "name": "telegram-set-default-reaction",
+      "title": "Set Default Reaction",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["emoji"],
+      "properties": ["emoji"]
+    },
+    {
+      "name": "telegram-set-emoji-status",
+      "title": "Set Emoji Status",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["collectibleId", "documentId", "untilUnix"]
+    },
+    {
+      "name": "telegram-set-global-privacy-settings",
+      "title": "Set Global Privacy Settings",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": [
+        "archiveAndMuteNewNoncontactPeers",
+        "hideReadMarks",
+        "keepArchivedFolders",
+        "keepArchivedUnmuted",
+        "newNoncontactPeersRequirePremium"
+      ]
+    },
+    {
+      "name": "telegram-set-personal-channel",
+      "title": "Set Personal Channel",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["channelId", "clear"]
+    },
+    {
+      "name": "telegram-set-privacy",
+      "title": "Set Privacy",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["rule", "setting"],
+      "properties": ["allowUsers", "disallowUsers", "rule", "setting"]
+    },
+    {
+      "name": "telegram-set-profile-color",
+      "title": "Set Profile Color",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["backgroundEmojiId", "color", "forProfile"]
+    },
+    {
+      "name": "telegram-set-profile-photo",
+      "title": "Set Profile Photo",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["fallback", "isVideo", "source"],
+      "properties": ["fallback", "isVideo", "source", "videoStartTs"]
+    },
+    {
+      "name": "telegram-set-slow-mode",
+      "title": "Set Slow Mode",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "seconds"],
+      "properties": ["chatId", "seconds"]
+    },
+    {
+      "name": "telegram-status",
+      "title": "Status",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": []
+    },
+    {
+      "name": "telegram-toggle-anti-spam",
+      "title": "Toggle Anti Spam",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "enabled"],
+      "properties": ["chatId", "enabled"]
+    },
+    {
+      "name": "telegram-toggle-channel-signatures",
+      "title": "Toggle Channel Signatures",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "enabled"],
+      "properties": ["chatId", "enabled"]
+    },
+    {
+      "name": "telegram-toggle-folder-tags",
+      "title": "Toggle Folder Tags",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["enabled"],
+      "properties": ["enabled"]
+    },
+    {
+      "name": "telegram-toggle-forum-mode",
+      "title": "Toggle Forum Mode",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "enabled"],
+      "properties": ["chatId", "confirm", "enabled"]
+    },
+    {
+      "name": "telegram-toggle-paid-reaction-privacy",
+      "title": "Toggle Paid Reaction Privacy",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId", "private"],
+      "properties": ["chatId", "messageId", "private"]
+    },
+    {
+      "name": "telegram-toggle-prehistory-hidden",
+      "title": "Toggle Prehistory Hidden",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "hidden"],
+      "properties": ["chatId", "hidden"]
+    },
+    {
+      "name": "telegram-toggle-story-pinned",
+      "title": "Toggle Story Pinned",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["ids", "pinned"],
+      "properties": ["chatId", "ids", "pinned"]
+    },
+    {
+      "name": "telegram-toggle-story-pinned-to-top",
+      "title": "Toggle Story Pinned To Top",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["ids"],
+      "properties": ["chatId", "ids"]
+    },
+    {
+      "name": "telegram-transcribe-audio",
+      "title": "Transcribe Audio",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-translate-message",
+      "title": "Translate Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["chatId", "messageIds", "toLang"],
+      "properties": ["chatId", "messageIds", "toLang"]
+    },
+    {
+      "name": "telegram-unban-user",
+      "title": "Unban User",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "userId"],
+      "properties": ["chatId", "userId"]
+    },
+    {
+      "name": "telegram-unblock-user",
+      "title": "Unblock User",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["userId"],
+      "properties": ["userId"]
+    },
+    {
+      "name": "telegram-unpin-message",
+      "title": "Unpin Message",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId"],
+      "properties": ["chatId", "messageId"]
+    },
+    {
+      "name": "telegram-update-profile",
+      "title": "Update Profile",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": [],
+      "properties": ["bio", "firstName", "lastName", "username"]
+    },
+    {
+      "name": "telegram-vote-poll",
+      "title": "Vote Poll",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "required": ["chatId", "messageId", "optionIndexes"],
+      "properties": ["chatId", "messageId", "optionIndexes"]
+    }
+  ]
+}
