@@ -103,6 +103,7 @@
     "mit": "MIT licensed",
     "privacy": "Privacy",
     "terms": "Terms",
+    "accessModel": "How we access Telegram",
     "tagline": "Unofficial Telegram MCP server for Claude AI & ChatGPT.",
     "disclaimer": "Independent open-source project. Not affiliated with, endorsed by or sponsored by Telegram, OpenAI or Anthropic."
   },
@@ -572,6 +573,90 @@
       "body": "Questions about this policy? Reach out via <issues>{issuesLabel}</issues>",
       "telegram": "or Telegram <tg>@{handle}</tg>",
       "email": "or email <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "How {brand} accesses Telegram",
+    "metaDescription": "{brand} is an unofficial client for Telegram: each person signs in to their own account through Telegram's public API. What it adds on top of the API, and how it follows Telegram's rules for third-party apps.",
+    "title": "How {brand} accesses Telegram",
+    "lastUpdated": "Last updated: {date}",
+    "updatedDate": "September 30, 2026",
+    "intro": "{brand} is an unofficial client for Telegram. It is not a bot and it does not scrape Telegram: each person signs in to their own Telegram account, and the assistant they connect works only with that account. This page explains how the access works, what {brand} adds on top of Telegram's API, and how it follows Telegram's rules for third-party apps.",
+    "access": {
+      "heading": "How access works",
+      "items": {
+        "0": {
+          "term": "Telegram's public client API",
+          "desc": "{brand} talks to Telegram through MTProto, the API Telegram publishes for third-party apps. Telegram <tgApi>invites developers</tgApi> to build clients on it free of charge, as long as they follow its API Terms of Service. {brand} uses its own registered application ID, as those terms require."
+        },
+        "1": {
+          "term": "Your own account, signed in by you",
+          "desc": "You connect by scanning a QR code with the Telegram app, the same way you link Telegram Desktop. The connection shows up in Telegram under Settings → Devices, and you can end it there at any moment."
+        },
+        "2": {
+          "term": "Only what your account can see",
+          "desc": "The assistant sees the same chats and channels your Telegram app shows you, and nothing more. There are no shared accounts and no access to accounts that have not signed in."
+        },
+        "3": {
+          "term": "Only when you ask",
+          "desc": "A tool runs when the assistant you connected calls it for your request. {brand} does not act on a schedule of its own."
+        }
+      }
+    },
+    "adds": {
+      "heading": "What {brand} adds on top of the API",
+      "items": {
+        "0": {
+          "term": "Clear labels on every tool",
+          "desc": "Every tool has a name, a title and a label that says whether it only reads, changes something, or does something that cannot be undone. AI clients use these labels to ask you before a tool acts."
+        },
+        "1": {
+          "term": "Irreversible actions off by default",
+          "desc": "Deleting messages, leaving groups, banning members and similar actions stay off until you switch them on in your settings. Even then they are limited to 20 a day, and every attempt is recorded in a log you can read."
+        },
+        "2": {
+          "term": "Confirmation before sending",
+          "desc": "The {brand} skills for Claude and ChatGPT tell the assistant to show you the exact text and the recipient, and to wait for your approval before it sends a message."
+        },
+        "3": {
+          "term": "Limits that protect your account",
+          "desc": "Requests are rate-limited for each connection, and when Telegram asks a client to slow down, {brand} waits instead of retrying at once. An assistant stuck in a loop cannot flood Telegram from your account."
+        },
+        "4": {
+          "term": "Nothing kept",
+          "desc": "Messages pass from Telegram to your assistant and are not stored or logged. The server keeps only what it needs to stay connected; the <privacy>privacy policy</privacy> lists exactly what that is."
+        },
+        "5": {
+          "term": "Open source",
+          "desc": "The server is open source under the MIT license, so anyone can check these claims or run their own copy: <repo>{repoLabel}</repo>."
+        }
+      }
+    },
+    "terms": {
+      "heading": "How {brand} follows Telegram's API terms",
+      "body": "Telegram's <tgTerms>API Terms of Service</tgTerms> set the rules for every third-party client. These are the points that matter most for an AI connector:",
+      "items": {
+        "0": {
+          "term": "Actions only with your knowledge",
+          "desc": "Telegram forbids clients from acting for a user without the user's knowledge and consent. {brand} acts only on requests from the assistant you connected, tools that change something are labelled as such, and irreversible ones need your opt-in."
+        },
+        "1": {
+          "term": "No AI training",
+          "desc": "{brand} does not use Telegram data to train or fine-tune any model, and it does not collect or aggregate message content."
+        },
+        "2": {
+          "term": "Clear naming",
+          "desc": "The app's name does not contain the word Telegram, and the app does not use the Telegram logo. It is described everywhere as an unofficial client for Telegram that is not affiliated with Telegram."
+        },
+        "3": {
+          "term": "Your privacy",
+          "desc": "{brand} reaches Telegram only through the session you created, deletes that session when you disconnect, and you can always end it from Telegram itself."
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "For app directory reviewers",
+      "body": "{brand} owns and operates its server at <host>{hostLabel}</host> and this website. The Telegram API is a third-party API that {brand} does not control. It is used under Telegram's public terms for client apps, and each user authorizes access to their own account. Questions: <issues>{issuesLabel}</issues>."
     }
   },
   "notFound": {

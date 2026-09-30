@@ -111,6 +111,7 @@
     "mit": "Berlisensi MIT",
     "privacy": "Privasi",
     "terms": "Ketentuan",
+    "accessModel": "Cara kami mengakses Telegram",
     "tagline": "Server MCP Telegram tidak resmi untuk Claude AI & ChatGPT.",
     "disclaimer": "Proyek open source independen. Tidak berafiliasi dengan, didukung, atau disponsori oleh Telegram, OpenAI, maupun Anthropic."
   },
@@ -580,6 +581,90 @@
       "body": "Ada pertanyaan tentang kebijakan ini? Hubungi kami melalui <issues>{issuesLabel}</issues>",
       "telegram": "atau Telegram <tg>@{handle}</tg>",
       "email": "atau email <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "Cara {brand} mengakses Telegram",
+    "metaDescription": "{brand} adalah klien tidak resmi untuk Telegram: setiap orang masuk ke akunnya sendiri melalui API publik Telegram. Apa yang ditambahkannya di atas API, dan bagaimana ia mematuhi aturan Telegram untuk aplikasi pihak ketiga.",
+    "title": "Cara {brand} mengakses Telegram",
+    "lastUpdated": "Terakhir diperbarui: {date}",
+    "updatedDate": "30 September 2026",
+    "intro": "{brand} adalah klien tidak resmi untuk Telegram. Ini bukan bot dan tidak melakukan scraping terhadap Telegram: setiap orang masuk ke akun Telegram miliknya sendiri, dan asisten yang ia hubungkan hanya bekerja dengan akun tersebut. Halaman ini menjelaskan cara kerja akses tersebut, apa yang ditambahkan {brand} di atas API Telegram, dan bagaimana {brand} mematuhi aturan Telegram untuk aplikasi pihak ketiga.",
+    "access": {
+      "heading": "Cara kerja akses",
+      "items": {
+        "0": {
+          "term": "API klien publik Telegram",
+          "desc": "{brand} berkomunikasi dengan Telegram melalui MTProto, API yang dipublikasikan Telegram untuk aplikasi pihak ketiga. Telegram <tgApi>mengundang pengembang</tgApi> untuk membangun klien di atasnya secara gratis, selama mereka mematuhi Ketentuan Layanan API-nya. {brand} menggunakan ID aplikasi terdaftarnya sendiri, sebagaimana diwajibkan oleh ketentuan tersebut."
+        },
+        "1": {
+          "term": "Akun Anda sendiri, Anda sendiri yang masuk",
+          "desc": "Anda terhubung dengan memindai kode QR menggunakan aplikasi Telegram, sama seperti saat Anda menautkan Telegram Desktop. Koneksi ini muncul di Telegram pada Pengaturan → Perangkat, dan Anda dapat mengakhirinya di sana kapan saja."
+        },
+        "2": {
+          "term": "Hanya yang dapat dilihat akun Anda",
+          "desc": "Asisten melihat obrolan dan kanal yang sama dengan yang ditampilkan aplikasi Telegram Anda, dan tidak lebih. Tidak ada akun bersama dan tidak ada akses ke akun yang belum masuk."
+        },
+        "3": {
+          "term": "Hanya saat Anda meminta",
+          "desc": "Sebuah alat dijalankan ketika asisten yang Anda hubungkan memanggilnya untuk permintaan Anda. {brand} tidak bertindak berdasarkan jadwalnya sendiri."
+        }
+      }
+    },
+    "adds": {
+      "heading": "Apa yang ditambahkan {brand} di atas API",
+      "items": {
+        "0": {
+          "term": "Label yang jelas pada setiap alat",
+          "desc": "Setiap alat memiliki nama, judul, dan label yang menyatakan apakah alat itu hanya membaca, mengubah sesuatu, atau melakukan sesuatu yang tidak dapat dibatalkan. Klien AI menggunakan label ini untuk meminta persetujuan Anda sebelum sebuah alat bertindak."
+        },
+        "1": {
+          "term": "Tindakan yang tidak dapat dibatalkan nonaktif secara default",
+          "desc": "Menghapus pesan, keluar dari grup, memblokir anggota, dan tindakan serupa tetap nonaktif sampai Anda mengaktifkannya di pengaturan Anda. Bahkan setelah itu, tindakan tersebut dibatasi 20 kali sehari, dan setiap percobaan dicatat dalam log yang dapat Anda baca."
+        },
+        "2": {
+          "term": "Konfirmasi sebelum mengirim",
+          "desc": "Skill {brand} untuk Claude dan ChatGPT menginstruksikan asisten untuk menunjukkan kepada Anda teks persisnya beserta penerimanya, serta menunggu persetujuan Anda sebelum mengirim pesan."
+        },
+        "3": {
+          "term": "Batasan yang melindungi akun Anda",
+          "desc": "Permintaan dibatasi lajunya untuk setiap koneksi, dan ketika Telegram meminta klien untuk memperlambat, {brand} menunggu alih-alih langsung mencoba lagi. Asisten yang terjebak dalam loop tidak dapat membanjiri Telegram dari akun Anda."
+        },
+        "4": {
+          "term": "Tidak ada yang disimpan",
+          "desc": "Pesan diteruskan dari Telegram ke asisten Anda dan tidak disimpan maupun dicatat dalam log. Server hanya menyimpan apa yang diperlukan untuk tetap terhubung; <privacy>kebijakan privasi</privacy> merinci dengan tepat apa saja itu."
+        },
+        "5": {
+          "term": "Sumber terbuka",
+          "desc": "Server ini bersumber terbuka di bawah lisensi MIT, sehingga siapa pun dapat memeriksa klaim-klaim ini atau menjalankan salinannya sendiri: <repo>{repoLabel}</repo>."
+        }
+      }
+    },
+    "terms": {
+      "heading": "Bagaimana {brand} mematuhi ketentuan API Telegram",
+      "body": "<tgTerms>Ketentuan Layanan API</tgTerms> Telegram menetapkan aturan bagi setiap klien pihak ketiga. Berikut poin-poin yang paling penting bagi konektor AI:",
+      "items": {
+        "0": {
+          "term": "Tindakan hanya dengan sepengetahuan Anda",
+          "desc": "Telegram melarang klien bertindak atas nama pengguna tanpa sepengetahuan dan persetujuan pengguna tersebut. {brand} hanya bertindak berdasarkan permintaan dari asisten yang Anda hubungkan, alat yang mengubah sesuatu diberi label demikian, dan alat yang tindakannya tidak dapat dibatalkan memerlukan persetujuan aktif dari Anda."
+        },
+        "1": {
+          "term": "Tanpa pelatihan AI",
+          "desc": "{brand} tidak menggunakan data Telegram untuk melatih atau menyempurnakan (fine-tune) model apa pun, dan tidak mengumpulkan atau menghimpun isi pesan."
+        },
+        "2": {
+          "term": "Penamaan yang jelas",
+          "desc": "Nama aplikasi ini tidak mengandung kata Telegram, dan aplikasi ini tidak menggunakan logo Telegram. Di mana pun, aplikasi ini disebut sebagai klien tidak resmi untuk Telegram yang tidak berafiliasi dengan Telegram."
+        },
+        "3": {
+          "term": "Privasi Anda",
+          "desc": "{brand} mengakses Telegram hanya melalui sesi yang Anda buat, menghapus sesi tersebut saat Anda memutuskan koneksi, dan Anda selalu dapat mengakhirinya dari Telegram itu sendiri."
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "Untuk peninjau direktori aplikasi",
+      "body": "{brand} memiliki dan mengoperasikan servernya di <host>{hostLabel}</host> serta situs web ini. API Telegram adalah API pihak ketiga yang tidak dikendalikan oleh {brand}. API tersebut digunakan berdasarkan ketentuan publik Telegram untuk aplikasi klien, dan setiap pengguna memberikan otorisasi akses ke akunnya sendiri. Pertanyaan: <issues>{issuesLabel}</issues>."
     }
   },
   "notFound": {

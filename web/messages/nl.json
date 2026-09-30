@@ -111,6 +111,7 @@
     "mit": "MIT-gelicentieerd",
     "privacy": "Privacy",
     "terms": "Voorwaarden",
+    "accessModel": "Hoe we toegang krijgen tot Telegram",
     "tagline": "Onofficiële Telegram-MCP-server voor Claude AI & ChatGPT.",
     "disclaimer": "Onafhankelijk opensourceproject. Niet verbonden aan, goedgekeurd of gesponsord door Telegram, OpenAI of Anthropic."
   },
@@ -580,6 +581,90 @@
       "body": "Vragen over dit beleid? Neem contact op via <issues>{issuesLabel}</issues>",
       "telegram": "of via Telegram <tg>@{handle}</tg>",
       "email": "of per e-mail <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "Hoe {brand} toegang krijgt tot Telegram",
+    "metaDescription": "{brand} is een onofficiële client voor Telegram: iedereen logt via de openbare API van Telegram in op zijn eigen account. Wat het toevoegt bovenop de API en hoe het de regels van Telegram voor apps van derden volgt.",
+    "title": "Hoe {brand} toegang krijgt tot Telegram",
+    "lastUpdated": "Laatst bijgewerkt: {date}",
+    "updatedDate": "30 september 2026",
+    "intro": "{brand} is een onofficiële client voor Telegram. Het is geen bot en het scrapet Telegram niet: iedereen logt in op zijn eigen Telegram-account, en de assistent die diegene koppelt, werkt alleen met dat account. Op deze pagina lees je hoe de toegang werkt, wat {brand} toevoegt bovenop de API van Telegram en hoe het de regels van Telegram voor apps van derden volgt.",
+    "access": {
+      "heading": "Hoe de toegang werkt",
+      "items": {
+        "0": {
+          "term": "De openbare client-API van Telegram",
+          "desc": "{brand} communiceert met Telegram via MTProto, de API die Telegram publiceert voor apps van derden. Telegram <tgApi>nodigt ontwikkelaars uit</tgApi> om er kosteloos clients op te bouwen, zolang ze de API-servicevoorwaarden naleven. {brand} gebruikt een eigen geregistreerde applicatie-ID, zoals die voorwaarden vereisen."
+        },
+        "1": {
+          "term": "Je eigen account, waarop je zelf inlogt",
+          "desc": "Je maakt verbinding door met de Telegram-app een QR-code te scannen, op dezelfde manier als je Telegram Desktop koppelt. De verbinding verschijnt in Telegram onder Instellingen → Apparaten, en je kunt haar daar op elk moment beëindigen."
+        },
+        "2": {
+          "term": "Alleen wat je account kan zien",
+          "desc": "De assistent ziet dezelfde chats en kanalen die je Telegram-app je toont, en niets meer. Er zijn geen gedeelde accounts en er is geen toegang tot accounts die niet zijn aangemeld."
+        },
+        "3": {
+          "term": "Alleen als je erom vraagt",
+          "desc": "Een tool wordt uitgevoerd wanneer de assistent die je hebt gekoppeld hem voor jouw verzoek aanroept. {brand} handelt niet volgens een eigen planning."
+        }
+      }
+    },
+    "adds": {
+      "heading": "Wat {brand} toevoegt bovenop de API",
+      "items": {
+        "0": {
+          "term": "Duidelijke labels op elke tool",
+          "desc": "Elke tool heeft een naam, een titel en een label dat aangeeft of hij alleen leest, iets wijzigt of iets doet dat niet ongedaan kan worden gemaakt. AI-clients gebruiken deze labels om het je te vragen voordat een tool iets uitvoert."
+        },
+        "1": {
+          "term": "Onomkeerbare acties standaard uit",
+          "desc": "Berichten verwijderen, groepen verlaten, leden verbannen en vergelijkbare acties blijven uitgeschakeld totdat je ze in je instellingen inschakelt. Ook dan zijn ze beperkt tot 20 per dag, en elke poging wordt vastgelegd in een logboek dat je kunt inzien."
+        },
+        "2": {
+          "term": "Bevestiging vóór verzending",
+          "desc": "De {brand}-skills voor Claude en ChatGPT geven de assistent de instructie om je de exacte tekst en de ontvanger te tonen en op je goedkeuring te wachten voordat hij een bericht verstuurt."
+        },
+        "3": {
+          "term": "Limieten die je account beschermen",
+          "desc": "Het aantal verzoeken is per verbinding beperkt, en wanneer Telegram een client vraagt het tempo te verlagen, wacht {brand} in plaats van het meteen opnieuw te proberen. Een assistent die in een lus vastzit, kan Telegram niet vanaf je account overspoelen."
+        },
+        "4": {
+          "term": "Niets bewaard",
+          "desc": "Berichten gaan van Telegram naar je assistent en worden niet opgeslagen of gelogd. De server bewaart alleen wat nodig is om verbonden te blijven; het <privacy>privacybeleid</privacy> vermeldt precies wat dat is."
+        },
+        "5": {
+          "term": "Opensource",
+          "desc": "De server is opensource onder de MIT-licentie, zodat iedereen deze beweringen kan controleren of een eigen exemplaar kan draaien: <repo>{repoLabel}</repo>."
+        }
+      }
+    },
+    "terms": {
+      "heading": "Hoe {brand} de API-voorwaarden van Telegram volgt",
+      "body": "De <tgTerms>API-servicevoorwaarden</tgTerms> van Telegram leggen de regels vast voor elke client van derden. Dit zijn de punten die het zwaarst wegen voor een AI-connector:",
+      "items": {
+        "0": {
+          "term": "Acties alleen met jouw medeweten",
+          "desc": "Telegram verbiedt clients om namens een gebruiker te handelen zonder diens medeweten en toestemming. {brand} handelt alleen op verzoeken van de assistent die je hebt gekoppeld, tools die iets wijzigen zijn als zodanig gelabeld, en voor onomkeerbare tools moet je zelf toestemming geven."
+        },
+        "1": {
+          "term": "Geen AI-training",
+          "desc": "{brand} gebruikt geen Telegram-gegevens om een model te trainen of te finetunen, en verzamelt of bundelt geen berichtinhoud."
+        },
+        "2": {
+          "term": "Duidelijke naamgeving",
+          "desc": "De naam van de app bevat het woord Telegram niet, en de app gebruikt het Telegram-logo niet. Overal wordt de app beschreven als een onofficiële client voor Telegram die niet aan Telegram gelieerd is."
+        },
+        "3": {
+          "term": "Je privacy",
+          "desc": "{brand} krijgt alleen toegang tot Telegram via de sessie die jij hebt aangemaakt, verwijdert die sessie wanneer je de verbinding verbreekt, en je kunt haar altijd vanuit Telegram zelf beëindigen."
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "Voor beoordelaars van appcatalogi",
+      "body": "{brand} is eigenaar en beheerder van zijn server op <host>{hostLabel}</host> en van deze website. De Telegram-API is een API van derden waarover {brand} geen controle heeft. Deze wordt gebruikt onder de openbare voorwaarden van Telegram voor client-apps, en elke gebruiker geeft zelf toestemming voor toegang tot zijn eigen account. Vragen: <issues>{issuesLabel}</issues>."
     }
   },
   "notFound": {

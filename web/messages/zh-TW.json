@@ -111,6 +111,7 @@
     "mit": "MIT 授權",
     "privacy": "隱私",
     "terms": "條款",
+    "accessModel": "我們如何存取 Telegram",
     "tagline": "面向 Claude AI 與 ChatGPT 的非官方 Telegram MCP 伺服器。",
     "disclaimer": "獨立開源專案。與 Telegram、OpenAI、Anthropic 無關聯，亦未獲得其背書或贊助。"
   },
@@ -580,6 +581,90 @@
       "body": "對本政策有疑問嗎？請透過 <issues>{issuesLabel}</issues> 與我們聯絡",
       "telegram": "或透過 Telegram <tg>@{handle}</tg>",
       "email": "或寄送電子郵件至 <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "{brand} 如何存取 Telegram",
+    "metaDescription": "{brand} 是 Telegram 的非官方用戶端：每個人都透過 Telegram 的公開 API 登入自己的帳號。本頁說明它在 API 之上增加了哪些功能，以及它如何遵守 Telegram 對第三方應用程式的規範。",
+    "title": "{brand} 如何存取 Telegram",
+    "lastUpdated": "最後更新：{date}",
+    "updatedDate": "2026 年 9 月 30 日",
+    "intro": "{brand} 是 Telegram 的非官方用戶端。它不是機器人，也不會抓取 Telegram 的資料：每個人都登入自己的 Telegram 帳號，而其連接的助理只能使用該帳號。本頁說明存取的運作方式、{brand} 在 Telegram API 之上增加了哪些功能，以及它如何遵守 Telegram 對第三方應用程式的規範。",
+    "access": {
+      "heading": "存取的運作方式",
+      "items": {
+        "0": {
+          "term": "Telegram 的公開用戶端 API",
+          "desc": "{brand} 透過 MTProto 與 Telegram 通訊，這是 Telegram 為第三方應用程式公開的 API。Telegram <tgApi>邀請開發者</tgApi>免費在其上開發用戶端，前提是遵守其 API 服務條款。{brand} 依照這些條款的要求，使用自己註冊的應用程式 ID。"
+        },
+        "1": {
+          "term": "您自己的帳號，由您親自登入",
+          "desc": "您只需用 Telegram 應用程式掃描 QR 碼即可連接，方式與連結 Telegram Desktop 相同。此連線會顯示在 Telegram 的「設定 → 已連線的裝置」中，您可隨時在該處終止連線。"
+        },
+        "2": {
+          "term": "僅限您的帳號能看到的內容",
+          "desc": "助理看到的聊天和頻道與您的 Telegram 應用程式向您顯示的完全相同，僅此而已。沒有共用帳號，也無法存取尚未登入的帳號。"
+        },
+        "3": {
+          "term": "僅在您要求時",
+          "desc": "工具會在您連接的助理因應您的請求呼叫它時執行。{brand} 不會依自己的排程自行動作。"
+        }
+      }
+    },
+    "adds": {
+      "heading": "{brand} 在 API 之上增加了什麼",
+      "items": {
+        "0": {
+          "term": "每個工具都有清楚的標籤",
+          "desc": "每個工具都有名稱、標題和一個標籤，說明它是僅讀取、會變更內容，還是會執行無法復原的操作。AI 用戶端會利用這些標籤，在工具執行動作前先詢問您。"
+        },
+        "1": {
+          "term": "不可逆的操作預設為關閉",
+          "desc": "刪除訊息、離開群組、封鎖成員及類似操作會保持關閉，直到您在設定中將其開啟。即使開啟後，每天也僅限 20 次，而且每次嘗試都會記錄在您可以查看的日誌中。"
+        },
+        "2": {
+          "term": "傳送前先確認",
+          "desc": "適用於 Claude 和 ChatGPT 的 {brand} 技能會指示助理向您顯示確切的文字內容與收件者，並在傳送訊息前等待您的核准。"
+        },
+        "3": {
+          "term": "保護您帳號的限制",
+          "desc": "每個連線的請求都有速率限制；當 Telegram 要求用戶端放慢速度時，{brand} 會等待，而不是立即重試。陷入迴圈的助理無法從您的帳號對 Telegram 發送大量請求。"
+        },
+        "4": {
+          "term": "不保留任何內容",
+          "desc": "訊息從 Telegram 傳遞到您的助理，不會被儲存或記錄。伺服器只保留維持連線所需的資料；<privacy>隱私權政策</privacy>列出了這些資料的確切內容。"
+        },
+        "5": {
+          "term": "開放原始碼",
+          "desc": "伺服器以 MIT 授權條款開放原始碼，因此任何人都能檢驗這些說法，或自行架設一份：<repo>{repoLabel}</repo>。"
+        }
+      }
+    },
+    "terms": {
+      "heading": "{brand} 如何遵守 Telegram 的 API 條款",
+      "body": "Telegram 的<tgTerms>API 服務條款</tgTerms>為所有第三方用戶端訂定了規則。以下是對 AI 連接器最重要的幾點：",
+      "items": {
+        "0": {
+          "term": "僅在您知情的情況下執行操作",
+          "desc": "Telegram 禁止用戶端在使用者不知情且未同意的情況下代表使用者執行操作。{brand} 僅依您所連接之助理的請求執行操作，會變更內容的工具都有相應標示，而不可逆的工具需要您主動選擇啟用。"
+        },
+        "1": {
+          "term": "不用於 AI 訓練",
+          "desc": "{brand} 不會使用 Telegram 資料來訓練或微調任何模型，也不會蒐集或彙整訊息內容。"
+        },
+        "2": {
+          "term": "清楚的命名",
+          "desc": "本應用程式的名稱不含 Telegram 一詞，也不使用 Telegram 標誌。它在所有地方皆被描述為與 Telegram 無關聯的 Telegram 非官方用戶端。"
+        },
+        "3": {
+          "term": "您的隱私",
+          "desc": "{brand} 僅透過您建立的工作階段存取 Telegram，並在您中斷連線時刪除該工作階段；您也隨時可以直接在 Telegram 中終止它。"
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "致應用程式目錄審查人員",
+      "body": "{brand} 擁有並營運其位於 <host>{hostLabel}</host> 的伺服器及本網站。Telegram API 是 {brand} 無法控制的第三方 API。其使用依據 Telegram 針對用戶端應用程式的公開條款，且每位使用者都會自行授權存取其帳號。如有疑問：<issues>{issuesLabel}</issues>。"
     }
   },
   "notFound": {

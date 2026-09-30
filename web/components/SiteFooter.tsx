@@ -17,6 +17,7 @@ export function SiteFooter() {
         <a href={config.issuesUrl}>{config.issuesLabel}</a>
         <Link href="/privacy">{t("privacy")}</Link>
         <Link href="/terms">{t("terms")}</Link>
+        <Link href="/docs/access-model">{t("accessModel")}</Link>
       </div>
       <p className={s.copy}>
         &copy; {new Date().getFullYear()} {config.brandName}. {t("tagline")}

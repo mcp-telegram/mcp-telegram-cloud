@@ -111,6 +111,7 @@
     "mit": "MIT lisanslı",
     "privacy": "Gizlilik",
     "terms": "Şartlar",
+    "accessModel": "Telegram'a nasıl erişiyoruz",
     "tagline": "Claude AI ve ChatGPT için resmi olmayan Telegram MCP sunucusu.",
     "disclaimer": "Bağımsız açık kaynak proje. Telegram, OpenAI veya Anthropic ile bağlantılı değildir; onlar tarafından onaylanmamış ve desteklenmemektedir."
   },
@@ -580,6 +581,90 @@
       "body": "Bu politikayla ilgili sorularınız mı var? <issues>{issuesLabel}</issues> üzerinden bize ulaşın",
       "telegram": "veya Telegram <tg>@{handle}</tg>",
       "email": "veya e-posta <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "{brand} Telegram'a nasıl erişir",
+    "metaDescription": "{brand}, Telegram için resmi olmayan bir istemcidir: herkes Telegram'ın herkese açık API'si üzerinden kendi hesabında oturum açar. API'nin üzerine neler eklediği ve Telegram'ın üçüncü taraf uygulamalara ilişkin kurallarına nasıl uyduğu.",
+    "title": "{brand} Telegram'a nasıl erişir",
+    "lastUpdated": "Son güncelleme: {date}",
+    "updatedDate": "30 Eylül 2026",
+    "intro": "{brand}, Telegram için resmi olmayan bir istemcidir. Bir bot değildir ve Telegram'dan veri kazımaz (scraping yapmaz): herkes kendi Telegram hesabında oturum açar ve bağladığı asistan yalnızca o hesapla çalışır. Bu sayfa erişimin nasıl işlediğini, {brand} tarafından Telegram API'sinin üzerine neler eklendiğini ve {brand} hizmetinin Telegram'ın üçüncü taraf uygulamalara ilişkin kurallarına nasıl uyduğunu açıklar.",
+    "access": {
+      "heading": "Erişim nasıl işler",
+      "items": {
+        "0": {
+          "term": "Telegram'ın herkese açık istemci API'si",
+          "desc": "{brand}, Telegram ile MTProto üzerinden iletişim kurar; MTProto, Telegram'ın üçüncü taraf uygulamalar için yayımladığı API'dir. Telegram, API Hizmet Koşullarına uydukları sürece geliştiricileri bu API üzerinde ücretsiz olarak istemci geliştirmeye <tgApi>davet eder</tgApi>. {brand}, bu koşulların gerektirdiği şekilde kendi kayıtlı uygulama kimliğini kullanır."
+        },
+        "1": {
+          "term": "Kendi hesabınız, oturumu siz açarsınız",
+          "desc": "Bağlanmak için Telegram uygulamasıyla bir QR kodu tararsınız; bu, Telegram Desktop'ı bağlama yönteminizle aynıdır. Bağlantı Telegram'da Ayarlar → Cihazlar altında görünür ve onu dilediğiniz an oradan sonlandırabilirsiniz."
+        },
+        "2": {
+          "term": "Yalnızca hesabınızın görebildikleri",
+          "desc": "Asistan, Telegram uygulamanızın size gösterdiği sohbetleri ve kanalları görür, fazlasını değil. Paylaşılan hesap yoktur; oturum açılmamış hesaplara da erişilmez."
+        },
+        "3": {
+          "term": "Yalnızca siz istediğinizde",
+          "desc": "Bir araç, bağladığınız asistan onu isteğiniz için çağırdığında çalışır. {brand} kendi belirlediği bir zamanlamaya göre işlem yapmaz."
+        }
+      }
+    },
+    "adds": {
+      "heading": "{brand} API'nin üzerine neler ekler",
+      "items": {
+        "0": {
+          "term": "Her araçta açık etiketler",
+          "desc": "Her aracın bir adı, bir başlığı ve yalnızca okuma mı yaptığını, bir şeyi mi değiştirdiğini yoksa geri alınamaz bir eylem mi gerçekleştirdiğini belirten bir etiketi vardır. Yapay zekâ istemcileri, bir araç harekete geçmeden önce size sormak için bu etiketleri kullanır."
+        },
+        "1": {
+          "term": "Geri alınamaz eylemler varsayılan olarak kapalı",
+          "desc": "Mesajları silme, gruplardan ayrılma, üyeleri yasaklama ve benzeri eylemler, siz ayarlarınızdan açana kadar kapalı kalır. Açıldıklarında bile günde 20 ile sınırlıdırlar ve her girişim, görüntüleyebileceğiniz bir kayıtta tutulur."
+        },
+        "2": {
+          "term": "Göndermeden önce onay",
+          "desc": "Claude ve ChatGPT için {brand} becerileri, asistana bir mesaj göndermeden önce size tam metni ve alıcıyı göstermesini ve onayınızı beklemesini söyler."
+        },
+        "3": {
+          "term": "Hesabınızı koruyan sınırlar",
+          "desc": "İstekler her bağlantı için hız sınırına tabidir ve Telegram bir istemciden yavaşlamasını istediğinde {brand} hemen yeniden denemek yerine bekler. Bir döngüye takılan asistan, hesabınızdan Telegram'a istek yağdıramaz."
+        },
+        "4": {
+          "term": "Hiçbir şey saklanmaz",
+          "desc": "Mesajlar Telegram'dan asistanınıza iletilir; saklanmaz veya kayda alınmaz. Sunucu yalnızca bağlı kalmak için ihtiyaç duyduğu bilgileri tutar; bunların tam olarak neler olduğu <privacy>gizlilik politikasında</privacy> listelenmiştir."
+        },
+        "5": {
+          "term": "Açık kaynak",
+          "desc": "Sunucu MIT lisansı altında açık kaynaklıdır; böylece herkes bu iddiaları doğrulayabilir veya kendi kopyasını çalıştırabilir: <repo>{repoLabel}</repo>."
+        }
+      }
+    },
+    "terms": {
+      "heading": "{brand} Telegram'ın API koşullarına nasıl uyar",
+      "body": "Telegram'ın <tgTerms>API Hizmet Koşulları</tgTerms>, her üçüncü taraf istemci için kuralları belirler. Bir yapay zekâ bağlayıcısı için en önemli noktalar şunlardır:",
+      "items": {
+        "0": {
+          "term": "Eylemler yalnızca sizin bilginiz dahilinde",
+          "desc": "Telegram, istemcilerin bir kullanıcı adına kullanıcının bilgisi ve rızası olmadan eylemde bulunmasını yasaklar. {brand} yalnızca bağladığınız asistandan gelen isteklere göre hareket eder, bir şeyi değiştiren araçlar bu şekilde etiketlenir ve geri alınamaz araçlar sizin açıkça etkinleştirmenizi gerektirir."
+        },
+        "1": {
+          "term": "Yapay zekâ eğitimi yok",
+          "desc": "{brand}, Telegram verilerini herhangi bir modeli eğitmek veya bir modele ince ayar yapmak için kullanmaz ve mesaj içeriğini toplamaz veya bir araya getirmez."
+        },
+        "2": {
+          "term": "Açık adlandırma",
+          "desc": "Uygulamanın adı Telegram kelimesini içermez ve uygulama Telegram logosunu kullanmaz. Her yerde, Telegram ile bağlantısı olmayan, Telegram için resmi olmayan bir istemci olarak tanımlanır."
+        },
+        "3": {
+          "term": "Gizliliğiniz",
+          "desc": "{brand}, Telegram'a yalnızca sizin oluşturduğunuz oturum üzerinden erişir ve bağlantıyı kestiğinizde bu oturumu siler; oturumu her zaman doğrudan Telegram'dan da sonlandırabilirsiniz."
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "Uygulama dizini inceleyicileri için",
+      "body": "{brand}, <host>{hostLabel}</host> adresindeki sunucusunun ve bu web sitesinin sahibi ve işletmecisidir. Telegram API'si, {brand} tarafından kontrol edilmeyen üçüncü taraf bir API'dir. Telegram'ın istemci uygulamalara yönelik herkese açık koşulları kapsamında kullanılır ve her kullanıcı kendi hesabına erişimi kendisi yetkilendirir. Sorular için: <issues>{issuesLabel}</issues>."
     }
   },
   "notFound": {

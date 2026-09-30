@@ -111,6 +111,7 @@
     "mit": "Licencia MIT",
     "privacy": "Privacidad",
     "terms": "Términos",
+    "accessModel": "Cómo accedemos a Telegram",
     "tagline": "Servidor MCP de Telegram no oficial para Claude AI y ChatGPT.",
     "disclaimer": "Proyecto independiente de código abierto. No está afiliado, avalado ni patrocinado por Telegram, OpenAI o Anthropic."
   },
@@ -580,6 +581,90 @@
       "body": "¿Tienes preguntas sobre esta política? Escríbenos a través de <issues>{issuesLabel}</issues>",
       "telegram": "o por Telegram <tg>@{handle}</tg>",
       "email": "o por correo electrónico <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "Cómo accede {brand} a Telegram",
+    "metaDescription": "{brand} es un cliente no oficial de Telegram: cada persona inicia sesión en su propia cuenta a través de la API pública de Telegram. Qué añade {brand} a la API y cómo cumple las normas de Telegram para aplicaciones de terceros.",
+    "title": "Cómo accede {brand} a Telegram",
+    "lastUpdated": "Última actualización: {date}",
+    "updatedDate": "30 de septiembre de 2026",
+    "intro": "{brand} es un cliente no oficial de Telegram. No es un bot y no extrae datos de Telegram mediante scraping: cada persona inicia sesión en su propia cuenta de Telegram, y el asistente que conecta trabaja únicamente con esa cuenta. Esta página explica cómo funciona el acceso, qué añade {brand} a la API de Telegram y cómo cumple las normas de Telegram para aplicaciones de terceros.",
+    "access": {
+      "heading": "Cómo funciona el acceso",
+      "items": {
+        "0": {
+          "term": "La API pública de clientes de Telegram",
+          "desc": "{brand} se comunica con Telegram mediante MTProto, la API que Telegram publica para aplicaciones de terceros. Telegram <tgApi>invita a los desarrolladores</tgApi> a crear clientes sobre ella de forma gratuita, siempre que cumplan sus Términos de Servicio de la API. {brand} utiliza su propio ID de aplicación registrado, tal como exigen dichos términos."
+        },
+        "1": {
+          "term": "Tu propia cuenta, en la que inicias sesión tú",
+          "desc": "Te conectas escaneando un código QR con la aplicación de Telegram, del mismo modo que vinculas Telegram Desktop. La conexión aparece en Telegram en Ajustes → Dispositivos, y puedes cerrarla desde ahí en cualquier momento."
+        },
+        "2": {
+          "term": "Solo lo que tu cuenta puede ver",
+          "desc": "El asistente ve los mismos chats y canales que te muestra tu aplicación de Telegram, y nada más. No hay cuentas compartidas ni acceso a cuentas que no hayan iniciado sesión."
+        },
+        "3": {
+          "term": "Solo cuando tú lo pides",
+          "desc": "Una herramienta se ejecuta cuando el asistente que conectaste la invoca para atender tu solicitud. {brand} no actúa según una programación propia."
+        }
+      }
+    },
+    "adds": {
+      "heading": "Qué añade {brand} a la API",
+      "items": {
+        "0": {
+          "term": "Etiquetas claras en cada herramienta",
+          "desc": "Cada herramienta tiene un nombre, un título y una etiqueta que indica si solo lee, si modifica algo o si realiza una acción que no se puede deshacer. Los clientes de IA usan estas etiquetas para pedirte confirmación antes de que una herramienta actúe."
+        },
+        "1": {
+          "term": "Acciones irreversibles desactivadas por defecto",
+          "desc": "Eliminar mensajes, salir de grupos, expulsar miembros y acciones similares permanecen desactivadas hasta que las actives en tus ajustes. Incluso entonces, están limitadas a 20 al día, y cada intento queda anotado en un registro que puedes consultar."
+        },
+        "2": {
+          "term": "Confirmación antes de enviar",
+          "desc": "Las skills de {brand} para Claude y ChatGPT indican al asistente que te muestre el texto exacto y el destinatario, y que espere tu aprobación antes de enviar un mensaje."
+        },
+        "3": {
+          "term": "Límites que protegen tu cuenta",
+          "desc": "Las solicitudes tienen un límite de frecuencia para cada conexión, y cuando Telegram pide a un cliente que reduzca el ritmo, {brand} espera en lugar de reintentar de inmediato. Un asistente atascado en un bucle no puede saturar Telegram desde tu cuenta."
+        },
+        "4": {
+          "term": "No se guarda nada",
+          "desc": "Los mensajes pasan de Telegram a tu asistente y no se almacenan ni se registran. El servidor conserva solo lo que necesita para mantenerse conectado; la <privacy>política de privacidad</privacy> detalla exactamente qué es."
+        },
+        "5": {
+          "term": "Código abierto",
+          "desc": "El servidor es de código abierto bajo la licencia MIT, por lo que cualquiera puede verificar estas afirmaciones o ejecutar su propia copia: <repo>{repoLabel}</repo>."
+        }
+      }
+    },
+    "terms": {
+      "heading": "Cómo cumple {brand} los términos de la API de Telegram",
+      "body": "Los <tgTerms>Términos de Servicio de la API</tgTerms> de Telegram establecen las normas para todos los clientes de terceros. Estos son los puntos más importantes para un conector de IA:",
+      "items": {
+        "0": {
+          "term": "Acciones solo con tu conocimiento",
+          "desc": "Telegram prohíbe que los clientes actúen en nombre de un usuario sin su conocimiento y consentimiento. {brand} actúa únicamente ante solicitudes del asistente que conectaste, las herramientas que modifican algo están etiquetadas como tales y las irreversibles requieren que las actives expresamente."
+        },
+        "1": {
+          "term": "Sin entrenamiento de IA",
+          "desc": "{brand} no utiliza datos de Telegram para entrenar ni ajustar ningún modelo, y no recopila ni agrega el contenido de los mensajes."
+        },
+        "2": {
+          "term": "Denominación clara",
+          "desc": "El nombre de la aplicación no contiene la palabra Telegram, y la aplicación no utiliza el logotipo de Telegram. En todas partes se describe como un cliente no oficial de Telegram que no está afiliado a Telegram."
+        },
+        "3": {
+          "term": "Tu privacidad",
+          "desc": "{brand} accede a Telegram únicamente a través de la sesión que tú creaste, elimina esa sesión cuando te desconectas, y siempre puedes cerrarla desde el propio Telegram."
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "Para los revisores de directorios de aplicaciones",
+      "body": "{brand} es propietario y operador de su servidor en <host>{hostLabel}</host> y de este sitio web. La API de Telegram es una API de terceros que {brand} no controla. Se utiliza conforme a los términos públicos de Telegram para aplicaciones cliente, y cada usuario autoriza el acceso a su propia cuenta. Preguntas: <issues>{issuesLabel}</issues>."
     }
   },
   "notFound": {

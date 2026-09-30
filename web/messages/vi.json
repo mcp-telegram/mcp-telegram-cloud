@@ -111,6 +111,7 @@
     "mit": "Cấp phép MIT",
     "privacy": "Quyền riêng tư",
     "terms": "Điều khoản",
+    "accessModel": "Cách chúng tôi truy cập Telegram",
     "tagline": "Máy chủ MCP Telegram không chính thức cho Claude AI & ChatGPT.",
     "disclaimer": "Dự án mã nguồn mở độc lập. Không liên kết, không được chứng thực hay tài trợ bởi Telegram, OpenAI hoặc Anthropic."
   },
@@ -580,6 +581,90 @@
       "body": "Có câu hỏi về chính sách này? Liên hệ với chúng tôi qua <issues>{issuesLabel}</issues>",
       "telegram": "hoặc Telegram <tg>@{handle}</tg>",
       "email": "hoặc email <mail>{address}</mail>"
+    }
+  },
+  "accessModel": {
+    "metaTitle": "Cách {brand} truy cập Telegram",
+    "metaDescription": "{brand} là một ứng dụng khách không chính thức cho Telegram: mỗi người đăng nhập vào tài khoản của chính mình thông qua API công khai của Telegram. Những gì ứng dụng bổ sung ngoài API và cách ứng dụng tuân thủ các quy định của Telegram dành cho ứng dụng bên thứ ba.",
+    "title": "Cách {brand} truy cập Telegram",
+    "lastUpdated": "Cập nhật lần cuối: {date}",
+    "updatedDate": "Ngày 30 tháng 9 năm 2026",
+    "intro": "{brand} là một ứng dụng khách không chính thức cho Telegram. Đây không phải là bot và không thu thập dữ liệu (scrape) từ Telegram: mỗi người đăng nhập vào tài khoản Telegram của chính mình, và trợ lý mà họ kết nối chỉ làm việc với tài khoản đó. Trang này giải thích cách thức truy cập, những gì {brand} bổ sung ngoài API của Telegram, và cách {brand} tuân thủ các quy định của Telegram dành cho ứng dụng bên thứ ba.",
+    "access": {
+      "heading": "Cách thức truy cập",
+      "items": {
+        "0": {
+          "term": "API công khai dành cho ứng dụng khách của Telegram",
+          "desc": "{brand} giao tiếp với Telegram qua MTProto, API mà Telegram công bố cho các ứng dụng bên thứ ba. Telegram <tgApi>mời các nhà phát triển</tgApi> xây dựng ứng dụng khách trên API này miễn phí, miễn là họ tuân thủ Điều khoản Dịch vụ API của Telegram. {brand} sử dụng ID ứng dụng đã đăng ký của riêng mình, đúng như các điều khoản đó yêu cầu."
+        },
+        "1": {
+          "term": "Tài khoản của chính bạn, do bạn đăng nhập",
+          "desc": "Bạn kết nối bằng cách quét mã QR bằng ứng dụng Telegram, giống như cách bạn liên kết Telegram Desktop. Kết nối này hiển thị trong Telegram tại Cài đặt → Thiết bị, và bạn có thể kết thúc nó tại đó bất cứ lúc nào."
+        },
+        "2": {
+          "term": "Chỉ những gì tài khoản của bạn có thể thấy",
+          "desc": "Trợ lý thấy đúng những cuộc trò chuyện và kênh mà ứng dụng Telegram hiển thị cho bạn, và không gì hơn. Không có tài khoản dùng chung và không có quyền truy cập vào các tài khoản chưa đăng nhập."
+        },
+        "3": {
+          "term": "Chỉ khi bạn yêu cầu",
+          "desc": "Một công cụ chỉ chạy khi trợ lý bạn đã kết nối gọi nó để thực hiện yêu cầu của bạn. {brand} không tự hành động theo lịch trình riêng."
+        }
+      }
+    },
+    "adds": {
+      "heading": "Những gì {brand} bổ sung ngoài API",
+      "items": {
+        "0": {
+          "term": "Nhãn rõ ràng trên mọi công cụ",
+          "desc": "Mỗi công cụ đều có tên, tiêu đề và nhãn cho biết công cụ đó chỉ đọc, thay đổi một thứ gì đó, hay thực hiện một hành động không thể hoàn tác. Các ứng dụng AI dùng những nhãn này để hỏi bạn trước khi một công cụ hành động."
+        },
+        "1": {
+          "term": "Các hành động không thể hoàn tác bị tắt theo mặc định",
+          "desc": "Xóa tin nhắn, rời nhóm, cấm thành viên và các hành động tương tự vẫn bị tắt cho đến khi bạn bật chúng trong phần cài đặt. Ngay cả khi đã bật, chúng vẫn bị giới hạn ở 20 lần mỗi ngày, và mọi lần thử đều được ghi vào nhật ký mà bạn có thể xem."
+        },
+        "2": {
+          "term": "Xác nhận trước khi gửi",
+          "desc": "Các skill {brand} dành cho Claude và ChatGPT yêu cầu trợ lý hiển thị cho bạn chính xác nội dung và người nhận, đồng thời chờ bạn chấp thuận trước khi gửi tin nhắn."
+        },
+        "3": {
+          "term": "Giới hạn bảo vệ tài khoản của bạn",
+          "desc": "Các yêu cầu bị giới hạn tần suất cho mỗi kết nối, và khi Telegram yêu cầu một ứng dụng khách giảm tốc độ, {brand} sẽ chờ thay vì thử lại ngay lập tức. Một trợ lý bị mắc kẹt trong vòng lặp không thể gửi tràn ngập yêu cầu đến Telegram từ tài khoản của bạn."
+        },
+        "4": {
+          "term": "Không lưu giữ gì",
+          "desc": "Tin nhắn được chuyển từ Telegram đến trợ lý của bạn và không được lưu trữ hay ghi nhật ký. Máy chủ chỉ giữ những gì cần thiết để duy trì kết nối; <privacy>chính sách quyền riêng tư</privacy> liệt kê chính xác những dữ liệu đó."
+        },
+        "5": {
+          "term": "Mã nguồn mở",
+          "desc": "Máy chủ là mã nguồn mở theo giấy phép MIT, vì vậy bất kỳ ai cũng có thể kiểm chứng những tuyên bố này hoặc tự chạy bản sao của riêng mình: <repo>{repoLabel}</repo>."
+        }
+      }
+    },
+    "terms": {
+      "heading": "Cách {brand} tuân thủ điều khoản API của Telegram",
+      "body": "<tgTerms>Điều khoản Dịch vụ API</tgTerms> của Telegram đặt ra các quy định cho mọi ứng dụng khách bên thứ ba. Dưới đây là những điểm quan trọng nhất đối với một trình kết nối AI:",
+      "items": {
+        "0": {
+          "term": "Chỉ hành động khi bạn biết",
+          "desc": "Telegram cấm các ứng dụng khách hành động thay mặt người dùng mà người dùng không biết và không đồng ý. {brand} chỉ hành động theo yêu cầu từ trợ lý bạn đã kết nối, các công cụ thay đổi dữ liệu đều được gắn nhãn tương ứng, và các công cụ không thể hoàn tác cần bạn chủ động bật."
+        },
+        "1": {
+          "term": "Không huấn luyện AI",
+          "desc": "{brand} không sử dụng dữ liệu Telegram để huấn luyện hoặc tinh chỉnh bất kỳ mô hình nào, và không thu thập hay tổng hợp nội dung tin nhắn."
+        },
+        "2": {
+          "term": "Đặt tên rõ ràng",
+          "desc": "Tên ứng dụng không chứa từ Telegram, và ứng dụng không sử dụng logo Telegram. Ở mọi nơi, ứng dụng đều được mô tả là một ứng dụng khách không chính thức cho Telegram, không liên kết với Telegram."
+        },
+        "3": {
+          "term": "Quyền riêng tư của bạn",
+          "desc": "{brand} chỉ truy cập Telegram thông qua phiên mà bạn đã tạo, xóa phiên đó khi bạn ngắt kết nối, và bạn luôn có thể kết thúc phiên đó ngay từ Telegram."
+        }
+      }
+    },
+    "reviewers": {
+      "heading": "Dành cho người duyệt danh mục ứng dụng",
+      "body": "{brand} sở hữu và vận hành máy chủ của mình tại <host>{hostLabel}</host> cùng trang web này. Telegram API là một API của bên thứ ba mà {brand} không kiểm soát. API này được sử dụng theo các điều khoản công khai của Telegram dành cho ứng dụng khách, và mỗi người dùng tự cấp quyền truy cập vào tài khoản của chính mình. Câu hỏi: <issues>{issuesLabel}</issues>."
     }
   },
   "notFound": {
