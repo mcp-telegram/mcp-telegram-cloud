@@ -7,7 +7,8 @@
  *   - data-sse-url      : EventSource endpoint (already query-encoded server-side)
  *   - data-auto         : "1" to open the SSE immediately on load; absent → wait
  *                         for a #startBtn click (Login enters a username first).
- *   - data-cookie-url    : (Authorize only) POST endpoint that trades the login ticket for the session cookie
+ *   - data-cookie-url    : POST endpoint that trades the login ticket for the session cookie
+ *   - data-next-url      : (Login only) where to go once the session cookie is set
  *   - data-password-url  : POST endpoint that delivers the 2FA cloud password
  *   - data-msg-connected : localized success heading
  *   - data-msg-added     : localized "account added" heading
@@ -142,6 +143,21 @@ if (root) {
       const data = jsonData(e);
       es?.close();
       showResult(ok(d.msgConnected ?? "Connected!", peer(data), d.msgSaved ?? ""));
+      // Login: the scan proved who this is; trade the ticket for the session cookie, then open the dashboard.
+      if (d.cookieUrl && data.handoff) {
+        fetch(d.cookieUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ handoff: data.handoff }),
+          credentials: "same-origin",
+        })
+          .then((res) => {
+            // Same-site path only ("/my/settings"), never another origin or "//host".
+            const next = d.nextUrl ?? "";
+            if (res.ok && next.startsWith("/") && !next.startsWith("//")) window.location.assign(next);
+          })
+          .catch(() => {});
+      }
     });
     es.addEventListener("added", (e) => {
       const data = jsonData(e);

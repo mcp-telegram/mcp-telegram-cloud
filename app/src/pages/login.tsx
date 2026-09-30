@@ -27,6 +27,8 @@ function LoginPage(props: LoginProps) {
         data-island="qr-flow"
         data-sse-url-template="/login/qr?userId={userId}"
         data-password-url="/qr/password"
+        data-cookie-url="/oauth/authorize/qr/cookie"
+        data-next-url="/my/settings"
         data-msg-connected={t("login.connected")}
         data-msg-saved={t("login.sessionSaved")}
         data-msg-lost={t("login.connectionLost")}

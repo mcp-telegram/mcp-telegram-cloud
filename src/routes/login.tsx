@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { OAuthProvider } from "../oauth.js";
 import { LoginPage } from "../pages/LoginPage.js";
 import { handleQrLogin } from "../qr-login.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
@@ -6,9 +7,10 @@ import type { SessionManager } from "../session-manager.js";
 
 export interface LoginRoutesDeps {
   sessions: SessionManager;
+  oauth: Pick<OAuthProvider, "createBrowserHandoff">;
 }
 
-export function createLoginRoutes({ sessions }: LoginRoutesDeps): Hono {
+export function createLoginRoutes({ sessions, oauth }: LoginRoutesDeps): Hono {
   const app = new Hono();
 
   app.get("/", async (c) => {
@@ -29,7 +31,7 @@ export function createLoginRoutes({ sessions }: LoginRoutesDeps): Hono {
       return c.text("userId required", 400);
     }
 
-    const stream = await handleQrLogin(sessions, userId, c.req.raw.signal);
+    const stream = await handleQrLogin(sessions, userId, c.req.raw.signal, oauth);
 
     return new Response(stream, {
       headers: {

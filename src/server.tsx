@@ -252,7 +252,7 @@ app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
 registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
-app.route("/login", createLoginRoutes({ sessions }));
+app.route("/login", createLoginRoutes({ sessions, oauth }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads, oauth }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
 // Directory-review access: hands a reviewer the demo session so the OAuth fast

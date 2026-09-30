@@ -79,10 +79,13 @@ describe("handleQrLogin persists under the scanned identity", () => {
     );
   });
 
-  it("still allows the request-supplied id as a lookup hint only", () => {
-    // Reading an existing session by hint is harmless and keeps the
-    // "already connected" shortcut working — only WRITES are restricted.
-    assert.match(body, /getOrCreateSession\(requestedUserId\)/);
+  it("never answers 'connected' for the request-supplied id without a scan", () => {
+    // Since 2.61 a `connected` event carries a browser-session ticket, so the old
+    // "already connected" shortcut would have signed anyone in as whoever they
+    // typed. The only identity the page may receive comes from the scan.
+    assert.ok(!/getOrCreateSession\(\s*requestedUserId/.test(body), "no session lookup by the typed id");
+    assert.match(body, /createBrowserHandoff\(userId\)/, "the ticket is minted for the scanned account");
+    assert.ok(!/createBrowserHandoff\(\s*requestedUserId/.test(body), "never for the typed id");
   });
 
   it("guard is not vacuous — it fails on the pre-fix shape", () => {

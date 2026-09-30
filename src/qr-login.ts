@@ -80,6 +80,7 @@ export async function handleQrLogin(
   sessions: SessionManager,
   requestedUserId: string,
   signal: AbortSignal,
+  oauth: Pick<OAuthProvider, "createBrowserHandoff">,
 ): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder();
 
@@ -107,16 +108,9 @@ export async function handleQrLogin(
       signal.addEventListener("abort", () => clearInterval(heartbeat), { once: true });
 
       try {
-        const telegram = await sessions.getOrCreateSession(requestedUserId);
-
-        // Check if already connected
-        if (await telegram.ensureConnected()) {
-          const me = await telegram.getMe();
-          send("connected", { name: me.firstName, username: me.username, id: me.id });
-          controller.close();
-          return;
-        }
-
+        // No "already connected" shortcut: this page also signs the browser in to
+        // /my/*, and `requestedUserId` is whatever the visitor typed. Only a scan
+        // proves who they are, so every visit scans.
         send("status", { message: "Starting QR login..." });
 
         const loginId = newLoginId();
@@ -137,9 +131,31 @@ export async function handleQrLogin(
               userId: logUser(userId),
             });
           }
-          sessions.saveSessionString(userId, outcome.sessionString);
-          await sessions.adoptSession(userId, fresh);
-          send("connected", { name: me.firstName, username: me.username, id: me.id });
+          const existing = sessions.getSavedUserIds().includes(userId)
+            ? await sessions.tryReconnectSession(userId)
+            : null;
+          if (existing) {
+            // Already connected: the scan was only a sign-in. Keep the stored
+            // session and end the one we just created, so every dashboard visit
+            // does not leave another device in the user's Telegram settings.
+            await fresh.logOut().catch((err: unknown) => {
+              logger.warn(`Could not end the sign-in-only Telegram authorization: ${(err as Error).message}`, {
+                component: "qr-login",
+                event: "qr.signin.logout_failed",
+                userId: logUser(userId),
+              });
+            });
+          } else {
+            sessions.saveSessionString(userId, outcome.sessionString);
+            await sessions.adoptSession(userId, fresh);
+          }
+          send("connected", {
+            name: me.firstName,
+            username: me.username,
+            id: me.id,
+            // Proof of identity for the browser: traded for the session cookie.
+            handoff: oauth.createBrowserHandoff(userId),
+          });
         } else {
           send("error_msg", { message: outcome.message ?? "QR login failed" });
         }
