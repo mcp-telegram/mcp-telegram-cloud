@@ -5,10 +5,14 @@ you need to know before opening an issue or pull request.
 
 ## Project scope
 
-`mcp-telegram-cloud` is the **hosted, multi-user, read-only** flavour of the
+`mcp-telegram-cloud` is the **hosted, multi-user** flavour of the
 [`@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram) MCP
 server. It is intended to run as a service that multiple Telegram users
 connect to via OAuth + QR login.
+
+Issues and pull requests are welcome in any language. We answer in English,
+and in Russian if you wrote in Russian. Priorities and planned work are on the
+public [roadmap board](https://github.com/orgs/mcp-telegram/projects).
 
 Two repos, two scopes:
 
@@ -30,10 +34,12 @@ the upstream repo. Cloud only **whitelists** which upstream tools are exposed.
 
 ## Development setup
 
+Requirements: [Bun](https://bun.sh) 1.4.
+
 ```bash
-pnpm install
+bun install
 cp .env.example .env   # fill in TELEGRAM_API_ID / TELEGRAM_API_HASH / ADMIN_TOKEN
-pnpm dev               # tsx watch on src/server.tsx
+bun run dev            # bun --hot src/server.tsx
 ```
 
 You can run against a live Telegram account, but **use a throwaway test
@@ -41,7 +47,7 @@ account** for development. The session DB stores plaintext MTProto sessions.
 
 ## Code style and conventions
 
-- **Linter / formatter**: [Biome](https://biomejs.dev). Run `pnpm lint:fix`
+- **Linter / formatter**: [Biome](https://biomejs.dev). Run `bun run lint:fix`
   before committing. The pre-commit hook (`husky` + `biome check --staged`)
   will format staged files automatically.
 - **Pre-commit secrets scan**: if [`gitleaks`](https://github.com/gitleaks/gitleaks)
@@ -54,8 +60,7 @@ account** for development. The session DB stores plaintext MTProto sessions.
   why.
 - **Comments**: only when the *why* is non-obvious. Don't restate the code.
 - **Tests**: unit tests live in `src/__tests__/*.test.ts` and run via
-  `pnpm test` (powered by `tsx --test`, which uses Node's built-in
-  `node:test`). Add tests for new behaviour where it's reasonable —
+  `bun run test` (`bun test`). Add tests for new behaviour where it's reasonable —
   pure functions, parsers, validation, security guards. PRs that
   expand coverage (especially around OAuth and rate-limiting paths)
   are very welcome.
@@ -66,24 +71,27 @@ account** for development. The session DB stores plaintext MTProto sessions.
 2. Make your change. Keep PRs focused — one logical change per PR.
 3. Run locally:
    ```bash
-   pnpm lint:fix
-   pnpm typecheck
-   pnpm build
+   bun run lint
+   bun run typecheck
+   bun run test
    ```
+   If you touched `web/` or `app/`, also run their `web:*` / `app:*` lint,
+   typecheck and test scripts.
 4. Open the PR using the template. Fill in **what** and **why** — reviewers
    should not have to guess your motivation.
-5. CI will run gitleaks + TruffleHog on every PR
-   (`.github/workflows/security-scan.yml`). Build runs on push to `main`
-   and tagged releases (`.github/workflows/build.yml`); deploy is in a
-   separate private repo. There is no separate lint/typecheck PR job
-   today, so please run them locally.
+5. CI runs gitleaks + TruffleHog on every PR
+   (`.github/workflows/security-scan.yml`) and the `check` job
+   (lint, typecheck, tests, parity and translation checks for the server,
+   `web/` and `app/`) on every PR that touches code
+   (`.github/workflows/build.yml`). Deploy is in a separate private repo.
 6. Maintainer review: usually within a few days. We may request changes
    focused on scope, security, or operational impact.
 
 ## What we will likely **not** merge
 
-- New write-capable tools on the cloud side. Cloud is read-only by design;
-  if you need write tools, self-host the upstream `mcp-telegram` package.
+- Tools that bypass the per-user safety switches. Destructive tools are
+  opt-in per user (off by default) and write tools show the outgoing
+  content for confirmation; new write-capable tools must fit that model.
 - Changes that add new ENV variables without documenting them in
   `.env.example` and `README.md`.
 - Operational/infra changes — Docker Swarm stacks, deploy workflows, and

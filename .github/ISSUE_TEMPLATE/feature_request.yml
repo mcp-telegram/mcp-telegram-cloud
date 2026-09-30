@@ -1,10 +1,12 @@
 name: Feature request
 description: Suggest a new feature or improvement
-labels: ["enhancement"]
+labels: ["enhancement", "needs triage"]
 body:
   - type: markdown
     attributes:
       value: |
+        You can write in any language.
+
         Before opening a feature request, please check whether your idea
         belongs in the upstream
         [`@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram)

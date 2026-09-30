@@ -1,10 +1,12 @@
 name: Bug report
 description: Something is broken in mcp-telegram-cloud
-labels: ["bug"]
+labels: ["bug", "needs triage"]
 body:
   - type: markdown
     attributes:
       value: |
+        You can write in any language.
+
         Thanks for taking the time to report a bug. Please fill in as much
         detail as you can — vague reports take longer to triage.
 
