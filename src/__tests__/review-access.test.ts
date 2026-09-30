@@ -21,7 +21,7 @@ process.env.TELEGRAM_API_HASH ??= "test-hash";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
-import { buildTgUserCookie } from "../cookie-handler.js";
+import { buildBrowserSessionCookie } from "../cookie-handler.js";
 import type { createReviewRoutes as createReviewRoutesType } from "../routes/review.js";
 import type { SessionManager as SessionManagerType } from "../session-manager.js";
 
@@ -162,7 +162,10 @@ function routeWith(opts: {
     resolveReviewToken: () => opts.resolve,
     tryReconnectSession: async () => (opts.reconnect ? ({} as TelegramService) : null),
   } as unknown as SessionManagerType;
-  return createReviewRoutes({ sessions });
+  const oauth = {
+    createBrowserSession: (userId: string) => (userId === "demo_account" ? "c".repeat(64) : "d".repeat(64)),
+  };
+  return createReviewRoutes({ sessions, oauth: oauth as never });
 }
 
 describe("GET /review", () => {
@@ -171,7 +174,9 @@ describe("GET /review", () => {
     const res = await app.request("/?token=whatever");
     assert.equal(res.status, 200);
     const cookie = res.headers.get("set-cookie") ?? "";
-    assert.match(cookie, /tg_user=demo_account/);
+    // An opaque server-side session for the demo account, never the username itself.
+    assert.match(cookie, new RegExp(`tg_sid=${"c".repeat(64)}`));
+    assert.ok(!/tg_user=demo_account/.test(cookie), "the username must not be the credential");
     assert.ok(cookie.includes("HttpOnly"));
     // Review runs for months. A 30-day hint would expire between the reviewer
     // opening the link and coming back, dropping them on the QR page they have
@@ -203,18 +208,18 @@ describe("GET /review", () => {
   });
 });
 
-describe("session-hint cookie", () => {
+describe("browser session cookie", () => {
   it("carries the flags the OAuth fast path depends on", () => {
-    const cookie = buildTgUserCookie("demo_account");
-    assert.match(cookie, /^tg_user=demo_account;/);
+    const cookie = buildBrowserSessionCookie("e".repeat(64));
+    assert.match(cookie, new RegExp(`^tg_sid=${"e".repeat(64)};`));
     for (const flag of ["Path=/", "SameSite=Lax", "Secure", "HttpOnly"]) {
       assert.ok(cookie.includes(flag), `missing ${flag}`);
     }
   });
 
   it("refuses a value that could break out of the cookie", () => {
-    for (const bad of ["a; Domain=evil.test", "a\r\nSet-Cookie: x=1", "", "a".repeat(65)]) {
-      assert.throws(() => buildTgUserCookie(bad), /unsafe tg_user value/);
+    for (const bad of ["a; Domain=evil.test", "a\r\nSet-Cookie: x=1", "", "demo_account", "a".repeat(65)]) {
+      assert.throws(() => buildBrowserSessionCookie(bad), /unsafe session token/);
     }
   });
 });

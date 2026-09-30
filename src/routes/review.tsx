@@ -1,11 +1,17 @@
 import { Hono } from "hono";
-import { buildTgUserCookie, REVIEW_HINT_MAX_AGE_SECONDS } from "../cookie-handler.js";
+import {
+  buildBrowserSessionCookie,
+  CLEAR_LEGACY_TG_USER_COOKIE,
+  REVIEW_HINT_MAX_AGE_SECONDS,
+} from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
+import type { OAuthProvider } from "../oauth.js";
 import { reviewRateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
 
 export interface ReviewRoutesDeps {
   sessions: SessionManager;
+  oauth: OAuthProvider;
 }
 
 /**
@@ -14,14 +20,15 @@ export interface ReviewRoutesDeps {
  * Directory reviewers cannot complete our normal sign-in: it is Telegram's own
  * device-link QR, which needs a phone running Telegram, and the submission form
  * forbids requiring one. This route hands them the one thing they are missing —
- * a session — by writing the same `tg_user` hint cookie the QR page writes.
- * From there the untouched OAuth fast path in `routes/oauth.tsx` recognises the
- * hint and redirects straight back with an authorization code.
+ * a browser session (`tg_sid`), the same one a finished QR login starts. The
+ * review token is the proof of identity. From there the OAuth fast path in
+ * `routes/oauth.tsx` recognises the session and redirects straight back with an
+ * authorization code.
  *
  * Deliberately no new authentication path: the token only selects an existing
  * session, and every check the normal flow performs still runs afterwards.
  */
-export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
+export function createReviewRoutes({ sessions, oauth }: ReviewRoutesDeps): Hono {
   const app = new Hono();
 
   // Rate-limit before any logic: brute-force a 192-bit token is implausible,
@@ -68,7 +75,9 @@ export function createReviewRoutes({ sessions }: ReviewRoutesDeps): Hono {
       uses: resolved.uses,
     });
 
-    c.header("Set-Cookie", buildTgUserCookie(resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS));
+    const sessionToken = oauth.createBrowserSession(resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS);
+    c.header("Set-Cookie", buildBrowserSessionCookie(sessionToken, REVIEW_HINT_MAX_AGE_SECONDS), { append: true });
+    c.header("Set-Cookie", CLEAR_LEGACY_TG_USER_COOKIE, { append: true });
     // Never let a shared cache keep a response that carries a session hint.
     c.header("Cache-Control", "no-store");
     return c.html(

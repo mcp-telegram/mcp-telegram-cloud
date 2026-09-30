@@ -1,106 +1,97 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { decideTgUserCookie } from "../cookie-handler.js";
+import {
+  buildBrowserSessionCookie,
+  CLEAR_LEGACY_TG_USER_COOKIE,
+  decideSessionHandoff,
+  readBrowserSessionToken,
+} from "../cookie-handler.js";
 
 const ISSUER = "https://mcp-telegram.com";
+const TICKET = "f".repeat(64);
+const redeemOnly = (valid: string, userId: string) => (t: string) => (t === valid ? userId : null);
 
-describe("decideTgUserCookie", () => {
-  it("returns 204 + HttpOnly Set-Cookie for a valid same-origin request", () => {
-    const result = decideTgUserCookie({
+describe("decideSessionHandoff", () => {
+  it("returns 204 with the user the ticket was minted for", () => {
+    const result = decideSessionHandoff({
+      origin: ISSUER,
+      issuer: ISSUER,
+      body: { handoff: TICKET },
+      redeem: redeemOnly(TICKET, "alice_42"),
+    });
+    assert.deepEqual(result, { status: 204, userId: "alice_42" });
+  });
+
+  it("ignores any username the page claims", () => {
+    const result = decideSessionHandoff({
+      origin: ISSUER,
+      issuer: ISSUER,
+      body: { handoff: TICKET, username: "someone_else" },
+      redeem: redeemOnly(TICKET, "alice_42"),
+    });
+    assert.deepEqual(result, { status: 204, userId: "alice_42" });
+  });
+
+  it("rejects a username without a ticket (the pre-2.61 request shape)", () => {
+    const result = decideSessionHandoff({
       origin: ISSUER,
       issuer: ISSUER,
       body: { username: "alice_42" },
+      redeem: () => "alice_42",
     });
-    assert.equal(result.status, 204);
-    if (result.status !== 204) return; // type narrowing
-    assert.match(result.setCookie, /^tg_user=alice_42;/);
-    assert.match(result.setCookie, /HttpOnly/);
-    assert.match(result.setCookie, /Secure/);
-    assert.match(result.setCookie, /SameSite=Lax/);
-    assert.match(result.setCookie, /Path=\//);
-    assert.match(result.setCookie, /Max-Age=2592000/); // 30 days
+    assert.equal(result.status, 400);
   });
 
-  it("returns 403 when Origin header is missing", () => {
-    const result = decideTgUserCookie({
-      origin: undefined,
+  it("returns 403 when Origin is missing or foreign", () => {
+    for (const origin of [undefined, "https://evil.example", "null"]) {
+      const result = decideSessionHandoff({ origin, issuer: ISSUER, body: { handoff: TICKET }, redeem: () => "x" });
+      assert.equal(result.status, 403, String(origin));
+    }
+  });
+
+  it("returns 403 for an unknown, expired or spent ticket", () => {
+    const result = decideSessionHandoff({
+      origin: ISSUER,
       issuer: ISSUER,
-      body: { username: "alice" },
+      body: { handoff: TICKET },
+      redeem: () => null,
     });
     assert.equal(result.status, 403);
   });
 
-  it("returns 403 when Origin does not match issuer (CSRF protection)", () => {
-    const result = decideTgUserCookie({
-      origin: "https://evil.example",
-      issuer: ISSUER,
-      body: { username: "alice" },
-    });
-    assert.equal(result.status, 403);
+  it("returns 400 for malformed bodies without calling redeem", () => {
+    let called = false;
+    const redeem = () => {
+      called = true;
+      return "x";
+    };
+    for (const body of [null, "str", {}, { handoff: 1 }, { handoff: "short" }, { handoff: `${TICKET}; x=1` }]) {
+      assert.equal(decideSessionHandoff({ origin: ISSUER, issuer: ISSUER, body, redeem }).status, 400);
+    }
+    assert.equal(called, false);
   });
+});
 
-  it("returns 400 when body is null (malformed JSON)", () => {
-    const result = decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: null });
-    assert.equal(result.status, 400);
-  });
-
-  it("returns 400 when username is missing", () => {
-    const result = decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: {} });
-    assert.equal(result.status, 400);
-  });
-
-  it("returns 400 when username is the string 'unknown'", () => {
-    const result = decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: { username: "unknown" } });
-    assert.equal(result.status, 400);
-  });
-
-  it("returns 400 when username is not a string (number, object)", () => {
-    assert.equal(decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: { username: 123 } }).status, 400);
-    assert.equal(decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: { username: {} } }).status, 400);
-  });
-
-  it("returns 400 when username exceeds Telegram's 32-char limit", () => {
-    const result = decideTgUserCookie({
-      origin: ISSUER,
-      issuer: ISSUER,
-      body: { username: "a".repeat(33) },
-    });
-    assert.equal(result.status, 400);
-  });
-
-  it("returns 400 when username is shorter than Telegram's 5-char minimum", () => {
-    for (const tooShort of ["a", "ab", "abc", "abcd"]) {
-      const result = decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: { username: tooShort } });
-      assert.equal(result.status, 400, `expected 400 for ${JSON.stringify(tooShort)}`);
+describe("browser session cookie", () => {
+  it("is HttpOnly, Secure, SameSite=Lax, 30 days by default", () => {
+    const cookie = buildBrowserSessionCookie(TICKET);
+    assert.match(cookie, new RegExp(`^tg_sid=${TICKET};`));
+    for (const flag of ["Path=/", "SameSite=Lax", "Secure", "HttpOnly", "Max-Age=2592000"]) {
+      assert.ok(cookie.includes(flag), `missing ${flag}`);
     }
   });
 
-  it("returns 400 when username does not start with a letter (Telegram rule)", () => {
-    for (const badStart of ["1abcd", "_abcd", "9user1", "_underscore"]) {
-      const result = decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: { username: badStart } });
-      assert.equal(result.status, 400, `expected 400 for ${JSON.stringify(badStart)}`);
-    }
+  it("clears the legacy username cookie", () => {
+    assert.match(CLEAR_LEGACY_TG_USER_COOKIE, /^tg_user=;/);
+    assert.match(CLEAR_LEGACY_TG_USER_COOKIE, /Max-Age=0/);
   });
 
-  it("accepts usernames at the boundary (5 chars and 32 chars, leading letter)", () => {
-    const five = decideTgUserCookie({ origin: ISSUER, issuer: ISSUER, body: { username: "abcde" } });
-    assert.equal(five.status, 204);
-    const thirtyTwo = decideTgUserCookie({
-      origin: ISSUER,
-      issuer: ISSUER,
-      body: { username: `a${"b".repeat(31)}` },
-    });
-    assert.equal(thirtyTwo.status, 204);
-  });
-
-  it("rejects usernames containing characters outside [A-Za-z0-9_] (cookie smuggling guard)", () => {
-    for (const bad of ["alice; Path=/admin", "bob\r\nSet-Cookie: x=y", "carol bob", "evil%2F", "name.dot"]) {
-      const result = decideTgUserCookie({
-        origin: ISSUER,
-        issuer: ISSUER,
-        body: { username: bad },
-      });
-      assert.equal(result.status, 400, `expected 400 for ${JSON.stringify(bad)}`);
-    }
+  it("reads only a well-formed tg_sid", () => {
+    assert.equal(readBrowserSessionToken(`a=1; tg_sid=${TICKET}; b=2`), TICKET);
+    assert.equal(readBrowserSessionToken(`tg_sid=${TICKET}`), TICKET);
+    assert.equal(readBrowserSessionToken(`xtg_sid=${TICKET}`), undefined);
+    assert.equal(readBrowserSessionToken("tg_sid=victim"), undefined);
+    assert.equal(readBrowserSessionToken("tg_user=victim"), undefined);
+    assert.equal(readBrowserSessionToken(undefined), undefined);
   });
 });

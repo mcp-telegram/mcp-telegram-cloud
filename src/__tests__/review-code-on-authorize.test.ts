@@ -109,7 +109,8 @@ describe("POST /oauth/authorize/review — the reviewer gets in from the QR page
     assert.ok(issued, "the code must be a real, exchangeable authorization code");
 
     const cookie = res.headers.get("set-cookie") ?? "";
-    assert.match(cookie, /tg_user=demo_account/, "a later re-authorization must take the fast path");
+    assert.match(cookie, /tg_sid=[0-9a-f]{64}/, "a later re-authorization must take the fast path");
+    assert.ok(!/tg_user=demo_account/.test(cookie), "the username must not be the credential");
     assert.match(cookie, /HttpOnly/);
     assert.match(cookie, /SameSite=Lax/);
     assert.equal(res.headers.get("cache-control"), "no-store");
@@ -120,9 +121,10 @@ describe("POST /oauth/authorize/review — the reviewer gets in from the QR page
     const res = await post(app, formFor(clientId, TOKEN));
     assert.equal(res.status, 302);
 
+    const sid = (res.headers.get("set-cookie") ?? "").match(/tg_sid=[0-9a-f]{64}/)?.[0] ?? "";
     const again = await app.request(
       `/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(CHATGPT_CB)}&code_challenge=${CHALLENGE}&code_challenge_method=S256&state=s2`,
-      { headers: { cookie: `tg_user=${DEMO}` } },
+      { headers: { cookie: sid } },
     );
     assert.equal(again.status, 302, "no consent screen for the destination the reviewer already entered a code for");
   });

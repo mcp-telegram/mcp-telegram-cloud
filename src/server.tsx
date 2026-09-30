@@ -257,7 +257,7 @@ app.route("/my", createMyRoutes({ destructive, sessions, uploads, oauth }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
 // Directory-review access: hands a reviewer the demo session so the OAuth fast
 // path can skip the QR code they have no way to scan.
-app.route("/review", createReviewRoutes({ sessions }));
+app.route("/review", createReviewRoutes({ sessions, oauth }));
 // Shared 2FA cloud-password back-channel for all QR flows (POST /qr/password).
 app.route("/qr", createQrPasswordRoutes());
 

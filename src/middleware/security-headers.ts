@@ -43,5 +43,9 @@ export const securityHeaders: MiddlewareHandler = async (c, next) => {
   c.header("Content-Security-Policy", CSP);
   c.header("X-Content-Type-Options", "nosniff");
   c.header("X-Frame-Options", "DENY");
-  c.header("Referrer-Policy", "no-referrer");
+  // same-origin, not no-referrer: under no-referrer browsers send `Origin: null`
+  // on form POSTs, and every same-origin form here (settings, consent approve,
+  // review code) checks Origin against the issuer, so they all returned 403
+  // (issue #21). same-origin still sends nothing to other sites.
+  c.header("Referrer-Policy", "same-origin");
 };

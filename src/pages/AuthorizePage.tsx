@@ -88,15 +88,15 @@ export const AuthorizePage: FC<AuthorizePageProps> = (props) => {
           '<p>' + window.__esc(data.name || '') + ' (@' + window.__esc(data.username || 'unknown') + ')</p>' +
           '<p style="margin-top:12px;font-size:13px;color:#707579">Redirecting...</p>' +
           '</div>';
-        // Ask the server to set the HttpOnly tg_user hint cookie. Best-effort:
+        // Trade the one-time ticket for the HttpOnly session cookie. Best-effort:
         // on failure we still redirect — losing the cookie only means the next
         // OAuth flow will show the QR again instead of the fast-redirect path.
-        if (data.username && data.username !== 'unknown') {
+        if (data.handoff) {
           try {
             await fetch('/oauth/authorize/qr/cookie', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username: data.username }),
+              body: JSON.stringify({ handoff: data.handoff }),
               credentials: 'same-origin',
             });
           } catch {

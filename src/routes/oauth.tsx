@@ -2,7 +2,13 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
-import { buildTgUserCookie, decideTgUserCookie, REVIEW_HINT_MAX_AGE_SECONDS } from "../cookie-handler.js";
+import {
+  buildBrowserSessionCookie,
+  CLEAR_LEGACY_TG_USER_COOKIE,
+  decideSessionHandoff,
+  REVIEW_HINT_MAX_AGE_SECONDS,
+  readBrowserSessionToken,
+} from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
@@ -21,10 +27,21 @@ export interface OAuthRoutesDeps {
   sessions: SessionManager;
 }
 
-function getUserIdHint(c: Context): string | undefined {
-  const cookies = c.req.header("cookie") ?? "";
-  const match = cookies.match(/tg_user=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : undefined;
+/**
+ * The user this browser proved to be, from the server-side session behind `tg_sid`.
+ *
+ * Never from a client-supplied name: until 2.61 this read a `tg_user` cookie that
+ * held the plain username, so anyone could claim any account with one header.
+ */
+function sessionUser(c: Context, oauth: OAuthProvider): string | undefined {
+  return oauth.getBrowserSessionUser(readBrowserSessionToken(c.req.header("cookie"))) ?? undefined;
+}
+
+/** Start a browser session and drop the legacy username cookie in the same response. */
+function setBrowserSession(c: Context, oauth: OAuthProvider, userId: string, maxAgeSeconds?: number): void {
+  const token = oauth.createBrowserSession(userId, maxAgeSeconds ?? 60 * 60 * 24 * 30);
+  c.header("Set-Cookie", buildBrowserSessionCookie(token, maxAgeSeconds), { append: true });
+  c.header("Set-Cookie", CLEAR_LEGACY_TG_USER_COOKIE, { append: true });
 }
 
 /**
@@ -206,7 +223,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     // full authorization code for the victim's Telegram (verified against prod
     // before this fix). Unknown destination ⇒ ask the human first. Returning
     // users see no change: hasGrant() also counts tokens they already hold.
-    const userIdHint = getUserIdHint(c);
+    const userIdHint = sessionUser(c, oauth);
     const originKey = redirectOrigin(redirectUri);
 
     if (userIdHint) {
@@ -315,7 +332,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     // session-reuse branch also mints a code from the cookie alone. An
     // ungranted destination drops the hint, so the visitor must actually scan
     // the QR — a deliberate act — instead of the code appearing by itself.
-    const rawHint = getUserIdHint(c);
+    const rawHint = sessionUser(c, oauth);
     const qrOriginKey = redirectOrigin(redirectUri);
     const userIdHint = rawHint && qrOriginKey && oauth.hasGrant(rawHint, qrOriginKey) ? rawHint : undefined;
 
@@ -346,8 +363,10 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
    * CSRF, three independent layers:
    *   1. POST-only — no <img>/<link> can trigger it.
    *   2. Origin must equal the issuer — a cross-site form post is rejected.
-   *   3. The tg_user cookie is SameSite=Lax, so it is not even attached to a
-   *      cross-site POST; without it there is no session to authorize.
+   *   3. The tg_sid session cookie is SameSite=Lax, so it is not even attached
+   *      to a cross-site POST; without it there is no session to authorize.
+   * Identity comes only from that server-side session, never from a header the
+   * caller can type (Origin can be forged outside a browser; the session cannot).
    */
   app.post("/authorize/approve", async (c) => {
     if (c.req.header("origin") !== config.issuer) {
@@ -380,7 +399,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       return c.text("PKCE required: code_challenge with code_challenge_method=S256", 400);
     }
 
-    const userId = getUserIdHint(c);
+    const userId = sessionUser(c, oauth);
     if (!userId) {
       incr(OAUTH_FLOW, { step: "approve", outcome: "no_session" });
       return c.text("No active session — start again from your client", 403);
@@ -522,29 +541,25 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       clientId,
     });
     incr(OAUTH_FLOW, { step: "review_code", outcome: "ok" });
-    // Same hint GET /review writes, so a client that re-authorizes later (token
+    // Same session GET /review starts, so a client that re-authorizes later (token
     // lost, connector re-added) passes through the fast path instead of landing
-    // on the QR page again.
-    c.header("Set-Cookie", buildTgUserCookie(resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS));
+    // on the QR page again. The review token is the proof of identity here.
+    setBrowserSession(c, oauth, resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS);
     return c.redirect(target, 302);
   });
 
-  // Server-side setter for the `tg_user` hint cookie. Called from the
-  // AuthorizePage client script after a successful QR login so the cookie can
-  // be HttpOnly (the previous client-side `document.cookie = …` set the same
-  // value but made it readable from JS, which an XSS could exfiltrate).
-  // CSRF protection: same-origin via Origin header check against config.issuer.
+  // Trades the one-time ticket from a finished QR login (SSE `redirect` event)
+  // for the HttpOnly browser session cookie. The ticket decides whose session it
+  // is; the page's own claims are ignored. Origin check: same-origin only.
   app.post("/authorize/qr/cookie", async (c) => {
-    const result = decideTgUserCookie({
+    const result = decideSessionHandoff({
       origin: c.req.header("origin"),
       issuer: config.issuer,
-      body: await c.req
-        .json()
-        .then((b) => b as { username?: unknown })
-        .catch(() => null),
+      body: await c.req.json().catch(() => null),
+      redeem: (ticket) => oauth.redeemBrowserHandoff(ticket),
     });
     if (result.status === 204) {
-      c.header("Set-Cookie", result.setCookie);
+      setBrowserSession(c, oauth, result.userId);
       return c.body(null, 204);
     }
     return c.text(result.body, result.status);

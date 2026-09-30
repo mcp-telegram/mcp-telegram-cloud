@@ -7,7 +7,7 @@
  *   - data-sse-url      : EventSource endpoint (already query-encoded server-side)
  *   - data-auto         : "1" to open the SSE immediately on load; absent → wait
  *                         for a #startBtn click (Login enters a username first).
- *   - data-cookie-url    : (Authorize only) POST endpoint to set the tg_user hint
+ *   - data-cookie-url    : (Authorize only) POST endpoint that trades the login ticket for the session cookie
  *   - data-password-url  : POST endpoint that delivers the 2FA cloud password
  *   - data-msg-connected : localized success heading
  *   - data-msg-added     : localized "account added" heading
@@ -156,12 +156,12 @@ if (root) {
       const navigate = () => {
         if (data.url) window.location.href = data.url;
       };
-      // Authorize: set the HttpOnly tg_user hint cookie, best-effort, then go.
-      if (d.cookieUrl && data.username && data.username !== "unknown") {
+      // Authorize: trade the one-time ticket for the HttpOnly session cookie, best-effort, then go.
+      if (d.cookieUrl && data.handoff) {
         fetch(d.cookieUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: data.username }),
+          body: JSON.stringify({ handoff: data.handoff }),
           credentials: "same-origin",
         })
           .then(navigate)

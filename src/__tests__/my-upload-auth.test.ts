@@ -3,7 +3,7 @@
  *
  * The route serves two callers with opposite threat models:
  *
- *   - the browser dashboard, authenticated by the ambient `tg_user` cookie —
+ *   - the browser dashboard, authenticated by the ambient `tg_sid` session cookie —
  *     therefore CSRF-gated on Origin/Referer;
  *   - an MCP agent, authenticated by an OAuth Bearer token — which a browser
  *     never attaches automatically, so the CSRF gate must NOT apply (and could
@@ -27,6 +27,12 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
 const { createMyRoutes } = await import("../routes/my.js");
+
+// Browser sessions are opaque tokens resolved server-side (see cookie-handler.ts).
+const SID_COOKIE_USER = "a".repeat(64);
+const SID_STRANGER = "b".repeat(64);
+const browserSessions: Record<string, string> = { [SID_COOKIE_USER]: "cookie_user", [SID_STRANGER]: "stranger" };
+const getBrowserSessionUser = (t: string | undefined) => (t ? (browserSessions[t] ?? null) : null);
 
 const ISSUER = "https://test.example.com";
 
@@ -52,6 +58,7 @@ function makeApp() {
   const oauth = {
     // Only this one token is real, and it belongs to `bearer_user`.
     validateToken: (token: string) => (token === "good-token" ? { userId: "bearer_user", clientName: "pi" } : null),
+    getBrowserSessionUser,
   };
 
   return createMyRoutes({
@@ -84,7 +91,7 @@ describe("POST /my/upload — Bearer path (MCP agents)", () => {
   });
 
   it("binds the upload to the token's user, not to any cookie present", async () => {
-    const res = await upload({ Authorization: "Bearer good-token", Cookie: "tg_user=cookie_user" });
+    const res = await upload({ Authorization: "Bearer good-token", Cookie: `tg_sid=${SID_COOKIE_USER}` });
     assert.equal(res.status, 200);
     assert.deepEqual(
       stored.map((s) => s.userId),
@@ -97,7 +104,7 @@ describe("POST /my/upload — Bearer path (MCP agents)", () => {
     // writing as whoever is logged into the same browser profile.
     const res = await upload({
       Authorization: "Bearer not-a-real-token",
-      Cookie: "tg_user=cookie_user",
+      Cookie: `tg_sid=${SID_COOKIE_USER}`,
       Origin: ISSUER,
     });
     assert.equal(res.status, 401);
@@ -113,7 +120,7 @@ describe("POST /my/upload — Bearer path (MCP agents)", () => {
 
 describe("POST /my/upload — cookie path (dashboard)", () => {
   it("accepts a same-origin cookie submit", async () => {
-    const res = await upload({ Cookie: "tg_user=cookie_user", Origin: ISSUER });
+    const res = await upload({ Cookie: `tg_sid=${SID_COOKIE_USER}`, Origin: ISSUER });
     assert.equal(res.status, 200);
     assert.deepEqual(
       stored.map((s) => s.userId),
@@ -122,24 +129,24 @@ describe("POST /my/upload — cookie path (dashboard)", () => {
   });
 
   it("still 403s a cookie submit with no Origin/Referer (CSRF regression)", async () => {
-    const res = await upload({ Cookie: "tg_user=cookie_user" });
+    const res = await upload({ Cookie: `tg_sid=${SID_COOKIE_USER}` });
     assert.equal(res.status, 403);
     assert.deepEqual(stored, []);
   });
 
   it("still 403s a cookie submit from a foreign origin (CSRF regression)", async () => {
-    const res = await upload({ Cookie: "tg_user=cookie_user", Origin: "https://evil.example.org" });
+    const res = await upload({ Cookie: `tg_sid=${SID_COOKIE_USER}`, Origin: "https://evil.example.org" });
     assert.equal(res.status, 403);
     assert.deepEqual(stored, []);
   });
 
   it("403s on a look-alike origin prefix", async () => {
-    const res = await upload({ Cookie: "tg_user=cookie_user", Origin: "https://test.example.com.evil.io" });
+    const res = await upload({ Cookie: `tg_sid=${SID_COOKIE_USER}`, Origin: "https://test.example.com.evil.io" });
     assert.equal(res.status, 403);
   });
 
   it("401s a cookie whose user has no saved session on this server", async () => {
-    const res = await upload({ Cookie: "tg_user=stranger", Origin: ISSUER });
+    const res = await upload({ Cookie: `tg_sid=${SID_STRANGER}`, Origin: ISSUER });
     assert.equal(res.status, 401);
   });
 });
@@ -172,6 +179,7 @@ describe("POST /my/upload — quota and size still apply to both paths", () => {
       uploads: uploads as never,
       oauth: {
         validateToken: (t: string) => (t === "good-token" ? { userId: "bearer_user", clientName: "pi" } : null),
+        getBrowserSessionUser,
       } as never,
     });
     return app.request("/upload", { method: "POST", headers, body: body() });
@@ -201,7 +209,7 @@ describe("POST /my/upload — quota and size still apply to both paths", () => {
     const res = await withPreflight(
       { reason: "file_too_large", message: "too big" },
       {
-        Cookie: "tg_user=cookie_user",
+        Cookie: `tg_sid=${SID_COOKIE_USER}`,
         Origin: ISSUER,
       },
     );

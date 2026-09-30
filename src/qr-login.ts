@@ -240,6 +240,8 @@ export async function handleOAuthQrLogin(
               name: me.firstName ?? "",
               username: me.username ?? "unknown",
               id: me.id,
+              // Page trades this for the session cookie (POST /oauth/authorize/qr/cookie).
+              handoff: oauth.createBrowserHandoff(userIdHint),
             });
             controller.close();
             return;
@@ -303,6 +305,9 @@ export async function handleOAuthQrLogin(
             name: me.firstName ?? "",
             username: me.username ?? "unknown",
             id: me.id,
+            // The only way a browser session is born after QR: the server saw the
+            // login finish, so it vouches for this user with a one-time ticket.
+            handoff: oauth.createBrowserHandoff(userId),
           });
 
           // Adopt the live client into the session pool — avoids a duplicate Telegram session.

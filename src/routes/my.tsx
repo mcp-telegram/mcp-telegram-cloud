@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
+import { readBrowserSessionToken } from "../cookie-handler.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
@@ -19,42 +20,22 @@ export interface MyRoutesDeps {
   sessions: SessionManager;
   uploads: UploadStore;
   /** Token validator for the Bearer path on `POST /my/upload` (MCP agents). */
-  oauth: Pick<OAuthProvider, "validateToken">;
+  oauth: Pick<OAuthProvider, "validateToken" | "getBrowserSessionUser">;
 }
 
 /**
- * Routes under `/my/*` are user-facing — authenticated by the `tg_user` cookie
- * set during the OAuth/QR flow (see cookie-handler.ts). The cookie value is the
- * Telegram username, which doubles as the userId in cloud's SQLite. We require
- * a matching saved session to confirm the user actually owns that account on
- * this server (cookie alone is not sufficient — same browser switching servers
- * would otherwise inherit a stale username).
+ * Routes under `/my/*` are user-facing, authenticated by the browser session
+ * cookie `tg_sid` (see cookie-handler.ts). The session is created only after
+ * the server saw proof of identity (a finished QR login or a review token), so
+ * the cookie cannot be forged from a username the way the old `tg_user` value
+ * could. We still require a saved Telegram session for that user, so a browser
+ * that outlived the user's account on this server is treated as signed out.
  */
-
-function getUsernameFromCookie(c: Context): string | undefined {
-  const cookies = c.req.header("cookie") ?? "";
-  // Anchor on start-of-string or `; ` so a cookie named `xtg_user` or one whose
-  // value happens to contain the literal substring `tg_user=victim` doesn't
-  // get picked up first. Defense in depth — typical browsers don't construct
-  // such headers, but adjacent cookie-injection paths shouldn't compromise auth.
-  const match = cookies.match(/(?:^|;\s*)tg_user=([^;]+)/);
-  if (!match) return undefined;
-  // decodeURIComponent throws URIError on malformed `%xx` sequences; treat that
-  // as missing-cookie so the route returns its normal unauthenticated branch
-  // (401/302) instead of leaking a 500.
-  try {
-    return decodeURIComponent(match[1]);
-  } catch {
-    return undefined;
-  }
-}
-
-function requireUser(c: Context, sessions: SessionManager): string | null {
-  const username = getUsernameFromCookie(c);
-  if (!username) return null;
-  const saved = sessions.getSavedUserIds();
-  if (!saved.includes(username)) return null;
-  return username;
+function requireUser(c: Context, deps: Pick<MyRoutesDeps, "oauth" | "sessions">): string | null {
+  const userId = deps.oauth.getBrowserSessionUser(readBrowserSessionToken(c.req.header("cookie")));
+  if (!userId) return null;
+  if (!deps.sessions.getSavedUserIds().includes(userId)) return null;
+  return userId;
 }
 
 /** Who is uploading, and by which credential — the two paths differ in CSRF
@@ -76,7 +57,7 @@ function resolveUploader(c: Context, deps: MyRoutesDeps): UploadCaller | null {
     const tokenInfo = deps.oauth.validateToken(auth.slice(7));
     return tokenInfo ? { userId: tokenInfo.userId, via: "bearer" } : null;
   }
-  const userId = requireUser(c, deps.sessions);
+  const userId = requireUser(c, deps);
   return userId ? { userId, via: "cookie" } : null;
 }
 
@@ -95,14 +76,14 @@ function originMatchesIssuer(headerValue: string): boolean {
 }
 
 export function createMyRoutes(deps: MyRoutesDeps): Hono {
-  const { destructive, sessions, uploads } = deps;
+  const { destructive, uploads } = deps;
   const app = new Hono({ strict: false });
   const uploadRateLimit = makeUploadRateLimit();
 
   app.get("/", (c) => c.redirect("/my/settings", 302));
 
   app.get("/uploads", async (c) => {
-    const userId = requireUser(c, sessions);
+    const userId = requireUser(c, deps);
     if (!userId) return unauthorizedRedirect(c);
 
     const flash = c.req.query("flash") ?? undefined;
@@ -230,7 +211,7 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
   );
 
   app.get("/settings", async (c) => {
-    const userId = requireUser(c, sessions);
+    const userId = requireUser(c, deps);
     if (!userId) return unauthorizedRedirect(c);
 
     const ok = c.req.query("ok");
@@ -256,7 +237,7 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
   });
 
   app.post("/settings", async (c) => {
-    const userId = requireUser(c, sessions);
+    const userId = requireUser(c, deps);
     if (!userId) return unauthorizedRedirect(c);
 
     // CSRF: same-origin only. The form is HTML-POST'ed without a token, so we
@@ -284,7 +265,7 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
   });
 
   app.get("/audit", async (c) => {
-    const userId = requireUser(c, sessions);
+    const userId = requireUser(c, deps);
     if (!userId) return unauthorizedRedirect(c);
 
     const rows = destructive.listForUser(userId, 100);

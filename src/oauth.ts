@@ -18,6 +18,9 @@ const AUTH_CODE_TTL_SECONDS = 600; // 10 min — single-use, exchanged immediate
 // (e.g. client received our 200 then network dropped before persisting it). Real attacks land
 // hours/days/weeks later; legitimate retries land in milliseconds.
 const CONCURRENT_REFRESH_WINDOW_SECONDS = 10;
+// A QR login hands the page a one-time ticket that the page trades for the session cookie
+// right away; two minutes covers a slow phone without leaving a long-lived secret around.
+const BROWSER_HANDOFF_TTL_SECONDS = 120;
 
 // Short, irreversible identifier suitable for log correlation across replay events without
 // leaking the secret. SHA-256 truncated to 16 hex chars = 64 bits. Birthday collision
@@ -111,6 +114,24 @@ export class OAuthProvider {
         redirect_origin TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now')),
         PRIMARY KEY (user_id, redirect_origin)
+      );
+
+      -- Browser sessions (the tg_sid cookie). Before these existed the browser
+      -- identified itself with a tg_user cookie holding the plain username, so
+      -- anyone could claim any account by sending that cookie. A session is only
+      -- minted after the server itself saw the proof: a finished QR login (via a
+      -- one-time handoff) or a valid review token. Both tables store hashes only.
+      CREATE TABLE IF NOT EXISTS browser_sessions (
+        token_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_browser_sessions_user ON browser_sessions(user_id);
+      CREATE TABLE IF NOT EXISTS browser_handoffs (
+        token_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        expires_at INTEGER NOT NULL
       );
     `);
 
@@ -299,6 +320,56 @@ export class OAuthProvider {
       });
     }
     return result.changes;
+  }
+
+  /**
+   * One-time ticket that turns a server-side QR login into a browser session.
+   *
+   * The QR login finishes inside an SSE stream whose headers are already sent,
+   * so it cannot set a cookie itself. It hands this ticket to the page, and the
+   * page trades it for the session cookie. Short-lived and single-use.
+   */
+  createBrowserHandoff(userId: string): string {
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = Math.floor(Date.now() / 1000) + BROWSER_HANDOFF_TTL_SECONDS;
+    this.db
+      .prepare("INSERT INTO browser_handoffs (token_hash, user_id, expires_at) VALUES (?, ?, ?)")
+      .run(hashToken(token), userId, expiresAt);
+    return token;
+  }
+
+  /** Consume a handoff ticket: the user it was minted for, or null. The ticket is gone either way. */
+  redeemBrowserHandoff(token: string): string | null {
+    if (!/^[0-9a-f]{64}$/.test(token)) return null;
+    const hash = hashToken(token);
+    const now = Math.floor(Date.now() / 1000);
+    return this.db.transaction(() => {
+      const row = this.db.prepare("SELECT user_id, expires_at FROM browser_handoffs WHERE token_hash = ?").get(hash) as
+        | { user_id: string; expires_at: number }
+        | undefined;
+      this.db.prepare("DELETE FROM browser_handoffs WHERE token_hash = ?").run(hash);
+      if (!row || row.expires_at < now) return null;
+      return row.user_id;
+    })();
+  }
+
+  /** Start a browser session for a user the server has verified. Returns the cookie value. */
+  createBrowserSession(userId: string, maxAgeSeconds: number): string {
+    const token = randomBytes(32).toString("hex");
+    const now = Math.floor(Date.now() / 1000);
+    this.db
+      .prepare("INSERT INTO browser_sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
+      .run(hashToken(token), userId, now + maxAgeSeconds, now);
+    return token;
+  }
+
+  /** The user behind a browser session cookie value, or null when unknown or expired. */
+  getBrowserSessionUser(token: string | undefined): string | null {
+    if (!token || !/^[0-9a-f]{64}$/.test(token)) return null;
+    const row = this.db
+      .prepare("SELECT user_id FROM browser_sessions WHERE token_hash = ? AND expires_at >= ?")
+      .get(hashToken(token), Math.floor(Date.now() / 1000)) as { user_id: string } | undefined;
+    return row?.user_id ?? null;
   }
 
   /** Create authorization code (after user approves) */
@@ -721,6 +792,8 @@ export class OAuthProvider {
     this.db.prepare("DELETE FROM oauth_codes WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_tokens WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE expires_at != 0 AND expires_at < ?").run(now);
+    this.db.prepare("DELETE FROM browser_sessions WHERE expires_at < ?").run(now);
+    this.db.prepare("DELETE FROM browser_handoffs WHERE expires_at < ?").run(now);
     // Reap abandoned client registrations (DCR flood). Runs after token cleanup
     // so a client whose only tokens just expired becomes eligible immediately.
     this.pruneUnusedClients(config.unusedClientTtlDays);

@@ -38,6 +38,9 @@ const ISSUER = config.issuer;
 const PKCE = "code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256";
 const USER = "victim";
 
+/** A real browser session for USER (the cookie a finished QR login leaves behind). */
+const sessionCookie = (oauth: InstanceType<typeof OAuthProvider>) => `tg_sid=${oauth.createBrowserSession(USER, 3600)}`;
+
 type Deps = { oauth: InstanceType<typeof OAuthProvider>; app: Hono };
 
 /** Real provider + real routes; only the Telegram session layer is a double. */
@@ -65,7 +68,7 @@ describe("GET /oauth/authorize — unknown destination cannot mint a code silent
     const clientId = register(oauth, "https://evil.example/cb", "Claude"); // name is attacker-chosen on purpose
 
     const res = await app.request(authorizeUrl(clientId, "https://evil.example/cb"), {
-      headers: { cookie: `tg_user=${USER}` },
+      headers: { cookie: sessionCookie(oauth) },
     });
 
     assert.equal(res.status, 200, "must not be a 302 to the attacker");
@@ -82,7 +85,7 @@ describe("GET /oauth/authorize — unknown destination cannot mint a code silent
     oauth.recordGrant(USER, "https://claude.ai");
 
     const res = await app.request(authorizeUrl(clientId, "https://claude.ai/api/mcp/auth_callback"), {
-      headers: { cookie: `tg_user=${USER}` },
+      headers: { cookie: sessionCookie(oauth) },
     });
 
     assert.equal(res.status, 302);
@@ -114,7 +117,7 @@ describe("GET /oauth/authorize — unknown destination cannot mint a code silent
     // Claude re-registers on every reconnect — brand-new client_id, same host.
     const freshClient = register(oauth, "https://claude.ai/api/mcp/auth_callback", "Claude");
     const res = await app.request(authorizeUrl(freshClient, "https://claude.ai/api/mcp/auth_callback"), {
-      headers: { cookie: `tg_user=${USER}` },
+      headers: { cookie: sessionCookie(oauth) },
     });
 
     assert.equal(res.status, 302, "a returning user must not be asked to confirm again");
@@ -140,7 +143,7 @@ describe("GET /oauth/authorize — unknown destination cannot mint a code silent
     const evil = register(oauth, "https://evil.example/cb", "Claude");
 
     const res = await app.request(authorizeUrl(evil, "https://evil.example/cb"), {
-      headers: { cookie: `tg_user=${USER}` },
+      headers: { cookie: sessionCookie(oauth) },
     });
     assert.equal(res.status, 200);
   });
@@ -150,7 +153,7 @@ describe("GET /oauth/authorize — unknown destination cannot mint a code silent
     const clientId = register(oauth, "https://claude.ai/api/mcp/auth_callback", "Claude");
 
     const res = await app.request(authorizeUrl(clientId, "https://claude.ai/api/mcp/auth_callback"), {
-      headers: { cookie: `tg_user=${USER}` },
+      headers: { cookie: sessionCookie(oauth) },
     });
     assert.equal(res.status, 200);
     assert.match(await res.text(), /qr-section|Scan|Connect your Telegram/i);
@@ -173,7 +176,7 @@ describe("POST /oauth/authorize/approve", () => {
 
     const res = await app.request("/oauth/authorize/approve", {
       method: "POST",
-      headers: { cookie: `tg_user=${USER}`, origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
+      headers: { cookie: sessionCookie(oauth), origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
       body: body(clientId, "https://newtool.example/cb"),
     });
 
@@ -183,7 +186,7 @@ describe("POST /oauth/authorize/approve", () => {
 
     // And the next visit is silent, so confirming is a one-time cost.
     const again = await app.request(authorizeUrl(clientId, "https://newtool.example/cb"), {
-      headers: { cookie: `tg_user=${USER}` },
+      headers: { cookie: sessionCookie(oauth) },
     });
     assert.equal(again.status, 302);
   });
@@ -195,7 +198,7 @@ describe("POST /oauth/authorize/approve", () => {
     const res = await app.request("/oauth/authorize/approve", {
       method: "POST",
       headers: {
-        cookie: `tg_user=${USER}`,
+        cookie: sessionCookie(oauth),
         origin: "https://evil.example",
         "content-type": "application/x-www-form-urlencoded",
       },
@@ -224,7 +227,7 @@ describe("POST /oauth/authorize/approve", () => {
 
     const res = await app.request("/oauth/authorize/approve", {
       method: "POST",
-      headers: { cookie: `tg_user=${USER}`, origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
+      headers: { cookie: sessionCookie(oauth), origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
       body: body(clientId, "https://newtool.example/cb"),
     });
     assert.equal(res.status, 403);
@@ -238,7 +241,7 @@ describe("POST /oauth/authorize/approve", () => {
     const tampered = body(clientId, "https://attacker.example/cb");
     const res = await app.request("/oauth/authorize/approve", {
       method: "POST",
-      headers: { cookie: `tg_user=${USER}`, origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
+      headers: { cookie: sessionCookie(oauth), origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
       body: tampered,
     });
     assert.equal(res.status, 400);
@@ -248,7 +251,7 @@ describe("POST /oauth/authorize/approve", () => {
     noPkce.set("code_challenge_method", "plain");
     const res2 = await app.request("/oauth/authorize/approve", {
       method: "POST",
-      headers: { cookie: `tg_user=${USER}`, origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
+      headers: { cookie: sessionCookie(oauth), origin: ISSUER, "content-type": "application/x-www-form-urlencoded" },
       body: noPkce,
     });
     assert.equal(res2.status, 400);

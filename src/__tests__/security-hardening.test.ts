@@ -30,7 +30,7 @@ describe("securityHeaders middleware", () => {
     assert.equal(res.headers.get("strict-transport-security"), "max-age=31536000; includeSubDomains");
     assert.equal(res.headers.get("x-content-type-options"), "nosniff");
     assert.equal(res.headers.get("x-frame-options"), "DENY");
-    assert.equal(res.headers.get("referrer-policy"), "no-referrer");
+    assert.equal(res.headers.get("referrer-policy"), "same-origin");
     const csp = res.headers.get("content-security-policy") ?? "";
     assert.match(csp, /frame-ancestors 'none'/);
     assert.match(csp, /script-src 'self'/);
