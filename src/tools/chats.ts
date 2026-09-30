@@ -243,7 +243,8 @@ export const CHATS_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-set-admin",
-    description: "Promote a user to admin in a supergroup or channel with full permissions",
+    description:
+      "Promote a user to admin in a supergroup or channel. Grants: change info, post, edit and delete messages, ban users, invite users, pin messages, manage voice chats. Does not grant the right to add other admins.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       userId: z.string().describe("User ID or username to promote"),
@@ -439,8 +440,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-edit-group",
-    description:
-      "Edit a Telegram group's title or description. (Group photo updates are not exposed via the cloud since they require a server-side file path.)",
+    description: "Edit a Telegram group's title or description. Changing the group photo is not supported.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       title: z.string().min(1).max(255).optional().describe("New group title"),

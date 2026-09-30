@@ -303,7 +303,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-edit-story",
     description:
-      "Edit an existing story: update caption ('' clears it) or change privacy rules. Cloud disallows replacing the media file (filesystem-bound) — use a fresh story for media changes.",
+      "Edit an existing story: update caption ('' clears it) or change privacy rules. Replacing the story's photo or video is not supported; post a new story instead.",
     inputSchema: {
       chatId: z.string().default("me").describe("Peer owning the story"),
       storyId: z.number().int().positive().describe("ID of the story to edit"),

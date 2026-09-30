@@ -96,7 +96,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-sticker",
     description:
-      "Send a sticker from a sticker set to a chat. First use telegram-get-sticker-set to browse available stickers and find the index",
+      "Send a sticker from a sticker set to a chat. The sticker is identified by the set's short name and its index in that set, as listed by telegram-get-sticker-set.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       stickerSet: z.string().min(1).describe("Short name of the sticker set (e.g. 'HotCherry')"),
@@ -117,7 +117,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-state",
     description:
-      "Initialize the polling cursor by fetching the current Telegram updates state {pts, qts, date, seq, unreadCount}. Call once before telegram-get-updates; then persist {pts, qts, date} in your agent state and feed them into telegram-get-updates. The MCP server does NOT store the cursor — you do.",
+      "Initialize the polling cursor by fetching the current Telegram updates state {pts, qts, date, seq, unreadCount}. The returned {pts, qts, date} is the starting cursor for telegram-get-updates. The server does not store the cursor between calls.",
     inputSchema: {},
     annotations: READ_ONLY,
     handler: async (_args, { telegram }) => {
@@ -129,7 +129,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-updates",
     description:
-      "Fetch new messages, deleted messages, and other updates since a previously-known {pts, qts, date} cursor (from telegram-get-state or a prior call). Returns compact newMessages[], deletedMessageIds[], otherUpdates[] (className only), and the new cursor state. isFinal=false means more updates are queued — call again with the returned state. If Telegram reports the gap is too long, a fallback hint is returned suggesting to resync via telegram-read-messages per chat. Cursor is stateless — the agent must persist {pts, qts, date} between calls.",
+      "Fetch new messages, deleted messages, and other updates since a previously-known {pts, qts, date} cursor (from telegram-get-state or a prior call). Returns compact newMessages[], deletedMessageIds[], otherUpdates[] (className only), and the new cursor state. isFinal=false means more updates are queued — call again with the returned state. If Telegram reports the gap is too long, a fallback hint is returned suggesting to resync via telegram-read-messages per chat. The server does not store the cursor; each call takes the {pts, qts, date} returned by the previous one.",
     inputSchema: {
       pts: z.number().int().describe("Last known pts (from telegram-get-state or prior telegram-get-updates)"),
       qts: z.number().int().describe("Last known qts (secret-chat / encrypted stream cursor; 0 if unknown)"),
@@ -176,7 +176,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-channel-updates",
     description:
-      "Fetch new messages and updates for a single channel/supergroup since a known per-channel pts cursor. Separate from the global cursor used by telegram-get-updates. Returns compact newMessages[], otherUpdates[], and new {pts, isFinal, timeout?}. If the channel gap is too long, Telegram returns a dialog snapshot — this tool forwards it and hints to resync via telegram-read-messages. Cursor is stateless — the agent stores pts.",
+      "Fetch new messages and updates for a single channel/supergroup since a known per-channel pts cursor. Separate from the global cursor used by telegram-get-updates. Returns compact newMessages[], otherUpdates[], and new {pts, isFinal, timeout?}. If the channel gap is too long, Telegram returns a dialog snapshot — this tool forwards it and hints to resync via telegram-read-messages. The server does not store the cursor; each call takes the pts returned by the previous one.",
     inputSchema: {
       chatId: z.string().describe("Channel or supergroup ID or username"),
       pts: z.number().int().describe("Last known per-channel pts"),
@@ -295,7 +295,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-group-call",
     description:
-      "Fetch metadata + an optional initial slice of participants for the active group call (voice/video chat) attached to a chat (phone.GetGroupCall). Returns call info (id, accessHash, participantsCount, title, scheduleDate, recordStartDate, streamDcId, flags) plus a participant slice (peer, date, muted/left/self flags, source, volume, video/presentation indicators) and participantsNextOffset. Pass limit:0 (default) for metadata only. Cloud requires MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 (set on this server).",
+      "Fetch metadata + an optional initial slice of participants for the active group call (voice/video chat) attached to a chat (phone.GetGroupCall). Returns call info (id, accessHash, participantsCount, title, scheduleDate, recordStartDate, streamDcId, flags) plus a participant slice (peer, date, muted/left/self flags, source, volume, video/presentation indicators) and participantsNextOffset. Pass limit:0 (default) for metadata only.",
     inputSchema: {
       chat: z
         .string()
@@ -357,7 +357,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-group-call-participants",
     description:
-      "List participants of the active group call (voice/video chat) attached to a chat with pagination (phone.GetGroupParticipants). Looks up the chat's current InputGroupCall automatically, then returns {count, participants[], nextOffset?, version}. Each participant includes peer, date, source, volume, muted/self/left/videoJoined flags, raise-hand rating, about text, and hasVideo/hasPresentation indicators. Cloud requires MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 (set on this server).",
+      "List participants of the active group call (voice/video chat) attached to a chat with pagination (phone.GetGroupParticipants). Looks up the chat's current InputGroupCall automatically, then returns {count, participants[], nextOffset?, version}. Each participant includes peer, date, source, volume, muted/self/left/videoJoined flags, raise-hand rating, about text, and hasVideo/hasPresentation indicators.",
     inputSchema: {
       chat: z
         .string()

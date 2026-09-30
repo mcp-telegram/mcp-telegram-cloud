@@ -646,7 +646,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-inline-query-send",
     description:
-      "Send an inline bot result to a chat by queryId + resultId (as returned by telegram-inline-query). The queryId is valid for ~60s after the original query, so call this soon after telegram-inline-query.",
+      "Send an inline bot result to a chat by queryId + resultId (as returned by telegram-inline-query). The queryId expires about 60s after the original query.",
     inputSchema: {
       chatId: z.string().describe("Target chat ID or username to send the result into"),
       queryId: z

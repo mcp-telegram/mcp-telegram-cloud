@@ -62,7 +62,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-accounts-current",
     description:
-      "Show which Telegram account is currently active — i.e. which account every other telegram-* tool is talking to. Cheap one-line check before sending a message.",
+      "Show which Telegram account is currently active — i.e. which account every other telegram-* tool is talking to.",
     inputSchema: {},
     annotations: READ_ONLY,
     skipRequireConnection: true,
