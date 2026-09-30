@@ -512,6 +512,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
         component: "review",
         event: "review.session.unavailable",
         userId: logUser(resolved.userId),
+        reviewNote: resolved.note ?? "",
       });
       return c.html(
         reviewPage(
@@ -538,6 +539,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       event: "review.code.used",
       userId: logUser(resolved.userId),
       uses: resolved.uses,
+      reviewNote: resolved.note ?? "",
       clientId,
     });
     incr(OAUTH_FLOW, { step: "review_code", outcome: "ok" });

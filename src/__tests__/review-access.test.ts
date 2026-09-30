@@ -65,7 +65,7 @@ describe("review tokens — resolution", () => {
   it("resolves to the session it was issued for", () => {
     const sm = makeManager();
     const token = sm.createReviewToken("demo_account", "OpenAI review", 30 * DAY);
-    assert.deepEqual(sm.resolveReviewToken(token), { userId: "demo_account", uses: 1 });
+    assert.deepEqual(sm.resolveReviewToken(token), { userId: "demo_account", uses: 1, note: "OpenAI review" });
   });
 
   it("stays valid across visits and counts them", () => {

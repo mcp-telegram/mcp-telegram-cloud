@@ -188,4 +188,7 @@ export type LogFields = Partial<{
   retentionDays: number;
   /** How many times a reusable capability (e.g. a review link) has been used. */
   uses: number;
+  /** Operator-written label of a review token (e.g. `anthropic-directory`), set at issue time via
+   *  POST /api/review-token. Tells apart reviewers who share one demo account. Not user data. */
+  reviewNote: string;
 }>;

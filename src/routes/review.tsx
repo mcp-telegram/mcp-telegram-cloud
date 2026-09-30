@@ -58,6 +58,7 @@ export function createReviewRoutes({ sessions, oauth }: ReviewRoutesDeps): Hono 
         component: "review",
         event: "review.session.unavailable",
         userId: logUser(resolved.userId),
+        reviewNote: resolved.note ?? "",
       });
       return c.html(
         reviewPage(
@@ -73,6 +74,7 @@ export function createReviewRoutes({ sessions, oauth }: ReviewRoutesDeps): Hono 
       event: "review.link.used",
       userId: logUser(resolved.userId),
       uses: resolved.uses,
+      reviewNote: resolved.note ?? "",
     });
 
     const sessionToken = oauth.createBrowserSession(resolved.userId, REVIEW_HINT_MAX_AGE_SECONDS);

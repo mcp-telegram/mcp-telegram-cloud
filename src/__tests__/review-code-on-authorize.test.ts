@@ -17,7 +17,7 @@ process.env.ISSUER ??= "https://test.invalid";
 process.env.MCP_TELEGRAM_TELEMETRY ??= "off";
 
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it, mock } from "node:test";
 import { Hono } from "hono";
 
 const { Database } = await import("bun:sqlite");
@@ -25,6 +25,7 @@ const { OAuthProvider } = await import("../oauth.js");
 const { createOAuthRoutes } = await import("../routes/oauth.js");
 const { extractReviewToken } = await import("../routes/review.js");
 const { config } = await import("../config.js");
+const { logger } = await import("../logger.js");
 
 const ISSUER = config.issuer;
 const CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
@@ -39,12 +40,12 @@ const nextIp = () => `10.9.${Math.floor(ipSeq / 250)}.${(ipSeq++ % 250) + 1}`;
 
 type Setup = { oauth: InstanceType<typeof OAuthProvider>; app: Hono; clientId: string; reconnects: string[] };
 
-function setup(opts: { sessionAlive?: boolean } = {}): Setup {
+function setup(opts: { sessionAlive?: boolean; note?: string | null } = {}): Setup {
   const db = new Database(":memory:");
   const oauth = new OAuthProvider({ issuer: ISSUER, db });
   const reconnects: string[] = [];
   const sessions = {
-    resolveReviewToken: (t: string) => (t === TOKEN ? { userId: DEMO, uses: 1 } : null),
+    resolveReviewToken: (t: string) => (t === TOKEN ? { userId: DEMO, uses: 1, note: opts.note ?? null } : null),
     tryReconnectSession: async (userId: string) => {
       reconnects.push(userId);
       return opts.sessionAlive === false ? null : { connected: true };
@@ -114,6 +115,19 @@ describe("POST /oauth/authorize/review — the reviewer gets in from the QR page
     assert.match(cookie, /HttpOnly/);
     assert.match(cookie, /SameSite=Lax/);
     assert.equal(res.headers.get("cache-control"), "no-store");
+  });
+
+  it("names the code in the review.code.used event, so reviewers sharing one demo account are told apart", async () => {
+    const { app, clientId } = setup({ note: "anthropic-directory" });
+    const info = mock.method(logger, "info");
+    try {
+      const res = await post(app, formFor(clientId, TOKEN));
+      assert.equal(res.status, 302);
+      const used = info.mock.calls.find((c) => c.arguments[1]?.event === "review.code.used");
+      assert.equal(used?.arguments[1]?.reviewNote, "anthropic-directory");
+    } finally {
+      info.mock.restore();
+    }
   });
 
   it("records the grant, so a re-authorization from the same destination is silent", async () => {

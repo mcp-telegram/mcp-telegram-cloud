@@ -949,18 +949,20 @@ export class SessionManager {
 
   /** Resolve a review token and count the visit. Returns null when the token is
    *  unknown, revoked or expired. */
-  resolveReviewToken(token: string): { userId: string; uses: number } | null {
+  resolveReviewToken(token: string): { userId: string; uses: number; note: string | null } | null {
     const hash = hashToken(token);
     const row = this.db
-      .prepare("SELECT user_id, expires_at, revoked, uses FROM review_tokens WHERE token_hash = ?")
-      .get(hash) as { user_id: string; expires_at: number; revoked: number; uses: number } | undefined;
+      .prepare("SELECT user_id, note, expires_at, revoked, uses FROM review_tokens WHERE token_hash = ?")
+      .get(hash) as
+      | { user_id: string; note: string | null; expires_at: number; revoked: number; uses: number }
+      | undefined;
     if (!row) return null;
     if (row.revoked === 1) return null;
     if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
     this.db
       .prepare("UPDATE review_tokens SET uses = uses + 1, last_used_at = datetime('now') WHERE token_hash = ?")
       .run(hash);
-    return { userId: row.user_id, uses: row.uses + 1 };
+    return { userId: row.user_id, uses: row.uses + 1, note: row.note };
   }
 
   /**
