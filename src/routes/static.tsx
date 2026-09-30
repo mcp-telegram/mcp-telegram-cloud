@@ -1,6 +1,12 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { config } from "../config.js";
-import { TELEGRAM_ICON_PNG_128, TELEGRAM_ICON_PNG_256, TELEGRAM_ICON_SVG } from "../icon.js";
+import {
+  CHATROOST_ICON_PNG_32,
+  CHATROOST_ICON_PNG_128,
+  CHATROOST_ICON_PNG_256,
+  CHATROOST_ICON_PNG_512,
+  CHATROOST_ICON_SVG,
+} from "../icon.js";
 import { getActiveMcpSessionsTotal, isDraining } from "../lifecycle.js";
 import { readClientAsset } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
@@ -48,34 +54,20 @@ export function createStaticRoutes({ sessions }: StaticRoutesDeps): Hono {
     return c.json(body, isDraining() ? 503 : 200);
   });
 
-  app.get("/icon.svg", (c) => {
-    return c.body(TELEGRAM_ICON_SVG, {
-      headers: {
-        "Content-Type": "image/svg+xml",
-        "Cache-Control": "public, max-age=86400",
-      },
+  // Brand icons (Chatroost mark, see src/icon.ts). `serverInfo.icons` in mcp-handler points at
+  // these; /favicon.ico gives this host a favicon for clients and directories that fetch one.
+  const image = (body: string | Uint8Array, type: string) => (c: Context) =>
+    c.body(typeof body === "string" ? body : new Uint8Array(body), 200, {
+      "Content-Type": type,
+      "Cache-Control": "public, max-age=86400",
     });
-  });
 
-  // PNG variants exposed for clients that don't render SVG (e.g. ChatGPT app avatar).
-  // 128×128 is the standard Apps Directory size; 256×256 is the retina variant.
-  app.get("/icon.png", (c) => {
-    return c.body(TELEGRAM_ICON_PNG_128, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
-  });
-
-  app.get("/icon-256.png", (c) => {
-    return c.body(TELEGRAM_ICON_PNG_256, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
-  });
+  app.get("/icon.svg", image(CHATROOST_ICON_SVG, "image/svg+xml"));
+  // PNG variants for clients that don't render SVG (e.g. ChatGPT app avatar).
+  app.get("/icon.png", image(CHATROOST_ICON_PNG_128, "image/png"));
+  app.get("/icon-256.png", image(CHATROOST_ICON_PNG_256, "image/png"));
+  app.get("/icon-512.png", image(CHATROOST_ICON_PNG_512, "image/png"));
+  app.get("/favicon.ico", image(CHATROOST_ICON_PNG_32, "image/png"));
 
   return app;
 }
