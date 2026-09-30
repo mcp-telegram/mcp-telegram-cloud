@@ -26,13 +26,14 @@ This is the **cloud / multi-user** flavour. For the single-user CLI
 ## Quick start (hosted)
 
 1. Open Claude.ai → Settings → Connectors → **Add custom connector**.
-2. Server URL: `https://mcp-telegram.com/mcp`.
+2. Server URL: `https://mcp.mcp-telegram.com/mcp`.
 3. Click Connect. You will be redirected to scan a QR code with
    Telegram (Settings → Devices → Link Desktop Device).
 4. Done. Ask Claude to read your unread messages, search chats, etc.
 
-ChatGPT Apps Directory submission is in review. Until then, add
-`https://mcp-telegram.com/mcp` manually as a custom MCP server.
+Directory listings for Claude and ChatGPT (as **Chatroost**) are in
+progress. Until then, add `https://mcp.mcp-telegram.com/mcp` manually as a
+custom MCP server.
 
 ## Quick start (self-hosted)
 

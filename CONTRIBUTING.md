@@ -101,6 +101,15 @@ account** for development. The session DB stores plaintext MTProto sessions.
 - Refactors without a concrete bug or perf rationale. We try to keep the
   surface small.
 
+## Directory reviews
+
+While the hosted server is under review in the ChatGPT or Claude directory,
+reviewers test the live server with a demo account and a snapshot of our
+tools. Issues labelled `review-sensitive` touch that contract. Before you
+change tool names or annotations, OAuth, sessions, cleanup jobs or rate
+limits, read the pinned
+[review freeze issue](https://github.com/mcp-telegram/mcp-telegram-cloud/issues/52).
+
 ## Releasing (maintainers only)
 
 Tagged release process: bump `package.json` version, push a `vX.Y.Z` git
