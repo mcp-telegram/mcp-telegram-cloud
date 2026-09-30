@@ -36,7 +36,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-set-emoji-status",
     description:
-      "Set your profile emoji status (custom animated emoji shown next to your name). Requires Telegram Premium. Pass documentId or collectibleId to set — omit both to clear the status. Use telegram-list-emoji-statuses to browse available IDs.",
+      "Set your profile emoji status (custom animated emoji shown next to your name). Requires Telegram Premium. Pass documentId or collectibleId to set — omit both to clear the status. Available IDs are listed by telegram-list-emoji-statuses.",
     inputSchema: {
       documentId: z
         .string()
@@ -84,7 +84,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-list-emoji-statuses",
     description:
-      "List default or recently-used emoji statuses available for your account. Useful for finding a documentId to pass to a status-set tool.",
+      "List default or recently-used emoji statuses available for your account. Each entry carries the documentId that telegram-set-emoji-status accepts.",
     inputSchema: {
       kind: z
         .enum(["default", "recent", "channel_default", "collectible"])
@@ -214,7 +214,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-delete-profile-photo",
     description:
-      "Delete one or more profile photos by their photo IDs. Use telegram-get-profile-photo to obtain the current photo ID. Returns which IDs were deleted and which were not found.",
+      "Delete one or more profile photos by their photo IDs. Photo IDs are the ones telegram-get-profile-photo returns. Returns which IDs were deleted and which were not found.",
     inputSchema: {
       photoIds: z
         .array(z.string().regex(/^\d{1,20}$/, "must be a numeric photo ID"))

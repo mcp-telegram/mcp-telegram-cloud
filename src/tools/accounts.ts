@@ -39,7 +39,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-accounts-list",
     description:
-      "List all Telegram accounts attached to your connector — the primary OAuth-bound account plus any secondaries added via telegram-accounts-add. The active one (used for every other tool call) is marked with ⭐. Use telegram-accounts-switch to change it.",
+      "List all Telegram accounts attached to your connector — the primary OAuth-bound account plus any secondaries added via telegram-accounts-add. The active one (used for every other tool call) is marked with ⭐. telegram-accounts-switch changes it.",
     inputSchema: {},
     annotations: READ_ONLY,
     skipRequireConnection: true,

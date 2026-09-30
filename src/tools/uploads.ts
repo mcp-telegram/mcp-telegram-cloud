@@ -336,7 +336,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         // degenerate case Telegram itself rejects — fail at validation, not on the wire.
         .min(2)
         .max(10)
-        .describe("2-10 album items (Telegram cap; 1 item is invalid — use telegram-send-file instead)"),
+        .describe("2-10 album items (Telegram cap; 1 item is invalid, a single file goes through telegram-send-file)"),
       caption: captionField,
       parseMode: parseModeField,
       ...replyTargetFields,

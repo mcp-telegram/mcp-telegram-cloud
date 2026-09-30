@@ -675,7 +675,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-press-button",
     description:
-      "Press an inline keyboard callback button on a message. Identify the button by (row, column) from telegram-get-message-buttons, or pass raw callback_data as base64. URL, switch-inline, game and 2FA-password buttons are rejected with a clear error.",
+      "Press an inline keyboard callback button on a message. The button is identified by its (row, column) position as listed by telegram-get-message-buttons, or by raw callback_data in base64. URL, switch-inline, game and 2FA-password buttons are rejected with a clear error.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username where the message lives"),
       messageId: z.number().int().positive().describe("Message ID whose inline button to press"),
@@ -716,7 +716,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-transcribe-audio",
     description:
-      "Request server-side transcription of a voice note or video note (Telegram Premium feature). Returns immediately with transcriptionId — if pending:true, call telegram-get-transcription to poll for completion.",
+      "Request server-side transcription of a voice note or video note (Telegram Premium feature). Returns immediately with a transcriptionId; pending:true means the text is not ready yet, and telegram-get-transcription returns it once it is.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID of the voice or video note"),

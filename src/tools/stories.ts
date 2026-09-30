@@ -71,7 +71,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-peer-stories",
     description:
-      "Fetch currently active stories posted by a specific peer (user/channel). Returns compact story metadata (id, date, expireDate, caption, mediaType, counters) without raw media blobs. Use telegram-download-media with the story id if you need media bytes.",
+      "Fetch currently active stories posted by a specific peer (user/channel). Returns compact story metadata (id, date, expireDate, caption, mediaType, counters) without raw media blobs. The media itself is not included; telegram-download-media returns it by story id.",
     inputSchema: {
       chatId: z.string().describe("Peer to fetch stories from — user/channel id or @username"),
     },

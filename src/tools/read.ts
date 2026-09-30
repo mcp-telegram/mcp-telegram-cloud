@@ -475,7 +475,7 @@ export const READ_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-discussion-message",
     description:
-      "For a channel post with comments enabled, returns the linked discussion-group info (discussionGroupId, discussionMsgId, unreadCount, topMessage). Use telegram-get-replies on (discussionGroupId, discussionMsgId) to read the comment thread.",
+      "For a channel post with comments enabled, returns the linked discussion-group info (discussionGroupId, discussionMsgId, unreadCount, topMessage). The comment thread is addressed by (discussionGroupId, discussionMsgId), the pair telegram-get-replies takes.",
     inputSchema: {
       chatId: z.string().describe("Channel ID or @username that contains the post"),
       messageId: z.number().int().positive().describe("ID of the channel post to get discussion info for"),
@@ -832,7 +832,7 @@ export const READ_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-suggested-folders",
     description:
-      "Get Telegram's suggested chat folders based on your chat list (e.g. 'Unread', 'Personal', 'Work'). Returns folder templates you can create with telegram-create-folder.",
+      "Get Telegram's suggested chat folders based on your chat list (e.g. 'Unread', 'Personal', 'Work'). Returns folder templates only; nothing is created.",
     inputSchema: {},
     annotations: READ_ONLY,
     handler: async (_args, { telegram }) => {

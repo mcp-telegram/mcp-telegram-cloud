@@ -16,7 +16,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-sticker-set",
     description:
-      "Get all stickers from a sticker set by its short name. Returns each sticker with index and emoji. Use the index with telegram-send-sticker to send a specific sticker",
+      "Get all stickers from a sticker set by its short name. Returns each sticker with index and emoji. The index identifies the sticker in telegram-send-sticker.",
     inputSchema: {
       shortName: z
         .string()
@@ -39,8 +39,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-search-sticker-sets",
-    description:
-      "Search for sticker sets by name or keyword. Returns matching sticker pack names that can be used with telegram-get-sticker-set",
+    description: "Search for sticker sets by name or keyword. Returns the short names of matching sticker packs.",
     inputSchema: {
       query: z.string().describe("Search query (e.g. 'cat', 'love', 'pepe', 'anime')"),
     },
@@ -61,8 +60,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-get-installed-stickers",
-    description:
-      "List all sticker sets installed by the user. Returns pack names and short names for use with other sticker tools",
+    description: "List all sticker sets installed by the user. Returns pack titles and short names.",
     inputSchema: {},
     annotations: READ_ONLY,
     handler: async (_args, { telegram }) => {
@@ -129,7 +127,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-updates",
     description:
-      "Fetch new messages, deleted messages, and other updates since a previously-known {pts, qts, date} cursor (from telegram-get-state or a prior call). Returns compact newMessages[], deletedMessageIds[], otherUpdates[] (className only), and the new cursor state. isFinal=false means more updates are queued — call again with the returned state. If Telegram reports the gap is too long, a fallback hint is returned suggesting to resync via telegram-read-messages per chat. The server does not store the cursor; each call takes the {pts, qts, date} returned by the previous one.",
+      "Fetch new messages, deleted messages, and other updates since a previously-known {pts, qts, date} cursor (from telegram-get-state or a prior call). Returns compact newMessages[], deletedMessageIds[], otherUpdates[] (className only), and the new cursor state. isFinal=false means more updates are queued — call again with the returned state. If Telegram reports the gap is too long, the result says so and the history has to be re-read per chat. The server does not store the cursor; each call takes the {pts, qts, date} returned by the previous one.",
     inputSchema: {
       pts: z.number().int().describe("Last known pts (from telegram-get-state or prior telegram-get-updates)"),
       qts: z.number().int().describe("Last known qts (secret-chat / encrypted stream cursor; 0 if unknown)"),
@@ -176,7 +174,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-channel-updates",
     description:
-      "Fetch new messages and updates for a single channel/supergroup since a known per-channel pts cursor. Separate from the global cursor used by telegram-get-updates. Returns compact newMessages[], otherUpdates[], and new {pts, isFinal, timeout?}. If the channel gap is too long, Telegram returns a dialog snapshot — this tool forwards it and hints to resync via telegram-read-messages. The server does not store the cursor; each call takes the pts returned by the previous one.",
+      "Fetch new messages and updates for a single channel/supergroup since a known per-channel pts cursor. Separate from the global cursor used by telegram-get-updates. Returns compact newMessages[], otherUpdates[], and new {pts, isFinal, timeout?}. If the channel gap is too long, Telegram returns a dialog snapshot instead, and this tool forwards it. The server does not store the cursor; each call takes the pts returned by the previous one.",
     inputSchema: {
       chatId: z.string().describe("Channel or supergroup ID or username"),
       pts: z.number().int().describe("Last known per-channel pts"),
@@ -236,7 +234,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-quick-replies",
     description:
-      "Fetch the list of quick-reply shortcuts configured for the user account (messages.GetQuickReplies). Each entry has {shortcutId, shortcut, topMessage, count} — use the shortcutId with telegram-get-quick-reply-messages to inspect the stored messages. Optional `hash` implements Telegram's hash-based diff: pass the last-known aggregate hash as a decimal string and the server may respond with notModified=true if nothing changed.",
+      "Fetch the list of quick-reply shortcuts configured for the user account (messages.GetQuickReplies). Each entry has {shortcutId, shortcut, topMessage, count} ; telegram-get-quick-reply-messages takes the shortcutId and shows the stored messages. Optional `hash` implements Telegram's hash-based diff: pass the last-known aggregate hash as a decimal string and the server may respond with notModified=true if nothing changed.",
     inputSchema: {
       hash: z
         .string()
@@ -261,7 +259,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-quick-reply-messages",
     description:
-      "Fetch messages stored under a quick-reply shortcut (messages.GetQuickReplyMessages). Use `shortcutId` from telegram-get-quick-replies. Optional `ids` narrows to specific message ids within the shortcut. Optional `hash` implements Telegram's hash-based diff: pass the last-known aggregate hash as a decimal string — the server may respond with {notModified:true, count} if nothing changed.",
+      "Fetch messages stored under a quick-reply shortcut (messages.GetQuickReplyMessages). `shortcutId` comes from telegram-get-quick-replies. Optional `ids` narrows to specific message ids within the shortcut. Optional `hash` implements Telegram's hash-based diff: pass the last-known aggregate hash as a decimal string — the server may respond with {notModified:true, count} if nothing changed.",
     inputSchema: {
       shortcutId: z.number().int().nonnegative().describe("Shortcut id from telegram-get-quick-replies"),
       ids: z
@@ -309,7 +307,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .max(500)
         .optional()
         .describe(
-          "Max participants to include (default 0 — metadata only; use telegram-get-group-call-participants for pagination)",
+          "Max participants to include (default 0 — metadata only; paginated lists are in telegram-get-group-call-participants)",
         ),
     },
     annotations: READ_ONLY,
