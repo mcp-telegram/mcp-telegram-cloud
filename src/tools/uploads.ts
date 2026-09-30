@@ -242,7 +242,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-voice",
     description:
-      "Send a voice message (OGG/Opus preferred; M4A/MP3 also accepted). Bytes from uploadId or https:// URL.",
+      "Send a voice message. Only OGG/Opus audio arrives as a voice message; other formats arrive as a regular audio file. Bytes from uploadId or https:// URL.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       source: sourceSchema,
