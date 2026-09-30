@@ -301,13 +301,18 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
     const config: {
       title: string;
       description: string;
-      annotations: ToolAnnotations;
+      annotations: ToolAnnotations & { title?: string };
       inputSchema?: ZodRawShapeCompat;
     } = {
       title: tool.title ?? deriveTitle(tool.name),
       description: tool.description,
       annotations: tool.annotations,
     };
+    // The same title again inside the annotations: the Claude directory portal checks
+    // `annotations.title` (Software Directory Policy 1E), not the top-level `tool.title`,
+    // and flagged all 174 tools without it. Additive only: the value is identical and no
+    // hint changes, so the tool contract under OpenAI review is untouched.
+    config.annotations = { ...tool.annotations, title: config.title };
     if (tool.inputSchema) config.inputSchema = tool.inputSchema;
 
     const isDestructive = tool.annotations.destructiveHint;

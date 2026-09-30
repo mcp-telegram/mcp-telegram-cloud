@@ -41,7 +41,7 @@ interface ReviewedTool {
 interface ListedTool {
   name: string;
   title?: string;
-  annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean };
+  annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; openWorldHint?: boolean; title?: string };
   inputSchema: { required?: string[]; properties?: Record<string, unknown> };
 }
 
@@ -145,6 +145,11 @@ describe(`reviewed tool contract (${contract.review})`, () => {
       }
     }
     assert.deepEqual(drift, [], `reviewed metadata changed:\n  ${drift.join("\n  ")}`);
+  });
+
+  it("every served tool repeats its title in annotations.title (Claude directory portal checks that field)", () => {
+    const missing = [...listed.values()].filter((t) => !t.title || t.annotations?.title !== t.title).map((t) => t.name);
+    assert.deepEqual(missing, [], `annotations.title missing or different from title: ${missing.join(", ")}`);
   });
 
   it("arguments stay compatible: same required set, no reviewed argument removed", () => {
