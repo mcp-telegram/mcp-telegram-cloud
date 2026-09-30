@@ -12,7 +12,7 @@ connect to via OAuth + QR login.
 
 Issues and pull requests are welcome in any language. We answer in English,
 and in Russian if you wrote in Russian. Priorities and planned work are on the
-public [roadmap board](https://github.com/orgs/mcp-telegram/projects).
+public [roadmap board](https://github.com/orgs/mcp-telegram/projects/1).
 
 Two repos, two scopes:
 
