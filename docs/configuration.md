@@ -335,8 +335,8 @@ curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: applicati
 ```
 
 Only a SHA-256 hash is stored, so a leaked database or backup cannot be
-replayed. Opening the link writes the same `tg_user` session hint the QR page
-writes, valid for a year, and the ordinary OAuth flow takes over from there —
+replayed. Opening the link starts the same `tg_sid` browser session a QR scan
+starts, valid for a year, and the ordinary OAuth flow takes over from there —
 no separate authentication path exists. Access is granted to that **browser**:
 a private window or a different browser will show the QR page instead.
 

@@ -106,16 +106,16 @@ There is no horizontal scaling story today — see
 Claude.ai  ──[1] /.well-known/oauth-authorization-server──────▶ cloud
 Claude.ai  ──[2] POST /oauth/register (RFC 7591)──────────────▶ cloud  ─▶ oauth_clients
 Claude.ai  ──[3] redirect user → /oauth/authorize?…(PKCE)─────▶ browser
-browser    ──[4] GET /oauth/authorize  (no tg_user cookie)────▶ cloud
+browser    ──[4] GET /oauth/authorize  (no tg_sid session)─────▶ cloud
                                             cloud renders AuthorizePage (HTML)
 browser    ──[5] EventSource → /oauth/authorize/qr (SSE)──────▶ cloud
                                             cloud  ──[MTProto qrCode]──▶  Telegram
                                             cloud  ◀──────────────────  user_id, session_string
                                             cloud  ─▶ user_sessions
-cloud      ──[6] SSE `redirect` event {url, name, username, id}─▶ browser
-browser    ──[7] POST /oauth/authorize/qr/cookie ──▶ cloud  (best-effort, only
-                if username is known; sets HttpOnly tg_user cookie; failures
-                ignored — the redirect still happens)
+cloud      ──[6] SSE `redirect` event {url, name, username, id, handoff}─▶ browser
+browser    ──[7] POST /oauth/authorize/qr/cookie {handoff} ──▶ cloud  (best-effort;
+                trades the single-use ticket for the HttpOnly tg_sid session
+                cookie; failures ignored — the redirect still happens)
 browser    ──[8] window.location.href = url      ──▶ Claude.ai (carrying ?code=… &state=…)
 Claude.ai  ──[9] POST /oauth/token (code + PKCE verifier)──▶ cloud  ─▶ oauth_tokens
 Claude.ai  ──[10] /mcp with Bearer token  (initialize)─────▶ cloud
@@ -125,7 +125,7 @@ After step 10, every tool call is `Authorization: Bearer …` →
 `SessionManager.getOrCreateSession(userId)` → MCP request dispatched.
 
 **Reconnect fast path:** if a returning user hits `/oauth/authorize`
-with a valid `tg_user` cookie, the upstream session is still alive, **and
+with a valid `tg_sid` browser session, the upstream session is still alive, **and
 the account has already connected this callback destination**, the cloud
 skips QR entirely and 302-redirects straight back to the client with a
 fresh code (see `tryReconnectSession()` in
@@ -200,19 +200,19 @@ Cleanup tasks run on `setInterval`:
 QR login over SSE. The user scans on their phone; Telegram returns the
 session string straight to the cloud, which stores it under the identity
 reported by `getMe()` for the account that actually signed in \u2014 never under an
-id supplied by the caller. (`/login/qr?userId=` accepts an id only as a lookup
-hint for the "already connected" shortcut. Until v2.60.3 it was also used as
+id supplied by the caller. (`/login/qr?userId=` no longer affects identity at all. Until v2.60.3 it was also used as
 the STORAGE key, and since `user_sessions` upserts on conflict, anyone could
 pass a victim's handle, scan with their own phone and overwrite that victim's
 session row \u2014 after which the victim's still-valid tokens drove the attacker's
 account.) The browser only ever sees a
-30-day `tg_user` cookie (a year when written by a review link, so it
-cannot expire mid-review) (HttpOnly + Secure + SameSite=Lax) containing
-the public Telegram `username` — used as a hint to skip the QR step on
-subsequent OAuth flows. The cookie never carries the session string or
-the numeric user id, and is only set when the account has a public
-username (sentinel `unknown` is rejected to avoid mis-routing future
-logins).
+`tg_sid` cookie (HttpOnly + Secure + SameSite=Lax, 30 days; a year when
+started by a review link, so it cannot expire mid-review): an opaque
+256-bit token that maps to a row in `browser_sessions` (stored as a hash).
+The row is created only after proof of identity: a finished QR scan,
+handed to the page as a single-use two-minute ticket, or a valid review
+token. Until v2.61.0 the cookie was `tg_user=<username>` and the server
+trusted it, so anyone who knew a username could act as that user; the old
+cookie is now ignored and cleared. `/login/qr` always requires a scan.
 
 ### Client auth (LLM ↔ cloud)
 
@@ -248,7 +248,7 @@ The cloud **does not** support implicit grant or password grant.
 ### Review access links
 
 `/review?token=…` redeems a link that points at a prepared demo account. It
-writes the same `tg_user` hint the QR page writes and then steps aside — the
+starts the same `tg_sid` browser session a QR scan starts and then steps aside — the
 ordinary OAuth fast path issues the code, so there is no second authentication
 path to audit. Since v2.60.3 that fast path also requires a grant for the
 callback destination: the demo account already holds tokens for
@@ -333,7 +333,7 @@ src/
   session-manager.ts      Map<userId, TelegramService>
   oauth.ts                OAuth provider core (8414/7591/7636/7009)
   routes/oauth.tsx        OAuth HTTP routes + 9728 well-known
-  cookie-handler.ts       tg_user hint cookie (HttpOnly, CSRF guard)
+  cookie-handler.ts       tg_sid browser session cookie + QR handoff decision
   qr-login.ts             SSE handler for QR auth
   rate-limit.ts           per-IP token-bucket middleware
   rate-limiter-events*.ts forward upstream stderr events to logger

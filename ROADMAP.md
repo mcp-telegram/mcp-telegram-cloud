@@ -4,8 +4,15 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-06-02
-**Current version:** 2.36.1 (cloud) / [`@overpod/mcp-telegram` 1.36.5](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-09-30
+**Current version:** 2.61.1 (cloud) / [`@overpod/mcp-telegram` 1.43.1](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+
+> **Planned work and its status now live on the public
+> [roadmap board](https://github.com/orgs/mcp-telegram/projects/1)** (horizons
+> Now / Next / Later, epics as parent issues). This file keeps the goal, what we
+> deliberately do not plan, and a history of shipped highlights. The "Now",
+> "Next" and "Later" sections below are kept as of 2026-06-02 for context; where
+> they differ from the board, the board wins.
 
 ---
 
@@ -104,9 +111,6 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   own much simpler ecosystem; no value to duplicate it here.
 - **Web UI for chat / messaging** — out of scope; this is an MCP server,
   not a Telegram client. Use the official clients for that.
-- **Multi-account per user** — one Telegram account per cloud user.
-  Multi-account complicates session storage, OAuth, and rate-limit
-  accounting; not enough demand to justify the cost.
 - **`telegram-terminate-session` will not be exposed**. Permanently in
   `EXPLICIT_EXCLUDED`. The upstream tool is dual-mode — terminate one
   specific session by hash, or `terminateAllOther=true` to revoke every
@@ -118,6 +122,17 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
   official Telegram clients.
 
 ## Done (recent highlights)
+
+- **2026-09-30** — **Browser sessions are server-issued** (cloud v2.61.0,
+  v2.61.1). The `/my/*` pages and the OAuth fast path identify the browser by
+  an opaque `tg_sid` session created only after a QR scan or a review token,
+  replacing the `tg_user=<username>` cookie the server used to trust. Same
+  release fixes #21: form posts were rejected because `Referrer-Policy:
+  no-referrer` made browsers send `Origin: null`.
+- **2026-09-30** — **Directory review guard** (cloud#51): CI pins the tool
+  contract under review in the ChatGPT directory.
+- **v2.32.0** — **Multi-account per user** (`telegram-accounts-*` tools),
+  previously listed here as not planned.
 
 - **2026-05-20** — **`/docs/oauth` developer reference page** (cloud v2.31.0).
   New top-level docs route at `/docs/oauth` for MCP client implementers.

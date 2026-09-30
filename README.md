@@ -16,12 +16,12 @@ This is the **cloud / multi-user** flavour. For the single-user CLI
 
 - Exposes a Telegram account to an MCP-aware client (Claude.ai, ChatGPT
   Apps, custom MCP hosts) over Streamable HTTP.
-- **Read-only and safe-state-change tools only** — no `send-message`,
-  no `delete-message`, no admin actions. The hosted service trades off
-  capability for a smaller blast radius.
+- Read, write and destructive tools. Destructive ones (delete, ban,
+  leave) are off by default and enabled per user at `/my/settings`;
+  write actions are shown to the user for confirmation by the client.
 - OAuth 2.0 with dynamic client registration and PKCE (RFC 8414 +
   7591 + 7636). QR login is embedded in the OAuth authorize page —
-  connect once, reconnect via refresh token for 30 days.
+  connect once; the client keeps its token and refreshes it silently.
 
 ## Quick start (hosted)
 
@@ -60,62 +60,26 @@ hardening checklist, and incident response.
 
 ## MCP tools exposed
 
-Cloud whitelists a subset of the upstream tools. All are annotated
-`readOnlyHint: true` or are safe state-changes (mark-as-read, mute).
+The hosted service exposes almost the whole upstream catalogue (about 175
+tools; `bun check-parity` lists the exact set), in three tiers:
 
-**Read & search**
+- **Read** (`readOnlyHint: true`): chats, messages, search, topics,
+  members, profiles, contacts, reactions, stories, stats, stickers, media
+  download. Run without a confirmation in clients that honour hints.
+- **Write**: send, forward, react, polls, pin, drafts, group and profile
+  edits, media uploads (see below). Clients show the outgoing action for
+  confirmation.
+- **Destructive** (`destructiveHint: true`, about 20 tools, e.g.
+  `telegram-delete-message`, `telegram-ban-user`, `telegram-leave-group`):
+  **off by default**. Each user turns them on at
+  [`/my/settings`](https://mcp.mcp-telegram.com/my/settings) (sign in with
+  a QR scan) and sees their history at `/my/audit`; a separate daily limit
+  applies.
 
-- `telegram-status` — connection status
-- `telegram-list-chats` — dialogs with filtering
-- `telegram-read-messages` — paginated message read
-- `telegram-search-chats` — search chats by name / description / size
-- `telegram-search-global` — full-text search across public chats and
-  channels
-- `telegram-search-messages` — full-text search inside a chat
-- `telegram-get-unread` — unread chats with per-topic breakdown for
-  forums
-
-**Chat & member info**
-
-- `telegram-get-chat-info` — chat details and metadata
-- `telegram-get-chat-members` — group/channel members
-- `telegram-get-chat-folders` — user's chat folders
-- `telegram-list-topics` — forum topics with unread counts
-- `telegram-read-topic-messages` — read messages from a forum topic
-- `telegram-get-invite-links` — chat invite links
-- `telegram-get-reactions` — message reactions with user details
-
-**Profiles & contacts**
-
-- `telegram-get-profile` — detailed user profile (bio, photo, last
-  seen, premium)
-- `telegram-get-profile-photo` — download profile photo
-- `telegram-get-contacts` — contacts list
-- `telegram-get-contact-requests` — incoming non-contact messages
-
-**Stickers**
-
-- `telegram-get-sticker-set`
-- `telegram-search-sticker-sets`
-- `telegram-get-installed-stickers`
-- `telegram-get-recent-stickers`
-
-**Media**
-
-- `telegram-download-media` — download photos and documents
-
-**Safe state changes**
-
-- `telegram-mark-as-read` — mark a chat as read
-- `telegram-mute-chat` — mute notifications
-
-**Account info**
-
-- `telegram-get-sessions` — list active Telegram sessions
-
-For the full upstream tool catalogue (including `send-message`,
-`forward-message`, group admin, profile write, etc.), use the CLI
-[`@overpod/mcp-telegram`](https://github.com/mcp-telegram/mcp-telegram).
+Three upstream tools are never exposed because they conflict with the
+OAuth/QR session model: `telegram-login`, `telegram-logout` and
+`telegram-terminate-session`. Stars tools are opt-in for self-hosters
+(`MCP_TELEGRAM_ENABLE_STARS=1`).
 
 ## Sending a local file
 
