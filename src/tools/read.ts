@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DOWNLOAD_CHUNK_BYTES, DOWNLOAD_LIMITS } from "../download-store.js";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   formatReactions,
@@ -237,10 +238,30 @@ export const READ_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-download-media",
     description:
-      "Download media (photo, video, document) from a Telegram message. By default returns a small thumbnail preview to keep the response cheap — pass full:true only when you need the full-resolution image (which can be large and costly in context). Non-image media returns metadata only.",
+      "Download media from a Telegram message. Images default to a thumbnail; full:true shows the full image inline. file:true prepares the original file (up to 8 MiB) for private download. Non-image media also returns a downloadId, authenticated browser URL, size and SHA-256, valid for 15 minutes. To retrieve bytes via MCP, repeat the same chatId/messageId with downloadId and offset (default 0): each response contains up to 64 KiB of base64, nextOffset and eof. Keep chunks out of the conversation context; decode them locally and verify the size and hash. Download IDs and URLs are not public sharing links.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
-      messageId: z.number().describe("Message ID containing media"),
+      messageId: z.number().int().positive().describe("Message ID containing media"),
+      file: z
+        .boolean()
+        .optional()
+        .describe("Prepare the ORIGINAL file for private download instead of an inline image/thumbnail. Max 8 MiB."),
+      downloadId: z
+        .string()
+        .regex(/^dl_[a-f0-9]{32}$/)
+        .optional()
+        .describe(
+          "Previously returned private download ID. Reads a chunk of the cached file, not Telegram again. Keep the original chatId/messageId.",
+        ),
+      offset: z
+        .number()
+        .int()
+        .nonnegative()
+        .max(DOWNLOAD_LIMITS.fileBytes)
+        .optional()
+        .describe(
+          "Byte offset when reading downloadId. Default 0; continue at nextOffset until eof. Retries at the same offset return identical bytes until expiry.",
+        ),
       full: z
         .boolean()
         .optional()
@@ -249,20 +270,70 @@ export const READ_TOOLS: ToolDefinition[] = [
         ),
     },
     annotations: READ_ONLY,
-    handler: async ({ chatId, messageId, full }, { telegram }) => {
-      // Default to the smallest thumbnail (thumb: 0). The buffer inlines as
-      // base64 into the LLM context, so a full image costs proportionally more
-      // tokens — a single ~950KB photo is ~hundreds of thousands of tokens.
-      const { buffer, mimeType, isThumb } = await telegram.downloadMediaAsBuffer(
-        chatId,
-        messageId,
-        full ? undefined : { thumb: 0 },
-      );
-
-      if (mimeType.startsWith("image/")) {
+    skipConnectionFor: ({ downloadId }) => downloadId !== undefined,
+    handler: async (
+      { chatId, messageId, full, file, downloadId, offset },
+      { telegram, downloads, userId, sessions, baseUrl, sourceAccountId, sourceAttachmentId },
+    ) => {
+      if (!downloads || !userId || !sessions || !baseUrl)
+        throw new Error("Private download storage is unavailable on this server");
+      if (downloadId !== undefined) {
+        const chunk = downloads.chunk(userId, downloadId, chatId, messageId, offset ?? 0);
+        if (!chunk) throw new Error("Download unavailable, expired or not yours. Prepare the original message again.");
+        return { content: [{ type: "text", text: JSON.stringify(chunk) }], structuredContent: chunk };
+      }
+      if (offset !== undefined) throw new Error("offset requires downloadId");
+      const accountId = sourceAccountId;
+      if (accountId === undefined || !sourceAttachmentId)
+        throw new Error("Source account was not bound to this tool call");
+      const account = sessions.listAccounts(userId).find((a) => a.accountId === accountId);
+      if (!account) throw new Error("Source account is unavailable");
+      const canRead = () =>
+        sessions.getAccountAttachmentId(userId, accountId) === sourceAttachmentId &&
+        sessions
+          .listAccounts(userId)
+          .some(
+            (a) =>
+              a.accountId === accountId && a.telegramUserId === account.telegramUserId && a.addedAt === account.addedAt,
+          );
+      // An explicit capability check is essential: old core versions silently
+      // ignore unknown options, so passing maxBytes to them would NOT be a cap.
+      // SAFETY: this optional API is implemented by the next core release;
+      // the installed old core lacks its declaration. We check for the method
+      // below and fail closed before downloading if that capability is absent.
+      const bounded = (
+        telegram as unknown as {
+          downloadMediaBounded?: (
+            chatId: string,
+            messageId: number,
+            options: { maxBytes: number; thumb?: number; signal: AbortSignal },
+          ) => Promise<{ buffer: Buffer; mimeType: string; isThumb: boolean; fileName?: string }>;
+        }
+      ).downloadMediaBounded;
+      if (typeof bounded !== "function")
+        throw new Error("Private downloads require an updated Telegram core with bounded media support");
+      const signal = AbortSignal.timeout(60_000);
+      let isThumb = false;
+      const metadata = await downloads.prepare(userId, { chatId, messageId, canRead }, async (maxBytes) => {
+        const result = await bounded.call(telegram, chatId, messageId, {
+          maxBytes,
+          signal,
+          ...(!full && !file && { thumb: 0 }),
+        });
+        signal.throwIfAborted(); // never publish late work after the download deadline
+        isThumb = result.isThumb;
+        return result;
+      });
+      const url = `${baseUrl}/my/download/${metadata.downloadId}`;
+      if (!file && metadata.mimeType.startsWith("image/")) {
+        const cached = downloads.read(userId, metadata.downloadId);
+        if (!cached) throw new Error("Download expired during preparation");
+        const { bytes: buffer } = cached;
+        const mimeType = metadata.mimeType;
+        downloads.forget(userId, metadata.downloadId); // previews don't consume the snapshot quota
         if (buffer.length > MAX_INLINE_MEDIA) {
           return textResult(
-            `Image too large for inline display (${(buffer.length / 1024).toFixed(0)} KB, limit ~950 KB). The image is a ${mimeType} file. Try asking for a specific smaller photo or use telegram-read-messages to see the text content.`,
+            `Image too large for inline display (${(buffer.length / 1024).toFixed(0)} KB, limit ~950 KB). The image is a ${mimeType} file. Use file:true to download it privately without inline base64.`,
           );
         }
         const note = isThumb
@@ -276,9 +347,11 @@ export const READ_TOOLS: ToolDefinition[] = [
         };
       }
 
-      return textResult(
-        `Media downloaded: ${mimeType}, ${(buffer.length / 1024).toFixed(0)} KB. Non-image media cannot be displayed inline.`,
-      );
+      const result = { ...metadata, url, chunkBytes: DOWNLOAD_CHUNK_BYTES };
+      return {
+        content: [{ type: "text", text: JSON.stringify(result) }],
+        structuredContent: result,
+      };
     },
   },
 

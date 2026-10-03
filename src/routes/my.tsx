@@ -4,6 +4,7 @@ import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
 import { readBrowserSessionToken } from "../cookie-handler.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
+import { DOWNLOAD_CHUNK_BYTES, type DownloadStore } from "../download-store.js";
 import { logger, logUser } from "../logger.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuditPage } from "../pages/AuditPage.js";
@@ -19,6 +20,7 @@ export interface MyRoutesDeps {
   destructive: DestructiveGuard;
   sessions: SessionManager;
   uploads: UploadStore;
+  downloads?: DownloadStore;
   /** Token validator for the Bearer path on `POST /my/upload` (MCP agents). */
   oauth: Pick<OAuthProvider, "validateToken" | "getBrowserSessionUser">;
 }
@@ -81,6 +83,71 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
   const uploadRateLimit = makeUploadRateLimit();
 
   app.get("/", (c) => c.redirect("/my/settings", 302));
+
+  // IDs are selectors, not credentials. No bearer tokens or signed sharing
+  // secrets in query strings, paths, Referer, access logs or browser history.
+  app.use("/download/*", async (c, next) => {
+    c.header("Cache-Control", "private, no-store");
+    c.header("Referrer-Policy", "no-referrer");
+    c.header("X-Content-Type-Options", "nosniff");
+    c.header("Vary", "Authorization, Cookie");
+    await next();
+  });
+  app.get("/download/:id", uploadRateLimit, (c) => {
+    const auth = c.req.header("authorization");
+    // Invalid/malformed Authorization must not fall through to browser identity.
+    const userId =
+      auth !== undefined
+        ? auth.startsWith("Bearer ")
+          ? deps.oauth.validateToken(auth.slice(7))?.userId
+          : null
+        : requireUser(c, deps);
+    if (!userId && auth === undefined && c.req.header("accept")?.includes("text/html")) {
+      c.header("WWW-Authenticate", `Bearer resource_metadata="${rootUrl(config.issuer, MCP_RESOURCE_METADATA_PATH)}"`);
+      return c.html(
+        '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in to download</title><body><h1>Sign in to download</h1><p>This file is private. <a href="/login">Sign in with Telegram</a>, then reopen this link before it expires. If it has expired, ask your assistant to prepare the original message again.</p></body></html>',
+        401,
+      );
+    }
+    if (!userId)
+      return c.json(
+        {
+          error: "unauthorized",
+          loginUrl: `${config.issuer}/login`,
+          message: "Sign in, then reopen the download link before it expires.",
+        },
+        401,
+        {
+          "WWW-Authenticate": `Bearer resource_metadata="${rootUrl(config.issuer, MCP_RESOURCE_METADATA_PATH)}"`,
+        },
+      );
+    if (!deps.downloads) return c.json({ error: "download_unavailable" }, 503);
+    const item = deps.downloads.read(userId, c.req.param("id"));
+    if (!item)
+      return c.json({ error: "download_unavailable", message: "Prepare the original message again via MCP." }, 404);
+    // Never render arbitrary HTML/SVG/documents on the OAuth origin. Even an
+    // adversarial MIME or filename is returned as an attachment, not executed.
+    const name = encodeURIComponent(item.metadata.fileName).replace(
+      /['()*]/g,
+      (ch) => `%${ch.charCodeAt(0).toString(16).toUpperCase()}`,
+    );
+    c.header("Content-Disposition", `attachment; filename="media.bin"; filename*=UTF-8''${name}`);
+    c.header("Content-Type", "application/octet-stream");
+    c.header("Content-Security-Policy", "sandbox; default-src 'none'");
+    c.header("Content-Length", String(item.metadata.size));
+    // HEAD doesn't consume the snapshot. GET is retryable until the fixed TTL;
+    // MCP byte offsets are the resumable path, HTTP Range is not implemented.
+    let offset = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const end = Math.min(offset + DOWNLOAD_CHUNK_BYTES, item.bytes.length);
+        controller.enqueue(item.bytes.subarray(offset, end));
+        offset = end;
+        if (offset === item.bytes.length) controller.close();
+      },
+    });
+    return new Response(c.req.method === "HEAD" ? null : body, { headers: c.res.headers });
+  });
 
   app.get("/uploads", async (c) => {
     const userId = requireUser(c, deps);

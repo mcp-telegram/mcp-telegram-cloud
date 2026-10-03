@@ -7,19 +7,35 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 const { TOOLS } = await import("../tools.js");
+const { DownloadStore, DOWNLOAD_LIMITS } = await import("../download-store.js");
 
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0x00, 0x01, 0x02]);
 
-/** Capture the options the handler forwards to downloadMediaAsBuffer. */
+/** Capture options forwarded to the bounded core API. */
 function makeDeps(result: { buffer: Buffer; mimeType: string; isThumb: boolean }) {
   const calls: Array<unknown> = [];
   const telegram = {
-    downloadMediaAsBuffer: async (_chatId: string, _messageId: number, options?: { thumb?: number }) => {
+    downloadMediaBounded: async (_chatId: string, _messageId: number, options?: { thumb?: number }) => {
       calls.push(options);
       return result;
     },
   };
-  return { deps: { telegram } as never, calls };
+  return {
+    deps: {
+      telegram,
+      userId: "owner",
+      sourceAccountId: 0,
+      sourceAttachmentId: "attachment",
+      baseUrl: "https://test.invalid",
+      downloads: new DownloadStore(),
+      sessions: {
+        getActiveAccountId: () => 0,
+        getAccountAttachmentId: () => "attachment",
+        listAccounts: () => [{ accountId: 0, telegramUserId: "owner", addedAt: "now" }],
+      },
+    } as never,
+    calls,
+  };
 }
 
 const tool = TOOLS.find((t) => t.name === "telegram-download-media");
@@ -30,7 +46,8 @@ describe("telegram-download-media thumbnail default", () => {
     if (!tool) return;
     const { deps, calls } = makeDeps({ buffer: JPEG, mimeType: "image/jpeg", isThumb: true });
     const res = (await tool.handler({ chatId: "@c", messageId: 1 }, deps)) as { content: unknown[] };
-    assert.deepEqual(calls[0], { thumb: 0 }, "default call must request the smallest thumbnail");
+    assert.equal((calls[0] as { thumb: number }).thumb, 0, "default must request the smallest thumbnail");
+    assert.equal((calls[0] as { maxBytes: number }).maxBytes, DOWNLOAD_LIMITS.fileBytes);
     // Image + a text note steering toward full:true.
     assert.equal(res.content.length, 2);
     assert.equal((res.content[0] as { type: string }).type, "image");
@@ -42,7 +59,7 @@ describe("telegram-download-media thumbnail default", () => {
     if (!tool) return;
     const { deps, calls } = makeDeps({ buffer: JPEG, mimeType: "image/jpeg", isThumb: false });
     await tool.handler({ chatId: "@c", messageId: 1, full: true }, deps);
-    assert.equal(calls[0], undefined, "full:true must NOT pass a thumb option (full resolution)");
+    assert.equal((calls[0] as { thumb?: number }).thumb, undefined, "full:true must NOT pass a thumb option");
   });
 
   it("exposes a full:boolean input describing the cost trade-off", () => {

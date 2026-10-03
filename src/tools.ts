@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
+import type { DownloadStore } from "./download-store.js";
 import type { SessionManager } from "./session-manager.js";
 import { type ArgAliases, buildArgAliases } from "./tool-call-interceptor.js";
 import {
@@ -62,6 +63,7 @@ export interface RegisterAllowedToolsExtras {
   userId?: string;
   /** Phase X: per-user upload store. Required for the 6 FS-bound tools to function. */
   uploads?: UploadStore;
+  downloads?: DownloadStore;
   /** Phase X: SSRF-hardened URL fetcher for the URL variant of upload-backed tools. */
   fetchUrl?: typeof fetchUrlSafely;
   /** v2.32.0 multi-account: session manager for the accounts-* tools. */
@@ -96,6 +98,7 @@ export function registerAllAllowedTools(
     recordDestructive,
     ...(extras?.userId !== undefined && { userId: extras.userId }),
     ...(extras?.uploads !== undefined && { uploads: extras.uploads }),
+    ...(extras?.downloads !== undefined && { downloads: extras.downloads }),
     ...(extras?.fetchUrl !== undefined && { fetchUrl: extras.fetchUrl }),
     ...(extras?.sessions !== undefined && { sessions: extras.sessions }),
     ...(extras?.baseUrl !== undefined && { baseUrl: extras.baseUrl }),

@@ -90,6 +90,15 @@ export class SessionManager {
       )
     `);
 
+    // A primary slot is always accountId=0, so a second-resolution timestamp
+    // cannot distinguish removal + reattachment within one second. A fresh
+    // random attachment ID on INSERT prevents old private snapshots reviving.
+    const columns = this.db.prepare("PRAGMA table_info(user_sessions)").all() as { name: string }[];
+    if (!columns.some((c) => c.name === "attachment_id")) {
+      this.db.exec("ALTER TABLE user_sessions ADD COLUMN attachment_id TEXT NOT NULL DEFAULT ''");
+    }
+    this.db.exec("UPDATE user_sessions SET attachment_id = lower(hex(randomblob(16))) WHERE attachment_id = ''");
+
     // v2.32.0 multi-account: secondary Telegram accounts attached to a primary
     // owner_user_id. owner_user_id is the original `user_sessions.user_id` —
     // i.e. the Telegram identity that completed the OAuth flow. Primary account
@@ -349,11 +358,11 @@ export class SessionManager {
   saveSessionString(userId: string, sessionString: string): void {
     this.db
       .prepare(
-        `INSERT INTO user_sessions (user_id, session_string, updated_at)
-       VALUES (?, ?, datetime('now'))
+        `INSERT INTO user_sessions (user_id, session_string, updated_at, attachment_id)
+       VALUES (?, ?, datetime('now'), ?)
        ON CONFLICT(user_id) DO UPDATE SET session_string = excluded.session_string, updated_at = datetime('now')`,
       )
-      .run(userId, encryptSecret(sessionString));
+      .run(userId, encryptSecret(sessionString), randomBytes(16).toString("hex"));
   }
 
   getSession(userId: string): TelegramService | undefined {
@@ -636,6 +645,29 @@ export class SessionManager {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** 0 = primary active (default for owners with no row in `active_account`). */
+  /** Non-secret identity of this attachment, not a date or reusable slot ID.
+   * Secondary IDs are AUTOINCREMENT; binding to the primary attachment also
+   * invalidates them if the owner is removed and later reconnects. */
+  getAccountAttachmentId(ownerUserId: string, accountId: number): string | null {
+    // Old tasks in a start-first rolling update can still insert rows with the
+    // empty default after our startup migration. Lazily fill only those rows;
+    // compare-and-set keeps the generation stable across concurrent readers.
+    this.db
+      .prepare(
+        "UPDATE user_sessions SET attachment_id = lower(hex(randomblob(16))) WHERE user_id = ? AND attachment_id = ''",
+      )
+      .run(ownerUserId);
+    const primary = this.db.prepare("SELECT attachment_id FROM user_sessions WHERE user_id = ?").get(ownerUserId) as
+      | { attachment_id: string }
+      | undefined;
+    if (!primary?.attachment_id) return null;
+    if (accountId === 0) return primary.attachment_id;
+    const attached = this.db
+      .prepare("SELECT account_id FROM telegram_accounts WHERE owner_user_id = ? AND account_id = ?")
+      .get(ownerUserId, accountId);
+    return attached ? `${primary.attachment_id}:${accountId}` : null;
+  }
+
   getActiveAccountId(ownerUserId: string): number {
     const row = this.db.prepare("SELECT account_id FROM active_account WHERE owner_user_id = ?").get(ownerUserId) as
       | { account_id: number }

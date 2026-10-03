@@ -98,6 +98,17 @@ Single Node.js process. Inside it:
 There is no horizontal scaling story today — see
 [Known limitations](./self-hosting.md#known-limitations).
 
+## Private media snapshots
+
+`telegram-download-media` prepares bounded, owner-private snapshots in
+`DownloadStore` (process RAM only). Agents read retryable 64 KiB chunks through
+MCP; people download attachments from `/my/download/:id` using the authenticated
+browser session. The URL is not an authorization capability. Every read checks
+ownership, source-account attachment and a fixed 15-minute expiry. Snapshots are
+not written to SQLite or disk, and restart/rolling replacement invalidates them.
+See [downloads.md](./downloads.md) for the complete flow, limits, threat model,
+recovery and core-before-cloud release dependency.
+
 ## Request lifecycles
 
 ### First-time connect (Claude.ai)

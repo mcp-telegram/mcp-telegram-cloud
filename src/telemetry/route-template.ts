@@ -55,6 +55,7 @@ export function templatePath(path: string): string {
   if (STATIC.has(path)) return path;
   if (path.startsWith("/my/upload/")) return "/my/upload/:id";
   if (path.startsWith("/my/uploads/")) return "/my/uploads/:id";
+  if (path.startsWith("/my/download/")) return "/my/download/:id";
   // Content-hashed React island bundles — collapse so each hash isn't its own
   // time series.
   if (path.startsWith("/app-assets/")) return "/app-assets/:asset";

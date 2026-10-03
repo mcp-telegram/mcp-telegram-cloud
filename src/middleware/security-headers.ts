@@ -40,12 +40,14 @@ const CSP = [
 export const securityHeaders: MiddlewareHandler = async (c, next) => {
   await next();
   c.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-  c.header("Content-Security-Policy", CSP);
+  // Download responses set a stricter sandbox CSP and no-referrer policy.
+  // Do not overwrite those route-specific policies on the way back out.
+  c.header("Content-Security-Policy", c.res.headers.get("Content-Security-Policy") ?? CSP);
   c.header("X-Content-Type-Options", "nosniff");
   c.header("X-Frame-Options", "DENY");
   // same-origin, not no-referrer: under no-referrer browsers send `Origin: null`
   // on form POSTs, and every same-origin form here (settings, consent approve,
   // review code) checks Origin against the issuer, so they all returned 403
   // (issue #21). same-origin still sends nothing to other sites.
-  c.header("Referrer-Policy", "same-origin");
+  c.header("Referrer-Policy", c.res.headers.get("Referrer-Policy") ?? "same-origin");
 };

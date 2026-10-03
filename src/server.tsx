@@ -7,7 +7,7 @@ import { DestructiveGuard } from "./destructive-guard.js";
 import { HTTP_IDLE_TIMEOUT_S } from "./http-timeouts.js";
 import { startDrain } from "./lifecycle.js";
 import { logger, logUser } from "./logger.js";
-import { getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mcp-handler.js";
+import { downloads, getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mcp-handler.js";
 import { accessLog } from "./middleware/access-log.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { noindex } from "./middleware/noindex.js";
@@ -68,6 +68,8 @@ const uploads = new UploadStore(
 // log-free, but a future maintainer adding a `logger.info("Pruned N codes")`
 // call wouldn't have to re-discover the trace-pollution gotcha.
 setInterval(() => runDetached(() => oauth.cleanup()), 3600_000);
+// Fixed expiry is checked on every read; this timer reclaims idle snapshots.
+setInterval(() => downloads.purgeExpired(), 60_000);
 
 // Periodic purge of old usage_log rows (retention policy).
 // `runDetached` clears the AsyncLocalStorage span context so logger calls
@@ -253,7 +255,7 @@ app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
 app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
 registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions, oauth }));
-app.route("/my", createMyRoutes({ destructive, sessions, uploads, oauth }));
+app.route("/my", createMyRoutes({ destructive, sessions, uploads, downloads, oauth }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
 // Directory-review access: hands a reviewer the demo session so the OAuth fast
 // path can skip the QR code they have no way to scan.

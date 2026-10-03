@@ -81,6 +81,16 @@ OAuth/QR session model: `telegram-login`, `telegram-logout` and
 `telegram-terminate-session`. Stars tools are opt-in for self-hosters
 (`MCP_TELEGRAM_ENABLE_STARS=1`).
 
+## Downloading a voice note or file
+
+Call `telegram-download-media` with `chatId`, `messageId`, and `file: true`.
+The result includes a private `downloadId`, size, SHA-256, expiry, and an
+owner-authenticated browser download link. Agents can retrieve the bytes
+through the same MCP tool using `downloadId` and byte `offset`, without
+extracting an OAuth token or printing the file's base64 into the conversation.
+Snapshots last 15 minutes, are limited to 8 MiB, and disappear on restart.
+See [the full flow, recovery cases, security model and release dependency](docs/downloads.md).
+
 ## Sending a local file
 
 The media tools (`telegram-send-file`, `telegram-send-album`,

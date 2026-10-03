@@ -6,6 +6,7 @@ import { isAuthError } from "./auth-errors.js";
 // Aliased: `config` is shadowed by a local per-tool registration object below.
 import { config as appConfig } from "./config.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
+import type { DownloadStore } from "./download-store.js";
 import { logger, logUser } from "./logger.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION, TOOL_TIMEOUTS } from "./telemetry/metrics.js";
@@ -48,6 +49,10 @@ export interface ToolDeps {
   /** Phase X: per-user pending uploads. Required for the 6 FS-bound tools
    * (`telegram-send-file/voice/video-note/album/story`, `telegram-set-profile-photo`). */
   readonly uploads?: UploadStore;
+  readonly downloads?: DownloadStore;
+  /** Account bound to the exact TelegramService captured for this call. */
+  readonly sourceAccountId?: number;
+  readonly sourceAttachmentId?: string;
   /** Phase X: SSRF-hardened URL fetcher. Required for the URL variant of the 6 FS-bound tools. */
   readonly fetchUrl?: typeof fetchUrlSafely;
   /** v2.32.0 multi-account: session manager handle for the `accounts-*` tools. */
@@ -71,6 +76,8 @@ export interface ToolDefinition<TShape extends ZodRawShapeCompat = ZodRawShapeCo
   annotations: ToolAnnotations;
   /** Skip requireConnection() — tool handles disconnected state itself (e.g. telegram-status). */
   skipRequireConnection?: boolean;
+  /** Local snapshot reads don't need a live MTProto connection. */
+  skipConnectionFor?: (args: Args<TShape>) => boolean;
   /**
    * Opt-in env flag: tool is registered only when `process.env[requiresEnv] === "1"`.
    * Mirrors upstream's opt-in pattern (e.g. MCP_TELEGRAM_ENABLE_GROUP_CALLS) so self-hosters
@@ -260,6 +267,7 @@ export interface RegisterAllOptions {
   clientName?: string;
   /** Phase X: piped through to {@link ToolDeps.uploads}. */
   uploads?: UploadStore;
+  downloads?: DownloadStore;
   /** Phase X: piped through to {@link ToolDeps.fetchUrl}. */
   fetchUrl?: typeof fetchUrlSafely;
   /** v2.32.0: piped through to {@link ToolDeps.sessions} for `accounts-*` tools. */
@@ -333,7 +341,8 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
         if (destErr) return { content: [{ type: "text", text: destErr }], isError: true };
       }
 
-      if (!tool.skipRequireConnection) {
+      const skipConnection = tool.skipRequireConnection || tool.skipConnectionFor?.(args) === true;
+      if (!skipConnection) {
         // Bounded even though requireConnection swallows its own errors: it reaches
         // GramJS `ensureConnected()` through the per-user lock, which is exactly where
         // issue #19's permanent wedge formed.
@@ -383,10 +392,18 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
             // The handler is opted out via `skipRequireConnection: true` and
             // works through `sessions` instead, so we tolerate the absence.
             let telegram: TelegramService;
+            // No await between these lookups: account switches cannot relabel
+            // the captured client while a media download is in flight.
+            const sourceAccountId =
+              opts.userId !== undefined ? opts.sessions?.getActiveAccountId(opts.userId) : undefined;
+            const sourceAttachmentId =
+              opts.userId !== undefined && sourceAccountId !== undefined
+                ? opts.sessions?.getAccountAttachmentId?.(opts.userId, sourceAccountId)
+                : undefined;
             try {
               telegram = opts.getTelegram();
             } catch (err) {
-              if (!tool.skipRequireConnection) throw err;
+              if (!skipConnection) throw err;
               // SAFETY: reached only when `tool.skipRequireConnection` is true (guarded on
               // the line above). Those handlers are contractually barred from dereferencing
               // `deps.telegram` — they work through `deps.sessions` instead — so the value is
@@ -397,8 +414,11 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
             handlerClient = telegram;
             const deps: ToolDeps = {
               telegram,
+              ...(sourceAccountId !== undefined && { sourceAccountId }),
+              ...(sourceAttachmentId != null && { sourceAttachmentId }),
               ...(opts.userId !== undefined && { userId: opts.userId }),
               ...(opts.uploads !== undefined && { uploads: opts.uploads }),
+              ...(opts.downloads !== undefined && { downloads: opts.downloads }),
               ...(opts.fetchUrl !== undefined && { fetchUrl: opts.fetchUrl }),
               ...(opts.sessions !== undefined && { sessions: opts.sessions }),
               ...(opts.baseUrl !== undefined && { baseUrl: opts.baseUrl }),

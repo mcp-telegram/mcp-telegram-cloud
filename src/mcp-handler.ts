@@ -5,6 +5,7 @@ import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { config, iconPng256Url, iconPngUrl, iconUrl } from "./config.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
 import { type DestructiveGuard, summarizeArgs } from "./destructive-guard.js";
+import { DownloadStore } from "./download-store.js";
 import { MCP_SSE_KEEP_ALIVE_MS } from "./http-timeouts.js";
 import { logger, logUser } from "./logger.js";
 import { CLIENT_CLASSES, type ClientClass, classifyClient } from "./middleware/classify-client.js";
@@ -19,6 +20,8 @@ import type { UsageTracker } from "./usage.js";
 
 /** Map of MCP session ID → transport (for multi-request sessions) */
 const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
+/** Shared by MCP snapshots and authenticated HTTP downloads; lost on restart. */
+export const downloads = new DownloadStore();
 
 /** Map of MCP session ID → userId (to track which user owns which session) */
 const sessionOwners = new Map<string, string>();
@@ -360,6 +363,10 @@ async function handleMcpRequestInner(
   const sessionId = req.headers.get("mcp-session-id");
 
   if (sessionId && transports.has(sessionId)) {
+    // A valid token for B must never reuse the McpServer wired to A.
+    if (sessionOwners.get(sessionId) !== userId) {
+      return new Response("MCP session belongs to another user", { status: 403 });
+    }
     const transport = transports.get(sessionId);
     if (transport) {
       // Bump last-activity so the idle reaper does not consider this session
@@ -596,7 +603,16 @@ async function handleMcpRequestInner(
     checkRateLimit,
     checkDestructive,
     recordDestructive,
-    { userId, uploads, fetchUrl: fetchUrlSafely, sessions, baseUrl: config.issuer, onToolTimeout, clientName },
+    {
+      userId,
+      uploads,
+      downloads,
+      fetchUrl: fetchUrlSafely,
+      sessions,
+      baseUrl: config.issuer,
+      onToolTimeout,
+      clientName,
+    },
   );
 
   // Must run after registration: McpServer installs the `tools/call` handler lazily on the

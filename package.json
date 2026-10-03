@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@overpod/mcp-telegram": "^1.43.1",
+    "@overpod/mcp-telegram": "^1.43.2",
     "dotenv": "^17.4.2",
     "hono": "^4.13.8",
     "qrcode": "^1.5.4",
