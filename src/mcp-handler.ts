@@ -362,6 +362,18 @@ async function handleMcpRequestInner(
   // Check for existing session via header
   const sessionId = req.headers.get("mcp-session-id");
 
+  // Streamable HTTP requires 404 for a terminated/unknown session. Passing
+  // it to a new, uninitialized SDK transport produces 400 instead, leaving
+  // clients stuck after an idle reap or restart rather than re-initializing.
+  // Authentication has already run at the route boundary; no Telegram/OAuth
+  // state should be touched merely because an MCP transport has expired.
+  if (sessionId && !transports.has(sessionId)) {
+    return Response.json(
+      { jsonrpc: "2.0", error: { code: -32001, message: "MCP session not found; initialize a new session" }, id: null },
+      { status: 404 },
+    );
+  }
+
   if (sessionId && transports.has(sessionId)) {
     // A valid token for B must never reuse the McpServer wired to A.
     if (sessionOwners.get(sessionId) !== userId) {

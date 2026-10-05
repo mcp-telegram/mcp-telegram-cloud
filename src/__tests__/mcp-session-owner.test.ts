@@ -10,6 +10,37 @@ const { handleMcpRequest, _trackFullSessionForTest, _resetSessionTrackingForTest
 afterEach(() => _resetSessionTrackingForTest());
 
 describe("MCP session ownership", () => {
+  for (const method of ["POST", "GET", "DELETE"]) {
+    it(`an unknown/expired session returns 404 for ${method} without touching Telegram`, async () => {
+      let connected = 0;
+      const sessions = {
+        ensureActiveSession: async () => {
+          connected++;
+          throw new Error("Must not reconnect Telegram for an expired MCP transport");
+        },
+      };
+      const response = await handleMcpRequest(
+        sessions as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        "alice",
+        "test",
+        new Request("https://example.invalid/mcp", {
+          method,
+          headers: { "mcp-session-id": "expired-session" },
+          ...(method === "POST" ? { body: "{}" } : {}),
+        }),
+      );
+      assert.equal(response.status, 404);
+      assert.equal(connected, 0);
+      assert.equal(response.headers.get("mcp-session-id"), null);
+      const body = (await response.json()) as { error: { code: number } };
+      assert.equal(body.error.code, -32001);
+    });
+  }
+
   it("a valid caller B cannot drive a transport/server created for A", async () => {
     let reached = 0;
     _trackFullSessionForTest(

@@ -56,6 +56,16 @@ describe("/mcp auth boundary", () => {
     assert.equal(res.status, 401);
   });
 
+  it("still requires authentication for an expired MCP session", async () => {
+    const res = await post({ "mcp-session-id": "expired-session" });
+    assert.equal(res.status, 401);
+  });
+
+  it("an authenticated expired session returns 404 rather than an SDK 400", async () => {
+    const res = await post({ Authorization: "Bearer good-token", "mcp-session-id": "expired-session" });
+    assert.equal(res.status, 404);
+  });
+
   it("401s with an invalid Bearer token", async () => {
     const res = await post({ Authorization: "Bearer not-a-real-token" });
     assert.equal(res.status, 401);
