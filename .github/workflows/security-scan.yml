@@ -13,7 +13,9 @@ on:
   workflow_dispatch:
     inputs:
       full_history:
-        description: "Scan full git history (slower; use before opening repo or after history rewrites)"
+        description:
+          "Scan full git history (slower; use before opening repo or after his\
+          tory rewrites)"
         type: boolean
         default: false
 
@@ -21,11 +23,15 @@ on:
 env:
   GITLEAKS_VERSION: "8.30.1"
 
-# `inputs.full_history` is boolean but stringified in expressions ('true'/'false').
-# Including the input + event in the group prevents a long history scan from being
+# `inputs.full_history` is boolean but stringified in expressions
+# ('true'/'false').
+# Including the input + event in the group prevents a long history scan from
+# being
 # cancelled by an unrelated push to the same ref.
 concurrency:
-  group: security-scan-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ github.event.inputs.full_history || 'na' }}
+  group:
+    "security-scan-${{ github.workflow }}-${{ github.ref }}-${{ github.event_n\
+    ame }}-${{ github.event.inputs.full_history || 'na' }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -36,50 +42,65 @@ jobs:
     name: Gitleaks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: ${{ github.event.inputs.full_history == 'true' && 0 || 1 }}
+          fetch-depth:
+            "${{ github.event.inputs.full_history == 'true' && 0 || 1 }}"
 
       - name: Install Gitleaks
         run: |
           set -euo pipefail
           tmp="$(mktemp -d)"
           curl -fsSL -o "${tmp}/gitleaks.tar.gz" \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAK\
+          S_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           tar -xzf "${tmp}/gitleaks.tar.gz" -C "${tmp}" gitleaks
           sudo install -m 0755 "${tmp}/gitleaks" /usr/local/bin/gitleaks
           gitleaks version
 
       - name: Scan
+        env:
+          SCAN_FULL_HISTORY: ${{ github.event.inputs.full_history }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event.inputs.full_history }}" = "true" ]; then
+          if [ "$SCAN_FULL_HISTORY" = "true" ]; then
             echo "Full git-history scan"
-            gitleaks detect --source . --config .gitleaks.toml --redact --verbose
+            gitleaks detect --source . --config .gitleaks.toml --redact \
+          --verbose
           else
             echo "Working-tree scan (no-git mode)"
-            gitleaks detect --source . --config .gitleaks.toml --redact --verbose --no-git
+            gitleaks detect --source . --config .gitleaks.toml --redact \
+          --verbose --no-git
           fi
 
   trufflehog:
     name: TruffleHog
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      # The action injects --fail / --no-update / --github-actions itself; do not duplicate.
-      # For push to main, action's auto base/head can resolve to empty strings; scan the
+      # The action injects --fail / --no-update / --github-actions itself; do
+      # not duplicate.
+      # For push to main, action's auto base/head can resolve to empty strings;
+      # scan the
       # whole branch explicitly via base="" + head=ref_name (per upstream docs).
       #
-      # --exclude-paths: a whole-branch scan re-reads immutable commits, so an inline
-      # `trufflehog:ignore` added at HEAD cannot clear a fixture committed earlier
-      # (commit 02fe627 is where these came from). Each entry is justified inside the
+      # --exclude-paths: a whole-branch scan re-reads immutable commits, so an
+      # inline
+      # `trufflehog:ignore` added at HEAD cannot clear a fixture committed
+      # earlier
+      # (commit 02fe627 is where these came from). Each entry is justified
+      # inside the
       # file, and Gitleaks above still scans those same paths.
       - name: TruffleHog
-        uses: trufflesecurity/trufflehog@v3.95.2
+        uses:
+          "trufflesecurity/trufflehog\
+          @4dd8831c5f12599465d4d45c3c447b4018a34c85" # v3
         with:
           base: ""
           head: ${{ github.ref_name }}
-          extra_args: --results=verified,unknown --exclude-paths=.trufflehog-exclude-paths.txt
+          extra_args:
+            "--results=verified,unknown --exclude-paths=.trufflehog-exclude-pa\
+            ths.txt"
