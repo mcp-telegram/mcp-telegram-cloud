@@ -69,7 +69,10 @@ tools; `bun check-parity` lists the exact set), in three tiers:
 - **Write**: send, forward, react, polls, pin, drafts, group and profile
   edits, media uploads (see below). Clients show the outgoing action for
   confirmation.
-- **Destructive** (`destructiveHint: true`, about 20 tools, e.g.
+- **Hard to undo** (`destructiveHint: true`, not gated): editing a sent
+  message, group info, a folder or business hours. Clients ask for a
+  confirmation; the tools work without the opt-in below.
+- **Destructive** (`destructiveHint: true`, e.g.
   `telegram-delete-message`, `telegram-ban-user`, `telegram-leave-group`):
   **off by default**. Each user turns them on at
   [`/my/settings`](https://mcp.mcp-telegram.com/my/settings) (sign in with

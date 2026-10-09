@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  CONFIRMED_WRITE_PUBLIC,
   checkMessageLength,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
@@ -279,7 +280,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       messageId: z.number().describe("ID of the message to edit"),
       text: z.string().describe("New message text"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ text }) => checkMessageLength(text),
     handler: async ({ chatId, messageId, text }, { telegram }) => {
       await telegram.editMessage(chatId, messageId, sanitize(text));
@@ -659,7 +660,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       hideVia: z.boolean().optional().describe("Hide the 'via @bot' label on the sent message"),
       clearDraft: z.boolean().optional().describe("Clear the chat draft after sending"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, queryId, resultId, replyTo, silent, hideVia, clearDraft }, { telegram }) => {
       const { messageId } = await telegram.sendInlineBotResult(chatId, queryId, resultId, {
         replyTo,

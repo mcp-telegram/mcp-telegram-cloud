@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  CONFIRMED_WRITE_LOCAL,
+  CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
   errorResult,
@@ -98,7 +100,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       excludePeers: z.array(z.string()).max(100).optional().describe("Replace excludePeers list entirely"),
       pinnedPeers: z.array(z.string()).max(5).optional().describe("Replace pinnedPeers list entirely"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async (
       {
         id,
@@ -446,7 +448,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       title: z.string().min(1).max(255).optional().describe("New group title"),
       description: z.string().max(255).optional().describe("New group description (supergroups only)"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ title, description }) =>
       title === undefined && description === undefined
         ? errorResult("Provide at least one of: title, description")

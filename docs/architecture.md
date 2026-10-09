@@ -281,7 +281,9 @@ they feel. Two questions decide the class — can the user undo it
 | --- | --- | --- | --- | --- |
 | `READ_ONLY` | ✔ | ✘ | ✘ | read, search, download |
 | `LOCAL_WRITE` | ✘ | ✘ | ✘ | read markers, drafts, folders, mute, privacy |
-| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | send/edit/forward, reactions, invites, profile |
+| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | send/forward, reactions, invites, profile |
+| `CONFIRMED_WRITE_LOCAL` | ✘ | ✔ | ✘ | replace a folder's chats, story stealth mode |
+| `CONFIRMED_WRITE_PUBLIC` | ✘ | ✔ | ✔ | edit a sent message, edit group info, business hours/location/intro, inline bot result |
 | `DESTRUCTIVE_LOCAL` | ✘ | ✔ | ✘ | clear drafts, delete folder, detach account |
 | `DESTRUCTIVE_PUBLIC` | ✘ | ✔ | ✔ | delete message, ban, kick, revoke link, report |
 
@@ -289,9 +291,13 @@ they feel. Two questions decide the class — can the user undo it
 Telegram, so that reading would mark all tools false and say nothing. It is
 whether the effect leaves this account.
 
-Every `destructiveHint: true` tool is gated by `DestructiveGuard`: off by
-default, per-user opt-in at `/my/settings`, its own daily quota, and an audit
-row for each attempt readable at `/my/audit`.
+The `DESTRUCTIVE_*` tools (deletions, bans, reports) are gated by
+`DestructiveGuard`: off by default, per-user opt-in at `/my/settings`, its own
+daily quota, and an audit row for each attempt readable at `/my/audit`.
+`CONFIRMED_WRITE_*` tools also carry `destructiveHint: true`, because the old
+value is gone after the change and the host should confirm first, but they are
+not behind the opt-in: nothing is deleted and the user can set the value again.
+`isGuardedDestructive()` in `src/tools/helpers.ts` draws that line.
 
 `src/__tests__/tool-annotation-contract.test.ts` pins the class of every tool
 and fails when a new one is added without a decision.

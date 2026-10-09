@@ -10,6 +10,7 @@ import type { TelegramService } from "@overpod/mcp-telegram/service";
 
 const { registerAllTools } = await import("../tool-registry.js");
 const {
+  CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_PUBLIC: DESTRUCTIVE,
   READ_ONLY,
   OUTBOUND_WRITE: WRITE,
@@ -76,6 +77,13 @@ function buildHarness() {
         handler: async () => textResult("ran read"),
       },
       {
+        name: "confirmed-write-tool",
+        description: "hard-to-undo write: destructiveHint=true for the host, not gated",
+        annotations: CONFIRMED_WRITE_PUBLIC,
+        skipRequireConnection: true,
+        handler: async () => textResult("ran confirmed write"),
+      },
+      {
         name: "destructive-erroring-tool",
         description: "destructive tool whose handler returns isError=true",
         annotations: DESTRUCTIVE,
@@ -124,6 +132,16 @@ describe("tool-registry — destructive guard wiring", () => {
     await h.callbacks.get("destructive-erroring-tool")?.({ chatId: "@z" });
     assert.equal(h.recordCalls.length, 1);
     assert.equal(h.recordCalls[0].result, "error");
+  });
+
+  it("a CONFIRMED_WRITE tool advertises destructiveHint but skips the opt-in guard", async () => {
+    // Editing a sent message must keep working for users who never opted in to
+    // destructive tools: the hint is for the host's confirmation prompt only.
+    const h = buildHarness();
+    const res = await h.callbacks.get("confirmed-write-tool")?.({ chatId: "@x" });
+    assert.equal(res?.content[0]?.text, "ran confirmed write");
+    assert.equal(h.checkCalls.length, 0, "checkDestructive must not fire for CONFIRMED_WRITE tools");
+    assert.equal(h.recordCalls.length, 0, "no destructive audit row for CONFIRMED_WRITE tools");
   });
 
   it("never calls recordDestructive for non-destructive tools", async () => {

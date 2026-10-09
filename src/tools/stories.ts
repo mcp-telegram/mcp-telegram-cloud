@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  CONFIRMED_WRITE_LOCAL,
   DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
-  LOCAL_WRITE,
   OUTBOUND_WRITE,
   premiumOnlyOnError,
   READ_ONLY,
@@ -230,7 +230,9 @@ export const STORIES_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-read-stories",
-    description: "Mark stories as seen up to a given story ID (maxId, inclusive).",
+    title: "Mark Stories as Viewed",
+    description:
+      "Mark a user's or channel's stories as viewed, the same as opening them in Telegram, up to and including story maxId. The story owner can see that you viewed them.",
     inputSchema: {
       chatId: z.string().describe("Peer whose stories to mark as seen"),
       maxId: z.number().int().positive().describe("Stories up to and including this ID will be marked seen"),
@@ -271,7 +273,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       past: z.boolean().optional().describe("Remove your views from stories you already watched"),
       future: z.boolean().optional().describe("Hide your views for the next 25 minutes"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     preValidate: ({ past, future }) => {
       if (!past && !future) return errorResult("At least one of past or future must be true");
       return null;

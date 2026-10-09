@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   businessOnlyOnError,
+  CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
   errorResult,
@@ -233,7 +234,8 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-update-profile",
-    description: "Update your Telegram profile — first name, last name, bio, or username",
+    description:
+      "Update your Telegram profile: first name, last name, bio, or username. The change is visible to everyone who can see your profile.",
     inputSchema: {
       firstName: z.string().optional().describe("New first name"),
       lastName: z.string().optional().describe("New last name"),
@@ -446,7 +448,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       title: z.string().max(32).optional().describe("New admin-facing label (max 32 chars)"),
       parseMode: z.enum(["md", "html"]).optional().describe("Format message as Markdown or HTML"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ slug, message, title, parseMode }, { telegram }) => {
       const r = await telegram.editBusinessChatLink({
         slug,
@@ -505,7 +507,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .describe("Weekly schedule. Multiple ranges per day are allowed."),
       clear: z.boolean().optional().describe("Pass true to remove business hours entirely"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ clear, timezone, schedule }) => {
       if (!clear && (!timezone || !schedule?.length)) {
         return errorResult("timezone and schedule are required when not clearing");
@@ -530,7 +532,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       longitude: z.number().min(-180).max(180).optional().describe("Geo longitude (-180 to 180)"),
       clear: z.boolean().optional().describe("Pass true to remove business location"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ clear, address, latitude, longitude }) => {
       if (!clear && !address) return errorResult("address is required when not clearing");
       if ((latitude === undefined) !== (longitude === undefined)) {
@@ -696,7 +698,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .describe("Hex-encoded file_reference bytes (required with stickerId)"),
       clear: z.boolean().optional().describe("Pass true to remove the intro card"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ clear, title, description, stickerId, stickerAccessHash, stickerFileReference }) => {
       if (!clear && (!title || !description)) {
         return errorResult("title and description are required when not clearing");

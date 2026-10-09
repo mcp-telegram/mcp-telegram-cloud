@@ -322,7 +322,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-album",
     description:
-      "Send an album of 1-10 photos/videos to a chat. Each item supplies its own bytes (uploadId or https:// URL) and optional caption.",
+      "Send 2-10 files to a chat as one grouped album message. Each item supplies its own bytes (uploadId or https:// URL) and optional caption. Items arrive as files (documents), not as compressed photos.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       items: z

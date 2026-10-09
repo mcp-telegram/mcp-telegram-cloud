@@ -11,7 +11,7 @@ import { logger, logUser } from "./logger.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION, TOOL_TIMEOUTS } from "./telemetry/metrics.js";
 import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js";
-import { deriveTitle } from "./tools/helpers.js";
+import { deriveTitle, isGuardedDestructive } from "./tools/helpers.js";
 import type { UploadStore } from "./upload-store.js";
 import type { fetchUrlSafely } from "./url-fetcher.js";
 
@@ -323,7 +323,9 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
     config.annotations = { ...tool.annotations, title: config.title };
     if (tool.inputSchema) config.inputSchema = tool.inputSchema;
 
-    const isDestructive = tool.annotations.destructiveHint;
+    // Gated set, not the raw hint: CONFIRMED_WRITE tools carry destructiveHint for the
+    // host's confirmation prompt but must not require the destructive opt-in.
+    const isDestructive = isGuardedDestructive(tool.annotations);
 
     server.registerTool(tool.name, config, async (rawArgs: unknown) => {
       opts.onToolCall?.(tool.name);

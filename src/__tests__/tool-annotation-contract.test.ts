@@ -19,11 +19,26 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 const { TOOLS } = await import("../tools.js");
-const { READ_ONLY, LOCAL_WRITE, OUTBOUND_WRITE, DESTRUCTIVE_LOCAL, DESTRUCTIVE_PUBLIC } = await import(
-  "../tools/helpers.js"
-);
+const {
+  READ_ONLY,
+  LOCAL_WRITE,
+  OUTBOUND_WRITE,
+  CONFIRMED_WRITE_LOCAL,
+  CONFIRMED_WRITE_PUBLIC,
+  DESTRUCTIVE_LOCAL,
+  DESTRUCTIVE_PUBLIC,
+  isGuardedDestructive,
+} = await import("../tools/helpers.js");
 
-const CLASSES = { READ_ONLY, LOCAL_WRITE, OUTBOUND_WRITE, DESTRUCTIVE_LOCAL, DESTRUCTIVE_PUBLIC } as const;
+const CLASSES = {
+  READ_ONLY,
+  LOCAL_WRITE,
+  OUTBOUND_WRITE,
+  CONFIRMED_WRITE_LOCAL,
+  CONFIRMED_WRITE_PUBLIC,
+  DESTRUCTIVE_LOCAL,
+  DESTRUCTIVE_PUBLIC,
+} as const;
 
 const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
   READ_ONLY: [
@@ -108,12 +123,10 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
   LOCAL_WRITE: [
     "telegram-accounts-add",
     "telegram-accounts-switch",
-    "telegram-activate-stealth-mode",
     "telegram-add-contact",
     "telegram-archive-chat",
     "telegram-block-user",
     "telegram-create-folder",
-    "telegram-edit-folder",
     "telegram-get-unread-mentions",
     "telegram-get-unread-reactions",
     "telegram-mark-as-read",
@@ -138,13 +151,9 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-create-invite-link",
     "telegram-create-poll",
     "telegram-create-topic",
-    "telegram-edit-business-chat-link",
     "telegram-edit-fact-check",
-    "telegram-edit-group",
-    "telegram-edit-message",
     "telegram-edit-topic",
     "telegram-forward-message",
-    "telegram-inline-query-send",
     "telegram-invite-to-group",
     "telegram-join-chat",
     "telegram-pin-message",
@@ -170,9 +179,6 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-set-birthday",
     "telegram-set-business-away",
     "telegram-set-business-greeting",
-    "telegram-set-business-hours",
-    "telegram-set-business-intro",
-    "telegram-set-business-location",
     "telegram-set-emoji-status",
     "telegram-set-personal-channel",
     "telegram-set-profile-color",
@@ -188,6 +194,16 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-unpin-message",
     "telegram-update-profile",
     "telegram-vote-poll",
+  ],
+  CONFIRMED_WRITE_LOCAL: ["telegram-activate-stealth-mode", "telegram-edit-folder"],
+  CONFIRMED_WRITE_PUBLIC: [
+    "telegram-edit-business-chat-link",
+    "telegram-edit-group",
+    "telegram-edit-message",
+    "telegram-inline-query-send",
+    "telegram-set-business-hours",
+    "telegram-set-business-intro",
+    "telegram-set-business-location",
   ],
   DESTRUCTIVE_LOCAL: [
     "telegram-accounts-remove",
@@ -252,6 +268,20 @@ describe("tool annotation contract", () => {
       `new tool(s) without an annotation decision: ${unclassified.join(", ")}. ` +
         "Add them to EXPECTED after choosing a class in src/tools/helpers.ts.",
     );
+  });
+
+  it("only deletions go through the destructive opt-in, CONFIRMED_WRITE tools do not", () => {
+    for (const name of [...EXPECTED.DESTRUCTIVE_LOCAL, ...EXPECTED.DESTRUCTIVE_PUBLIC]) {
+      const tool = TOOLS.find((t) => t.name === name);
+      assert.ok(tool && isGuardedDestructive(tool.annotations), `${name} must be gated by DestructiveGuard`);
+    }
+    for (const name of [...EXPECTED.CONFIRMED_WRITE_LOCAL, ...EXPECTED.CONFIRMED_WRITE_PUBLIC]) {
+      const tool = TOOLS.find((t) => t.name === name);
+      assert.ok(tool?.annotations.destructiveHint, `${name} must advertise destructiveHint`);
+      assert.equal(isGuardedDestructive(tool.annotations), false, `${name} must not require the opt-in`);
+    }
+    // A copied class object loses its identity and must fall back to the gated path.
+    assert.equal(isGuardedDestructive({ ...CONFIRMED_WRITE_PUBLIC }), true);
   });
 
   it("no tool claims to be read-only while also being destructive", () => {

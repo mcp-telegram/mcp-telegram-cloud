@@ -70,6 +70,36 @@ export const OUTBOUND_WRITE = {
   openWorldHint: true,
 } as const;
 
+/** Hard to undo, invisible outside the account: replacing a folder's chat list,
+ * starting story stealth mode. `destructiveHint: true` so hosts confirm first,
+ * but NOT behind `DestructiveGuard` — nothing is deleted, the user can set the
+ * value again. See {@link isGuardedDestructive}. */
+export const CONFIRMED_WRITE_LOCAL = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  openWorldHint: false,
+} as const;
+
+/** Hard to undo and visible to others: editing a sent message (the old text is
+ * gone), replacing group info or business hours/location/intro, sending a bot's
+ * inline result. Same split as {@link CONFIRMED_WRITE_LOCAL}: hosts confirm,
+ * the server does not gate. */
+export const CONFIRMED_WRITE_PUBLIC = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  openWorldHint: true,
+} as const;
+
+const CONFIRMED_WRITES: ReadonlySet<object> = new Set([CONFIRMED_WRITE_LOCAL, CONFIRMED_WRITE_PUBLIC]);
+
+/** Whether a tool goes through `DestructiveGuard` (opt-in, quota, audit). Only
+ * real deletions do: the two CONFIRMED_WRITE classes carry `destructiveHint`
+ * for the host's confirmation but must stay usable without the opt-in. Matched
+ * by identity, so a copied object falls back to the stricter gated path. */
+export function isGuardedDestructive(annotations: { readonly destructiveHint: boolean }): boolean {
+  return annotations.destructiveHint && !CONFIRMED_WRITES.has(annotations);
+}
+
 /** Irreversible, but confined to this account: clearing drafts, deleting a
  * folder or a not-yet-sent scheduled message, detaching a linked account.
  * Gated server-side by `DestructiveGuard` (per-user opt-in + daily quota +

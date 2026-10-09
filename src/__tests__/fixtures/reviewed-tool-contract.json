@@ -1,14 +1,9 @@
 {
   "$comment": "Tool contract under directory review. Changing a reviewed tool's name, title, annotations, required arguments or removing an argument breaks the reviewer's test cases. Update this file only when a new version is submitted for review, and in the same PR as that submission. See issue #52 (review freeze) and #51.",
-  "review": "ChatGPT plugin directory, Chatroost 1.0.0",
-  "capturedAt": "2026-09-30",
-  "source": "Tool definitions stored for the submission in the OpenAI developer dashboard (continuous review view)",
-  "servedButNotReviewed": [
-    {
-      "name": "telegram-get-saved-music",
-      "reason": "Read-only tool shipped in v2.58.0 (2026-09-16). The 2026-09-24 resubmission kept the earlier tool scan, so the review snapshot does not include it; it has been served since. Keep it as is: removing a tool the reviewer may already see is also a change."
-    }
-  ],
+  "review": "ChatGPT plugin directory, Chatroost 1.0.0 (plugin package, resubmitted 2026-10-09)",
+  "capturedAt": "2026-10-09",
+  "source": "tools/list of the hosted image at the 2026-10-09 submission: real registry, Dockerfile MCP_TELEGRAM_ENABLE_* flags, in-memory transport",
+  "servedButNotReviewed": [],
   "tools": [
     {
       "name": "telegram-accounts-add",
@@ -70,7 +65,7 @@
       "title": "Activate Stealth Mode",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": [],
@@ -348,7 +343,7 @@
       "title": "Edit Business Chat Link",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["message", "slug"],
@@ -370,7 +365,7 @@
       "title": "Edit Folder",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": ["id"],
@@ -396,7 +391,7 @@
       "title": "Edit Group",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId"],
@@ -407,7 +402,7 @@
       "title": "Edit Message",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId", "text"],
@@ -909,6 +904,17 @@
       "properties": ["limit"]
     },
     {
+      "name": "telegram-get-saved-music",
+      "title": "Get Saved Music",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": [],
+      "properties": ["user", "offset", "limit"]
+    },
+    {
       "name": "telegram-get-scheduled",
       "title": "Get Scheduled",
       "annotations": {
@@ -1089,7 +1095,7 @@
       "title": "Inline Query Send",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "queryId", "resultId"],
@@ -1273,7 +1279,7 @@
     },
     {
       "name": "telegram-read-stories",
-      "title": "Read Stories",
+      "title": "Mark Stories as Viewed",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -1671,7 +1677,7 @@
       "title": "Set Business Hours",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1682,7 +1688,7 @@
       "title": "Set Business Intro",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1693,7 +1699,7 @@
       "title": "Set Business Location",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
