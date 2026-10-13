@@ -1,11 +1,11 @@
 # Release v1.43.4: immutable source identity shared by build and runtime label.
-ARG MCP_TELEGRAM_COMMIT=54322141786e458e78e2760361ebf15daa4822c5
+ARG MCP_TELEGRAM_COMMIT=a11e9a91db6b11ec50f5d4abb6a9377b887254ee
 
 # Stage 1: Build mcp-telegram from source (with declarations)
 # Core lib (mcp-telegram) is npm-native but Bun compiles it fine.
 # `python3 make g++` no longer needed: --ignore-scripts skips native addon build
 # for utf-8-validate/bufferutil; the JS fallback is identical.
-FROM oven/bun:1.4.2-alpine AS telegram-lib
+FROM oven/bun:1.4.3-alpine AS telegram-lib
 ARG MCP_TELEGRAM_COMMIT
 RUN apk add --no-cache git
 RUN git init /telegram \
@@ -24,7 +24,7 @@ RUN bun run build
 # keeps the backend tree at ~48MB and --frozen-lockfile still holds.
 # `--ignore-scripts` skips native compilation for `utf-8-validate` and
 # `bufferutil` (optional speedups for `ws`); the JS fallback is identical.
-FROM oven/bun:1.4.2-alpine AS builder
+FROM oven/bun:1.4.3-alpine AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --production --ignore-scripts
@@ -36,7 +36,7 @@ COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 # the runtime, keeping it lean (React lives only inside the SSR bundles, never
 # in the backend's deps). If this stage's output were ever absent the server
 # falls back to the legacy hono pages (reactPagesAvailable() === false).
-FROM oven/bun:1.4.2-alpine AS app-builder
+FROM oven/bun:1.4.3-alpine AS app-builder
 # Build the app workspace standalone (its package.json is self-contained:
 # react, react-dom, vite, @vitejs/plugin-react). Installing it in isolation
 # avoids pulling the root workspace graph (Next.js/web deps) into this stage and
@@ -52,7 +52,7 @@ COPY app/tsconfig.json app/biome.json app/vite.config.ts app/vite.ssr.config.ts 
 RUN bun run build
 
 # Stage 3: Production runtime — Bun runs .ts directly, no build step
-FROM oven/bun:1.4.2-alpine
+FROM oven/bun:1.4.3-alpine
 ARG MCP_TELEGRAM_COMMIT
 LABEL io.mcp-telegram.core.revision="${MCP_TELEGRAM_COMMIT}"
 WORKDIR /app
