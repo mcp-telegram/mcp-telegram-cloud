@@ -19,23 +19,48 @@ import type { MiddlewareHandler } from "hono";
  *                                 (stronger than X-Frame-Options; both set for
  *                                 older-UA coverage).
  *   - base-uri 'none', object-src 'none', form-action 'self' — lock down the rest.
+ *     Browsers apply form-action to the redirect that follows a form POST too,
+ *     so the OAuth pages whose forms answer with a 302 to the client (review
+ *     code, consent approve) add that client's validated redirect origin via
+ *     contentSecurityPolicy(); with bare 'self' Chrome silently drops the
+ *     redirect and the user is stuck on the page.
  *
  * HSTS is set unconditionally: the backend is HTTPS-only behind Traefik+LE, so
  * pinning a year of HTTPS closes the first-request downgrade window. No `preload`
  * yet (opt-in is hard to reverse); add once confident across all subdomains.
  */
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
-  "connect-src 'self'",
-  "font-src 'self'",
-  "frame-ancestors 'none'",
-  "base-uri 'none'",
-  "object-src 'none'",
-  "form-action 'self'",
-].join("; ");
+export function contentSecurityPolicy(formActionSources: string[] = []): string {
+  return [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "font-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+    "object-src 'none'",
+    ["form-action 'self'", ...formActionSources].join(" "),
+  ].join("; ");
+}
+
+const CSP = contentSecurityPolicy();
+
+/**
+ * CSP source matching an OAuth redirect URI: the origin for http(s), the bare
+ * scheme for app callbacks (`cursor://…` → `cursor:`). Null for anything that
+ * cannot be expressed safely as a single source token.
+ */
+export function formActionSource(redirectUri: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(redirectUri);
+  } catch {
+    return null;
+  }
+  if (url.protocol === "https:" || url.protocol === "http:") return url.origin;
+  return /^[a-z][a-z0-9+.-]*:$/.test(url.protocol) ? url.protocol : null;
+}
 
 export const securityHeaders: MiddlewareHandler = async (c, next) => {
   await next();

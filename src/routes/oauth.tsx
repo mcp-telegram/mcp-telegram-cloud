@@ -10,6 +10,7 @@ import {
   readBrowserSessionToken,
 } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
+import { contentSecurityPolicy, formActionSource } from "../middleware/security-headers.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { ConsentPage } from "../pages/ConsentPage.js";
@@ -57,6 +58,17 @@ function parsedRedirectUris(raw: string): string[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Let this page's forms (review code, consent approve) follow their 302 to the
+ * client: browsers enforce form-action on that redirect, and bare 'self' makes
+ * Chrome drop it silently (reviewer stuck on "Continue", 2026-10-13). Call only
+ * with a redirect_uri already matched against the registered client.
+ */
+function allowFormRedirectTo(c: Context, redirectUri: string): void {
+  const source = formActionSource(redirectUri);
+  if (source) c.header("Content-Security-Policy", contentSecurityPolicy([source]));
 }
 
 /**
@@ -235,6 +247,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
           event: "oauth.consent.required",
           userId: logUser(userIdHint),
         });
+        allowFormRedirectTo(c, redirectUri);
         return c.html(
           <ConsentPage
             clientId={clientId}
@@ -270,6 +283,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     }
 
     incr(OAUTH_FLOW, { step: "authorize", outcome: "qr_page" });
+    allowFormRedirectTo(c, redirectUri);
 
     if (reactPagesAvailable()) {
       const locale = detectRequestLocale(c);
