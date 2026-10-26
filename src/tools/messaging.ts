@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  CONFIRMED_WRITE_LOCAL,
   CONFIRMED_WRITE_PUBLIC,
   checkMessageLength,
   DESTRUCTIVE_LOCAL,
@@ -42,7 +43,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId }, { telegram }) => {
       await telegram.markAsRead(chatId);
       return textResult(`Marked ${chatId} as read`);
@@ -120,7 +121,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .default(false)
         .describe("If true, add reaction(s) to existing ones instead of replacing"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, messageId, emoji, addToExisting }, { telegram }) => {
       const updated = await telegram.sendReaction(chatId, messageId, emoji, addToExisting);
       const emojiStr = Array.isArray(emoji) ? emoji.join("") : emoji;
@@ -168,7 +169,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       emoji: z.string().max(8).describe("Reaction emoji. Empty string '' removes the reaction."),
       addToRecent: z.boolean().optional().describe("Add emoji to your recently used reactions"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, storyId, emoji, addToRecent }, { telegram }) => {
       await telegram.sendStoryReaction(chatId, storyId, emoji, addToRecent);
       return textResult(
@@ -186,7 +187,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       text: z.string().describe("Draft text. Empty string clears the draft"),
       replyTo: z.number().int().positive().optional().describe("Message ID this draft replies to"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, text, replyTo }, { telegram }) => {
       await telegram.saveDraft(chatId, text, replyTo);
       return textResult(text === "" ? `Draft cleared for ${chatId}` : `Draft saved for ${chatId}`);
@@ -205,7 +206,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .max(10)
         .describe("Zero-based option indexes. Empty [] retracts vote."),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, messageId, optionIndexes }, { telegram }) => {
       const result = await telegram.sendPollVote(chatId, messageId, optionIndexes);
       if (optionIndexes.length === 0) {
@@ -261,7 +262,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
           "Optional message effect ID (numeric string, up to 19 digits). Premium animated effect attached to the message.",
         ),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ text, parseMode }) => checkMessageLength(text, parseMode),
     handler: async ({ chatId, text, replyTo, parseMode, topicId, quoteText, effect }, { telegram }) => {
       const extra = quoteText || effect ? { quoteText: safeOpt(quoteText), effect } : undefined;
@@ -296,7 +297,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       toChatId: z.string().describe("Destination chat ID or username"),
       messageIds: z.array(z.number()).describe("Array of message IDs to forward"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ fromChatId, toChatId, messageIds }, { telegram }) => {
       await telegram.forwardMessage(fromChatId, toChatId, messageIds);
       return textResult(`Forwarded ${messageIds.length} message(s) from ${fromChatId} to ${toChatId}`);
@@ -357,7 +358,10 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
       topicId: z.number().int().positive().optional().describe("Forum topic ID"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
+    // Precise location, phone numbers or a birth date: off on the hosted service
+    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
     handler: async (
       { chatId, latitude, longitude, accuracyRadius, livePeriod, heading, proximityRadius, replyTo, topicId },
       { telegram },
@@ -393,7 +397,10 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       venueType: z.string().max(256).optional().describe("Provider-specific venue type category"),
       ...replyTargetFields,
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
+    // Precise location, phone numbers or a birth date: off on the hosted service
+    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
     handler: async (
       { chatId, latitude, longitude, title, address, provider, venueId, venueType, replyTo, topicId },
       { telegram },
@@ -427,7 +434,10 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       vcard: z.string().max(2048).optional().describe("Optional vCard v3.0 text content"),
       ...replyTargetFields,
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
+    // Precise location, phone numbers or a birth date: off on the hosted service
+    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
     handler: async ({ chatId, phone, firstName, lastName, vcard, replyTo, topicId }, { telegram }) => {
       const safeFirstName = sanitize(firstName);
       const { id } = await telegram.sendContact(chatId, phone, safeFirstName, {
@@ -455,7 +465,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         ),
       ...replyTargetFields,
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, emoji, replyTo, topicId }, { telegram }) => {
       const { id, value } = await telegram.sendDice(chatId, emoji, { replyTo, topicId });
       const rolled = value !== undefined ? `: rolled ${value}` : " (value pending)";
@@ -508,7 +518,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       limit: z.number().default(20).describe("Maximum number of mentions to return"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, limit }, { telegram }) => {
       const messages = await telegram.getUnreadMentions(chatId, limit);
       const text = messages.map(renderMessage).join("\n\n");
@@ -524,7 +534,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       limit: z.number().default(20).describe("Maximum number of messages to return"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, limit }, { telegram }) => {
       const messages = await telegram.getUnreadReactions(chatId, limit);
       const text = messages.map(renderMessage).join("\n\n");
@@ -549,7 +559,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Index of correct answer (0-based, required for quiz mode)"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ answers, multipleChoice, quiz, correctAnswer }) => {
       if (multipleChoice && quiz) return errorResult("multipleChoice and quiz are mutually exclusive");
       if (quiz && correctAnswer === undefined) return errorResult("quiz=true requires correctAnswer (0-based index)");
@@ -591,7 +601,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       messageId: z.number().int().positive().describe("Message ID to pin"),
       silent: z.boolean().default(false).describe("Pin without notification"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, messageId, silent }, { telegram }) => {
       await telegram.pinMessage(chatId, messageId, silent);
       return textResult(`Message ${messageId} pinned in ${chatId}`);
@@ -605,7 +615,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID to unpin"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, messageId }, { telegram }) => {
       await telegram.unpinMessage(chatId, messageId);
       return textResult(`Message ${messageId} unpinned in ${chatId}`);
@@ -627,7 +637,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       replyTo: z.number().int().positive().optional().describe("Message ID to reply to"),
       parseMode: z.enum(["md", "html"]).optional().describe("Message format: md (Markdown) or html"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ text, parseMode, scheduleDate }) => {
       const tooLong = checkMessageLength(text, parseMode);
       if (tooLong) return tooLong;
@@ -694,7 +704,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .describe("Button column index (0-based) — required unless data is provided"),
       data: z.string().optional().describe("Raw callback_data as base64 string (escape hatch — prefer row/column)"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ row, column, data }) => {
       const hasIndex = row !== undefined && column !== undefined;
       const hasPartialIndex = (row !== undefined) !== (column !== undefined);
@@ -789,7 +799,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       text: z.string().min(1).max(1024).describe("Fact-check annotation text (1-1024 chars)"),
       parseMode: z.enum(["md", "html"]).optional().describe("Text format (currently ignored — plain text only)"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, messageId, text, parseMode }, { telegram }) => {
       const safeText = sanitize(text);
       await telegram.editFactCheck(chatId, messageId, safeText, { parseMode });

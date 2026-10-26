@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   businessOnlyOnError,
+  CONFIRMED_WRITE_LOCAL,
   CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
@@ -10,6 +11,7 @@ import {
   OUTBOUND_WRITE,
   premiumOnlyOnError,
   READ_ONLY,
+  READ_OPEN,
   safeOpt,
   sanitize,
   textResult,
@@ -26,6 +28,9 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       phone: z.string().optional().describe("Phone number for the contact"),
     },
     annotations: LOCAL_WRITE,
+    // Precise location, phone numbers or a birth date: off on the hosted service
+    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
     handler: async ({ userId, firstName, lastName, phone }, { telegram }) => {
       const sanFirst = sanitize(firstName);
       const sanLast = safeOpt(lastName);
@@ -56,7 +61,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Unix timestamp when status expires. Omit for permanent."),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ documentId, collectibleId }) => {
       if (documentId && collectibleId) return errorResult("Only one of documentId or collectibleId may be set");
       return null;
@@ -127,7 +132,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Max tracks to return per page (default 50, max 100)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ user, offset, limit }, { telegram }) => {
       const result = await telegram.getSavedMusic(safeOpt(user), { offset, limit });
       return textResult(JSON.stringify(result));
@@ -157,7 +162,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
           "Custom emoji document ID (stringified long) for profile background pattern (Premium). Omit to remove.",
         ),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ forProfile, color, backgroundEmojiId }, { telegram }) => {
       await telegram.setProfileColor({ forProfile, color, backgroundEmojiId });
       if (color === undefined && !backgroundEmojiId) return textResult("Profile color reset");
@@ -179,6 +184,9 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       clear: z.boolean().optional().describe("Pass true to remove birthday from profile"),
     },
     annotations: OUTBOUND_WRITE,
+    // Precise location, phone numbers or a birth date: off on the hosted service
+    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
     preValidate: ({ clear, day, month }) => {
       if (!clear && (!day || !month)) return errorResult("day and month are required when not clearing");
       return null;
@@ -199,7 +207,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       channelId: z.string().optional().describe("Channel ID or @username to feature on profile"),
       clear: z.boolean().optional().describe("Pass true to remove personal channel from profile"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ channelId, clear }) => {
       if (!clear && !channelId) return errorResult("channelId is required when not clearing");
       if (clear && channelId) return errorResult("Cannot set channelId and clear=true simultaneously");
@@ -242,7 +250,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       bio: z.string().optional().describe("New bio/about text (max 70 chars, 300 for Premium)"),
       username: z.string().optional().describe("New username (without @)"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ firstName, lastName, bio, username }, { telegram }) => {
       const updates: string[] = [];
       const sanFirst = safeOpt(firstName);
@@ -275,7 +283,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       allowUsers: z.array(z.string()).optional().describe("User IDs/usernames to always allow (exceptions)"),
       disallowUsers: z.array(z.string()).optional().describe("User IDs/usernames to always disallow (exceptions)"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ setting, rule, allowUsers, disallowUsers }, { telegram }) => {
       await telegram.setPrivacy(setting, rule, allowUsers, disallowUsers);
       return textResult(`Privacy: ${setting} set to "${rule}"`);
@@ -321,7 +329,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Only allow users with Telegram Premium to message you if they are not in your contacts (Premium)"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async (
       {
         archiveAndMuteNewNoncontactPeers,
@@ -362,7 +370,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       messageId: z.number().int().positive().describe("Message ID of the channel post"),
       private: z.boolean().describe("true = anonymous on leaderboard, false = show name"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, messageId, private: privateFlag }, { telegram }) => {
       await telegram.togglePaidReactionPrivacy(chatId, messageId, privateFlag);
       return textResult(
@@ -408,7 +416,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
     inputSchema: {
       slug: z.string().min(1).describe("Link slug to resolve (from t.me/m/<slug>)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ slug }, { telegram }) => {
       const r = await telegram.resolveBusinessChatLink(slug);
       const lines = [`Peer: ${r.peer.type}:${r.peer.id}`, `Entities: ${r.entityCount}`, `Message: ${r.message}`];
@@ -533,6 +541,9 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       clear: z.boolean().optional().describe("Pass true to remove business location"),
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    // Precise location, phone numbers or a birth date: off on the hosted service
+    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
     preValidate: ({ clear, address, latitude, longitude }) => {
       if (!clear && !address) return errorResult("address is required when not clearing");
       if ((latitude === undefined) !== (longitude === undefined)) {
@@ -585,7 +596,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         .describe("Send greeting if user has been inactive for N days"),
       clear: z.boolean().optional().describe("Pass true to disable greeting message"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ clear, shortcutId, includeUsers, excludeUsers }) => {
       if (!clear && shortcutId === undefined) return errorResult("shortcutId is required when not clearing");
       if (includeUsers?.length && excludeUsers?.length) {
@@ -641,7 +652,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       excludeUsers: z.array(z.string()).optional(),
       clear: z.boolean().optional().describe("Pass true to disable away message"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     preValidate: ({ clear, shortcutId, schedule, customFrom, customTo, includeUsers, excludeUsers }) => {
       if (!clear && shortcutId === undefined) return errorResult("shortcutId is required when not clearing");
       if (schedule === "custom" && (customFrom === undefined || customTo === undefined)) {

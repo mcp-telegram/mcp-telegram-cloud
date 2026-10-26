@@ -9,6 +9,7 @@ import { z } from "zod";
 
 const { TOOLS } = await import("../tools.js");
 const { EXPLICIT_EXCLUDED } = await import("../parity-config.js");
+const { isGuardedDestructive } = await import("../tools/helpers.js");
 
 const PHASE_X_TOOLS = [
   "telegram-send-file",
@@ -21,16 +22,16 @@ const PHASE_X_TOOLS = [
 
 describe("Phase X — FS-bound tools registered with source union", () => {
   for (const name of PHASE_X_TOOLS) {
-    it(`registers ${name} as a non-destructive write tool`, () => {
+    it(`registers ${name} as a write the host confirms, outside the destructive opt-in`, () => {
       const tool = TOOLS.find((t) => t.name === name);
       assert.ok(tool, `${name} is not in TOOLS array`);
       if (!tool) return;
       assert.equal(tool.annotations.readOnlyHint, false, `${name} should not be read-only`);
-      assert.equal(
-        tool.annotations.destructiveHint,
-        false,
-        `${name} is non-destructive — content can be deleted by the user via Telegram itself`,
-      );
+      // A send or a replaced profile photo cannot be taken back for whoever
+      // saw it, so the host confirms (destructiveHint), but nothing is
+      // deleted, so the per-user destructive opt-in does not apply.
+      assert.equal(tool.annotations.destructiveHint, true, `${name} is an irreversible send or overwrite`);
+      assert.equal(isGuardedDestructive(tool.annotations), false, `${name} must not require the destructive opt-in`);
       assert.ok(tool.description.length >= 20, `${name} description too short`);
       assert.ok(typeof tool.handler === "function", `${name} missing handler`);
     });

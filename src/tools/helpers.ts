@@ -33,45 +33,60 @@ export const replyTargetFields = {
 
 // MCP annotation classes.
 //
-// Two independent questions decide the class of every tool, and both are
-// answered from what the tool actually does, not from how risky it feels:
+// Values follow the OpenAI plugin guidelines ("Correct annotation"), which the
+// ChatGPT directory review checks tool by tool, and match the MCP hints Claude
+// uses for confirmations:
 //
-//   destructiveHint — can the effect be undone by the user?
-//   openWorldHint   — does the effect leave this account?
+//   readOnlyHint    — true only for retrieval, computation or previews that do
+//                     not change anything. Posting messages is a write.
+//   destructiveHint — true for deletion, overwriting, cancellation, access
+//                     revocation and irreversible sends. false only for
+//                     additive writes; "the user can undo it" is not a reason.
+//   openWorldHint   — true when the tool reaches public or open-ended entities
+//                     or arbitrary destinations (other people, public search,
+//                     URLs, third-party bots). false when it stays inside the
+//                     account's own chats, contacts and settings, even though
+//                     Telegram is an external service.
 //
-// The second one is the easy mistake. "Open world" is not "calls a third-party
-// API": per the MCP annotation guidance it covers changing state other people
-// can see — delivering a message to a recipient, posting to a channel, editing
-// a profile, filing a report. Everything this connector does runs through
-// Telegram, so an "it is all one API, therefore closed" reading would mark all
-// 174 tools false and say nothing. What separates them is whether anyone other
-// than the account owner can observe the result.
+// Every class is matched by identity, so copying an object changes behavior;
+// see {@link isGuardedDestructive}.
 
-/** Reads only. Cannot change any state. */
+/** Reads only, inside the account: its chats, contacts, settings, stats. */
 export const READ_ONLY = {
   readOnlyHint: true,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
 
-/** Reversible, and invisible outside the account: read markers, drafts,
- * folders, archive/mute, privacy settings, local account bookkeeping. */
+/** Reads only, but reaches beyond the account: public search, any user's or
+ * channel's public profile and stories, public sticker catalogs, arbitrary
+ * URLs, third-party inline bots. */
+export const READ_OPEN = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  openWorldHint: true,
+} as const;
+
+/** Additive or cosmetic, and invisible outside the account: creating a folder,
+ * mute/archive/pin of a dialog, folder tags, default reaction, transcription
+ * and translation requests, switching or adding a linked account. */
 export const LOCAL_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
 
-/** Reversible, but other people see it: sending and editing messages,
- * reactions, stories, polls, invites, group and profile changes. */
+/** Additive and visible to others, without an irreversible effect: typing
+ * indicator, joining a chat, unbanning or unblocking, creating an invite link,
+ * a forum topic or a business chat link, pinning a story. */
 export const OUTBOUND_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
   openWorldHint: true,
 } as const;
 
-/** Hard to undo, invisible outside the account: replacing a folder's chat list,
- * starting story stealth mode. `destructiveHint: true` so hosts confirm first,
+/** Overwrites the account's own state: replacing a draft, a folder's chats or
+ * the folder order, privacy settings, marking mentions read, story stealth mode. `destructiveHint: true` so hosts confirm first,
  * but NOT behind `DestructiveGuard` — nothing is deleted, the user can set the
  * value again. See {@link isGuardedDestructive}. */
 export const CONFIRMED_WRITE_LOCAL = {
@@ -80,9 +95,9 @@ export const CONFIRMED_WRITE_LOCAL = {
   openWorldHint: false,
 } as const;
 
-/** Hard to undo and visible to others: editing a sent message (the old text is
- * gone), replacing group info or business hours/location/intro, sending a bot's
- * inline result. Same split as {@link CONFIRMED_WRITE_LOCAL}: hosts confirm,
+/** Irreversible sends and overwrites other people see: sending, forwarding or
+ * editing messages and media, reactions, votes, read receipts, pins, invites,
+ * admin and group settings, profile and business fields, bot actions. Same split as {@link CONFIRMED_WRITE_LOCAL}: hosts confirm,
  * the server does not gate. */
 export const CONFIRMED_WRITE_PUBLIC = {
   readOnlyHint: false,
