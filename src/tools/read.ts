@@ -5,6 +5,7 @@ import {
   formatReactions,
   MAX_INLINE_MEDIA,
   READ_ONLY,
+  READ_OPEN,
   renderDialog,
   renderMessage,
   sanitize,
@@ -75,7 +76,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       query: z.string().describe("Search query (name or username)"),
       limit: z.number().default(10).describe("Max results"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ query, limit }, { telegram }) => {
       const results = await telegram.searchChats(query, limit);
       const text = results
@@ -97,7 +98,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ query, limit, minDate, maxDate }, { telegram }) => {
       const messages = await telegram.searchGlobal(query, limit, minDate, maxDate);
       const text = messages
@@ -425,7 +426,7 @@ export const READ_TOOLS: ToolDefinition[] = [
     inputSchema: {
       userId: z.string().describe("User ID or username"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ userId }, { telegram }) => {
       const profile = await telegram.getProfile(userId);
       const lines = [
@@ -452,7 +453,7 @@ export const READ_TOOLS: ToolDefinition[] = [
     inputSchema: {
       entityId: z.string().describe("User/Chat/Channel ID or username"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ entityId }, { telegram }) => {
       const result = await telegram.downloadProfilePhoto(entityId);
       if (!result || !("buffer" in result)) return textResult("No profile photo found");
@@ -783,7 +784,7 @@ export const READ_TOOLS: ToolDefinition[] = [
         )
         .describe("Public http(s) URL to preview"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ url }, { telegram }) => {
       const p = await telegram.getWebPreview(url);
       if (!p) return textResult("No preview available.");

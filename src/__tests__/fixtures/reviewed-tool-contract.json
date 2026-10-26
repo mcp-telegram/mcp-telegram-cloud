@@ -1,8 +1,8 @@
 {
   "$comment": "Tool contract under directory review. Changing a reviewed tool's name, title, annotations, required arguments or removing an argument breaks the reviewer's test cases. Update this file only when a new version is submitted for review, and in the same PR as that submission. See issue #52 (review freeze) and #51.",
-  "review": "ChatGPT plugin directory, Chatroost 1.0.0 (plugin package, resubmitted 2026-10-09)",
-  "capturedAt": "2026-10-09",
-  "source": "tools/list of the hosted image at the 2026-10-09 submission: real registry, Dockerfile MCP_TELEGRAM_ENABLE_* flags, in-memory transport",
+  "review": "ChatGPT plugin directory, Chatroost (resubmission after the 2026-10-26 rejection)",
+  "capturedAt": "2026-10-26",
+  "source": "tools/list of the hosted image: real registry, Dockerfile MCP_TELEGRAM_ENABLE_* flags, in-memory transport (scripts/capture-reviewed-contract.ts)",
   "servedButNotReviewed": [],
   "tools": [
     {
@@ -72,22 +72,11 @@
       "properties": ["future", "past"]
     },
     {
-      "name": "telegram-add-contact",
-      "title": "Add Contact",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": false
-      },
-      "required": ["firstName", "userId"],
-      "properties": ["firstName", "lastName", "phone", "userId"]
-    },
-    {
       "name": "telegram-approve-join-request",
       "title": "Approve Join Request",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["approved", "chatId", "userId"],
@@ -120,8 +109,8 @@
       "title": "Block User",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": false
+        "destructiveHint": true,
+        "openWorldHint": true
       },
       "required": ["userId"],
       "properties": ["userId"]
@@ -200,7 +189,7 @@
       "title": "Create Group",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["title", "users"],
@@ -222,7 +211,7 @@
       "title": "Create Poll",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["answers", "chatId", "question"],
@@ -336,7 +325,7 @@
         "openWorldHint": false
       },
       "required": ["chatId", "messageId"],
-      "properties": ["chatId", "full", "messageId"]
+      "properties": ["chatId", "downloadId", "file", "full", "messageId", "offset"]
     },
     {
       "name": "telegram-edit-business-chat-link",
@@ -354,7 +343,7 @@
       "title": "Edit Fact Check",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId", "text"],
@@ -424,7 +413,7 @@
       "title": "Edit Topic",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "topicId"],
@@ -446,7 +435,7 @@
       "title": "Forward Message",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["fromChatId", "messageIds", "toChatId"],
@@ -777,7 +766,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId"]
@@ -810,7 +799,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["userId"],
       "properties": ["userId"]
@@ -821,7 +810,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["entityId"],
       "properties": ["entityId"]
@@ -909,10 +898,10 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
-      "properties": ["user", "offset", "limit"]
+      "properties": ["limit", "offset", "user"]
     },
     {
       "name": "telegram-get-scheduled",
@@ -953,7 +942,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["shortName"],
       "properties": ["shortName"]
@@ -964,7 +953,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["chatId", "limit", "offsetId"]
@@ -975,7 +964,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "ids"],
       "properties": ["chatId", "ids"]
@@ -1040,7 +1029,7 @@
       "title": "Get Unread Mentions",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": ["chatId"],
@@ -1051,7 +1040,7 @@
       "title": "Get Unread Reactions",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": ["chatId"],
@@ -1074,7 +1063,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["url"],
       "properties": ["url"]
@@ -1085,7 +1074,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["bot", "chatId", "query"],
       "properties": ["bot", "chatId", "offset", "query"]
@@ -1106,7 +1095,7 @@
       "title": "Invite To Group",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "users"],
@@ -1183,8 +1172,8 @@
       "title": "Mark As Read",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": false
+        "destructiveHint": true,
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId"]
@@ -1227,7 +1216,7 @@
       "title": "Pin Message",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId"],
@@ -1238,7 +1227,7 @@
       "title": "Press Button",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId"],
@@ -1260,7 +1249,7 @@
       "title": "React To Story",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "emoji", "storyId"],
@@ -1282,7 +1271,7 @@
       "title": "Mark Stories as Viewed",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "maxId"],
@@ -1315,7 +1304,7 @@
       "title": "Reorder Folders",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": ["order"],
@@ -1349,7 +1338,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["slug"],
       "properties": ["slug"]
@@ -1370,7 +1359,7 @@
       "title": "Save Draft",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": ["chatId", "text"],
@@ -1382,7 +1371,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["query"],
       "properties": ["limit", "query"]
@@ -1393,7 +1382,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["query"],
       "properties": ["limit", "maxDate", "minDate", "query"]
@@ -1415,7 +1404,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["query"],
       "properties": ["query"]
@@ -1425,29 +1414,18 @@
       "title": "Send Album",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "items"],
       "properties": ["caption", "chatId", "items", "parseMode", "replyTo", "topicId"]
     },
     {
-      "name": "telegram-send-contact",
-      "title": "Send Contact",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": true
-      },
-      "required": ["chatId", "firstName", "phone"],
-      "properties": ["chatId", "firstName", "lastName", "phone", "replyTo", "topicId", "vcard"]
-    },
-    {
       "name": "telegram-send-dice",
       "title": "Send Dice",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId"],
@@ -1458,39 +1436,18 @@
       "title": "Send File",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "source"],
       "properties": ["caption", "chatId", "source"]
     },
     {
-      "name": "telegram-send-location",
-      "title": "Send Location",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": true
-      },
-      "required": ["chatId", "latitude", "longitude"],
-      "properties": [
-        "accuracyRadius",
-        "chatId",
-        "heading",
-        "latitude",
-        "livePeriod",
-        "longitude",
-        "proximityRadius",
-        "replyTo",
-        "topicId"
-      ]
-    },
-    {
       "name": "telegram-send-message",
       "title": "Send Message",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "text"],
@@ -1501,7 +1458,7 @@
       "title": "Send Reaction",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId"],
@@ -1512,7 +1469,7 @@
       "title": "Send Scheduled",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "scheduleDate", "text"],
@@ -1523,7 +1480,7 @@
       "title": "Send Sticker",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "index", "stickerSet"],
@@ -1534,7 +1491,7 @@
       "title": "Send Story",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "privacy", "source"],
@@ -1564,33 +1521,11 @@
       "properties": ["action", "chatId"]
     },
     {
-      "name": "telegram-send-venue",
-      "title": "Send Venue",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": true
-      },
-      "required": ["address", "chatId", "latitude", "longitude", "title"],
-      "properties": [
-        "address",
-        "chatId",
-        "latitude",
-        "longitude",
-        "provider",
-        "replyTo",
-        "title",
-        "topicId",
-        "venueId",
-        "venueType"
-      ]
-    },
-    {
       "name": "telegram-send-video-note",
       "title": "Send Video Note",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "source"],
@@ -1601,7 +1536,7 @@
       "title": "Send Voice",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "source"],
@@ -1612,7 +1547,7 @@
       "title": "Set Admin",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "userId"],
@@ -1630,22 +1565,11 @@
       "properties": ["chatId", "period"]
     },
     {
-      "name": "telegram-set-birthday",
-      "title": "Set Birthday",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": true
-      },
-      "required": [],
-      "properties": ["clear", "day", "month", "year"]
-    },
-    {
       "name": "telegram-set-business-away",
       "title": "Set Business Away",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1666,7 +1590,7 @@
       "title": "Set Business Greeting",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1693,17 +1617,6 @@
       },
       "required": [],
       "properties": ["clear", "description", "stickerAccessHash", "stickerFileReference", "stickerId", "title"]
-    },
-    {
-      "name": "telegram-set-business-location",
-      "title": "Set Business Location",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "openWorldHint": true
-      },
-      "required": [],
-      "properties": ["address", "clear", "latitude", "longitude"]
     },
     {
       "name": "telegram-set-chat-permissions",
@@ -1755,7 +1668,7 @@
       "title": "Set Emoji Status",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1766,7 +1679,7 @@
       "title": "Set Global Privacy Settings",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": [],
@@ -1783,7 +1696,7 @@
       "title": "Set Personal Channel",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1794,7 +1707,7 @@
       "title": "Set Privacy",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": false
       },
       "required": ["rule", "setting"],
@@ -1805,7 +1718,7 @@
       "title": "Set Profile Color",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -1816,7 +1729,7 @@
       "title": "Set Profile Photo",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["fallback", "isVideo", "source"],
@@ -1827,7 +1740,7 @@
       "title": "Set Slow Mode",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "seconds"],
@@ -1849,7 +1762,7 @@
       "title": "Toggle Anti Spam",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "enabled"],
@@ -1860,7 +1773,7 @@
       "title": "Toggle Channel Signatures",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "enabled"],
@@ -1893,8 +1806,8 @@
       "title": "Toggle Paid Reaction Privacy",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
-        "openWorldHint": false
+        "destructiveHint": true,
+        "openWorldHint": true
       },
       "required": ["chatId", "messageId", "private"],
       "properties": ["chatId", "messageId", "private"]
@@ -1904,7 +1817,7 @@
       "title": "Toggle Prehistory Hidden",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "hidden"],
@@ -1926,7 +1839,7 @@
       "title": "Toggle Story Pinned To Top",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["ids"],
@@ -1981,7 +1894,7 @@
       "title": "Unpin Message",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId"],
@@ -1992,7 +1905,7 @@
       "title": "Update Profile",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": [],
@@ -2003,7 +1916,7 @@
       "title": "Vote Poll",
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "openWorldHint": true
       },
       "required": ["chatId", "messageId", "optionIndexes"],

@@ -5,7 +5,7 @@ priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
 **Last updated:** 2026-10-26
-**Current version:** 2.63.4 (cloud) / [`@overpod/mcp-telegram` 1.43.7](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Current version:** 2.64.0 (cloud) / [`@overpod/mcp-telegram` 1.43.7](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 > **Planned work and its status now live on the public
 > [roadmap board](https://github.com/orgs/mcp-telegram/projects/1)** (horizons

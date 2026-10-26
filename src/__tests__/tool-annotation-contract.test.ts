@@ -8,8 +8,10 @@
  * new tool is added without a deliberate decision — the failure mode we are
  * guarding against is a tool inheriting a default nobody looked at.
  *
- * Class meanings live in `src/tools/helpers.ts`; the two axes are "can the user
- * undo it" (destructiveHint) and "can anyone else see it" (openWorldHint).
+ * Class meanings live in `src/tools/helpers.ts`, following the OpenAI plugin
+ * guidelines: destructiveHint is "deletes, overwrites, revokes or sends
+ * irreversibly", openWorldHint is "reaches beyond the account's own chats,
+ * contacts and settings".
  */
 process.env.ISSUER ??= "https://tool-annotation-contract-test.invalid";
 process.env.TELEGRAM_API_ID ??= "1";
@@ -21,6 +23,7 @@ import { describe, it } from "node:test";
 const { TOOLS } = await import("../tools.js");
 const {
   READ_ONLY,
+  READ_OPEN,
   LOCAL_WRITE,
   OUTBOUND_WRITE,
   CONFIRMED_WRITE_LOCAL,
@@ -32,6 +35,7 @@ const {
 
 const CLASSES = {
   READ_ONLY,
+  READ_OPEN,
   LOCAL_WRITE,
   OUTBOUND_WRITE,
   CONFIRMED_WRITE_LOCAL,
@@ -76,11 +80,8 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-get-my-role",
     "telegram-get-outbox-read-date",
     "telegram-get-paid-reaction-privacy",
-    "telegram-get-peer-stories",
     "telegram-get-poll-results",
     "telegram-get-poll-voters",
-    "telegram-get-profile",
-    "telegram-get-profile-photo",
     "telegram-get-quick-replies",
     "telegram-get-quick-reply-messages",
     "telegram-get-reactions",
@@ -88,7 +89,6 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-get-recent-stickers",
     "telegram-get-replies",
     "telegram-get-saved-dialogs",
-    "telegram-get-saved-music",
     "telegram-get-saved-star-gifts",
     "telegram-get-scheduled",
     "telegram-get-sessions",
@@ -97,70 +97,90 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-get-stars-topup-options",
     "telegram-get-stars-transactions",
     "telegram-get-state",
-    "telegram-get-sticker-set",
-    "telegram-get-stories-archive",
-    "telegram-get-stories-by-id",
     "telegram-get-story-views",
     "telegram-get-suggested-folders",
     "telegram-get-top-reactions",
     "telegram-get-transcription",
     "telegram-get-unread",
     "telegram-get-updates",
-    "telegram-get-web-preview",
-    "telegram-inline-query",
     "telegram-list-chats",
     "telegram-list-emoji-statuses",
     "telegram-list-topics",
     "telegram-read-messages",
     "telegram-read-topic-messages",
+    "telegram-search-messages",
+    "telegram-status",
+  ],
+  READ_OPEN: [
+    "telegram-get-peer-stories",
+    "telegram-get-profile",
+    "telegram-get-profile-photo",
+    "telegram-get-saved-music",
+    "telegram-get-sticker-set",
+    "telegram-get-stories-archive",
+    "telegram-get-stories-by-id",
+    "telegram-get-web-preview",
+    "telegram-inline-query",
     "telegram-resolve-business-chat-link",
     "telegram-search-chats",
     "telegram-search-global",
-    "telegram-search-messages",
     "telegram-search-sticker-sets",
-    "telegram-status",
   ],
   LOCAL_WRITE: [
     "telegram-accounts-add",
     "telegram-accounts-switch",
     "telegram-add-contact",
     "telegram-archive-chat",
-    "telegram-block-user",
     "telegram-create-folder",
-    "telegram-get-unread-mentions",
-    "telegram-get-unread-reactions",
-    "telegram-mark-as-read",
     "telegram-mark-dialog-unread",
     "telegram-mute-chat",
     "telegram-pin-chat",
     "telegram-rate-transcription",
-    "telegram-reorder-folders",
-    "telegram-save-draft",
     "telegram-set-default-reaction",
-    "telegram-set-global-privacy-settings",
-    "telegram-set-privacy",
     "telegram-toggle-folder-tags",
-    "telegram-toggle-paid-reaction-privacy",
     "telegram-transcribe-audio",
     "telegram-translate-message",
   ],
   OUTBOUND_WRITE: [
-    "telegram-approve-join-request",
     "telegram-create-business-chat-link",
-    "telegram-create-group",
     "telegram-create-invite-link",
-    "telegram-create-poll",
     "telegram-create-topic",
+    "telegram-join-chat",
+    "telegram-save-star-gift",
+    "telegram-send-typing",
+    "telegram-set-birthday",
+    "telegram-toggle-story-pinned",
+    "telegram-unban-user",
+    "telegram-unblock-user",
+  ],
+  CONFIRMED_WRITE_LOCAL: [
+    "telegram-activate-stealth-mode",
+    "telegram-edit-folder",
+    "telegram-get-unread-mentions",
+    "telegram-get-unread-reactions",
+    "telegram-reorder-folders",
+    "telegram-save-draft",
+    "telegram-set-global-privacy-settings",
+    "telegram-set-privacy",
+  ],
+  CONFIRMED_WRITE_PUBLIC: [
+    "telegram-approve-join-request",
+    "telegram-block-user",
+    "telegram-create-group",
+    "telegram-create-poll",
+    "telegram-edit-business-chat-link",
     "telegram-edit-fact-check",
+    "telegram-edit-group",
+    "telegram-edit-message",
     "telegram-edit-topic",
     "telegram-forward-message",
+    "telegram-inline-query-send",
     "telegram-invite-to-group",
-    "telegram-join-chat",
+    "telegram-mark-as-read",
     "telegram-pin-message",
     "telegram-press-button",
     "telegram-react-to-story",
     "telegram-read-stories",
-    "telegram-save-star-gift",
     "telegram-send-album",
     "telegram-send-contact",
     "telegram-send-dice",
@@ -171,14 +191,15 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-send-scheduled",
     "telegram-send-sticker",
     "telegram-send-story",
-    "telegram-send-typing",
     "telegram-send-venue",
     "telegram-send-video-note",
     "telegram-send-voice",
     "telegram-set-admin",
-    "telegram-set-birthday",
     "telegram-set-business-away",
     "telegram-set-business-greeting",
+    "telegram-set-business-hours",
+    "telegram-set-business-intro",
+    "telegram-set-business-location",
     "telegram-set-emoji-status",
     "telegram-set-personal-channel",
     "telegram-set-profile-color",
@@ -186,24 +207,12 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-set-slow-mode",
     "telegram-toggle-anti-spam",
     "telegram-toggle-channel-signatures",
+    "telegram-toggle-paid-reaction-privacy",
     "telegram-toggle-prehistory-hidden",
-    "telegram-toggle-story-pinned",
     "telegram-toggle-story-pinned-to-top",
-    "telegram-unban-user",
-    "telegram-unblock-user",
     "telegram-unpin-message",
     "telegram-update-profile",
     "telegram-vote-poll",
-  ],
-  CONFIRMED_WRITE_LOCAL: ["telegram-activate-stealth-mode", "telegram-edit-folder"],
-  CONFIRMED_WRITE_PUBLIC: [
-    "telegram-edit-business-chat-link",
-    "telegram-edit-group",
-    "telegram-edit-message",
-    "telegram-inline-query-send",
-    "telegram-set-business-hours",
-    "telegram-set-business-intro",
-    "telegram-set-business-location",
   ],
   DESTRUCTIVE_LOCAL: [
     "telegram-accounts-remove",
@@ -302,5 +311,47 @@ describe("tool annotation contract", () => {
     for (const tool of mustBeOpenWorld) {
       assert.equal(tool.annotations.openWorldHint, true, `${tool.name} must be openWorldHint=true`);
     }
+  });
+
+  it("every send to other people advertises destructiveHint (an irreversible send)", () => {
+    // OpenAI plugin guidelines: destructiveHint covers "irreversible sends";
+    // "the user can delete it later" does not justify false. The typing
+    // indicator is the one send that leaves nothing behind.
+    const sends = TOOLS.filter(
+      (t) => /^telegram-(send|forward|invite)-/.test(t.name) && t.name !== "telegram-send-typing",
+    );
+    assert.ok(sends.length > 10, "expected the filter to match the send tools");
+    for (const tool of sends) {
+      assert.equal(tool.annotations.destructiveHint, true, `${tool.name} must be destructiveHint=true`);
+    }
+  });
+
+  it("tools that take precise location, phone numbers or a birth date are opt-in, not hosted by default", () => {
+    // OpenAI plugin guidelines: no precise location in input schemas, no
+    // sensitive personal data the stated purpose does not strictly need. The
+    // hosted image does not set this flag (see the reviewed contract test).
+    const personal = [
+      "telegram-send-location",
+      "telegram-send-venue",
+      "telegram-set-business-location",
+      "telegram-send-contact",
+      "telegram-add-contact",
+      "telegram-set-birthday",
+    ];
+    for (const name of personal) {
+      const tool = TOOLS.find((t) => t.name === name);
+      assert.ok(tool, `${name} is missing from the catalog`);
+      assert.equal(tool?.requiresEnv, "MCP_TELEGRAM_ENABLE_PERSONAL_DATA", `${name} must be behind the opt-in`);
+    }
+    const sensitiveField = /^(latitude|longitude|address|phone|birthday|day|month|year|password|code)$/;
+    const exposed = TOOLS.filter((t) => !t.requiresEnv)
+      .filter((t) => Object.keys(t.inputSchema ?? {}).some((f) => sensitiveField.test(f)))
+      .map(
+        (t) =>
+          `${t.name}(${Object.keys(t.inputSchema ?? {})
+            .filter((f) => sensitiveField.test(f))
+            .join(",")})`,
+      );
+    assert.deepEqual(exposed, [], "a default-on tool asks for a restricted or sensitive field");
   });
 });

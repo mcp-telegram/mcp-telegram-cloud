@@ -2,12 +2,14 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   CONFIRMED_WRITE_LOCAL,
+  CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
   OUTBOUND_WRITE,
   premiumOnlyOnError,
   READ_ONLY,
+  READ_OPEN,
   renderStorySnippet,
   sanitize,
   textResult,
@@ -75,7 +77,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Peer to fetch stories from — user/channel id or @username"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId }, { telegram }) => {
       const r = await telegram.getPeerStories(chatId);
       if (!r) return textResult("No stories from this peer.");
@@ -96,7 +98,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Peer to fetch stories from — user/channel id or @username"),
       ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to fetch (1-100 per request)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, ids }, { telegram }) => {
       const r = await telegram.getStoriesById(chatId, ids);
       const lines = [`${r.count} story(ies):`];
@@ -167,7 +169,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
         .describe("Pagination cursor — last story id from previous page (0 to start)"),
       limit: z.number().int().min(1).max(100).default(50).describe("Max stories to return (1-100, default 50)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, offsetId, limit }, { telegram }) => {
       const r = await telegram.getStoriesArchive(chatId, offsetId, limit);
       if (r.stories.length === 0) return textResult("No archived stories.");
@@ -217,7 +219,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       chatId: z.string().default("me").describe("Peer owning the stories"),
       ids: z.array(z.number().int().positive()).max(100).describe("Story IDs to pin to the top row; pass [] to clear"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, ids }, { telegram }) => {
       await telegram.toggleStoryPinnedToTop(chatId, ids);
       return textResult(
@@ -237,7 +239,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Peer whose stories to mark as seen"),
       maxId: z.number().int().positive().describe("Stories up to and including this ID will be marked seen"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, maxId }, { telegram }) => {
       const result = await telegram.readStories(chatId, maxId);
       return textResult(`Marked stories as read up to #${maxId} (${result.ids.length} newly seen)`);

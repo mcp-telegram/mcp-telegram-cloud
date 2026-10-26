@@ -40,12 +40,23 @@ describe("Wave 2.2 — write tools (messaging core)", () => {
     });
   }
 
-  it("none of the Wave 2.2 tools require an opt-in env flag", () => {
+  it("only the Wave 2.2 tools that take personal data require an opt-in env flag", () => {
+    // Precise location, phone numbers and birth dates are off on the hosted
+    // service (OpenAI plugin guidelines); every other tool is on by default.
+    const personal = new Set([
+      "telegram-send-location",
+      "telegram-send-venue",
+      "telegram-send-contact",
+      "telegram-add-contact",
+      "telegram-set-birthday",
+      "telegram-set-business-location",
+    ]);
     for (const name of WAVE_2_2_TOOLS) {
       const tool = TOOLS.find((t) => t.name === name);
       assert.ok(tool, `${name} missing`);
       if (!tool) continue;
-      assert.equal(tool.requiresEnv, undefined, `${name} unexpectedly gated by ${tool.requiresEnv}`);
+      const expected = personal.has(name) ? "MCP_TELEGRAM_ENABLE_PERSONAL_DATA" : undefined;
+      assert.equal(tool.requiresEnv, expected, `${name} gated by ${tool.requiresEnv}`);
     }
   });
 

@@ -1,12 +1,13 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
-  OUTBOUND_WRITE,
   READ_ONLY,
+  READ_OPEN,
   renderGroupCallParticipant,
   sanitize,
   textResult,
@@ -24,7 +25,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
           "Short name of the sticker set (e.g. 'AnimatedEmojis', 'HotCherry'). Find names via telegram-search-sticker-sets or from t.me/addstickers/<shortName> links",
         ),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ shortName }, { telegram }) => {
       const set = await telegram.getStickerSet(shortName);
       const lines = [`📦 ${set.title} (${set.shortName})`, `${set.count} stickers`, ""];
@@ -43,7 +44,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
     inputSchema: {
       query: z.string().describe("Search query (e.g. 'cat', 'love', 'pepe', 'anime')"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ query }, { telegram }) => {
       const sets = await telegram.searchStickerSets(query);
       if (sets.length === 0) return textResult(`No sticker sets found for "${query}". Try different keywords.`);
@@ -105,7 +106,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .describe("Index of the sticker in the set (0-based, get from telegram-get-sticker-set)"),
       replyTo: z.number().int().optional().describe("Message ID to reply to"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, stickerSet, index, replyTo }, { telegram }) => {
       await telegram.sendSticker(chatId, stickerSet, index, replyTo);
       return textResult(sanitize(`Sticker sent from "${stickerSet}" [${index}] to ${chatId}`));
@@ -213,7 +214,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Pagination offset returned by a previous call as nextOffset (empty string on first call)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ bot, chatId, query, offset }, { telegram }) => {
       const r = await telegram.getInlineBotResults(bot, chatId, query, offset);
       const lines = [
