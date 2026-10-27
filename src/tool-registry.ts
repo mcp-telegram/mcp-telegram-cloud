@@ -11,6 +11,7 @@ import { logger, logUser } from "./logger.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION, TOOL_TIMEOUTS } from "./telemetry/metrics.js";
 import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js";
+import { toolErrorText } from "./tool-error-text.js";
 import { deriveTitle, isGuardedDestructive } from "./tools/helpers.js";
 import type { UploadStore } from "./upload-store.js";
 import type { fetchUrlSafely } from "./url-fetcher.js";
@@ -245,7 +246,7 @@ function handleToolError(
     error: msg,
     ...caller,
   });
-  return { content: [{ type: "text", text: `Error: ${msg}` }], isError: true };
+  return { content: [{ type: "text", text: toolErrorText(msg) }], isError: true };
 }
 
 export interface RegisterAllOptions {

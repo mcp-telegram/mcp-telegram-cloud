@@ -91,6 +91,23 @@ describe("tool log attribution", () => {
     }
   });
 
+  // The model gets the plain-language text, the log keeps the raw GramJS message.
+  it("an unresolved peer reaches the client as plain text and the log as raw", async () => {
+    const rawMsg =
+      'Could not find the input entity for {"channelId":"4304313856","className":"PeerChannel"}.\n         Please read https://docs.telethon.dev/en/stable/concepts/entities.html to find out more details.';
+    const call = register(
+      async () => {
+        throw new Error(rawMsg);
+      },
+      { userId: RAW_USER_ID, clientName: "Claude" },
+    );
+    const res = await call({});
+    assert.equal(res.isError, true);
+    assert.match(res.content[0]?.text ?? "", /^Error: Telegram could not resolve channel 4304313856/);
+    const [rec] = byEvent("tool.error");
+    assert.equal(rec?.attrs.error, rawMsg);
+  });
+
   it("never logs the raw Telegram user id when hashing is on", async () => {
     const { config } = await import("../config.js");
     const prev = config.logUserIds;
