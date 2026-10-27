@@ -30,6 +30,41 @@ function fingerprint(token: string): string {
   return createHash("sha256").update(token).digest("hex").slice(0, 16);
 }
 
+/**
+ * Registered redirect URIs for a client. The column is written by our own
+ * registration code as a JSON array, but a hand-edited or half-migrated row
+ * must not turn /authorize into a 500. Unparsable becomes an empty list, which
+ * fails CLOSED at matchRedirectUri ("Invalid redirect_uri"), never open.
+ */
+export function parsedUris(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((u): u is string => typeof u === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Callback origins of the directory apps under review (ChatGPT, Claude). Clients
+ * pointing only here are kept from pruning while a review link is live — see
+ * `pruneUnusedClients`.
+ */
+export const REVIEW_REDIRECT_ORIGINS: ReadonlySet<string> = new Set([
+  "https://chatgpt.com",
+  "https://chat.openai.com",
+  "https://claude.ai",
+  "https://claude.com",
+]);
+
+/**
+ * At most this many kept-for-review clients survive a prune (newest first). Registration
+ * is anonymous, so anyone can point a client at chatgpt.com; without a cap such rows would
+ * pile up for the whole review and fill the registration ceiling. A directory app needs a
+ * handful; prod held ~200 genuine ones on 2026-10-27.
+ */
+export const REVIEW_KEEP_MAX = 500;
+
 export interface OAuthConfig {
   issuer: string; // public base URL (e.g. "https://your-host.example")
   db: Database;
@@ -104,6 +139,10 @@ export class OAuthProvider {
       CREATE INDEX IF NOT EXISTS idx_oauth_codes_expires_at ON oauth_codes(expires_at);
       CREATE INDEX IF NOT EXISTS idx_oauth_tokens_expires_at ON oauth_tokens(expires_at);
       CREATE INDEX IF NOT EXISTS idx_oauth_refresh_tokens_expires_at ON oauth_refresh_tokens(expires_at);
+      -- "Has this client ever authorized?" probes (client prune and the registration ceiling, cloud#43).
+      CREATE INDEX IF NOT EXISTS idx_oauth_tokens_client_id ON oauth_tokens(client_id);
+      CREATE INDEX IF NOT EXISTS idx_oauth_refresh_tokens_client_id ON oauth_refresh_tokens(client_id);
+      CREATE INDEX IF NOT EXISTS idx_oauth_codes_client_id ON oauth_codes(client_id);
       -- Which callback destinations a user has knowingly connected. Gates the
       -- silent /oauth/authorize fast path: without a grant the user is asked to
       -- confirm, so a link to a stranger's freshly registered client can no
@@ -270,25 +309,31 @@ export class OAuthProvider {
       )
       .all(userId, userId) as Array<{ uris: string }>;
 
-    for (const row of rows) {
-      let uris: unknown;
-      try {
-        uris = JSON.parse(row.uris);
-      } catch {
-        continue;
-      }
-      if (!Array.isArray(uris)) continue;
-      for (const uri of uris) {
-        if (typeof uri !== "string") continue;
-        if (redirectOrigin(uri) === redirectOriginKey) return true;
-      }
-    }
-    return false;
+    return rows.some((row) => parsedUris(row.uris).some((uri) => redirectOrigin(uri) === redirectOriginKey));
   }
 
-  /** Total registered clients — used to enforce the registration ceiling. */
-  clientCount(): number {
-    return (this.db.prepare("SELECT COUNT(*) AS n FROM oauth_clients").get() as { n: number }).n;
+  /**
+   * Clients that never obtained a code or token — the only rows an anonymous
+   * DCR flood can create, so the registration ceiling counts these and nothing
+   * else (cloud#43).
+   *
+   * Counting every row made real usage eat the anti-flood budget: clients
+   * re-register on each reconnect and a client with a token is never pruned
+   * (access tokens live 10 years), so on prod 2026-10-27 about half of the
+   * 5000 ceiling was already authorized clients, growing ~300 a month. Hitting
+   * the ceiling answers 503 to every new user.
+   */
+  pendingClientCount(): number {
+    return (
+      this.db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM oauth_clients
+            WHERE client_id NOT IN (SELECT client_id FROM oauth_tokens)
+              AND client_id NOT IN (SELECT client_id FROM oauth_refresh_tokens)
+              AND client_id NOT IN (SELECT client_id FROM oauth_codes)`,
+        )
+        .get() as { n: number }
+    ).n;
   }
 
   /**
@@ -299,27 +344,67 @@ export class OAuthProvider {
    *
    * A client with any live or historical token is kept: a user who authorized
    * months ago and still holds a refresh token must keep their client row.
+   *
+   * `keepOrigins`: clients whose redirect URIs all point at these origins are kept
+   * regardless of age, newest first and at most {@link REVIEW_KEEP_MAX}. Used while
+   * a directory review is open — a directory app registers its client once and the
+   * reviewer may authorize weeks later; a pruned client means the reviewer cannot
+   * connect.
    */
-  pruneUnusedClients(olderThanDays: number): number {
+  pruneUnusedClients(olderThanDays: number, keepOrigins: ReadonlySet<string> = new Set()): number {
     if (olderThanDays <= 0) return 0;
     const cutoff = `-${Math.floor(olderThanDays)} days`;
-    const result = this.db
+    const candidates = this.db
       .prepare(
-        `DELETE FROM oauth_clients
+        `SELECT client_id, redirect_uris FROM oauth_clients
          WHERE created_at < datetime('now', ?)
            AND client_id NOT IN (SELECT client_id FROM oauth_tokens)
            AND client_id NOT IN (SELECT client_id FROM oauth_refresh_tokens)
-           AND client_id NOT IN (SELECT client_id FROM oauth_codes)`,
+           AND client_id NOT IN (SELECT client_id FROM oauth_codes)
+         ORDER BY created_at DESC, rowid DESC`,
       )
-      .run(cutoff);
-    if (result.changes > 0) {
-      logger.info(`Pruned ${result.changes} unused oauth_clients (older than ${olderThanDays}d, never authorized)`, {
-        component: "oauth",
-        event: "oauth.clients.pruned",
-        count: result.changes,
-      });
+      .all(cutoff) as Array<{ client_id: string; redirect_uris: string }>;
+
+    // Kept: every redirect URI points at a kept origin (a real directory client registers
+    // only its own callback; one chatgpt.com entry among others is not enough), newest
+    // first, up to REVIEW_KEEP_MAX.
+    let keptBudget = REVIEW_KEEP_MAX;
+    const doomed = candidates.filter((c) => {
+      if (keepOrigins.size === 0 || keptBudget === 0) return true;
+      const uris = parsedUris(c.redirect_uris);
+      const keep = uris.length > 0 && uris.every((u) => keepOrigins.has(redirectOrigin(u) ?? ""));
+      if (keep) keptBudget--;
+      return !keep;
+    });
+    // Re-checked at delete time: during a start-first rollout another container shares this
+    // database and may hand a candidate its first code between the SELECT and here.
+    // Indexed point probes, not NOT IN: those rebuild the whole token sets per row and took
+    // ~33 s for 5000 stale clients, blocking the event loop inside the write transaction.
+    const del = this.db.prepare(
+      `DELETE FROM oauth_clients
+        WHERE client_id = ?1
+          AND NOT EXISTS (SELECT 1 FROM oauth_tokens WHERE client_id = ?1)
+          AND NOT EXISTS (SELECT 1 FROM oauth_refresh_tokens WHERE client_id = ?1)
+          AND NOT EXISTS (SELECT 1 FROM oauth_codes WHERE client_id = ?1)`,
+    );
+    let deleted = 0;
+    this.db.transaction(() => {
+      for (const c of doomed) deleted += del.run(c.client_id).changes;
+    })();
+
+    const kept = candidates.length - doomed.length;
+    if (deleted > 0 || kept > 0) {
+      logger.info(
+        `Pruned ${deleted} unused oauth_clients (older than ${olderThanDays}d, never authorized), kept ${kept} for open review`,
+        {
+          component: "oauth",
+          event: "oauth.clients.pruned",
+          count: deleted,
+          keptForReview: kept,
+        },
+      );
     }
-    return result.changes;
+    return deleted;
   }
 
   /**
@@ -787,7 +872,7 @@ export class OAuthProvider {
    * by time — they live until rotation, replay-revoke, or explicit /oauth/revoke. Pre-v2.23.0
    * tokens still carry a real `expires_at` and are pruned here once stale.
    */
-  cleanup(): void {
+  cleanup(opts: { reviewOpen?: boolean } = {}): void {
     const now = Math.floor(Date.now() / 1000);
     this.db.prepare("DELETE FROM oauth_codes WHERE expires_at < ?").run(now);
     this.db.prepare("DELETE FROM oauth_tokens WHERE expires_at < ?").run(now);
@@ -796,7 +881,7 @@ export class OAuthProvider {
     this.db.prepare("DELETE FROM browser_handoffs WHERE expires_at < ?").run(now);
     // Reap abandoned client registrations (DCR flood). Runs after token cleanup
     // so a client whose only tokens just expired becomes eligible immediately.
-    this.pruneUnusedClients(config.unusedClientTtlDays);
+    this.pruneUnusedClients(config.unusedClientTtlDays, opts.reviewOpen ? REVIEW_REDIRECT_ORIGINS : undefined);
   }
 
   /**

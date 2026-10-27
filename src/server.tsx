@@ -7,7 +7,13 @@ import { DestructiveGuard } from "./destructive-guard.js";
 import { HTTP_IDLE_TIMEOUT_S } from "./http-timeouts.js";
 import { startDrain } from "./lifecycle.js";
 import { logger, logUser } from "./logger.js";
-import { downloads, getActiveSessionsByClient, startIdleReaper, stopIdleReaper } from "./mcp-handler.js";
+import {
+  createDeadSessionHandler,
+  downloads,
+  getActiveSessionsByClient,
+  startIdleReaper,
+  stopIdleReaper,
+} from "./mcp-handler.js";
 import { accessLog } from "./middleware/access-log.js";
 import { CLIENT_CLASSES } from "./middleware/classify-client.js";
 import { noindex } from "./middleware/noindex.js";
@@ -50,6 +56,7 @@ if (!config.logUserIds && config.logHashSalt === SENTINEL_LOG_HASH_SALT) {
 
 const sessions = new SessionManager();
 const oauth = new OAuthProvider({ issuer: config.issuer, db: sessions.getDb() });
+sessions.setOnSessionDead(createDeadSessionHandler(sessions, oauth));
 const usage = new UsageTracker(sessions.getDb());
 const destructive = new DestructiveGuard(
   sessions.getDb(),
@@ -67,7 +74,8 @@ const uploads = new UploadStore(
 // for symmetry with the other purge timers — `oauth.cleanup()` is currently
 // log-free, but a future maintainer adding a `logger.info("Pruned N codes")`
 // call wouldn't have to re-discover the trace-pollution gotcha.
-setInterval(() => runDetached(() => oauth.cleanup()), 3600_000);
+// A live review link keeps directory-app clients from being pruned (review rule 4).
+setInterval(() => runDetached(() => oauth.cleanup({ reviewOpen: sessions.hasLiveReviewToken() })), 3600_000);
 // Fixed expiry is checked on every read; this timer reclaims idle snapshots.
 setInterval(() => downloads.purgeExpired(), 60_000);
 

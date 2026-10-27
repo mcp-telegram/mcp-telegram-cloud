@@ -1,16 +1,24 @@
 import { Database } from "bun:sqlite";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import { isAuthErrorMessage } from "./auth-errors.js";
 import { config } from "./config.js";
 import { decryptSecret, encryptionEnabled, encryptSecret, hashToken, isEncrypted } from "./crypto.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
 import { logUser } from "./logger.js";
+import { incr, SESSION_DEAD } from "./telemetry/metrics.js";
 
 interface UserSession {
   telegram: TelegramService;
   connectedAt: Date;
   lastActivity: Date;
+  /** Fingerprint of the session string this client was built from (primary entries). */
+  sessionFp?: string;
+}
+
+/** Stable, non-reversible identity of a session string — fences dead-session cleanup (cloud#42). */
+function sessionFingerprint(sessionString: string): string {
+  return createHash("sha256").update(sessionString).digest("hex");
 }
 
 export interface TelegramAccount {
@@ -65,6 +73,11 @@ export class SessionManager {
    */
   private locks = new Map<string, Promise<void>>();
   private db: Database;
+
+  /** cloud#42 — wired by the server: drop the session and revoke OAuth. See {@link reportDeadSession}. */
+  private onSessionDead: ((userId: string, sessionFp: string) => Promise<void>) | null = null;
+  /** Users whose dead-session handler is in flight, so a burst of requests fires it once. */
+  private deadPending = new Set<string>();
 
   private readonly apiId = config.telegramApiId;
   private readonly apiHash = config.telegramApiHash;
@@ -198,6 +211,51 @@ export class SessionManager {
     }
   }
 
+  /** cloud#42 — what to do once Telegram has rejected a user's stored session. */
+  setOnSessionDead(handler: (userId: string, sessionFp: string) => Promise<void>): void {
+    this.onSessionDead = handler;
+  }
+
+  /**
+   * Telegram rejected `client` with a revocation reason. Acts only when `client` is the
+   * pooled PRIMARY client of `userId`: a secondary account (multi-account) or a client a
+   * concurrent QR login already replaced must not take the owner's session down with it.
+   */
+  reportDeadSession(userId: string, client: TelegramService): void {
+    const entry = this.sessions.get(userId);
+    if (entry?.telegram !== client || !entry.sessionFp) return;
+    this.reportDeadFingerprint(userId, entry.sessionFp);
+  }
+
+  /**
+   * Telegram has positively rejected the session whose fingerprint is `sessionFp`.
+   * Hands the user to the server's handler, which drops the session and revokes OAuth so
+   * the client asks the user to reconnect instead of retrying a connect that cannot succeed.
+   *
+   * Never for the demo account behind a live review link (review rule 4): revoking its
+   * OAuth tokens would cut every reviewer off for good, while keeping them lets the owner
+   * re-login the account by QR and the reviewer's existing connection works again.
+   *
+   * Runs the handler outside the caller's per-user lock: the handler takes that lock itself
+   * ({@link destroyDeadSession}), so awaiting it from inside would deadlock.
+   */
+  private reportDeadFingerprint(userId: string, sessionFp: string): void {
+    if (this.isReviewAccount(userId)) {
+      incr(SESSION_DEAD, { outcome: "review_kept" });
+      console.warn(`[sessions] Telegram rejected the review account ${logUser(userId)} — kept, re-login it by QR`);
+      return;
+    }
+    const handler = this.onSessionDead;
+    if (!handler || this.deadPending.has(userId)) return;
+    this.deadPending.add(userId);
+    incr(SESSION_DEAD, { outcome: "revoked" });
+    queueMicrotask(() => {
+      handler(userId, sessionFp)
+        .catch((err) => console.error(`[sessions] dead-session cleanup failed for ${logUser(userId)}:`, err))
+        .finally(() => this.deadPending.delete(userId));
+    });
+  }
+
   async getOrCreateSession(userId: string): Promise<TelegramService> {
     return this.withLock(userId, () => this.getOrCreateSessionImpl(userId));
   }
@@ -212,9 +270,14 @@ export class SessionManager {
         // socket pinned the lock chain forever and every later call for this user queued
         // behind a promise that never settled.
         try {
-          await withDeadline("ensureConnected", config.telegramConnectTimeoutMs, () =>
+          const ok = await withDeadline("ensureConnected", config.telegramConnectTimeoutMs, () =>
             existing.telegram.ensureConnected(),
           );
+          // cloud#42: a pooled client whose reconnect Telegram refused, for any caller —
+          // including tools that skip requireConnection (telegram-status).
+          if (!ok && existing.sessionFp && isAuthErrorMessage(existing.telegram.lastError)) {
+            this.reportDeadFingerprint(userId, existing.sessionFp);
+          }
         } catch (e) {
           if (!isDeadlineError(e)) throw e;
           // Recover IN PLACE rather than building a second TelegramService (review
@@ -240,21 +303,27 @@ export class SessionManager {
       | { session_string: string }
       | undefined;
 
-    if (row?.session_string) {
-      telegram.setSessionString(decryptSecret(row.session_string));
-    }
+    const stored = row?.session_string ? decryptSecret(row.session_string) : undefined;
+    if (stored) telegram.setSessionString(stored);
+    const sessionFp = stored ? sessionFingerprint(stored) : undefined;
 
-    const connected = (await this.connectBounded(telegram, userId)) === "connected";
+    const outcome = await this.connectBounded(telegram, userId);
 
     // Only add to pool if connection succeeded — don't cache broken sessions
-    if (connected) {
+    if (outcome === "connected") {
       this.sessions.set(userId, {
         telegram,
         connectedAt: new Date(),
         lastActivity: new Date(),
+        ...(sessionFp && { sessionFp }),
       });
     } else {
       console.log(`[sessions] getOrCreateSession: connect failed for ${logUser(userId)}, not adding to pool`);
+      // cloud#42: Telegram named a revocation reason, so every later request would redo
+      // the same doomed connect (one user produced 137 of them in 6 hours on prod).
+      if (outcome === "rejected" && sessionFp && isAuthErrorMessage(telegram.lastError)) {
+        this.reportDeadFingerprint(userId, sessionFp);
+      }
     }
 
     return telegram;
@@ -431,6 +500,64 @@ export class SessionManager {
    * Full session destruction: logout from Telegram, remove from memory and SQLite.
    * Used when user disconnects the connector (OAuth revoke).
    */
+  /**
+   * cloud#42 — destroy the session Telegram rejected, but only if it is still the one stored.
+   *
+   * The rejection is acted on later, outside the lock that saw it; in between a QR login can
+   * save fresh credentials and adopt a new client. Comparing fingerprints makes the cleanup a
+   * no-op then, instead of deleting the session the user just created.
+   *
+   * QR login saves credentials WITHOUT this lock, so nothing may be awaited between the check
+   * and the local teardown: the row is deleted and `onDestroyed` (OAuth revocation) runs in the
+   * same synchronous stretch. The DELETE is also fenced by the row value, for another container
+   * sharing the database during a rolling update. No `logOut`: Telegram already rejected the
+   * key, and the network teardown of the dead client runs in the background, bounded.
+   */
+  async destroyDeadSession(userId: string, sessionFp: string, onDestroyed: () => void): Promise<boolean> {
+    return this.withLock(userId, async () => {
+      const pooled = this.sessions.get(userId);
+      // A pooled client built from other credentials means a QR login was adopted since the
+      // rejection — the user is signed in again, whatever the row says right now (a stale
+      // disconnectUser save can briefly put the old string back).
+      if (pooled && pooled.sessionFp !== sessionFp) {
+        console.log(`[sessions] dead-session cleanup skipped for ${logUser(userId)}: a new login is active`);
+        return false;
+      }
+      // One IMMEDIATE transaction: during a rolling update another container shares the
+      // database, and its QR save must not land between the check and the revocation.
+      const destroyed = this.db
+        .transaction(() => {
+          const row = this.db.prepare("SELECT session_string FROM user_sessions WHERE user_id = ?").get(userId) as {
+            session_string: string;
+          } | null;
+          // No row: the dead session is already gone (e.g. tryReconnect removed it first),
+          // and the OAuth tokens still have to go — otherwise the client never sees a 401. A
+          // row with a different fingerprint is a fresh login and is left alone.
+          if (row) {
+            if (sessionFingerprint(decryptSecret(row.session_string)) !== sessionFp) return false;
+            this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
+          }
+          this.deleteSecondariesForOwner(userId);
+          onDestroyed();
+          return true;
+        })
+        .immediate();
+      if (!destroyed) {
+        console.log(`[sessions] dead-session cleanup skipped for ${logUser(userId)}: credentials changed since`);
+        return false;
+      }
+
+      if (pooled) {
+        this.sessions.delete(userId);
+        void withDeadline("disconnect", config.telegramConnectTimeoutMs, () => pooled.telegram.disconnect()).catch(
+          () => {},
+        );
+      }
+      console.log(`[sessions] Destroyed dead session for ${logUser(userId)}`);
+      return true;
+    });
+  }
+
   async destroyUserSession(userId: string): Promise<{ loggedOut: boolean }> {
     return this.withLock(userId, () => this.destroyUserSessionImpl(userId));
   }
@@ -499,10 +626,12 @@ export class SessionManager {
     // tool dispatch via mcp-handler.ts:140) immediately sees the live, connected instance —
     // never a TelegramService that is mid-logOut. The teardown of the old auth key happens
     // fire-and-forget after the swap.
+    const adoptedSession = telegram.getSessionString();
     this.sessions.set(userId, {
       telegram,
       connectedAt: new Date(),
       lastActivity: new Date(),
+      ...(adoptedSession && { sessionFp: sessionFingerprint(adoptedSession) }),
     });
     if (existing && existing.telegram !== telegram) {
       // QR login created a NEW auth key on Telegram's side → the old one must be revoked.
@@ -586,7 +715,8 @@ export class SessionManager {
 
     try {
       const telegram = this.telegramFactory(this.apiId, this.apiHash);
-      telegram.setSessionString(decryptSecret(row.session_string));
+      const stored = decryptSecret(row.session_string);
+      telegram.setSessionString(stored);
       const outcome = await this.connectBounded(telegram, userId);
 
       if (telegram.isConnected()) {
@@ -598,6 +728,7 @@ export class SessionManager {
           telegram,
           connectedAt: new Date(),
           lastActivity: new Date(),
+          sessionFp: sessionFingerprint(stored),
         });
         console.log(`[sessions] tryReconnect: ${logUser(userId)} — reconnected from SQLite`);
         return telegram;
@@ -623,8 +754,14 @@ export class SessionManager {
 
       // Session invalid — Telegram answered and refused it. Only now is deleting safe.
       console.log(`[sessions] tryReconnect: ${logUser(userId)} — session_string invalid, removing`);
-      this.db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(userId);
-      this.sessions.delete(userId);
+      // Fenced by value: a QR login may have saved fresh credentials while this connect waited.
+      this.db
+        .prepare("DELETE FROM user_sessions WHERE user_id = ? AND session_string = ?")
+        .run(userId, row.session_string);
+      if (this.sessions.get(userId) === pooled) this.sessions.delete(userId);
+      // cloud#42: the row alone is not enough — revoke OAuth too, or the client keeps a token
+      // for a user with no session and never learns to reconnect.
+      this.reportDeadFingerprint(userId, sessionFingerprint(stored));
     } catch (err) {
       console.error(`[sessions] tryReconnect: ${logUser(userId)} — error:`, err);
     }
@@ -864,8 +1001,15 @@ export class SessionManager {
       const telegram = this.telegramFactory(this.apiId, this.apiHash);
       telegram.setSessionString(decryptSecret(row.session_string));
       const connected = (await this.connectBounded(telegram, ownerUserId)) === "connected";
-      if (connected) {
+      // The owner's accounts may have been wiped while this connect waited (dead-session
+      // cleanup runs under the owner's lock, not this one): don't resurrect a removed account.
+      const stillThere = this.db
+        .prepare("SELECT 1 FROM telegram_accounts WHERE owner_user_id = ? AND account_id = ?")
+        .get(ownerUserId, accountId);
+      if (connected && stillThere) {
         this.sessions.set(key, { telegram, connectedAt: new Date(), lastActivity: new Date() });
+      } else if (connected) {
+        void withDeadline("disconnect", config.telegramConnectTimeoutMs, () => telegram.disconnect()).catch(() => {});
       }
       return telegram;
     });
@@ -1010,6 +1154,14 @@ export class SessionManager {
     const row = this.db
       .prepare("SELECT 1 FROM review_tokens WHERE user_id = ? AND revoked = 0 AND expires_at > ? LIMIT 1")
       .get(userId, Math.floor(Date.now() / 1000));
+    return row != null;
+  }
+
+  /** True while any review link is live — i.e. a directory review may be in progress. */
+  hasLiveReviewToken(): boolean {
+    const row = this.db
+      .prepare("SELECT 1 FROM review_tokens WHERE revoked = 0 AND expires_at > ? LIMIT 1")
+      .get(Math.floor(Date.now() / 1000));
     return row != null;
   }
 

@@ -11,7 +11,7 @@ import {
 } from "../cookie-handler.js";
 import { logger, logUser } from "../logger.js";
 import { contentSecurityPolicy, formActionSource } from "../middleware/security-headers.js";
-import type { OAuthProvider } from "../oauth.js";
+import { type OAuthProvider, parsedUris } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { ConsentPage } from "../pages/ConsentPage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
@@ -43,21 +43,6 @@ function setBrowserSession(c: Context, oauth: OAuthProvider, userId: string, max
   const token = oauth.createBrowserSession(userId, maxAgeSeconds ?? 60 * 60 * 24 * 30);
   c.header("Set-Cookie", buildBrowserSessionCookie(token, maxAgeSeconds), { append: true });
   c.header("Set-Cookie", CLEAR_LEGACY_TG_USER_COOKIE, { append: true });
-}
-
-/**
- * Registered redirect URIs for a client. The column is written by our own
- * registration code as a JSON array, but a hand-edited or half-migrated row
- * must not turn /authorize into a 500. Unparsable becomes an empty list, which
- * fails CLOSED at matchRedirectUri ("Invalid redirect_uri"), never open.
- */
-function parsedRedirectUris(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((u): u is string => typeof u === "string") : [];
-  } catch {
-    return [];
-  }
 }
 
 /**
@@ -178,23 +163,38 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
   app.use("/*", bodyLimit({ maxSize: config.maxJsonBodyBytes }));
 
   // RFC 7591 — Dynamic Client Registration. Unauthenticated, so it carries a
-  // stricter per-IP limit than the rest of /oauth/* and a hard total-clients
-  // ceiling (audit H2).
+  // stricter per-IP limit than the rest of /oauth/* and a ceiling on clients
+  // that never authorized (audit H2, cloud#43).
   app.post("/register", registerRateLimit, async (c) => {
-    if (oauth.clientCount() >= config.maxOauthClients && config.maxOauthClients > 0) {
+    if (oauth.pendingClientCount() >= config.maxOauthClients && config.maxOauthClients > 0) {
       incr(OAUTH_FLOW, { step: "register", outcome: "capacity" });
       return c.json({ error: "registration temporarily unavailable" }, 503);
     }
-    const body = await c.req.json();
-    if (!body.redirect_uris || !Array.isArray(body.redirect_uris) || body.redirect_uris.length === 0) {
+    // A body that is not a JSON object used to throw out of c.req.json() and
+    // answer 500 (~26 a week on prod); RFC 7591 §3.2.2 wants a 400.
+    const body: unknown = await c.req.json().catch(() => null);
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      incr(OAUTH_FLOW, { step: "register", outcome: "error" });
+      return c.json({ error: "invalid_client_metadata", error_description: "body must be a JSON object" }, 400);
+    }
+    const { redirect_uris, client_name } = body as { redirect_uris?: unknown; client_name?: unknown };
+    if (!Array.isArray(redirect_uris) || redirect_uris.length === 0) {
       incr(OAUTH_FLOW, { step: "register", outcome: "error" });
       return c.json({ error: "redirect_uris required" }, 400);
     }
-    if (body.redirect_uris.length > 10) {
+    if (redirect_uris.length > 10) {
       incr(OAUTH_FLOW, { step: "register", outcome: "error" });
       return c.json({ error: "too many redirect_uris" }, 400);
     }
-    const client = oauth.registerClient(body);
+    // A non-string entry was stored as-is and could never match at /authorize.
+    if (!redirect_uris.every((u) => typeof u === "string" && u.length > 0)) {
+      incr(OAUTH_FLOW, { step: "register", outcome: "error" });
+      return c.json({ error: "invalid_redirect_uri", error_description: "redirect_uris must be strings" }, 400);
+    }
+    const client = oauth.registerClient({
+      redirect_uris,
+      client_name: typeof client_name === "string" ? client_name : undefined,
+    });
     incr(OAUTH_FLOW, { step: "register", outcome: "ok" });
     return c.json(client, 201);
   });
@@ -212,7 +212,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       return c.text("Unknown client", 400);
     }
 
-    const allowedUris = parsedRedirectUris(client.redirect_uris);
+    const allowedUris = parsedUris(client.redirect_uris);
     if (!matchRedirectUri(allowedUris, redirectUri)) {
       incr(OAUTH_FLOW, { step: "authorize", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
@@ -329,7 +329,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       return c.text("Unknown client", 400);
     }
 
-    const allowedUris = parsedRedirectUris(client.redirect_uris);
+    const allowedUris = parsedUris(client.redirect_uris);
     if (!matchRedirectUri(allowedUris, redirectUri)) {
       incr(OAUTH_FLOW, { step: "authorize_qr", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
@@ -404,7 +404,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       incr(OAUTH_FLOW, { step: "approve", outcome: "unknown_client" });
       return c.text("Unknown client", 400);
     }
-    if (!matchRedirectUri(parsedRedirectUris(client.redirect_uris), redirectUri)) {
+    if (!matchRedirectUri(parsedUris(client.redirect_uris), redirectUri)) {
       incr(OAUTH_FLOW, { step: "approve", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
     }
@@ -490,7 +490,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
       incr(OAUTH_FLOW, { step: "review_code", outcome: "unknown_client" });
       return c.text("Unknown client", 400);
     }
-    if (!matchRedirectUri(parsedRedirectUris(client.redirect_uris), redirectUri)) {
+    if (!matchRedirectUri(parsedUris(client.redirect_uris), redirectUri)) {
       incr(OAUTH_FLOW, { step: "review_code", outcome: "bad_redirect" });
       return c.text("Invalid redirect_uri", 400);
     }

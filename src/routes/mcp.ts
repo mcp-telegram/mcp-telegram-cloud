@@ -92,7 +92,7 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
       );
     }
 
-    return handleMcpRequest(sessions, usage, oauth, destructive, uploads, userId, clientName, c.req.raw);
+    return handleMcpRequest(sessions, usage, destructive, uploads, userId, clientName, c.req.raw);
   };
 
   app.all("/mcp", handler);
