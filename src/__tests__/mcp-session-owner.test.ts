@@ -24,7 +24,6 @@ describe("MCP session ownership", () => {
         {} as never,
         {} as never,
         {} as never,
-        {} as never,
         "alice",
         "test",
         new Request("https://example.invalid/mcp", {
@@ -62,28 +61,10 @@ describe("MCP session ownership", () => {
         headers: { "mcp-session-id": "alice-session" },
         body: "{}",
       });
-    const stranger = await handleMcpRequest(
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      "bob",
-      "test",
-      req(),
-    );
+    const stranger = await handleMcpRequest({} as never, {} as never, {} as never, {} as never, "bob", "test", req());
     assert.equal(stranger.status, 403);
     assert.equal(reached, 0);
-    const owner = await handleMcpRequest(
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      "alice",
-      "test",
-      req(),
-    );
+    const owner = await handleMcpRequest({} as never, {} as never, {} as never, {} as never, "alice", "test", req());
     assert.equal(owner.status, 200);
     assert.equal(await owner.text(), "owner response");
     assert.equal(reached, 1);

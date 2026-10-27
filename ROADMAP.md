@@ -4,8 +4,8 @@ Public roadmap for `mcp-telegram-cloud`. This is a **living document** — items
 priorities shift, dates are not promises. Maintained by one person in spare time
 (see [README §Maintenance](README.md#maintenance)).
 
-**Last updated:** 2026-10-26
-**Current version:** 2.64.0 (cloud) / [`@overpod/mcp-telegram` 1.43.7](https://github.com/mcp-telegram/mcp-telegram) (upstream)
+**Last updated:** 2026-10-27
+**Current version:** 2.64.1 (cloud) / [`@overpod/mcp-telegram` 1.43.7](https://github.com/mcp-telegram/mcp-telegram) (upstream)
 
 > **Planned work and its status now live on the public
 > [roadmap board](https://github.com/orgs/mcp-telegram/projects/1)** (horizons
@@ -54,38 +54,37 @@ Things actively being worked on or about to ship.
 
 Ordered by current intent. Subject to change as decisions are locked.
 
-- **Per-user burst rate limit** (Layer 3) —
-  trigger: ≥10 daily active users sustained 7 days. Currently
-  Layer 1 (per-IP HTTP rate-limit on `/oauth/*`, 30 req/min) and Layer 2
-  (per-user daily quota, default 100 calls/day via `FREE_TIER_LIMIT`) are
-  live; Layer 5 (per-method soft limits) only if real flood statistics
-  demand it.
+- ~~**Per-user burst rate limit** (Layer 3) —
+  trigger: ≥10 daily active users sustained 7 days.~~ Shipped in v2.43.0 as
+  the per-token `/mcp` throttle (`MCP_RATE_LIMIT`, default 240 req/min);
+  noted 2026-10-27. Layer 1 (per-IP HTTP rate-limit on `/oauth/*`) and
+  Layer 2 (per-user daily quota via `FREE_TIER_LIMIT`, default 100
+  calls/day for self-hosters) are live too; Layer 5 (per-method soft
+  limits) only if real flood statistics demand it.
 
 ## Later (likely, no commitment)
 
 Direction is set, but timing depends on usage signals or external events.
 
-- **`MCP_TELEGRAM_ENABLE_STARS=0` in default cloud image**. Stars
-  remains opt-in via env flag for self-hosters; the hosted
-  `mcp-telegram.com` image does not register Stars tools by default
-  (matches the broader "no paid ecosystem on hosted free tier" stance,
-  with no judgment on Stars itself).
+- ~~**`MCP_TELEGRAM_ENABLE_STARS=0` in default cloud image**.~~ Already the
+  case: Stars tools register only when the env flag is set, and the hosted
+  service does not set it (noted 2026-10-27). Stars remains opt-in for
+  self-hosters.
 - **Proxy pool** — currently single-IP. Activation is investigation-led,
   not automatic.
   Signals to investigate: SigNoz alerts A1 (`flood_wait > 10/hour`) or A2
-  (`> 50/hour`), 10+ DAU sustained 7 consecutive days, or repeated user
-  reports of unexplained session drops. `AUTH_KEY_DUPLICATED` is treated
+  (`> 50/hour`), or repeated user reports of unexplained session drops.
+  ~~10+ DAU sustained 7 consecutive days~~ — long passed (2026-10-27), so
+  the alerts decide. `AUTH_KEY_DUPLICATED` is treated
   first as an IPC / single-flight bug, not as a proxy-pool trigger.
   Shortlisted infrastructure: datacenter VPS pool (~$20-40/mo, 5 IPs across
   3 regions) → residential proxies (~$50-200/mo) only on escalation.
 - **Per-method adaptive rate limiter** — only if real flood statistics
   show it's needed. Reactive strategy is currently sufficient
   (FLOOD_WAIT auto-retry).
-- **Session encryption at rest** — currently sessions are stored as
-  plaintext in SQLite (mirrors TDLib / Telegram Desktop). Threat model
-  documented in [`SECURITY.md`](SECURITY.md) and
-  [`docs/self-hosting.md`](docs/self-hosting.md). May add AES-GCM with
-  ENV-supplied key if community asks.
+- ~~**Session encryption at rest**~~ — shipped in v2.40.0: AES-GCM with an
+  env-supplied `SESSION_ENCRYPTION_KEY` (noted 2026-10-27). Threat model in
+  [`SECURITY.md`](SECURITY.md) and [`docs/self-hosting.md`](docs/self-hosting.md).
 - **Status page** at `mcp-telegram.com/status` — current service health
   (ok / maintenance / incident) with in-response banner middleware for
   active incidents.
@@ -123,6 +122,13 @@ Explicitly **not** on the roadmap. If this changes, it'll be noted in the
 
 ## Done (recent highlights)
 
+- **2026-10-27** — **Revoked Telegram sessions stop retrying; client
+  registry hygiene** (cloud v2.64.1, cloud#42, cloud#43). When Telegram
+  rejects a stored session at connect time, the server now logs it out and
+  revokes its OAuth tokens, so the client asks the user to reconnect instead
+  of retrying every few minutes. The dynamic-registration ceiling counts only
+  clients that never authorized, so real users can no longer exhaust it;
+  malformed `/oauth/register` bodies get a 400 instead of a 500.
 - **2026-09-30** — **Browser sessions are server-issued** (cloud v2.61.0,
   v2.61.1). The `/my/*` pages and the OAuth fast path identify the browser by
   an opaque `tg_sid` session created only after a QR scan or a review token,

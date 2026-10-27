@@ -152,6 +152,8 @@ export type LogFields = Partial<{
   removed: number;
   /** Items pruned. */
   pruned: number;
+  /** Rows a cleanup skipped on purpose because a directory review is open (cloud#43). */
+  keptForReview: number;
   /** Duration in milliseconds. */
   durationMs: number;
   /** Generic millisecond delay. */

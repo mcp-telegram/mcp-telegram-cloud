@@ -16,7 +16,8 @@ import type { UploadStore } from "./upload-store.js";
 import type { fetchUrlSafely } from "./url-fetcher.js";
 
 export type RequireConnection = () => Promise<string | null>;
-export type OnSessionRevoked = () => Promise<void>;
+/** `client` is the instance whose call failed, so only that session is judged dead (cloud#42). */
+export type OnSessionRevoked = (client?: TelegramService) => Promise<void>;
 /**
  * issue #19 — invoked when a tool call or its connection check breached its deadline.
  * The implementation (mcp-handler) drops the user's in-memory TelegramService so the next
@@ -103,7 +104,7 @@ export function resetSkipLogDedupe(): void {
   loggedSkips.clear();
 }
 
-const SESSION_REVOKED_MSG =
+export const SESSION_REVOKED_MSG =
   "Telegram session was revoked or expired. Please reconnect: Disconnect → Connect again in your app settings.";
 
 /**
@@ -224,6 +225,7 @@ function handleToolError(
   onRevoked: OnSessionRevoked,
   toolName: string,
   caller: CallerLogFields = {},
+  client?: TelegramService,
 ): CallToolResult {
   const msg = (e as Error).message ?? String(e);
   if (isAuthError(e)) {
@@ -233,7 +235,7 @@ function handleToolError(
       tool: toolName,
       ...caller,
     });
-    onRevoked().catch(() => {});
+    onRevoked(client).catch(() => {});
     return { content: [{ type: "text", text: SESSION_REVOKED_MSG }], isError: true };
   }
   logger.error(`Tool error in ${toolName}: ${msg}`, {
@@ -476,7 +478,7 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
             }
             const custom = tool.onError?.(e);
             if (custom) return custom;
-            return handleToolError(e, onRevoked, tool.name, caller);
+            return handleToolError(e, onRevoked, tool.name, caller, handlerClient);
           }
         },
       );

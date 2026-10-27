@@ -128,6 +128,10 @@ export const TOOL_DURATION = histogram("mcp.tool.duration", "MCP tool handler du
 export const TOOL_TIMEOUTS = counter("mcp.tool.timeouts", "Tool-call deadline breaches by tool+stage", "1");
 export const OAUTH_FLOW = counter("oauth.flow", "OAuth flow step outcomes", "1");
 export const RATE_LIMIT_HITS = counter("rate_limit.hits", "Rate-limit denials by tier", "1");
+/** cloud#42 — Telegram rejected a stored session (revoked / unregistered key). `outcome`:
+ * `revoked` = session dropped and OAuth revoked so the client re-authorizes instead of
+ * retrying; `review_kept` = demo account behind a live review link, left alone. */
+export const SESSION_DEAD = counter("telegram.session.dead", "Sessions Telegram rejected, by outcome", "1");
 /** Outbound OTLP export failures, by signal and classified reason. Surfaces silent
  * fetch errors that previously left operators with `/health` 200 but zero data in
  * SigNoz (root cause of v2.17.1 first-deploy debugging round). */

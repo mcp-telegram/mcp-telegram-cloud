@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
+import { isAuthErrorMessage } from "./auth-errors.js";
 import { config, iconPng256Url, iconPngUrl, iconUrl } from "./config.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
 import { type DestructiveGuard, summarizeArgs } from "./destructive-guard.js";
@@ -13,6 +14,7 @@ import type { OAuthProvider } from "./oauth.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, RATE_LIMIT_HITS } from "./telemetry/metrics.js";
 import { installCallToolInterceptor } from "./tool-call-interceptor.js";
+import { SESSION_REVOKED_MSG } from "./tool-registry.js";
 import { ARG_ALIASES, registerAllAllowedTools } from "./tools.js";
 import type { UploadStore } from "./upload-store.js";
 import { fetchUrlSafely } from "./url-fetcher.js";
@@ -53,6 +55,30 @@ const activeSessionsByClient = new Map<ClientClass, number>();
 const sessionClient = new Map<string, ClientClass>();
 
 /** Read the current active-session count for a single client class. */
+/**
+ * cloud#42 — Telegram rejected a user's stored session. Log the account out locally and
+ * invalidate its OAuth tokens: the client then gets 401, its refresh fails and it sends the
+ * user back through QR login, instead of opening a new MCP session every few minutes that
+ * retries a connect Telegram will never accept. Wired into `SessionManager.setOnSessionDead`.
+ */
+export function createDeadSessionHandler(
+  sessions: SessionManager,
+  oauth: OAuthProvider,
+): (userId: string, sessionFp: string) => Promise<void> {
+  return async (userId, sessionFp) => {
+    const uid = logUser(userId);
+    logger.warn(`Session revoked, cleaning up`, { component: "cloud", userId: uid, event: "session.revoked" }); // telemetry-allow: uid = logUser(userId) hashed above
+    await sessions.destroyDeadSession(userId, sessionFp, () => {
+      const revoked = oauth.revokeAllUserTokens(userId);
+      logger.info(`OAuth tokens invalidated after session revoke: ${revoked}`, {
+        component: "oauth",
+        userId: uid,
+        event: "oauth.token.revoke_on_session_death",
+      });
+    });
+  };
+}
+
 export function getActiveSessionsByClient(client: ClientClass): number {
   return activeSessionsByClient.get(client) ?? 0;
 }
@@ -332,7 +358,6 @@ export function _setReaperSessionsForTest(sessions: SessionManager | null): void
 export async function handleMcpRequest(
   sessions: SessionManager,
   usage: UsageTracker,
-  oauth: OAuthProvider,
   destructive: DestructiveGuard,
   uploads: UploadStore,
   userId: string,
@@ -343,7 +368,7 @@ export async function handleMcpRequest(
   // cannot leak a permanently "in-flight" request and block shutdown forever.
   inFlightRequests++;
   try {
-    return await handleMcpRequestInner(sessions, usage, oauth, destructive, uploads, userId, clientName, req);
+    return await handleMcpRequestInner(sessions, usage, destructive, uploads, userId, clientName, req);
   } finally {
     inFlightRequests--;
   }
@@ -352,7 +377,6 @@ export async function handleMcpRequest(
 async function handleMcpRequestInner(
   sessions: SessionManager,
   usage: UsageTracker,
-  oauth: OAuthProvider,
   destructive: DestructiveGuard,
   uploads: UploadStore,
   userId: string,
@@ -483,6 +507,13 @@ async function handleMcpRequestInner(
       // was its own unbounded await on the hot path of every tool call.
       if (await withDeadline("requireConnection", config.telegramConnectTimeoutMs, () => telegram.ensureConnected()))
         return null;
+      // A pooled client whose reconnect Telegram refused (cloud#42). Judged by the client
+      // actually inspected, not the account id read before the await: a concurrent account
+      // switch must not let a dead secondary take the primary down with it.
+      if (isAuthErrorMessage(telegram.lastError)) {
+        sessions.reportDeadSession(userId, telegram);
+        return SESSION_REVOKED_MSG;
+      }
       const reason = telegram.lastError ? ` ${telegram.lastError}` : "";
       return `Not connected to Telegram.${reason}`;
     } catch (e) {
@@ -523,17 +554,9 @@ async function handleMcpRequestInner(
     else sessions.markUnhealthy(userId);
   };
 
-  const onSessionRevoked = async () => {
-    const uid = logUser(userId);
-    logger.warn(`Session revoked, cleaning up`, { component: "cloud", userId: uid, event: "session.revoked" }); // telemetry-allow: uid = logUser(userId) hashed above
-    await sessions.destroyUserSession(userId);
-    // Invalidate all OAuth tokens → ChatGPT gets 401 → refresh fails → triggers re-auth → QR
-    const revoked = oauth.revokeAllUserTokens(userId);
-    logger.info(`OAuth tokens invalidated after session revoke: ${revoked}`, {
-      component: "oauth",
-      userId: uid,
-      event: "oauth.token.revoke_on_session_death",
-    });
+  // Same path as a revocation seen at connect time (cloud#42): one handler, review guard included.
+  const onSessionRevoked = async (client?: TelegramService) => {
+    if (client) sessions.reportDeadSession(userId, client);
   };
 
   const FREE_TIER_LIMIT = config.freeTierLimit;
