@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DOWNLOAD_CHUNK_BYTES, DOWNLOAD_LIMITS } from "../download-store.js";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  formatMediaSuffix,
   formatReactions,
   MAX_INLINE_MEDIA,
   READ_ONLY,
@@ -104,7 +105,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       const text = messages
         .map(
           (m) =>
-            `[#${m.id}] [${m.date}] [${m.chat.type === "channel" ? "C" : m.chat.type === "group" ? "G" : "P"} ${m.chat.name}${m.chat.username ? ` @${m.chat.username}` : ""}] ${m.sender}: ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}${formatReactions(m.reactions)}`,
+            `[#${m.id}] [${m.date}] [${m.chat.type === "channel" ? "C" : m.chat.type === "group" ? "G" : "P"} ${m.chat.name}${m.chat.username ? ` @${m.chat.username}` : ""}] ${m.sender}: ${m.text}${formatMediaSuffix(m.media)}${formatReactions(m.reactions)}`,
         )
         .join("\n\n");
       return textResult(sanitize(text) || "No messages found");
@@ -595,12 +596,7 @@ export const READ_TOOLS: ToolDefinition[] = [
     handler: async ({ chatId }, { telegram }) => {
       const messages = await telegram.getScheduledMessages(chatId);
       if (messages.length === 0) return textResult("No scheduled messages.");
-      const text = messages
-        .map(
-          (m) =>
-            `[#${m.id}] [${m.date}] ${m.text}${m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : ""}`,
-        )
-        .join("\n\n");
+      const text = messages.map((m) => `[#${m.id}] [${m.date}] ${m.text}${formatMediaSuffix(m.media)}`).join("\n\n");
       return textResult(sanitize(text));
     },
   },

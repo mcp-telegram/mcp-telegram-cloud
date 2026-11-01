@@ -149,8 +149,39 @@ export function renderMessage(m: {
   media?: { type: string; fileName?: string };
   reactions?: { emoji: string; count: number; me: boolean }[];
 }): string {
-  const media = m.media ? ` [${m.media.type}${m.media.fileName ? `: ${m.media.fileName}` : ""}]` : "";
-  return `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${media}${formatReactions(m.reactions)}`;
+  return `[#${m.id}] [${m.date}] ${m.sender}: ${m.text}${formatMediaSuffix(m.media)}${formatReactions(m.reactions)}`;
+}
+
+/**
+ * Media suffix of a message line, like " [photo]" or " [document: a.pdf]".
+ * Link previews ("webpage", core 1.44.2+) stay hidden while the directory review freeze keeps the
+ * read-messages / search-messages output format fixed; show them once the freeze ends.
+ */
+export function formatMediaSuffix(media?: { type: string; fileName?: string }): string {
+  if (!media || media.type === "webpage") return "";
+  return ` [${media.type}${media.fileName ? `: ${media.fileName}` : ""}]`;
+}
+
+/** Reply of telegram-mark-as-read; forums also report how their topics were marked */
+export function formatMarkAsReadResult(
+  chatId: string,
+  r: {
+    topicsMarked?: number;
+    topicsFailed?: number;
+    topicError?: string;
+    topicsRemaining?: number;
+    topicsNotChecked?: boolean;
+  },
+): string {
+  let text = `Marked ${chatId} as read`;
+  if (r.topicsMarked !== undefined) text += ` (${r.topicsMarked} unread topics marked)`;
+  if (r.topicsFailed) text += `. ${r.topicsFailed} topics could not be marked: ${r.topicError}`;
+  else if (r.topicError) text += `. Stopped early: ${r.topicError}`;
+  if (r.topicsRemaining) text += `. ${r.topicsRemaining} more unread topics left, call again to mark them`;
+  if (r.topicsNotChecked) {
+    text += ". The forum has more topics than one call checks; call again to continue with the rest";
+  }
+  return text;
 }
 
 export function renderDialog(d: {

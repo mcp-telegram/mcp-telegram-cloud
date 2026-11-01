@@ -7,6 +7,7 @@ import {
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
   errorResult,
+  formatMarkAsReadResult,
   LOCAL_WRITE,
   OUTBOUND_WRITE,
   premiumOnlyOnError,
@@ -45,8 +46,8 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId }, { telegram }) => {
-      await telegram.markAsRead(chatId);
-      return textResult(`Marked ${chatId} as read`);
+      const result = await telegram.markAsRead(chatId);
+      return textResult(formatMarkAsReadResult(chatId, result));
     },
   },
 
