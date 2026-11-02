@@ -174,6 +174,25 @@ purgeUrlFetchOrphans(0)
 // so re-encrypting while it still serves would feed it `v1:` envelopes and break live
 // sessions. By +2 min the old task is gone. No-op in passthrough mode (no key set).
 // Active users also migrate lazily on their next write (saveSessionString/addAccount encrypt).
+/** See the deferred block below: compact once, retrying every 10 min while busy. */
+function compactWithRetry(attemptsLeft: number): void {
+  try {
+    if (sessions.compactOnce("2026-11-secure-delete")) {
+      logger.info("Database compacted once to clear freed pages", {
+        component: "sessions",
+        event: "sessions.compact_once",
+      });
+    }
+  } catch (e) {
+    logger.warn(`One-time database compaction did not finish: ${(e as Error).message}`, {
+      component: "sessions",
+      event: "sessions.compact_once_failed",
+      count: attemptsLeft - 1,
+    });
+    if (attemptsLeft > 1) setTimeout(() => runDetached(() => compactWithRetry(attemptsLeft - 1)), 600_000).unref?.();
+  }
+}
+
 setTimeout(() => {
   runDetached(() => {
     try {
@@ -209,6 +228,10 @@ setTimeout(() => {
         event: "oauth.hash_backfill_failed",
       });
     }
+    // One-time rewrite of the file after the backfills above: pages freed before
+    // `secure_delete` was enabled may still hold plaintext session strings. Past the old
+    // task's drain; if something still holds the database, retry a few times.
+    compactWithRetry(6);
   });
 }, 120_000);
 

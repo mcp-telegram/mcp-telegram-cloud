@@ -37,18 +37,24 @@ COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 # in the backend's deps). If this stage's output were ever absent the server
 # falls back to the legacy hono pages (reactPagesAvailable() === false).
 FROM oven/bun:1.4.4-alpine AS app-builder
-# Build the app workspace standalone (its package.json is self-contained:
-# react, react-dom, vite, @vitejs/plugin-react). Installing it in isolation
-# avoids pulling the root workspace graph (Next.js/web deps) into this stage and
-# sidesteps the husky `prepare` hook that needs a .git dir. Bun on Alpine
+# Build the app workspace only: `--filter` installs just its dependencies (no
+# Next.js/web graph) and `--frozen-lockfile` takes them from the committed root
+# bun.lock, so the SSR bundles that run inside the backend are built from the
+# reviewed versions instead of whatever `^` ranges resolve to today. The web
+# manifest is copied only because the lockfile lists that workspace.
+# --ignore-scripts skips the husky `prepare` hook (no .git here). Bun on Alpine
 # occasionally flakes on install (IntegrityCheckFailed) — retry once.
 WORKDIR /build
-COPY app/package.json ./package.json
-RUN bun install --ignore-scripts || bun install --ignore-scripts
+COPY package.json bun.lock ./
+COPY app/package.json ./app/package.json
+COPY web/package.json ./web/package.json
+RUN bun install --frozen-lockfile --ignore-scripts --filter mcp-telegram-app \
+  || bun install --frozen-lockfile --ignore-scripts --filter mcp-telegram-app
 # Copy only sources/configs (NOT the host's app/node_modules or dist) so the
 # install above isn't clobbered.
-COPY app/src ./src
-COPY app/tsconfig.json app/biome.json app/vite.config.ts app/vite.ssr.config.ts ./
+COPY app/src ./app/src
+COPY app/tsconfig.json app/biome.json app/vite.config.ts app/vite.ssr.config.ts ./app/
+WORKDIR /build/app
 RUN bun run build
 
 # Stage 3: Production runtime — Bun runs .ts directly, no build step
@@ -64,8 +70,8 @@ COPY tsconfig.json ./
 # React page bundles (client islands + SSR), read at runtime by src/react-pages.ts.
 # app/src is copied too because the SSR bridge imports the app's pure-TS i18n
 # (detectLocale) directly from source.
-COPY --from=app-builder /build/dist ./app/dist
-COPY --from=app-builder /build/dist-ssr ./app/dist-ssr
+COPY --from=app-builder /build/app/dist ./app/dist
+COPY --from=app-builder /build/app/dist-ssr ./app/dist-ssr
 COPY app/src ./app/src
 COPY app/package.json ./app/package.json
 # Run as a non-root user (audit H3): a container RCE no longer lands as root.

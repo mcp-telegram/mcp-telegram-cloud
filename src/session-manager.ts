@@ -94,6 +94,9 @@ export class SessionManager {
   ) {
     this.db = new Database(dbPath);
     this.db.exec("PRAGMA journal_mode = WAL");
+    // Zero freed pages: without this, a session string replaced by its encrypted form (or
+    // a deleted row) stays readable in the file's free pages, i.e. in any disk snapshot.
+    this.db.exec("PRAGMA secure_delete = ON");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_sessions (
         user_id TEXT PRIMARY KEY,
@@ -1357,6 +1360,24 @@ export class SessionManager {
     this.db.prepare("DELETE FROM telegram_accounts WHERE owner_user_id = ?").run(ownerUserId);
     this.db.prepare("DELETE FROM active_account WHERE owner_user_id = ?").run(ownerUserId);
     this.db.prepare("DELETE FROM add_account_tokens WHERE owner_user_id = ?").run(ownerUserId);
+  }
+
+  /**
+   * Rewrite the database file once per `marker` (VACUUM + WAL truncate), so pages freed
+   * before `secure_delete` was on stop carrying old plaintext. Runs at most once: the
+   * marker is recorded in `maintenance_runs`. Returns true when it ran now.
+   */
+  compactOnce(marker: string): boolean {
+    this.db.exec("CREATE TABLE IF NOT EXISTS maintenance_runs (name TEXT PRIMARY KEY, done_at TEXT NOT NULL)");
+    if (this.db.prepare("SELECT 1 FROM maintenance_runs WHERE name = ?").get(marker)) return false;
+    this.db.exec("VACUUM");
+    // A reader elsewhere (the draining old container) can keep the checkpoint from
+    // finishing; SQLite reports that as busy=1 instead of throwing. Do not record the
+    // marker then, so the next attempt runs it again.
+    const cp = this.db.prepare("PRAGMA wal_checkpoint(TRUNCATE)").get() as { busy: number } | null;
+    if (cp?.busy) throw new Error("WAL checkpoint busy, compaction will be retried");
+    this.db.prepare("INSERT INTO maintenance_runs (name, done_at) VALUES (?, datetime('now'))").run(marker);
+    return true;
   }
 
   getDb(): Database {
