@@ -37,8 +37,11 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `FREE_TIER_LIMIT` | | `100` | Per-user daily tool-call quota. `0` = unlimited |
 | `OAUTH_RATE_LIMIT` | | `30` | Requests per IP per window on `/oauth/*`. `0` disables |
 | `OAUTH_RATE_WINDOW_MS` | | `60000` | Window duration in milliseconds |
-| `UPLOAD_RATE_LIMIT` | | `20` | Uploads per Bearer token (or IP) per window on `/my/upload`. `0` disables |
+| `UPLOAD_RATE_LIMIT` | | `20` | Uploads per issued Bearer token (IP otherwise) per window on `/my/upload`. `0` disables |
 | `UPLOAD_RATE_WINDOW_MS` | | `60000` | Window duration in milliseconds |
+| `QR_LOGIN_RATE_LIMIT` | | `20` | QR sign-ins per IP per window on `/login/qr` and `/oauth/authorize/qr`. `0` disables |
+| `QR_LOGIN_RATE_WINDOW_MS` | | `600000` | Window duration in milliseconds |
+| `QR_LOGIN_MAX_CONCURRENT` | | `50` | QR sign-ins running at once across all IPs. `0` disables |
 | `UPLOAD_FILE_MAX_BYTES` | | `52428800` | Per-file cap for `/my/upload` (50 MB) |
 | `UPLOAD_QUOTA_BYTES` | | `104857600` | Per-account pending-upload quota (100 MB) |
 | `UPLOAD_TTL_SECONDS` | | `900` | Lifetime of an unused `uploadId` |
@@ -279,8 +282,10 @@ ensure your reverse proxy sets one of these.
 
 ### `UPLOAD_RATE_LIMIT` / `UPLOAD_RATE_WINDOW_MS`
 
-Limit on `POST /my/upload`, keyed by the Bearer token when one is present
-and by IP otherwise. Default `20 / 60_000` = 20 uploads per minute.
+Limit on `POST /my/upload`, keyed by the Bearer token when the server issued
+it and by IP otherwise (a made-up token gets no bucket of its own, so random
+tokens cannot dodge the limit). Default `20 / 60_000` = 20 uploads per minute.
+`/mcp` uses the same rule with `MCP_RATE_LIMIT`.
 
 The byte limits below cap how much can be *pending* at once, not how much
 traffic the endpoint will accept: consuming an `uploadId` frees the quota
@@ -298,6 +303,15 @@ it (default 900 s). Apply identically to browser and token uploads.
 Oversize bodies are rejected with `413` before the multipart parser
 allocates; a quota breach returns `429`. Both are enforced twice (preflight
 and at write) to close the race between them.
+
+### `QR_LOGIN_RATE_LIMIT` / `QR_LOGIN_RATE_WINDOW_MS` / `QR_LOGIN_MAX_CONCURRENT`
+
+Every QR sign-in (`/login/qr`, `/oauth/authorize/qr`) opens an MTProto
+connection under the shared `TELEGRAM_API_ID` and holds it for minutes, so an
+unlimited flood could get the API ID throttled by Telegram for every user.
+Per IP: default `20 / 600_000` = 20 sign-ins per 10 minutes. Across all IPs at
+most `QR_LOGIN_MAX_CONCURRENT` (default 50) run at once; the next one is told
+to retry in a minute.
 
 ### `REVIEW_RATE_LIMIT` / `REVIEW_RATE_WINDOW_MS`
 
