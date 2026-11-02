@@ -3,7 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { TelegramService } from "@overpod/mcp-telegram/service";
 import { isAuthErrorMessage } from "./auth-errors.js";
 import { config } from "./config.js";
-import { decryptSecret, encryptionEnabled, encryptSecret, hashToken, isEncrypted } from "./crypto.js";
+import { decryptSecret, encryptionEnabled, encryptSecret, hashToken, isEncrypted, isHashedToken } from "./crypto.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
 import { logUser } from "./logger.js";
 import { incr, SESSION_DEAD } from "./telemetry/metrics.js";
@@ -1145,17 +1145,23 @@ export class SessionManager {
   createAddAccountToken(ownerUserId: string, label: string | null, ttlSeconds: number): string {
     const token = randomBytes(24).toString("hex");
     const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
+    // Stored hashed like every other credential here: a database copy must not carry
+    // live links that attach an attacker's account to the owner.
     this.db
       .prepare("INSERT INTO add_account_tokens (token, owner_user_id, label, expires_at) VALUES (?, ?, ?, ?)")
-      .run(token, ownerUserId, label, expiresAt);
+      .run(hashToken(token), ownerUserId, label, expiresAt);
     return token;
   }
 
   /** Validate an add-account token without consuming it (for GET page render). */
   peekAddAccountToken(token: string): { ownerUserId: string; label: string | null } | null {
+    if (isHashedToken(token)) return null; // a stored hash is not a link
+    // Rows written before hashing (they expire within minutes) still match by plaintext.
     const row = this.db
-      .prepare("SELECT owner_user_id, label, expires_at, used FROM add_account_tokens WHERE token = ?")
-      .get(token) as { owner_user_id: string; label: string | null; expires_at: number; used: number } | undefined;
+      .prepare("SELECT owner_user_id, label, expires_at, used FROM add_account_tokens WHERE token = ? OR token = ?")
+      .get(hashToken(token), token) as
+      | { owner_user_id: string; label: string | null; expires_at: number; used: number }
+      | undefined;
     if (!row) return null;
     if (row.used === 1) return null;
     if (row.expires_at < Math.floor(Date.now() / 1000)) return null;
@@ -1166,7 +1172,9 @@ export class SessionManager {
   consumeAddAccountToken(token: string): { ownerUserId: string; label: string | null } | null {
     const peeked = this.peekAddAccountToken(token);
     if (!peeked) return null;
-    const result = this.db.prepare("UPDATE add_account_tokens SET used = 1 WHERE token = ? AND used = 0").run(token);
+    const result = this.db
+      .prepare("UPDATE add_account_tokens SET used = 1 WHERE (token = ? OR token = ?) AND used = 0")
+      .run(hashToken(token), token);
     if (result.changes === 0) return null;
     return peeked;
   }

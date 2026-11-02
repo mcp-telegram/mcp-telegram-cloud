@@ -18,7 +18,7 @@ import { handleOAuthQrLogin } from "../qr-login.js";
 import { oauthRateLimit, qrLoginRateLimit, registerRateLimit, reviewRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import { redirectOrigin } from "../redirect-origin.js";
-import { matchRedirectUri } from "../redirect-uri-matcher.js";
+import { isAllowedRedirectUri, matchRedirectUri } from "../redirect-uri-matcher.js";
 import type { SessionManager } from "../session-manager.js";
 import { incr, OAUTH_FLOW } from "../telemetry/metrics.js";
 import { extractReviewToken, reviewPage } from "./review.js";
@@ -190,6 +190,16 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     if (!redirect_uris.every((u) => typeof u === "string" && u.length > 0)) {
       incr(OAUTH_FLOW, { step: "register", outcome: "error" });
       return c.json({ error: "invalid_redirect_uri", error_description: "redirect_uris must be strings" }, 400);
+    }
+    if (!redirect_uris.every((u) => isAllowedRedirectUri(u as string))) {
+      incr(OAUTH_FLOW, { step: "register", outcome: "error" });
+      return c.json(
+        {
+          error: "invalid_redirect_uri",
+          error_description: "redirect_uris must be https, http on localhost, or an app scheme",
+        },
+        400,
+      );
     }
     const client = oauth.registerClient({
       redirect_uris,

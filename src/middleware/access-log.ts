@@ -56,11 +56,14 @@ export const accessLog: MiddlewareHandler = async (c, next) => {
       // client_name) is only known after MCP token validation, so this layer
       // uses the bounded-enum `clientClass` to avoid a same-key collision.
       const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
-      logger[level](`${method} ${rawPath} ${status} ${duration}ms [${client}]`, {
+      // ID-shaped segments can be capabilities (`/accounts/add/<token>`, download ids):
+      // once templated, the raw path is never written to logs or SigNoz.
+      const loggedPath = route.includes(":") ? route : rawPath;
+      logger[level](`${method} ${loggedPath} ${status} ${duration}ms [${client}]`, {
         component: "http",
         event: "http.request",
         method,
-        path: rawPath,
+        path: loggedPath,
         route,
         status: String(status),
         status_class: cls,

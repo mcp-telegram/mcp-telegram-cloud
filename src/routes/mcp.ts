@@ -5,7 +5,7 @@ import { config } from "../config.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
 import { handleMcpRequest } from "../mcp-handler.js";
 import type { OAuthProvider } from "../oauth.js";
-import { mcpRateLimit } from "../rate-limit.js";
+import { makeMcpRateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
 import type { UsageTracker } from "../usage.js";
@@ -49,6 +49,7 @@ export function registerMcpRoutes(app: Hono, { oauth, sessions, usage, destructi
   app.use("/mcp/", corsMiddleware);
   // Per-token rate limit + request body cap (audit M1 / /mcp throttle). CORS
   // runs first so preflight OPTIONS short-circuits before these.
+  const mcpRateLimit = makeMcpRateLimit((token) => oauth.validateToken(token) !== null);
   app.use("/mcp", mcpRateLimit);
   app.use("/mcp/", mcpRateLimit);
   const mcpBodyLimit = bodyLimit({ maxSize: config.maxJsonBodyBytes });

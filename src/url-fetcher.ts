@@ -429,6 +429,16 @@ export function isPrivateAddress(addr: string): boolean {
   for (const prefix of BLOCKED_IPV6_PREFIXES) {
     if (norm.startsWith(prefix)) return true;
   }
+
+  // Tunnels and special ranges that can carry or stand for an internal destination:
+  // 6to4 2002::/16 and Teredo 2001::/32 embed an IPv4 address, 2001:db8::/32 is
+  // documentation-only and 100::/64 is the discard prefix (RFC 3056, 4380, 3849, 6666).
+  const g = expandIPv6(norm);
+  if (g) {
+    if (g[0] === 0x2002) return true;
+    if (g[0] === 0x2001 && (g[1] === 0x0000 || g[1] === 0x0db8)) return true;
+    if (g[0] === 0x0100 && g[1] === 0 && g[2] === 0 && g[3] === 0) return true;
+  }
   return false;
 }
 

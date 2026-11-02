@@ -239,14 +239,28 @@ function handleToolError(
     onRevoked(client).catch(() => {});
     return { content: [{ type: "text", text: SESSION_REVOKED_MSG }], isError: true };
   }
-  logger.error(`Tool error in ${toolName}: ${msg}`, {
+  const logged = loggableToolError(msg);
+  logger.error(`Tool error in ${toolName}: ${logged}`, {
     component: "tools",
     event: "tool.error",
     tool: toolName,
-    error: msg,
+    error: logged,
     ...caller,
   });
   return { content: [{ type: "text", text: toolErrorText(msg) }], isError: true };
+}
+
+/**
+ * Tool error text as it may be logged (and shipped to SigNoz). Telegram error codes and
+ * entity ids stay for debugging; what the user typed or owns does not: lines after the
+ * first (e.g. the list of chat titles in "Multiple chats match") are dropped, and the
+ * quoted chat reference (a name, @username or phone) is masked.
+ */
+export function loggableToolError(msg: string): string {
+  // Mask first, across lines: the typed reference may itself contain quotes or a newline.
+  // Greedy up to the last quote before a sentence end.
+  const masked = msg.replace(/\b(chats? match|chat) "[\s\S]*"(?=\.)/gi, '$1 "…"');
+  return (masked.split("\n", 1)[0] ?? "").slice(0, 300);
 }
 
 export interface RegisterAllOptions {

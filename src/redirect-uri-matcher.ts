@@ -36,7 +36,40 @@ function loopbackEquivalent(registered: URL, incoming: URL): boolean {
   return true;
 }
 
+/** Schemes a browser would execute or read locally instead of handing to an app. */
+const UNSAFE_SCHEMES = new Set([
+  "javascript:",
+  "data:",
+  "vbscript:",
+  "file:",
+  "about:",
+  "blob:",
+  "filesystem:",
+  "view-source:",
+]);
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Where an authorization code may be sent: https, http only to loopback (native apps on
+ * the user's machine), or an app's own scheme (`cursor:`, `vscode:`, ...). Registration
+ * used to accept anything, so `javascript:`/`data:` targets were stopped only by the
+ * page CSP; plain http to a remote host would leak the code on the wire.
+ */
+export function isAllowedRedirectUri(raw: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (u.protocol === "https:") return true;
+  if (u.protocol === "http:") return LOOPBACK_HOSTS.has(u.hostname);
+  if (UNSAFE_SCHEMES.has(u.protocol)) return false;
+  return /^[a-z][a-z0-9+.-]*:$/.test(u.protocol);
+}
+
 export function matchRedirectUri(registeredUris: string[], incoming: string): boolean {
+  if (!isAllowedRedirectUri(incoming)) return false;
   if (registeredUris.includes(incoming)) return true;
 
   const incomingUrl = parseUri(incoming);

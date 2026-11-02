@@ -1,5 +1,6 @@
 import type { Context, MiddlewareHandler } from "hono";
 import { config } from "./config.js";
+import { hashToken } from "./crypto.js";
 import { logger } from "./logger.js";
 
 type Bucket = { count: number; resetAt: number };
@@ -97,19 +98,33 @@ export const registerRateLimit = rateLimit({
 });
 
 /**
- * Per-token limiter for /mcp. Keys by the Bearer token (falling back to IP when
- * absent) so one token can't flood the backend / downstream Telegram MTProto
- * and trigger FLOOD_WAIT bans. /mcp is already Bearer-gated; this caps volume.
+ * Bucket key for a Bearer token the server actually issued (hashed, so raw tokens never sit
+ * in the bucket map). Anything else, including a missing or made-up token, falls back to
+ * the client IP: keying on an unverified token gave every random string a fresh bucket,
+ * so a flood with fake tokens was never limited and the map grew without bound.
  */
-export const mcpRateLimit = rateLimit({
-  limit: config.mcpRateLimit,
-  windowMs: config.mcpRateWindowMs,
-  scope: "mcp",
-  keyOf: (c) => {
+export function issuedBearerKey(isIssued: (token: string) => boolean): (c: Context) => string | null {
+  return (c) => {
     const auth = c.req.header("authorization");
-    return auth?.startsWith("Bearer ") ? auth.slice(7) : null;
-  },
-});
+    if (!auth?.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    return token && isIssued(token) ? `t:${hashToken(token)}` : null;
+  };
+}
+
+/**
+ * Per-token limiter for /mcp. Keys by the issued Bearer token (IP otherwise) so one token
+ * can't flood the backend / downstream Telegram MTProto and trigger FLOOD_WAIT bans, while
+ * many users behind one client IP (ChatGPT, Claude) keep separate buckets.
+ */
+export function makeMcpRateLimit(isIssued: (token: string) => boolean): MiddlewareHandler {
+  return rateLimit({
+    limit: config.mcpRateLimit,
+    windowMs: config.mcpRateWindowMs,
+    scope: "mcp",
+    keyOf: issuedBearerKey(isIssued),
+  });
+}
 
 /**
  * Limiter for `POST /my/upload`. Keyed by Bearer token when the caller is an
@@ -123,15 +138,12 @@ export const mcpRateLimit = rateLimit({
  * imported — that keeps it configurable from a test without depending on
  * module import order.
  */
-export function makeUploadRateLimit(): MiddlewareHandler {
+export function makeUploadRateLimit(isIssued: (token: string) => boolean): MiddlewareHandler {
   return rateLimit({
     limit: config.uploadRateLimit,
     windowMs: config.uploadRateWindowMs,
     scope: "upload",
-    keyOf: (c) => {
-      const auth = c.req.header("authorization");
-      return auth?.startsWith("Bearer ") ? auth.slice(7) : null;
-    },
+    keyOf: issuedBearerKey(isIssued),
   });
 }
 

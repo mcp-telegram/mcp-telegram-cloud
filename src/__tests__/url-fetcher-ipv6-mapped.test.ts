@@ -121,3 +121,17 @@ describe("fetchUrlSafely — hostile upstream cannot make us throw", () => {
     }
   });
 });
+
+describe("IPv6 tunnel and special ranges (security audit 2026-11-02)", () => {
+  it("blocks 6to4, Teredo, documentation and discard prefixes", () => {
+    for (const a of ["2002:a00:114::1", "2002:7f00:1::", "2001:0:4136:e378::1", "2001:db8::1", "100::1"]) {
+      assert.equal(isPrivateAddress(a), true, a);
+    }
+  });
+
+  it("still allows ordinary global addresses next to them", () => {
+    for (const a of ["2001:4860:4860::8888", "2606:4700:4700::1111", "2003::1"]) {
+      assert.equal(isPrivateAddress(a), false, a);
+    }
+  });
+});

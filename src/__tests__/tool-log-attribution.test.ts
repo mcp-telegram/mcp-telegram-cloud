@@ -105,7 +105,53 @@ describe("tool log attribution", () => {
     assert.equal(res.isError, true);
     assert.match(res.content[0]?.text ?? "", /^Error: Telegram could not resolve channel 4304313856/);
     const [rec] = byEvent("tool.error");
-    assert.equal(rec?.attrs.error, rawMsg);
+    // First line only: the entity id stays for debugging, the docs link does not.
+    assert.equal(rec?.attrs.error, rawMsg.split("\n")[0]);
+  });
+
+  it("chat titles and the typed chat reference never reach the log (security audit 2026-11-02)", async () => {
+    const call = register(
+      async () => {
+        throw new Error(
+          'Multiple chats match "+15551234567". Use the numeric ID instead:\n  -100123 Family chat\n  -100456 Doctor',
+        );
+      },
+      { userId: RAW_USER_ID, clientName: "Claude" },
+    );
+    await call({});
+    const logged = String(byEvent("tool.error").at(-1)?.attrs.error);
+    assert.ok(!logged.includes("+15551234567"), "the typed phone number is masked");
+    assert.ok(!logged.includes("Family chat") && !logged.includes("Doctor"), "chat titles are dropped");
+    assert.match(logged, /^Multiple chats match "…"/);
+  });
+
+  it("a chat title with quotes inside is masked whole (review finding)", async () => {
+    const call = register(
+      async () => {
+        throw new Error(
+          'Cannot find chat "Project "Ivanov" +15551234567". Use a numeric ID, @username, or run telegram-search-chats to find it.',
+        );
+      },
+      { userId: RAW_USER_ID, clientName: "Claude" },
+    );
+    await call({});
+    const logged = String(byEvent("tool.error").at(-1)?.attrs.error);
+    assert.ok(!logged.includes("Ivanov") && !logged.includes("+15551234567"), logged);
+    assert.match(logged, /^Cannot find chat "…"\. Use a numeric ID/);
+  });
+
+  it("a typed reference with a newline inside is masked before the first line is taken", async () => {
+    const call = register(
+      async () => {
+        throw new Error(
+          'Cannot find chat "+15551234567\nwork". Use a numeric ID, @username, or run telegram-search-chats to find it.',
+        );
+      },
+      { userId: RAW_USER_ID, clientName: "Claude" },
+    );
+    await call({});
+    const logged = String(byEvent("tool.error").at(-1)?.attrs.error);
+    assert.ok(!logged.includes("+15551234567"), logged);
   });
 
   it("never logs the raw Telegram user id when hashing is on", async () => {

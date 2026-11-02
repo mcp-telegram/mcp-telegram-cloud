@@ -55,5 +55,10 @@ ENV HOSTNAME=0.0.0.0
 COPY --from=builder /app/web/.next/standalone ./
 COPY --from=builder /app/web/.next/static ./web/.next/static
 COPY --from=builder /app/web/public ./web/public
+# Run as the image's unprivileged `bun` user (uid 1000), like the backend image:
+# a compromise of the site no longer lands as root in the container. Next writes
+# its runtime cache under .next, so that tree belongs to the user.
+RUN mkdir -p ./web/.next/cache && chown -R bun:bun ./web/.next
+USER bun
 EXPOSE 3001
 CMD ["bun", "web/server.js"]

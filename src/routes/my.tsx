@@ -80,7 +80,7 @@ function originMatchesIssuer(headerValue: string): boolean {
 export function createMyRoutes(deps: MyRoutesDeps): Hono {
   const { destructive, uploads } = deps;
   const app = new Hono({ strict: false });
-  const uploadRateLimit = makeUploadRateLimit();
+  const uploadRateLimit = makeUploadRateLimit((token) => deps.oauth.validateToken(token) !== null);
 
   app.get("/", (c) => c.redirect("/my/settings", 302));
 
