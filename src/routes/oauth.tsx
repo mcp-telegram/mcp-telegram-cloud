@@ -15,7 +15,7 @@ import { type OAuthProvider, parsedUris } from "../oauth.js";
 import { AuthorizePage } from "../pages/AuthorizePage.js";
 import { ConsentPage } from "../pages/ConsentPage.js";
 import { handleOAuthQrLogin } from "../qr-login.js";
-import { oauthRateLimit, registerRateLimit, reviewRateLimit } from "../rate-limit.js";
+import { oauthRateLimit, qrLoginRateLimit, registerRateLimit, reviewRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import { redirectOrigin } from "../redirect-origin.js";
 import { matchRedirectUri } from "../redirect-uri-matcher.js";
@@ -317,7 +317,7 @@ export function createOAuthRoutes({ oauth, sessions }: OAuthRoutesDeps): Hono {
     );
   });
 
-  app.get("/authorize/qr", async (c) => {
+  app.get("/authorize/qr", qrLoginRateLimit, async (c) => {
     const clientId = c.req.query("client_id") ?? "";
     const redirectUri = c.req.query("redirect_uri") ?? "";
     const state = c.req.query("state") ?? "";

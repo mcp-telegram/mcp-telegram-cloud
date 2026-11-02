@@ -146,3 +146,10 @@ export const reviewRateLimit = rateLimit({
   windowMs: config.reviewRateWindowMs,
   scope: "review",
 });
+
+/** QR sign-in limiter, shared by /login/qr and /oauth/authorize/qr (one bucket per IP). */
+export const qrLoginRateLimit = rateLimit({
+  limit: config.qrLoginRateLimit,
+  windowMs: config.qrLoginRateWindowMs,
+  scope: "qr_login",
+});

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { OAuthProvider } from "../oauth.js";
 import { LoginPage } from "../pages/LoginPage.js";
 import { handleQrLogin } from "../qr-login.js";
+import { qrLoginRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
 
@@ -25,7 +26,7 @@ export function createLoginRoutes({ sessions, oauth }: LoginRoutesDeps): Hono {
     return c.html(<LoginPage />);
   });
 
-  app.get("/qr", async (c) => {
+  app.get("/qr", qrLoginRateLimit, async (c) => {
     const userId = c.req.query("userId");
     if (!userId) {
       return c.text("userId required", 400);

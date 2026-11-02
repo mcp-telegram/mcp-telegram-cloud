@@ -150,28 +150,20 @@ export function createAdminRoutes({ oauth, sessions, usage }: AdminRoutesDeps): 
     );
   });
 
+  // Admin-only: an OAuth token used to be enough, which let any token holder (a directory
+  // reviewer on the shared demo account included) replace the stored session behind it.
   app.post("/import-session", async (c) => {
-    const auth = c.req.header("Authorization");
-    const body = await c.req.json();
-
-    let userId: string | null = null;
-
-    if (isAdminAuthorized(auth)) {
-      userId = body.userId;
-      if (!userId) return c.json({ error: "userId required" }, 400);
-    } else if (auth?.startsWith("Bearer ")) {
-      const tokenInfo = oauth.validateToken(auth.slice(7));
-      if (tokenInfo) userId = tokenInfo.userId;
-    }
-
-    if (!userId) {
+    if (!isAdminAuthorized(c.req.header("Authorization"))) {
       return c.json({ error: "unauthorized" }, 401);
     }
-
-    const sessionString = body.sessionString;
+    const body = (await c.req.json().catch(() => null)) as { userId?: unknown; sessionString?: unknown } | null;
+    const userId = typeof body?.userId === "string" ? body.userId : "";
+    if (!userId) return c.json({ error: "userId required" }, 400);
+    const sessionString = typeof body?.sessionString === "string" ? body.sessionString : "";
     if (!sessionString) return c.json({ error: "sessionString required" }, 400);
 
-    sessions.saveSessionString(userId, sessionString);
+    // Whose session this is is unknown until the next QR login verifies it.
+    sessions.saveSessionString(userId, sessionString, null);
     return c.json({ ok: true, userId });
   });
 

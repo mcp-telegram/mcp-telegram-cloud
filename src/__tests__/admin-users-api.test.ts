@@ -244,3 +244,59 @@ describe("admin routes auth + wiring", () => {
     assert.equal(second.status, 404, "second delete finds nothing");
   });
 });
+
+/**
+ * Security audit 2026-11-02: an ordinary OAuth token was enough to call import-session,
+ * so any token holder (a directory reviewer on the shared demo account included) could
+ * replace the stored session behind it. A malformed body answered 500.
+ */
+describe("POST /import-session", () => {
+  const post = (app: ReturnType<typeof makeFixture>["app"], headers: Record<string, string>, body: string) =>
+    app.request("/import-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body,
+    });
+  const stored = (db: ReturnType<typeof makeFixture>["db"], userId: string) =>
+    db.prepare("SELECT session_string, telegram_id FROM user_sessions WHERE user_id = ?").get(userId) as
+      | { session_string: string; telegram_id: string | null }
+      | undefined;
+
+  it("refuses an OAuth token: only the admin token may replace a stored session", async () => {
+    const { sessions, db, oauth, app } = makeFixture();
+    sessions.saveSessionString("demo", "demo-session", "777");
+    const before = stored(db, "demo")?.session_string;
+    db.prepare("INSERT INTO oauth_tokens (access_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)").run(
+      hashToken("reviewer-token"),
+      "client-1",
+      "demo",
+      FUTURE_SEC,
+    );
+    assert.equal(oauth.validateToken("reviewer-token")?.userId, "demo", "the token itself is valid");
+
+    const res = await post(
+      app,
+      { Authorization: "Bearer reviewer-token" },
+      JSON.stringify({ sessionString: "attacker-session" }),
+    );
+
+    assert.equal(res.status, 401);
+    assert.equal(stored(db, "demo")?.session_string, before, "the stored session is untouched");
+  });
+
+  it("admin import works and marks the owner unknown until the next QR login", async () => {
+    const { sessions, db, app } = makeFixture();
+    sessions.saveSessionString("demo", "demo-session", "777");
+
+    const res = await post(app, ADMIN_HEADER, JSON.stringify({ userId: "demo", sessionString: "new-session" }));
+
+    assert.equal(res.status, 200);
+    assert.equal(stored(db, "demo")?.telegram_id, null);
+  });
+
+  it("answers 400, not 500, to a malformed body", async () => {
+    const { app } = makeFixture();
+    assert.equal((await post(app, ADMIN_HEADER, "{not json")).status, 400);
+    assert.equal((await post(app, ADMIN_HEADER, JSON.stringify({ userId: "demo" }))).status, 400);
+  });
+});

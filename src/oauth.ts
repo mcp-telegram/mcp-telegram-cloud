@@ -495,6 +495,8 @@ export class OAuthProvider {
     codeVerifier: string;
     redirectUri: string;
   }): { access_token: string; token_type: string; expires_in: number; refresh_token: string } | null {
+    // A value already in stored form is a row copied out of the database, not a code.
+    if (isHashedToken(params.code)) return null;
     // Dual-read: hashed row (current) or legacy plaintext. Client sends the plaintext code.
     const row = this.db
       .prepare("SELECT * FROM oauth_codes WHERE code = ? OR code = ?")
@@ -578,6 +580,8 @@ export class OAuthProvider {
       | { kind: "reject" }
       | { kind: "not_found" };
 
+    // Stored form (from a database copy) is never a valid refresh token.
+    if (isHashedToken(params.refreshToken)) return null;
     const hashedRefresh = hashToken(params.refreshToken);
     const outcome: Outcome = this.db
       .transaction((): Outcome => {
@@ -789,6 +793,9 @@ export class OAuthProvider {
 
   /** Validate Bearer token, return userId and clientName or null */
   validateToken(token: string): { userId: string; clientName: string } | null {
+    // The OR branch below reads legacy plaintext rows. Without this check it also matched a
+    // stored hash sent as the token, so a leaked database or backup worked as live tokens.
+    if (isHashedToken(token)) return null;
     // Dual-read: match the hashed row (current scheme) OR a not-yet-migrated legacy
     // plaintext row. The client always sends plaintext; we hash to match the stored hash.
     const row = this.db
@@ -810,13 +817,30 @@ export class OAuthProvider {
    * RFC 7009 — Token Revocation.
    */
   revokeToken(token: string): string | null {
+    if (isHashedToken(token)) return null;
     // Dual-read; delete by the value actually stored (hashed or legacy plaintext).
     const hashed = hashToken(token);
     const row = this.db
       .prepare("SELECT access_token, user_id FROM oauth_tokens WHERE access_token = ? OR access_token = ?")
       .get(hashed, token) as { access_token: string; user_id: string } | undefined;
 
-    if (!row) return null;
+    if (!row) {
+      // RFC 7009 covers refresh tokens too. Ignoring them left a "revoked" client able to
+      // mint new access tokens; the caller's full cleanup removes the rest of the chain.
+      const refresh = this.db
+        .prepare(
+          "SELECT refresh_token, user_id FROM oauth_refresh_tokens WHERE (refresh_token = ? OR refresh_token = ?) AND revoked = 0",
+        )
+        .get(hashed, token) as { refresh_token: string; user_id: string } | undefined;
+      if (!refresh) return null;
+      this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE refresh_token = ?").run(refresh.refresh_token);
+      logger.info(`OAuth refresh token revoked for ${logUser(refresh.user_id)}`, {
+        component: "oauth",
+        event: "oauth.token.revoke",
+        userId: logUser(refresh.user_id),
+      });
+      return refresh.user_id;
+    }
 
     this.db.prepare("DELETE FROM oauth_tokens WHERE access_token = ?").run(row.access_token);
     logger.info(`OAuth token revoked for ${logUser(row.user_id)}`, {
@@ -839,6 +863,12 @@ export class OAuthProvider {
   revokeAllUserTokens(userId: string): number {
     const result = this.db.prepare("DELETE FROM oauth_tokens WHERE user_id = ?").run(userId);
     const refreshResult = this.db.prepare("DELETE FROM oauth_refresh_tokens WHERE user_id = ?").run(userId);
+    // Browser sessions are access too: a `tg_sid` left on another computer could approve a
+    // new OAuth client (= a fresh token) after the user disconnected and signed in again.
+    this.db.prepare("DELETE FROM browser_sessions WHERE user_id = ?").run(userId);
+    this.db.prepare("DELETE FROM browser_handoffs WHERE user_id = ?").run(userId);
+    // An authorization code issued before the revoke would otherwise still mint a new pair.
+    this.db.prepare("DELETE FROM oauth_codes WHERE user_id = ?").run(userId);
     logger.info(
       `All tokens revoked for ${logUser(userId)}: ${result.changes} access + ${refreshResult.changes} refresh`,
       {

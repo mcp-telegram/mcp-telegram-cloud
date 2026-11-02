@@ -125,6 +125,10 @@ export interface FetchOptions {
 export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<FetchSuccess | FetchDenied> {
   if (opts.maxBytes <= 0) throw new Error("fetchUrlSafely: maxBytes must be positive");
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  // One clock for the whole fetch: every hop AND the body. The per-request timer used to
+  // stop once headers arrived, so a server that answered and then dripped the body held
+  // the connection (and up to maxBytes of memory) forever.
+  const deadline = AbortSignal.timeout(timeoutMs);
 
   let currentUrl = url;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
@@ -134,7 +138,7 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
     // IP pin via native fetch: hit the pre-resolved IP, carry the original host
     // in SNI + Host header. No per-connection cleanup needed — Bun's fetch owns
     // the socket lifecycle, so there's nothing to close.
-    const response = await doFetch(validated, timeoutMs);
+    const response = await doFetch(validated, deadline, timeoutMs);
     if (!response.ok) return response;
     const res = response.response;
 
@@ -184,7 +188,7 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
       return { ok: false, reason: "non_2xx", message: `Upstream returned HTTP ${res.status}` };
     }
 
-    return streamBody(res, currentUrl, opts.maxBytes);
+    return streamBody(res, currentUrl, opts.maxBytes, deadline, timeoutMs);
   }
   return { ok: false, reason: "redirect_limit", message: `Too many redirects (>${MAX_REDIRECTS})` };
 }
@@ -268,15 +272,17 @@ interface FetchResult {
   response: Response;
 }
 
-async function doFetch(validated: ValidatedUrl, timeoutMs: number): Promise<FetchResult | FetchDenied> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+async function doFetch(
+  validated: ValidatedUrl,
+  deadline: AbortSignal,
+  timeoutMs: number,
+): Promise<FetchResult | FetchDenied> {
   const { pinnedUrl, host, serverName } = buildPinnedRequest(validated.url, validated.pinnedIp);
   try {
     const response = await fetch(pinnedUrl, {
       method: "GET",
       redirect: "manual",
-      signal: controller.signal,
+      signal: deadline,
       headers: { Host: host },
       // Bun-specific: pin the socket to the IP in `pinnedUrl` but present the
       // real hostname for TLS SNI. Typed via cast — not in the lib DOM RequestInit.
@@ -285,16 +291,20 @@ async function doFetch(validated: ValidatedUrl, timeoutMs: number): Promise<Fetc
     return { ok: true, response };
   } catch (e) {
     const err = e as Error;
-    if (err.name === "AbortError") {
+    if (deadline.aborted || err.name === "AbortError" || err.name === "TimeoutError") {
       return { ok: false, reason: "timeout", message: `Fetch timed out after ${timeoutMs}ms` };
     }
     return { ok: false, reason: "fetch_failed", message: `Fetch failed: ${err.message}` };
-  } finally {
-    clearTimeout(timer);
   }
 }
 
-async function streamBody(res: Response, finalUrl: string, maxBytes: number): Promise<FetchSuccess | FetchDenied> {
+async function streamBody(
+  res: Response,
+  finalUrl: string,
+  maxBytes: number,
+  deadline: AbortSignal,
+  timeoutMs: number,
+): Promise<FetchSuccess | FetchDenied> {
   const declaredLen = Number(res.headers.get("content-length"));
   if (Number.isFinite(declaredLen) && declaredLen > maxBytes) {
     try {
@@ -332,6 +342,9 @@ async function streamBody(res: Response, finalUrl: string, maxBytes: number): Pr
     try {
       chunk = await reader.read();
     } catch (e) {
+      if (deadline.aborted) {
+        return { ok: false, reason: "timeout", message: `Fetch timed out after ${timeoutMs}ms (body)` };
+      }
       return {
         ok: false,
         reason: "fetch_failed",

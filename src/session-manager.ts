@@ -112,6 +112,17 @@ export class SessionManager {
     }
     this.db.exec("UPDATE user_sessions SET attachment_id = lower(hex(randomblob(16))) WHERE attachment_id = ''");
 
+    // The row key is the public username, which Telegram lets its owner give up and
+    // anyone else claim. `telegram_id` pins a row to the account that created it, so a
+    // later holder of the same username never inherits it (see resolveAccountKey).
+    // NULL = legacy row, verified lazily on the next QR login.
+    if (!columns.some((c) => c.name === "telegram_id")) {
+      this.db.exec("ALTER TABLE user_sessions ADD COLUMN telegram_id TEXT");
+    }
+    this.db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_telegram_id ON user_sessions(telegram_id) WHERE telegram_id IS NOT NULL",
+    );
+
     // v2.32.0 multi-account: secondary Telegram accounts attached to a primary
     // owner_user_id. owner_user_id is the original `user_sessions.user_id` —
     // i.e. the Telegram identity that completed the OAuth flow. Primary account
@@ -422,16 +433,125 @@ export class SessionManager {
     mark(pooled);
   }
 
-  /** Save a user's session string to SQLite for persistence across restarts.
-   *  Encrypted at rest via {@link encryptSecret} (passthrough when no key is set). */
-  saveSessionString(userId: string, sessionString: string): void {
+  /**
+   * Save a user's session string to SQLite for persistence across restarts.
+   * Encrypted at rest via {@link encryptSecret} (passthrough when no key is set).
+   *
+   * `telegramId`: the numeric id of the account this session belongs to.
+   * - omitted: keep whatever the row already records (re-saving the same account's session);
+   * - a value: record it (QR login, after {@link resolveAccountKey} chose this row);
+   * - null: the owner is unknown (imported session), so the next QR login verifies it.
+   */
+  saveSessionString(userId: string, sessionString: string, telegramId?: string | null): void {
+    const keep = telegramId === undefined;
     this.db
       .prepare(
-        `INSERT INTO user_sessions (user_id, session_string, updated_at, attachment_id)
-       VALUES (?, ?, datetime('now'), ?)
-       ON CONFLICT(user_id) DO UPDATE SET session_string = excluded.session_string, updated_at = datetime('now')`,
+        `INSERT INTO user_sessions (user_id, session_string, updated_at, attachment_id, telegram_id)
+       VALUES (?, ?, datetime('now'), ?, ?)
+       ON CONFLICT(user_id) DO UPDATE SET session_string = excluded.session_string, updated_at = datetime('now'),
+         telegram_id = ${keep ? "user_sessions.telegram_id" : "excluded.telegram_id"}`,
       )
-      .run(userId, encryptSecret(sessionString), randomBytes(16).toString("hex"));
+      .run(userId, encryptSecret(sessionString), randomBytes(16).toString("hex"), keep ? null : telegramId);
+  }
+
+  /**
+   * True when something that grants access still hangs off `userId` although its
+   * `user_sessions` row is gone (a dead review account skips cleanup, a revoked legacy row
+   * is deleted on reconnect). Reusing such a key would hand that access to whoever now
+   * holds the username. Settings and history (grants, prefs, usage) do not count.
+   * Tables owned by other components may be absent (unit tests), so only existing ones
+   * are checked.
+   */
+  private keyHasLiveAccess(userId: string): boolean {
+    const now = Math.floor(Date.now() / 1000);
+    const checks: Array<[table: string, sql: string, args: Array<string | number>]> = [
+      ["telegram_accounts", "SELECT 1 FROM telegram_accounts WHERE owner_user_id = ?", [userId]],
+      [
+        "add_account_tokens",
+        "SELECT 1 FROM add_account_tokens WHERE owner_user_id = ? AND used = 0 AND expires_at > ?",
+        [userId, now],
+      ],
+      [
+        "review_tokens",
+        "SELECT 1 FROM review_tokens WHERE user_id = ? AND revoked = 0 AND expires_at > ?",
+        [userId, now],
+      ],
+      ["oauth_tokens", "SELECT 1 FROM oauth_tokens WHERE user_id = ? AND expires_at >= ?", [userId, now]],
+      [
+        "oauth_refresh_tokens",
+        "SELECT 1 FROM oauth_refresh_tokens WHERE user_id = ? AND revoked = 0 AND (expires_at = 0 OR expires_at >= ?)",
+        [userId, now],
+      ],
+      ["oauth_codes", "SELECT 1 FROM oauth_codes WHERE user_id = ? AND expires_at >= ?", [userId, now]],
+      ["browser_sessions", "SELECT 1 FROM browser_sessions WHERE user_id = ? AND expires_at >= ?", [userId, now]],
+      ["browser_handoffs", "SELECT 1 FROM browser_handoffs WHERE user_id = ? AND expires_at >= ?", [userId, now]],
+    ];
+    const tableExists = this.db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?");
+    return checks.some(
+      ([table, sql, args]) => tableExists.get(table) !== null && this.db.prepare(sql).get(...args) !== null,
+    );
+  }
+
+  /** Numeric Telegram id recorded for a primary row, or null for a legacy/unknown row. */
+  getPrimaryTelegramId(userId: string): string | null {
+    const row = this.db.prepare("SELECT telegram_id FROM user_sessions WHERE user_id = ?").get(userId) as
+      | { telegram_id: string | null }
+      | undefined;
+    return row?.telegram_id ?? null;
+  }
+
+  /**
+   * Row key for a Telegram account that just proved itself with a QR scan, or null when
+   * that cannot be decided right now (the caller asks the user to retry).
+   *
+   * Keys are usernames, and a username can change hands. Without this check the new
+   * holder of a released username signed in as the previous owner (and, through the
+   * OAuth QR flow, overwrote that owner's session so the owner's tokens drove the new
+   * account). Order:
+   * 1. a row already pinned to this telegram id keeps its key, even after a rename;
+   * 2. a free username (or the account's own numeric id) becomes the key, unless access
+   *    (tokens, review links, secondary accounts) still hangs off it without a row;
+   * 3. a username row pinned to someone else is left alone, the account gets its
+   *    numeric id as the key (Telegram usernames cannot start with a digit);
+   * 4. a legacy row without an id is verified by connecting its stored session; if
+   *    Telegram refused that session, its owner stays unknown and the numeric id is used.
+   */
+  async resolveAccountKey(me: { username?: string | null; id: unknown }): Promise<string | null> {
+    const telegramId = String(me.id);
+    const pinned = this.db.prepare("SELECT user_id FROM user_sessions WHERE telegram_id = ?").get(telegramId) as
+      | { user_id: string }
+      | undefined;
+    if (pinned) return pinned.user_id;
+
+    const candidate = me.username ?? telegramId;
+    if (candidate === telegramId) return candidate;
+    const row = this.db.prepare("SELECT telegram_id FROM user_sessions WHERE user_id = ?").get(candidate) as
+      | { telegram_id: string | null }
+      | undefined;
+    if (!row) return this.keyHasLiveAccess(candidate) ? telegramId : candidate;
+    if (row.telegram_id !== null) return row.telegram_id === telegramId ? candidate : telegramId;
+
+    // Legacy row: ask the stored session who it is.
+    const stored = await this.tryReconnectSession(candidate);
+    if (!stored) {
+      // Unverifiable. If the row survived, Telegram did not answer: retry later. If Telegram
+      // refused the session the row is gone, but its owner is still unknown, and tokens,
+      // review links or secondary accounts may hang off this key; handing the key to
+      // whoever now holds the username would hand those over too. Use the numeric id.
+      const still = this.db.prepare("SELECT 1 FROM user_sessions WHERE user_id = ?").get(candidate);
+      return still ? null : telegramId;
+    }
+    let ownerId: string;
+    try {
+      const owner = await withDeadline("getMe", config.telegramConnectTimeoutMs, () => stored.getMe());
+      ownerId = String(owner.id);
+    } catch {
+      return null;
+    }
+    this.db
+      .prepare("UPDATE OR IGNORE user_sessions SET telegram_id = ? WHERE user_id = ? AND telegram_id IS NULL")
+      .run(ownerId, candidate);
+    return ownerId === telegramId ? candidate : telegramId;
   }
 
   getSession(userId: string): TelegramService | undefined {

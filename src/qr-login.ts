@@ -48,17 +48,8 @@ async function connectFromSession(sessions: SessionManager, sessionString: strin
   return telegram;
 }
 
-/**
- * Storage key for a freshly authenticated Telegram account.
- *
- * Derived ONLY from the account that actually signed in. Exported so the rule
- * is unit-testable and so call sites cannot quietly reintroduce a
- * caller-supplied id: `/login/qr?userId=` is chosen by whoever opens the page,
- * and using it as the key let an attacker overwrite a victim's session row.
- */
-export function sessionKeyForAccount(me: { username?: string | null; id: unknown }): string {
-  return me.username ?? String(me.id);
-}
+/** Shown when an existing row for this username could not be checked (Telegram unreachable). */
+const ACCOUNT_CHECK_RETRY = "Could not confirm which Telegram account this is right now. Please try again in a minute.";
 
 /**
  * Handle QR login via SSE stream.
@@ -122,8 +113,17 @@ export async function handleQrLogin(
           // entry under this userId.
           const fresh = await connectFromSession(sessions, outcome.sessionString);
           const me = await fresh.getMe();
-          // Identity comes from the scanned account, never from the query param.
-          const userId = sessionKeyForAccount(me);
+          // Identity comes from the scanned account, never from the query param, and the
+          // row must belong to that account, not to a previous holder of its username.
+          const userId = await sessions.resolveAccountKey(me);
+          if (userId === null) {
+            // Nothing was stored: end the authorization this scan created instead of leaving
+            // an orphan device in the user's Telegram settings.
+            await fresh.logOut().catch(() => {});
+            send("error_msg", { message: ACCOUNT_CHECK_RETRY });
+            controller.close();
+            return;
+          }
           if (userId !== requestedUserId) {
             logger.info("QR login stored under the scanned account, not the requested id", {
               component: "qr-login",
@@ -146,7 +146,7 @@ export async function handleQrLogin(
               });
             });
           } else {
-            sessions.saveSessionString(userId, outcome.sessionString);
+            sessions.saveSessionString(userId, outcome.sessionString, String(me.id));
             await sessions.adoptSession(userId, fresh);
           }
           send("connected", {
@@ -287,10 +287,19 @@ export async function handleOAuthQrLogin(
         if (outcome.ok && outcome.sessionString) {
           const telegram = await connectFromSession(sessions, outcome.sessionString);
           const me = await telegram.getMe();
-          const userId = me.username ?? String(me.id);
+          // Same rule as handleQrLogin: never write into a row owned by a previous holder of
+          // this username, or that owner's live tokens start driving this account.
+          const userId = await sessions.resolveAccountKey(me);
+          if (userId === null) {
+            // Nothing was stored: end the authorization this scan created instead of leaving
+            // an orphan device in the user's Telegram settings.
+            await telegram.logOut().catch(() => {});
+            send("error_msg", { message: ACCOUNT_CHECK_RETRY });
+            controller.close();
+            return;
+          }
 
-          // Save Telegram session
-          sessions.saveSessionString(userId, outcome.sessionString);
+          sessions.saveSessionString(userId, outcome.sessionString, String(me.id));
 
           // Create OAuth auth code
           const code = oauth.createAuthCode({
@@ -416,7 +425,7 @@ export async function handleAddAccountQr(
         // It is already accessible without going through `telegram_accounts`,
         // and adding it as a secondary would double-bind the same identity
         // and silently steal active routing from the primary slot.
-        if (telegramUserId === ownerUserId) {
+        if (telegramUserId === ownerUserId || sessions.getPrimaryTelegramId(ownerUserId) === String(me.id)) {
           send("error_msg", {
             message: `This is already your primary account (@${telegramUserId}). Scan a DIFFERENT Telegram account.`,
           });

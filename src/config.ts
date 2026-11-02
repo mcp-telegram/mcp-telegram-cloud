@@ -237,6 +237,14 @@ export const config = {
   reviewRateLimit: intOr(process.env.REVIEW_RATE_LIMIT, 10),
   reviewRateWindowMs: intOr(process.env.REVIEW_RATE_WINDOW_MS, 15 * 60_000),
 
+  /** QR sign-in (/login/qr, /oauth/authorize/qr): each request opens an MTProto connection
+   * under the shared API_ID for up to minutes, so an unlimited flood can get the API_ID
+   * throttled for every user. Per IP: 20 per 10 min (prod peak was 7/hour from one IP). */
+  qrLoginRateLimit: intOr(process.env.QR_LOGIN_RATE_LIMIT, 20),
+  qrLoginRateWindowMs: intOr(process.env.QR_LOGIN_RATE_WINDOW_MS, 10 * 60_000),
+  /** Ceiling on QR sign-ins running at once across all IPs. 0 disables. */
+  qrLoginMaxConcurrent: intOr(process.env.QR_LOGIN_MAX_CONCURRENT, 50),
+
   /** Max request body bytes for JSON API routes (/oauth/*, /mcp). Default 1 MiB. */
   maxJsonBodyBytes: intOr(process.env.MAX_JSON_BODY_BYTES, 1024 * 1024),
 

@@ -11,7 +11,8 @@
  * trusted the query parameter, and that asymmetry was the bug.
  *
  * Two layers, because the behavioural part cannot be reached without GramJS:
- *   1. the identity rule itself (pure function);
+ *   1. the identity rule itself (`SessionManager.resolveAccountKey`, driven in
+ *      account-key-ownership.test.ts);
  *   2. a SOURCE guard that the persistence calls inside `handleQrLogin` use the
  *      derived id and never the request-supplied one. A future refactor that
  *      "simplifies" by passing `requestedUserId` back in fails here.
@@ -26,8 +27,6 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-const { sessionKeyForAccount } = await import("../qr-login.js");
-
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Body of a top-level `export ... function <name>(` up to the next top-level `}`. */
@@ -38,24 +37,6 @@ function functionBody(source: string, name: string): string {
   return source.slice(start, end === -1 ? source.length : end);
 }
 
-describe("sessionKeyForAccount", () => {
-  it("prefers the public username of the account that signed in", () => {
-    assert.equal(sessionKeyForAccount({ username: "overpod", id: 265716044 }), "overpod");
-  });
-
-  it("falls back to the numeric id when the account has no username", () => {
-    assert.equal(sessionKeyForAccount({ username: null, id: 265716044 }), "265716044");
-    assert.equal(sessionKeyForAccount({ id: 42 }), "42");
-  });
-
-  it("never returns a caller-controlled value — the signature has no room for one", () => {
-    // Regression-proofing by type shape: the function takes the Telegram
-    // account only. If someone adds a "requested id" parameter, this comment
-    // and the guard below are the trail back to why that is wrong.
-    assert.equal(sessionKeyForAccount.length, 1);
-  });
-});
-
 describe("handleQrLogin persists under the scanned identity", () => {
   const source = readFileSync(join(SRC, "qr-login.ts"), "utf8");
   const body = functionBody(source, "handleQrLogin");
@@ -63,8 +44,8 @@ describe("handleQrLogin persists under the scanned identity", () => {
   it("derives the storage key from the scanned account", () => {
     assert.match(
       body,
-      /const userId = sessionKeyForAccount\(me\)/,
-      "the storage key must come from getMe(), not from the request",
+      /const userId = await sessions\.resolveAccountKey\(me\)/,
+      "the storage key must come from the scanned account (getMe), resolved against row ownership",
     );
   });
 
@@ -90,8 +71,22 @@ describe("handleQrLogin persists under the scanned identity", () => {
 
   it("guard is not vacuous — it fails on the pre-fix shape", () => {
     const preFix = body
-      .replace(/const userId = sessionKeyForAccount\(me\);/, "")
+      .replace(/const userId = await sessions\.resolveAccountKey\(me\);/, "")
       .replace(/saveSessionString\(userId/, "saveSessionString(requestedUserId");
     assert.ok(/saveSessionString\(\s*requestedUserId/.test(preFix), "synthetic offender must be detectable");
+  });
+});
+
+describe("handleOAuthQrLogin persists under a row owned by the scanned account", () => {
+  const source = readFileSync(join(SRC, "qr-login.ts"), "utf8");
+  const body = functionBody(source, "handleOAuthQrLogin");
+
+  it("resolves the key against row ownership before writing", () => {
+    // 2026-11-02: the OAuth flow keyed by `me.username` directly, so the new holder of a
+    // released username overwrote the previous owner's row and that owner's tokens then
+    // drove the new account.
+    assert.match(body, /const userId = await sessions\.resolveAccountKey\(me\)/);
+    assert.ok(!/me\.username \?\? String\(me\.id\)/.test(body), "no raw username key");
+    assert.match(body, /saveSessionString\(userId, outcome\.sessionString, String\(me\.id\)\)/);
   });
 });

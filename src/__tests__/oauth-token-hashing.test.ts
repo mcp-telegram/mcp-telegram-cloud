@@ -154,3 +154,106 @@ describe("OAuth at-rest hashing", () => {
     assert.equal(oauth.migrateTokenHashes(), 0, "second sweep is a no-op");
   });
 });
+
+/**
+ * Pass-the-hash (security audit 2026-11-02): the legacy dual-read `WHERE t = hash(x) OR t = x`
+ * also matched when x WAS the stored hash, so rows copied out of cloud.db or a backup worked
+ * as live tokens and the at-rest hashing protected nothing.
+ */
+describe("a stored hash is never accepted as the token it protects", () => {
+  const storedOf = (db: DatabaseType, sql: string, arg: string) => (db.prepare(sql).get(arg) as { v: string }).v;
+
+  it("access token: validate and revoke refuse the hash, plaintext still works", () => {
+    const { oauth, db, clientId } = setup();
+    const pair = obtainPair(oauth, clientId, "alice");
+    const stored = storedOf(db, "SELECT access_token AS v FROM oauth_tokens WHERE user_id = ?", "alice");
+    assert.ok(isHashedToken(stored));
+
+    assert.equal(oauth.validateToken(stored), null, "hash from the database must not authenticate");
+    assert.equal(oauth.revokeToken(stored), null, "nor revoke on the owner's behalf");
+    assert.equal(oauth.validateToken(pair.access_token)?.userId, "alice");
+  });
+
+  it("refresh token: the hash does not mint a new pair", () => {
+    const { oauth, db, clientId } = setup();
+    const pair = obtainPair(oauth, clientId, "alice");
+    const stored = storedOf(db, "SELECT refresh_token AS v FROM oauth_refresh_tokens WHERE user_id = ?", "alice");
+
+    assert.equal(oauth.refreshAccessToken({ refreshToken: stored, clientId }), null);
+    assert.ok(oauth.refreshAccessToken({ refreshToken: pair.refresh_token, clientId }), "plaintext still rotates");
+  });
+
+  it("authorization code: the hash does not exchange", () => {
+    const { oauth, db, clientId } = setup();
+    const verifier = randomBytes(32).toString("base64url");
+    const challenge = createHash("sha256").update(verifier).digest("base64url");
+    oauth.createAuthCode({
+      clientId,
+      userId: "alice",
+      redirectUri: "https://example.test/cb",
+      codeChallenge: challenge,
+      codeChallengeMethod: "S256",
+    });
+    const stored = storedOf(db, "SELECT code AS v FROM oauth_codes WHERE user_id = ?", "alice");
+
+    const pair = oauth.exchangeCode({
+      code: stored,
+      clientId,
+      codeVerifier: verifier,
+      redirectUri: "https://example.test/cb",
+    });
+    assert.equal(pair, null);
+  });
+});
+
+describe("revocation reaches every credential of the user (security audit 2026-11-02)", () => {
+  it("revokeAllUserTokens also ends browser sessions, so a tg_sid left elsewhere stops working", () => {
+    const { oauth } = setup();
+    const cookie = oauth.createBrowserSession("alice", 3600);
+    const other = oauth.createBrowserSession("bob", 3600);
+    assert.equal(oauth.getBrowserSessionUser(cookie), "alice");
+
+    oauth.revokeAllUserTokens("alice");
+
+    assert.equal(oauth.getBrowserSessionUser(cookie), null);
+    assert.equal(oauth.getBrowserSessionUser(other), "bob", "other users keep theirs");
+  });
+
+  it("revokeToken accepts a refresh token (RFC 7009) and it no longer refreshes", () => {
+    const { oauth, clientId } = setup();
+    const pair = obtainPair(oauth, clientId, "alice");
+
+    assert.equal(oauth.revokeToken(pair.refresh_token), "alice");
+    assert.equal(oauth.refreshAccessToken({ refreshToken: pair.refresh_token, clientId }), null);
+  });
+});
+
+describe("revocation, review findings (2026-11-02)", () => {
+  it("an authorization code issued before revokeAllUserTokens no longer exchanges", () => {
+    const { oauth, clientId } = setup();
+    const verifier = randomBytes(32).toString("base64url");
+    const challenge = createHash("sha256").update(verifier).digest("base64url");
+    const code = oauth.createAuthCode({
+      clientId,
+      userId: "alice",
+      redirectUri: "https://example.test/cb",
+      codeChallenge: challenge,
+      codeChallengeMethod: "S256",
+    });
+
+    oauth.revokeAllUserTokens("alice");
+
+    const pair = oauth.exchangeCode({ code, clientId, codeVerifier: verifier, redirectUri: "https://example.test/cb" });
+    assert.equal(pair, null);
+  });
+
+  it("revokeToken also finds a legacy plaintext refresh token (before the hash migration runs)", () => {
+    const { oauth, db, clientId } = setup();
+    db.prepare(
+      "INSERT INTO oauth_refresh_tokens (refresh_token, client_id, user_id, expires_at) VALUES (?, ?, ?, ?)",
+    ).run("legacy-refresh", clientId, "alice", 0);
+
+    assert.equal(oauth.revokeToken("legacy-refresh"), "alice");
+    assert.equal(oauth.refreshAccessToken({ refreshToken: "legacy-refresh", clientId }), null);
+  });
+});

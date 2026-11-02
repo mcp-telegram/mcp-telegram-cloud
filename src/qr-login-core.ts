@@ -131,6 +131,26 @@ const defaultClientFactory: QrClientFactory = () => {
   };
 };
 
+/** Counts QR sign-ins holding an MTProto connection and refuses new ones past `cap()`. */
+export class QrLoginGate {
+  private active = 0;
+  constructor(private readonly cap: () => number) {}
+  tryEnter(): boolean {
+    const cap = this.cap();
+    if (cap > 0 && this.active >= cap) return false;
+    this.active++;
+    return true;
+  }
+  leave(): void {
+    this.active--;
+  }
+}
+
+/** Process-wide gate (see config.qrLoginMaxConcurrent). */
+const defaultQrLoginGate = new QrLoginGate(() => config.qrLoginMaxConcurrent);
+
+export const QR_LOGIN_BUSY = "Too many sign-ins are in progress right now. Please try again in a minute.";
+
 /**
  * Run one QR login attempt, transparently handling the 2FA cloud-password step.
  *
@@ -143,9 +163,22 @@ export async function runQrLogin(
   hooks: QrLoginHooks,
   signal: AbortSignal,
   clientFactory: QrClientFactory = defaultClientFactory,
+  gate: QrLoginGate = defaultQrLoginGate,
 ): Promise<QrLoginOutcome> {
   if (signal.aborted) return { ok: false, message: "QR login aborted" };
+  if (!gate.tryEnter()) return { ok: false, message: QR_LOGIN_BUSY };
+  try {
+    return await runQrLoginAttempt(hooks, signal, clientFactory);
+  } finally {
+    gate.leave();
+  }
+}
 
+async function runQrLoginAttempt(
+  hooks: QrLoginHooks,
+  signal: AbortSignal,
+  clientFactory: QrClientFactory,
+): Promise<QrLoginOutcome> {
   const creds = { apiId: config.telegramApiId, apiHash: config.telegramApiHash };
   const client = clientFactory();
 

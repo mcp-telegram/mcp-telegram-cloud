@@ -306,11 +306,12 @@ and fails when a new one is added without a decision.
 
 `/api/stats` accepts `Authorization: Bearer $ADMIN_TOKEN` only —
 compared with `crypto.timingSafeEqual()`.
-`/api/import-session` accepts **either** an admin bearer (and then
-imports for the `userId` in the request body) **or** a regular user
-OAuth bearer (and imports for the token's own user). When
-`ADMIN_TOKEN` is unset, the admin path is disabled but the user-bearer
-path on `/api/import-session` keeps working. Restrict admin endpoints
+`/api/import-session` accepts the admin bearer only and imports for the
+`userId` in the request body (until 2026-11 a user OAuth bearer was also
+accepted, which let any token holder replace the session behind it). The
+imported row is marked as having an unknown Telegram owner, so the next QR
+login verifies it. When `ADMIN_TOKEN` is unset, both endpoints answer `401`.
+Restrict admin endpoints
 at the proxy layer (allow-list IPs, VPN, etc.) — bearer alone is not
 sufficient exposure protection.
 
