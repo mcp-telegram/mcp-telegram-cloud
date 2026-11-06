@@ -1,11 +1,12 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
+  CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
-  OUTBOUND_WRITE,
   READ_ONLY,
+  READ_OPEN,
   sanitize,
   textResult,
 } from "./helpers.js";
@@ -216,7 +217,7 @@ export const STARS_TOOLS: ToolDefinition[] = [
       excludeUnique: z.boolean().optional().describe("Skip unique gifts"),
       sortByValue: z.boolean().optional().describe("Sort by Star value descending instead of date"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     requiresEnv: STARS_ENV,
     handler: async (
       {
@@ -285,7 +286,7 @@ export const STARS_TOOLS: ToolDefinition[] = [
         .describe("Saved gift ID (from telegram-get-saved-star-gifts) — required with chatId for chat gifts"),
       unsave: z.boolean().optional().describe("true = hide the gift from profile; false/omit = show it"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     requiresEnv: STARS_ENV,
     preValidate: ({ msgId, chatId, savedId }) => {
       if (msgId === undefined && !(chatId && savedId)) {

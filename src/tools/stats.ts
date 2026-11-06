@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { formatPeer, READ_ONLY, sanitize, textResult } from "./helpers.js";
+import { formatPeer, READ_ONLY, READ_OPEN, sanitize, textResult } from "./helpers.js";
 
 export const STATS_TOOLS: ToolDefinition[] = [
   {
@@ -124,7 +124,7 @@ export const STATS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Channel or supergroup to query — id or @username"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId }, { telegram }) => {
       const s = await telegram.getBoostsStatus(chatId);
       const lines = [

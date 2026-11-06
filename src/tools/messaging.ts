@@ -11,6 +11,7 @@ import {
   LOCAL_WRITE,
   OUTBOUND_WRITE,
   premiumOnlyOnError,
+  READ_OPEN,
   renderMessage,
   replyTargetFields,
   safeOpt,
@@ -65,7 +66,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Mute duration in seconds (only when muted=true). Omit to mute forever"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, muted, duration }, { telegram }) => {
       const MUTE_FOREVER = 2147483647;
       let muteUntil: number;
@@ -490,7 +491,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
         .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/)
         .describe("ISO 639-1 (e.g. 'en', 'ru') or locale (e.g. 'en-US')"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageIds, toLang }, { telegram }) => {
       const translations = await telegram.translateText(chatId, messageIds, toLang);
       const text =
@@ -733,7 +734,7 @@ export const MESSAGING_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID of the voice or video note"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const result = await telegram.transcribeAudio(chatId, messageId);
       const trialInfo =

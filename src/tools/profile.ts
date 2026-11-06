@@ -183,7 +183,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
       year: z.number().int().min(1900).max(2100).optional().describe("Year (optional — omit to hide age)"),
       clear: z.boolean().optional().describe("Pass true to remove birthday from profile"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     // Precise location, phone numbers or a birth date: off on the hosted service
     // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
     requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
@@ -385,7 +385,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
     inputSchema: {
       emoji: z.string().min(1).max(8).describe("Emoji character (e.g. 👍 ❤️ 🔥)"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ emoji }, { telegram }) => {
       await telegram.setDefaultReaction(emoji);
       return textResult(sanitize(`Default reaction set to ${emoji}`));

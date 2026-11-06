@@ -19,7 +19,6 @@ const WAVE_2_2_TOOLS = [
   "telegram-send-contact",
   "telegram-send-dice",
   "telegram-send-sticker",
-  "telegram-translate-message",
   "telegram-get-unread-mentions",
   "telegram-get-unread-reactions",
 ] as const;
@@ -232,6 +231,6 @@ describe("Wave 2.2 — write tools (messaging core)", () => {
   });
 
   it("WAVE_2_2_TOOLS list is exactly the expected size (drift detector)", () => {
-    assert.equal(WAVE_2_2_TOOLS.length, 12, "Wave 2.2 should expose exactly 12 tools");
+    assert.equal(WAVE_2_2_TOOLS.length, 11, "Wave 2.2 should expose exactly 11 tools");
   });
 });

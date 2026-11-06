@@ -44,41 +44,45 @@ export const replyTargetFields = {
 //                     additive writes; "the user can undo it" is not a reason.
 //   openWorldHint   — true when the tool reaches public or open-ended entities
 //                     or arbitrary destinations (other people, public search,
-//                     URLs, third-party bots). false when it stays inside the
-//                     account's own chats, contacts and settings, even though
-//                     Telegram is an external service.
+//                     URLs, third-party bots, any public chat by username).
+//                     false when it stays inside the account's own chats,
+//                     contacts and settings, or needs the account to be an
+//                     admin of the chat, even though Telegram is external.
 //
 // Every class is matched by identity, so copying an object changes behavior;
 // see {@link isGuardedDestructive}.
 
-/** Reads only, inside the account: its chats, contacts, settings, stats. */
+/** Reads only, inside the account: its dialogs, contacts and settings, its own
+ * scheduled messages and story views, stats of chats it administers. */
 export const READ_ONLY = {
   readOnlyHint: true,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
 
-/** Reads only, but reaches beyond the account: public search, any user's or
+/** Reads only, but reaches beyond the account: public search, any public chat
+ * by username (messages, members, topics, polls, reactions), any user's or
  * channel's public profile and stories, public sticker catalogs, arbitrary
- * URLs, third-party inline bots. */
+ * URLs, translating a message from any of them. */
 export const READ_OPEN = {
   readOnlyHint: true,
   destructiveHint: false,
   openWorldHint: true,
 } as const;
 
-/** Additive or cosmetic, and invisible outside the account: creating a folder,
- * mute/archive/pin of a dialog, folder tags, default reaction, transcription
- * and translation requests, switching or adding a linked account. */
+/** Additive and invisible outside the account: creating a folder, linking one
+ * more account, rating a transcription. Changing an existing value does not
+ * belong here, see {@link CONFIRMED_WRITE_LOCAL}. */
 export const LOCAL_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
   openWorldHint: false,
 } as const;
 
-/** Additive and visible to others, without an irreversible effect: typing
- * indicator, joining a chat, unbanning or unblocking, creating an invite link,
- * a forum topic or a business chat link, pinning a story. */
+/** Additive, reaches beyond the account, nothing irreversible: typing
+ * indicator, joining a chat, creating an invite link, a forum topic or a
+ * business chat link, sending a query to a third-party inline bot, starting a
+ * transcription, keeping a private copy of media for download. */
 export const OUTBOUND_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
@@ -86,7 +90,9 @@ export const OUTBOUND_WRITE = {
 } as const;
 
 /** Overwrites the account's own state: replacing a draft, a folder's chats or
- * the folder order, privacy settings, marking mentions read, story stealth mode. `destructiveHint: true` so hosts confirm first,
+ * the folder order, privacy settings, marking mentions read, story stealth
+ * mode, mute/archive/pin/unread state of a dialog, folder tags, default
+ * reaction, the active linked account. `destructiveHint: true` so hosts confirm first,
  * but NOT behind `DestructiveGuard` — nothing is deleted, the user can set the
  * value again. See {@link isGuardedDestructive}. */
 export const CONFIRMED_WRITE_LOCAL = {
@@ -97,7 +103,8 @@ export const CONFIRMED_WRITE_LOCAL = {
 
 /** Irreversible sends and overwrites other people see: sending, forwarding or
  * editing messages and media, reactions, votes, read receipts, pins, invites,
- * admin and group settings, profile and business fields, bot actions. Same split as {@link CONFIRMED_WRITE_LOCAL}: hosts confirm,
+ * admin and group settings, unbanning, unblocking, pinned stories, profile and
+ * business fields, bot actions. Same split as {@link CONFIRMED_WRITE_LOCAL}: hosts confirm,
  * the server does not gate. */
 export const CONFIRMED_WRITE_PUBLIC = {
   readOnlyHint: false,

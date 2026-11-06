@@ -6,6 +6,7 @@ import {
   DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
+  OUTBOUND_WRITE,
   READ_ONLY,
   READ_OPEN,
   renderGroupCallParticipant,
@@ -185,7 +186,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Force request updates even if the client hasn't processed previous ones (rarely needed)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, pts, limit, force }, { telegram }) => {
       const d = await telegram.getChannelUpdates(chatId, { pts, limit, force });
       const lines = [
@@ -204,7 +205,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-inline-query",
     description:
-      "Query an inline bot (like @gif, @bing) in a chat context and return the compact result list. Returns queryId, cacheTime, and results[{id,type,title?,description?,url?}]. The queryId is typically valid for ~60s. Bot must be a real bot account.",
+      "Send a query to a third-party inline bot (like @gif, @bing) in a chat context and return the compact result list. The bot receives the query text. Returns queryId, cacheTime, and results[{id,type,title?,description?,url?}]. The queryId is typically valid for ~60s. Bot must be a real bot account.",
     inputSchema: {
       bot: z.string().describe("Inline bot username (e.g. @gif) or numeric user ID"),
       chatId: z.string().describe("Chat ID or username providing context for the inline query"),
@@ -214,7 +215,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Pagination offset returned by a previous call as nextOffset (empty string on first call)"),
     },
-    annotations: READ_OPEN,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ bot, chatId, query, offset }, { telegram }) => {
       const r = await telegram.getInlineBotResults(bot, chatId, query, offset);
       const lines = [
@@ -311,7 +312,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
           "Max participants to include (default 0 — metadata only; paginated lists are in telegram-get-group-call-participants)",
         ),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     requiresEnv: "MCP_TELEGRAM_ENABLE_GROUP_CALLS",
     handler: async ({ chat, limit }, { telegram }) => {
       const r = await telegram.getGroupCall(chat, { limit });
@@ -385,7 +386,7 @@ export const MISC_TOOLS: ToolDefinition[] = [
         .optional()
         .describe("Max participants to return in this page (default 100)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     requiresEnv: "MCP_TELEGRAM_ENABLE_GROUP_CALLS",
     handler: async ({ chat, ids, sources, offset, limit }, { telegram }) => {
       const r = await telegram.getGroupCallParticipants(chat, { ids, sources, offset, limit });

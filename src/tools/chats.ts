@@ -177,7 +177,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       enabled: z.boolean().describe("true to enable folder tags, false to disable"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ enabled }, { telegram }) => {
       await telegram.toggleDialogFilterTags(enabled);
       return textResult(`Folder tags ${enabled ? "enabled" : "disabled"}`);
@@ -220,7 +220,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       userId: z.string().describe("User ID or username to unban"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, userId }, { telegram }) => {
       await telegram.unbanUser(chatId, userId);
       return textResult(`Unbanned ${userId} in ${chatId}`);
@@ -280,7 +280,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       archive: z.boolean().describe("true to archive, false to unarchive"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, archive }, { telegram }) => {
       await telegram.archiveChat(chatId, archive);
       return textResult(`${archive ? "Archived" : "Unarchived"} ${chatId}`);
@@ -294,7 +294,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       pin: z.boolean().describe("true to pin, false to unpin"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, pin }, { telegram }) => {
       await telegram.pinDialog(chatId, pin);
       return textResult(`${pin ? "Pinned" : "Unpinned"} ${chatId}`);
@@ -308,7 +308,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       unread: z.boolean().describe("true to mark as unread, false to clear the mark"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     handler: async ({ chatId, unread }, { telegram }) => {
       await telegram.markDialogUnread(chatId, unread);
       return textResult(`Marked ${chatId} as ${unread ? "unread" : "read"}`);
@@ -387,7 +387,7 @@ export const CHATS_TOOLS: ToolDefinition[] = [
     name: "telegram-unblock-user",
     description: "Unblock a previously blocked Telegram user",
     inputSchema: { userId: z.string().describe("User ID or username to unblock") },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ userId }, { telegram }) => {
       await telegram.unblockUser(userId);
       return textResult(`User unblocked: ${userId}`);

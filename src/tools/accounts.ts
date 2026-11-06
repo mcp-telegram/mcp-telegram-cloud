@@ -1,6 +1,13 @@
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
-import { DESTRUCTIVE_LOCAL, errorResult, LOCAL_WRITE, READ_ONLY, textResult } from "./helpers.js";
+import {
+  CONFIRMED_WRITE_LOCAL,
+  DESTRUCTIVE_LOCAL,
+  errorResult,
+  LOCAL_WRITE,
+  READ_ONLY,
+  textResult,
+} from "./helpers.js";
 
 /**
  * v2.32.0 multi-account tools.
@@ -88,7 +95,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       identifier: z.string().describe("Label, @username, account_id, or 'primary'"),
     },
-    annotations: LOCAL_WRITE,
+    annotations: CONFIRMED_WRITE_LOCAL,
     skipRequireConnection: true,
     handler: async ({ identifier }, { userId, sessions }) => {
       if (!userId || !sessions) return errorResult("Accounts tools require an authenticated MCP session.");

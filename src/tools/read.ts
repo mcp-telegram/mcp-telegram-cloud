@@ -5,6 +5,7 @@ import {
   formatMediaSuffix,
   formatReactions,
   MAX_INLINE_MEDIA,
+  OUTBOUND_WRITE,
   READ_ONLY,
   READ_OPEN,
   renderDialog,
@@ -62,7 +63,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, limit, offsetId, minDate, maxDate }, { telegram }) => {
       const messages = await telegram.getMessages(chatId, limit, offsetId, minDate, maxDate);
       const text = messages.map(renderMessage).join("\n\n");
@@ -122,7 +123,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       minDate: z.number().optional().describe("Unix timestamp: only messages after this date"),
       maxDate: z.number().optional().describe("Unix timestamp: only messages before this date"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, query, limit, minDate, maxDate }, { telegram }) => {
       const messages = await telegram.searchMessages(chatId, query, limit, minDate, maxDate);
       const text = messages.map(renderMessage).join("\n\n");
@@ -165,7 +166,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       limit: z.number().default(50).describe("Max number of members to return"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, limit }, { telegram }) => {
       const members = await telegram.getChatMembers(chatId, limit);
       const text = members.map((m) => `${m.name}${m.username ? ` (@${m.username})` : ""} [${m.id}]`).join("\n");
@@ -195,7 +196,7 @@ export const READ_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId }, { telegram }) => {
       const info = await telegram.getChatInfo(chatId);
       const lines = [
@@ -240,7 +241,7 @@ export const READ_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-download-media",
     description:
-      "Download media from a Telegram message. Images default to a thumbnail; full:true shows the full image inline. file:true prepares the original file (up to 8 MiB) for private download. Non-image media also returns a downloadId, authenticated browser URL, size and SHA-256, valid for 15 minutes. To retrieve bytes via MCP, repeat the same chatId/messageId with downloadId and offset (default 0): each response contains up to 64 KiB of base64, nextOffset and eof. Keep chunks out of the conversation context; decode them locally and verify the size and hash. Download IDs and URLs are not public sharing links.",
+      "Download media from a Telegram message. Images default to a thumbnail; full:true shows the full image inline. file:true prepares the original file (up to 8 MiB) for private download. Non-image media also returns a downloadId, authenticated browser URL, size and SHA-256, valid for 15 minutes. To retrieve bytes via MCP, repeat the same chatId/messageId with downloadId and offset (default 0): each response contains up to 64 KiB of base64, nextOffset and eof. Keep chunks out of the conversation context; decode them locally and verify the size and hash. Download IDs and URLs are not public sharing links. Non-inline results keep a private copy on the server for 15 minutes.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID containing media"),
@@ -271,7 +272,7 @@ export const READ_TOOLS: ToolDefinition[] = [
           "Fetch the full-resolution image instead of a thumbnail. Default false. A full image can be hundreds of KB of base64 in the response — only set true when the thumbnail is not enough (e.g. reading fine text/details).",
         ),
     },
-    annotations: READ_ONLY,
+    annotations: OUTBOUND_WRITE,
     skipConnectionFor: ({ downloadId }) => downloadId !== undefined,
     handler: async (
       { chatId, messageId, full, file, downloadId, offset },
@@ -365,7 +366,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username of a group with Topics enabled"),
       limit: z.number().default(100).describe("Max topics to return"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, limit }, { telegram }) => {
       const topics = await telegram.getForumTopics(chatId, limit);
       const text = topics
@@ -393,7 +394,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       limit: z.number().default(20).describe("Number of messages to return"),
       offsetId: z.number().optional().describe("Message ID to start from (for pagination)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, topicId, limit, offsetId }, { telegram }) => {
       const messages = await telegram.getTopicMessages(chatId, topicId, limit, offsetId);
       const text = messages.map(renderMessage).join("\n\n");
@@ -408,7 +409,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().describe("Message ID to get reactions for"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const result = await telegram.getMessageReactions(chatId, messageId);
       if (result.reactions.length === 0) return textResult(`No reactions on message ${messageId}`);
@@ -524,7 +525,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       messageId: z.number().int().positive().describe("ID of the message to link to"),
       thread: z.boolean().default(false).describe("Link to the message thread instead of the message itself"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId, thread }, { telegram }) => {
       const link = await telegram.getMessageLink(chatId, messageId, thread);
       return textResult(sanitize(link));
@@ -539,7 +540,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       messageId: z.number().describe("Top-level message ID whose replies you want"),
       limit: z.number().default(20).describe("Max replies to return"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId, limit }, { telegram }) => {
       const replies = await telegram.getReplies(chatId, messageId, limit);
       const text = replies.map(renderMessage).join("\n\n");
@@ -555,7 +556,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Channel ID or @username that contains the post"),
       messageId: z.number().int().positive().describe("ID of the channel post to get discussion info for"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const d = await telegram.getDiscussionMessage(chatId, messageId);
       const lines: string[] = [
@@ -621,7 +622,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID of the poll"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const p = await telegram.getPollResults(chatId, messageId);
       const header = `${p.question}${p.isQuiz ? " [quiz]" : ""}${p.isMulti ? " [multi]" : ""}${p.isClosed ? " [closed]" : ""} — ${p.totalVoters} voters`;
@@ -651,7 +652,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       limit: z.number().int().min(1).max(100).default(20).describe("Max voters to return"),
       offset: z.string().optional().describe("Pagination offset from previous call"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId, optionIndex, limit, offset }, { telegram }) => {
       const r = await telegram.getPollVoters(chatId, messageId, { optionIndex, limit, offset });
       if (r.voters.length === 0) return textResult("No voters yet.");
@@ -703,7 +704,7 @@ export const READ_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().describe("Message ID"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const r = await telegram.getMessageButtons(chatId, messageId);
       if (r.buttons.length === 0) return textResult(`No buttons (markup: ${r.markupType}).`);
@@ -815,7 +816,7 @@ export const READ_TOOLS: ToolDefinition[] = [
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId }, { telegram }) => {
       const r = await telegram.getMyRole(chatId);
       return textResult(sanitize(`${r.role} in ${r.chatName} (${r.chatId})`));
@@ -834,7 +835,7 @@ export const READ_TOOLS: ToolDefinition[] = [
         .max(100)
         .describe("Message IDs to get fact-checks for (1-100)"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, messageIds }, { telegram }) => {
       const r = await telegram.getFactCheck(chatId, messageIds);
       if (r.length === 0) return textResult("No fact-check data.");
@@ -879,12 +880,12 @@ export const READ_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-get-transcription",
     description:
-      "Poll for an updated voice/video-note transcription result. Calls the same endpoint as telegram-transcribe-audio — Telegram guarantees idempotency (returns the same transcriptionId with updated text once processing completes).",
+      "Poll for an updated voice/video-note transcription result. Calls the same endpoint as telegram-transcribe-audio, so it starts the transcription if none exists yet and may use up the Premium trial. Telegram guarantees idempotency (returns the same transcriptionId with updated text once processing completes).",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID of the voice or video note"),
     },
-    annotations: READ_ONLY,
+    annotations: OUTBOUND_WRITE,
     handler: async ({ chatId, messageId }, { telegram }) => {
       const r = await telegram.transcribeAudio(chatId, messageId);
       const trial = r.trialRemainsNum !== undefined ? `\nTrial remaining: ${r.trialRemainsNum}` : "";

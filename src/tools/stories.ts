@@ -6,7 +6,6 @@ import {
   DESTRUCTIVE_PUBLIC,
   errorResult,
   formatPeer,
-  OUTBOUND_WRITE,
   premiumOnlyOnError,
   READ_ONLY,
   READ_OPEN,
@@ -186,7 +185,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       chatId: z.string().describe("Peer who posted the story"),
       storyId: z.number().int().positive().describe("Story ID to get the link for"),
     },
-    annotations: READ_ONLY,
+    annotations: READ_OPEN,
     handler: async ({ chatId, storyId }, { telegram }) => {
       const r = await telegram.exportStoryLink(chatId, storyId);
       return textResult(sanitize(r.link));
@@ -201,7 +200,7 @@ export const STORIES_TOOLS: ToolDefinition[] = [
       ids: z.array(z.number().int().positive()).min(1).max(100).describe("Story IDs to pin or unpin"),
       pinned: z.boolean().describe("true to pin, false to unpin"),
     },
-    annotations: OUTBOUND_WRITE,
+    annotations: CONFIRMED_WRITE_PUBLIC,
     handler: async ({ chatId, ids, pinned }, { telegram }) => {
       const result = await telegram.toggleStoryPinned(chatId, ids, pinned);
       const { affected } = result;

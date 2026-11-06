@@ -4,7 +4,7 @@
  * MCP hints are how ChatGPT and Claude decide what needs a confirmation, so a
  * wrong one is not cosmetic: `openWorldHint: false` on a tool that delivers a
  * message to another person tells the client the action is contained. This
- * table pins the intended class of all 184 tools, and the last test fails when a
+ * table pins the intended class of all tools, and a test fails when a
  * new tool is added without a deliberate decision — the failure mode we are
  * guarding against is a tool inheriting a default nobody looked at.
  *
@@ -48,48 +48,30 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
   READ_ONLY: [
     "telegram-accounts-current",
     "telegram-accounts-list",
-    "telegram-download-media",
-    "telegram-export-story-link",
     "telegram-get-admin-log",
     "telegram-get-all-stories",
     "telegram-get-available-star-gifts",
     "telegram-get-boosts-list",
-    "telegram-get-boosts-status",
     "telegram-get-broadcast-stats",
     "telegram-get-business-chat-links",
-    "telegram-get-channel-updates",
     "telegram-get-chat-folders",
-    "telegram-get-chat-info",
-    "telegram-get-chat-members",
     "telegram-get-contact-requests",
     "telegram-get-contacts",
-    "telegram-get-discussion-message",
     "telegram-get-drafts",
-    "telegram-get-fact-check",
     "telegram-get-global-privacy-settings",
-    "telegram-get-group-call",
-    "telegram-get-group-call-participants",
     "telegram-get-groups-for-discussion",
     "telegram-get-installed-stickers",
     "telegram-get-invite-links",
     "telegram-get-megagroup-stats",
-    "telegram-get-message-buttons",
-    "telegram-get-message-link",
     "telegram-get-message-read-participants",
     "telegram-get-my-boosts",
-    "telegram-get-my-role",
     "telegram-get-outbox-read-date",
     "telegram-get-paid-reaction-privacy",
-    "telegram-get-poll-results",
-    "telegram-get-poll-voters",
     "telegram-get-quick-replies",
     "telegram-get-quick-reply-messages",
-    "telegram-get-reactions",
     "telegram-get-recent-reactions",
     "telegram-get-recent-stickers",
-    "telegram-get-replies",
     "telegram-get-saved-dialogs",
-    "telegram-get-saved-star-gifts",
     "telegram-get-scheduled",
     "telegram-get-sessions",
     "telegram-get-stars-status",
@@ -100,68 +82,81 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-get-story-views",
     "telegram-get-suggested-folders",
     "telegram-get-top-reactions",
-    "telegram-get-transcription",
     "telegram-get-unread",
     "telegram-get-updates",
     "telegram-list-chats",
     "telegram-list-emoji-statuses",
-    "telegram-list-topics",
-    "telegram-read-messages",
-    "telegram-read-topic-messages",
-    "telegram-search-messages",
     "telegram-status",
   ],
   READ_OPEN: [
+    "telegram-get-saved-star-gifts",
+    "telegram-export-story-link",
+    "telegram-get-boosts-status",
+    "telegram-get-channel-updates",
+    "telegram-get-chat-info",
+    "telegram-get-chat-members",
+    "telegram-get-discussion-message",
+    "telegram-get-fact-check",
+    "telegram-get-group-call",
+    "telegram-get-group-call-participants",
+    "telegram-get-message-buttons",
+    "telegram-get-message-link",
+    "telegram-get-my-role",
     "telegram-get-peer-stories",
+    "telegram-get-poll-results",
+    "telegram-get-poll-voters",
     "telegram-get-profile",
     "telegram-get-profile-photo",
+    "telegram-get-reactions",
+    "telegram-get-replies",
     "telegram-get-saved-music",
     "telegram-get-sticker-set",
     "telegram-get-stories-archive",
     "telegram-get-stories-by-id",
     "telegram-get-web-preview",
-    "telegram-inline-query",
+    "telegram-list-topics",
+    "telegram-read-messages",
+    "telegram-read-topic-messages",
     "telegram-resolve-business-chat-link",
     "telegram-search-chats",
     "telegram-search-global",
+    "telegram-search-messages",
     "telegram-search-sticker-sets",
+    "telegram-translate-message",
   ],
   LOCAL_WRITE: [
     "telegram-accounts-add",
-    "telegram-accounts-switch",
     "telegram-add-contact",
-    "telegram-archive-chat",
     "telegram-create-folder",
-    "telegram-mark-dialog-unread",
-    "telegram-mute-chat",
-    "telegram-pin-chat",
     "telegram-rate-transcription",
-    "telegram-set-default-reaction",
-    "telegram-toggle-folder-tags",
-    "telegram-transcribe-audio",
-    "telegram-translate-message",
   ],
   OUTBOUND_WRITE: [
     "telegram-create-business-chat-link",
     "telegram-create-invite-link",
     "telegram-create-topic",
+    "telegram-download-media",
+    "telegram-get-transcription",
+    "telegram-inline-query",
     "telegram-join-chat",
-    "telegram-save-star-gift",
     "telegram-send-typing",
-    "telegram-set-birthday",
-    "telegram-toggle-story-pinned",
-    "telegram-unban-user",
-    "telegram-unblock-user",
+    "telegram-transcribe-audio",
   ],
   CONFIRMED_WRITE_LOCAL: [
+    "telegram-accounts-switch",
     "telegram-activate-stealth-mode",
+    "telegram-archive-chat",
     "telegram-edit-folder",
     "telegram-get-unread-mentions",
     "telegram-get-unread-reactions",
+    "telegram-mark-dialog-unread",
+    "telegram-mute-chat",
+    "telegram-pin-chat",
     "telegram-reorder-folders",
     "telegram-save-draft",
+    "telegram-set-default-reaction",
     "telegram-set-global-privacy-settings",
     "telegram-set-privacy",
+    "telegram-toggle-folder-tags",
   ],
   CONFIRMED_WRITE_PUBLIC: [
     "telegram-approve-join-request",
@@ -181,6 +176,7 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-press-button",
     "telegram-react-to-story",
     "telegram-read-stories",
+    "telegram-save-star-gift",
     "telegram-send-album",
     "telegram-send-contact",
     "telegram-send-dice",
@@ -195,6 +191,7 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-send-video-note",
     "telegram-send-voice",
     "telegram-set-admin",
+    "telegram-set-birthday",
     "telegram-set-business-away",
     "telegram-set-business-greeting",
     "telegram-set-business-hours",
@@ -209,7 +206,10 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-toggle-channel-signatures",
     "telegram-toggle-paid-reaction-privacy",
     "telegram-toggle-prehistory-hidden",
+    "telegram-toggle-story-pinned",
     "telegram-toggle-story-pinned-to-top",
+    "telegram-unban-user",
+    "telegram-unblock-user",
     "telegram-unpin-message",
     "telegram-update-profile",
     "telegram-vote-poll",
@@ -323,6 +323,49 @@ describe("tool annotation contract", () => {
     assert.ok(sends.length > 10, "expected the filter to match the send tools");
     for (const tool of sends) {
       assert.equal(tool.annotations.destructiveHint, true, `${tool.name} must be destructiveHint=true`);
+    }
+  });
+
+  it("a read that takes any chat is open world unless Telegram limits it to the account's own data", () => {
+    // OpenAI plugin guidelines: openWorldHint is true for public or open-ended
+    // entities. A chat argument accepts any public username. The exceptions
+    // answer only for an admin of the chat or about the account's own items.
+    const bounded = new Set([
+      "telegram-get-admin-log",
+      "telegram-get-boosts-list",
+      "telegram-get-broadcast-stats",
+      "telegram-get-invite-links",
+      "telegram-get-megagroup-stats",
+      "telegram-get-message-read-participants",
+      "telegram-get-outbox-read-date",
+      "telegram-get-scheduled",
+      "telegram-get-stars-status",
+      "telegram-get-stars-subscriptions",
+      "telegram-get-stars-transactions",
+      "telegram-get-story-views",
+    ]);
+    const chatArgument = /^(chatId|chat|fromChatId|channelId|peer)$/;
+    const offenders = TOOLS.filter(
+      (t) =>
+        t.annotations.readOnlyHint &&
+        !t.annotations.openWorldHint &&
+        !bounded.has(t.name) &&
+        Object.keys(t.inputSchema ?? {}).some((f) => chatArgument.test(f)),
+    ).map((t) => t.name);
+    assert.deepEqual(offenders, []);
+  });
+
+  it("tools that change something are not read-only, whatever their name says", () => {
+    // Each of these looks like a read but starts a job, keeps a copy or sends data out.
+    for (const name of [
+      "telegram-download-media",
+      "telegram-get-transcription",
+      "telegram-get-unread-mentions",
+      "telegram-get-unread-reactions",
+      "telegram-inline-query",
+    ]) {
+      const tool = TOOLS.find((t) => t.name === name);
+      assert.equal(tool?.annotations.readOnlyHint, false, `${name} must be readOnlyHint=false`);
     }
   });
 

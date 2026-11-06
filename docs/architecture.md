@@ -273,23 +273,25 @@ endpoint. Issuing requires `ADMIN_TOKEN`. See
 
 Every tool carries MCP hints that clients use to decide what needs a user
 confirmation, so they are classified from behaviour rather than from how risky
-they feel. Two questions decide the class — can the user undo it
-(`destructiveHint`), and can anyone but the account owner see it
-(`openWorldHint`):
-
+they feel, following the OpenAI plugin guidelines. `destructiveHint` is false
+only for additive writes; being able to undo a change does not make it false.
+`openWorldHint` is true when the tool reaches public or open-ended entities:
 | Class | `readOnly` | `destructive` | `openWorld` | Examples |
 | --- | --- | --- | --- | --- |
-| `READ_ONLY` | ✔ | ✘ | ✘ | read, search, download |
-| `LOCAL_WRITE` | ✘ | ✘ | ✘ | read markers, drafts, folders, mute, privacy |
-| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | send/forward, reactions, invites, profile |
-| `CONFIRMED_WRITE_LOCAL` | ✘ | ✔ | ✘ | replace a folder's chats, story stealth mode |
-| `CONFIRMED_WRITE_PUBLIC` | ✘ | ✔ | ✔ | edit a sent message, edit group info, business hours/location/intro, inline bot result |
+| `READ_ONLY` | ✔ | ✘ | ✘ | own dialogs and contacts, stats of administered chats |
+| `READ_OPEN` | ✔ | ✘ | ✔ | read or search any public chat, public profiles, translate a message |
+| `LOCAL_WRITE` | ✘ | ✘ | ✘ | create a folder, link an account |
+| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | join a chat, create an invite link, query an inline bot, start a transcription, private media copy |
+| `CONFIRMED_WRITE_LOCAL` | ✘ | ✔ | ✘ | drafts, privacy, replace a folder's chats, mute/archive/pin a dialog, switch account |
+| `CONFIRMED_WRITE_PUBLIC` | ✘ | ✔ | ✔ | send/forward, reactions, edit a sent message, group info, unban, profile, inline bot result |
 | `DESTRUCTIVE_LOCAL` | ✘ | ✔ | ✘ | clear drafts, delete folder, detach account |
 | `DESTRUCTIVE_PUBLIC` | ✘ | ✔ | ✔ | delete message, ban, kick, revoke link, report |
 
 "Open world" is not "calls an external API" — everything here goes through
 Telegram, so that reading would mark all tools false and say nothing. It is
-whether the effect leaves this account.
+whether the tool stays within this account. A read that takes any chat by
+username reaches public chats and is open world, unless Telegram only answers
+it for an admin of that chat.
 
 The `DESTRUCTIVE_*` tools (deletions, bans, reports) are gated by
 `DestructiveGuard`: off by default, per-user opt-in at `/my/settings`, its own
