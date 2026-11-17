@@ -1,3 +1,4 @@
+import { formatChatFolder } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
 import { DOWNLOAD_CHUNK_BYTES, DOWNLOAD_LIMITS } from "../download-store.js";
 import type { ToolDefinition } from "../tool-registry.js";
@@ -478,10 +479,19 @@ export const READ_TOOLS: ToolDefinition[] = [
 
   {
     name: "telegram-get-chat-folders",
-    description: "Get list of your Telegram chat folders (filters) with their names and chat counts",
-    inputSchema: {},
+    description:
+      "Get list of your Telegram chat folders (filters) with their names and chat counts. Pass folderId to see one folder in full: its type filters and the pinned, included and excluded chats with IDs",
+    inputSchema: {
+      folderId: z
+        .number()
+        .int()
+        .min(2)
+        .optional()
+        .describe("Folder ID from the list; returns that folder's full setup including its chats"),
+    },
     annotations: READ_ONLY,
-    handler: async (_args, { telegram }) => {
+    handler: async ({ folderId }, { telegram }) => {
+      if (folderId !== undefined) return textResult(sanitize(formatChatFolder(await telegram.getChatFolder(folderId))));
       const folders = await telegram.getChatFolders();
       if (folders.length === 0) return textResult("No chat folders");
       const text = folders
@@ -490,7 +500,7 @@ export const READ_TOOLS: ToolDefinition[] = [
             `[${f.id}] ${f.emoticon ? `${f.emoticon} ` : ""}${f.title} (${f.includeCount} chats, ${f.pinnedCount} pinned)`,
         )
         .join("\n");
-      return textResult(sanitize(text));
+      return textResult(sanitize(`${text}\n\nPass folderId to list the chats in a folder.`));
     },
   },
 

@@ -40,6 +40,45 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
   },
 
   {
+    name: "telegram-rename-contact",
+    description:
+      "Rename a contact in your own address book only. Their public profile does not change and they are not notified. Works only for users already in your contacts.",
+    inputSchema: {
+      userId: z.string().describe("Contact's user ID or username"),
+      firstName: z.string().min(1).describe("New first name to show for the contact"),
+      lastName: z.string().optional().describe("New last name; omit to clear it"),
+    },
+    annotations: CONFIRMED_WRITE_LOCAL,
+    // Opt-in flag so a directory review freeze can keep them off; the hosted image enables it (Dockerfile)
+    requiresEnv: "MCP_TELEGRAM_ENABLE_CONTACT_EDITS",
+    handler: async ({ userId, firstName, lastName }, { telegram }) => {
+      const sanFirst = sanitize(firstName);
+      const sanLast = safeOpt(lastName);
+      const { id, previousName } = await telegram.renameContact(userId, sanFirst, sanLast);
+      return textResult(
+        sanitize(`Contact ${id} renamed: "${previousName}" -> "${[sanFirst, sanLast].filter(Boolean).join(" ")}"`),
+      );
+    },
+  },
+
+  {
+    name: "telegram-delete-contact",
+    description:
+      "Remove users from your contacts (address book). Chats and message history stay, nobody is blocked. Users who are not contacts are skipped.",
+    inputSchema: {
+      userIds: z.array(z.string()).min(1).max(100).describe("User IDs or usernames to remove from contacts"),
+    },
+    annotations: DESTRUCTIVE_LOCAL,
+    requiresEnv: "MCP_TELEGRAM_ENABLE_CONTACT_EDITS",
+    handler: async ({ userIds }, { telegram }) => {
+      const { deleted, notContacts } = await telegram.deleteContacts(userIds);
+      const lines = [deleted.length > 0 ? `Removed from contacts: ${deleted.join(", ")}` : "No contacts removed"];
+      if (notContacts.length > 0) lines.push(`Not in contacts, skipped: ${notContacts.join(", ")}`);
+      return textResult(sanitize(lines.join("\n")));
+    },
+  },
+
+  {
     name: "telegram-set-emoji-status",
     description:
       "Set your profile emoji status (custom animated emoji shown next to your name). Requires Telegram Premium. Pass documentId or collectibleId to set — omit both to clear the status. Available IDs are listed by telegram-list-emoji-statuses.",

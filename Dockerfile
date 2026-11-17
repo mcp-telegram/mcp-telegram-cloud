@@ -1,5 +1,5 @@
 # Release v1.43.4: immutable source identity shared by build and runtime label.
-ARG MCP_TELEGRAM_COMMIT=7f951e5bf16cbd2ec16b6e328dc5f65415d84e42
+ARG MCP_TELEGRAM_COMMIT=c8e6850764c326ab0155c9cbd9ac29138120a035
 
 # Stage 1: Build mcp-telegram from source (with declarations)
 # Core lib (mcp-telegram) is npm-native but Bun compiles it fine.
@@ -86,9 +86,11 @@ ENV NODE_ENV=production
 # are pre-enabled in the cloud image. Self-hosters can override these per-feature.
 #  - MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 : voice-chat metadata + participant listing
 #  - MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1 : quick-reply shortcut catalog + messages
+#  - MCP_TELEGRAM_ENABLE_CONTACT_EDITS=1 : rename a contact locally, remove contacts (delete goes through the destructive opt-in)
 # Telegram Stars (paid ecosystem) is intentionally NOT enabled — see parity-config.ts.
 ENV MCP_TELEGRAM_ENABLE_GROUP_CALLS=1
 ENV MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1
+ENV MCP_TELEGRAM_ENABLE_CONTACT_EDITS=1
 EXPOSE 3000
 VOLUME ["/app/data"]
 CMD ["bun", "src/server.tsx"]

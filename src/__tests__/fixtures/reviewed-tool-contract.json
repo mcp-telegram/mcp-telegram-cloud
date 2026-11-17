@@ -1,7 +1,7 @@
 {
   "$comment": "Tool contract under directory review. Changing a reviewed tool's name, title, annotations, required arguments or removing an argument breaks the reviewer's test cases. Update this file only when a new version is submitted for review, and in the same PR as that submission. See issue #52 (review freeze) and #51.",
-  "review": "ChatGPT plugin directory, Chatroost (resubmission after the 2026-11-05 rejection)",
-  "capturedAt": "2026-11-06",
+  "review": "Chatroost hosted catalog after the 2026-11-17 rejection, not yet resubmitted",
+  "capturedAt": "2026-11-17",
   "source": "tools/list of the hosted image: real registry, Dockerfile MCP_TELEGRAM_ENABLE_* flags, in-memory transport (scripts/capture-reviewed-contract.ts)",
   "servedButNotReviewed": [],
   "tools": [
@@ -240,6 +240,17 @@
       "properties": ["slug"]
     },
     {
+      "name": "telegram-delete-contact",
+      "title": "Delete Contact",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": ["userIds"],
+      "properties": ["userIds"]
+    },
+    {
       "name": "telegram-delete-fact-check",
       "title": "Delete Fact Check",
       "annotations": {
@@ -359,6 +370,7 @@
       },
       "required": ["id"],
       "properties": [
+        "addPeers",
         "bots",
         "broadcasts",
         "contacts",
@@ -372,6 +384,7 @@
         "includePeers",
         "nonContacts",
         "pinnedPeers",
+        "removePeers",
         "title"
       ]
     },
@@ -527,7 +540,7 @@
         "openWorldHint": false
       },
       "required": [],
-      "properties": []
+      "properties": ["folderId"]
     },
     {
       "name": "telegram-get-chat-info",
@@ -1298,6 +1311,17 @@
       },
       "required": ["chatId", "userId"],
       "properties": ["chatId", "userId"]
+    },
+    {
+      "name": "telegram-rename-contact",
+      "title": "Rename Contact",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "required": ["firstName", "userId"],
+      "properties": ["firstName", "lastName", "userId"]
     },
     {
       "name": "telegram-reorder-folders",

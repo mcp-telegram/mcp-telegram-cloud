@@ -1,3 +1,4 @@
+import { formatEditFolderResult } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
@@ -96,9 +97,25 @@ export const CHATS_TOOLS: ToolDefinition[] = [
       excludeMuted: z.boolean().optional(),
       excludeRead: z.boolean().optional(),
       excludeArchived: z.boolean().optional(),
-      includePeers: z.array(z.string()).max(100).optional().describe("Replace includePeers list entirely"),
+      includePeers: z
+        .array(z.string())
+        .max(100)
+        .optional()
+        .describe("Replace includePeers list entirely. To add or remove a few chats use addPeers/removePeers instead"),
       excludePeers: z.array(z.string()).max(100).optional().describe("Replace excludePeers list entirely"),
       pinnedPeers: z.array(z.string()).max(5).optional().describe("Replace pinnedPeers list entirely"),
+      addPeers: z
+        .array(z.string())
+        .max(100)
+        .optional()
+        .describe("Chat IDs/usernames to add to the folder; chats already in it stay"),
+      removePeers: z
+        .array(z.string())
+        .max(100)
+        .optional()
+        .describe(
+          "Chat IDs/usernames to take out of the folder (included or pinned); other chats stay. With type filters on, the chat is also excluded so its category does not bring it back",
+        ),
     },
     annotations: CONFIRMED_WRITE_LOCAL,
     handler: async (
@@ -117,10 +134,12 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         includePeers,
         excludePeers,
         pinnedPeers,
+        addPeers,
+        removePeers,
       },
       { telegram },
     ) => {
-      await telegram.editFolder(id, {
+      const result = await telegram.editFolder(id, {
         title: safeOpt(title),
         emoticon: safeOpt(emoticon),
         contacts,
@@ -134,8 +153,10 @@ export const CHATS_TOOLS: ToolDefinition[] = [
         includePeers,
         excludePeers,
         pinnedPeers,
+        addPeers,
+        removePeers,
       });
-      return textResult(`Folder ${id} updated`);
+      return textResult(sanitize(formatEditFolderResult(id, result)));
     },
   },
 
