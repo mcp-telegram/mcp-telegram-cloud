@@ -12,7 +12,7 @@
  */
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isAuthError, isAuthErrorMessage } from "../auth-errors.js";
+import { isAuthErrorMessage, isTelegramAuthError } from "../auth-errors.js";
 
 describe("isAuthErrorMessage — positive evidence of a dead session", () => {
   it("matches raw Telegram tokens", () => {
@@ -46,9 +46,15 @@ describe("isAuthErrorMessage — positive evidence of a dead session", () => {
     assert.equal(isAuthErrorMessage(null), false);
   });
 
-  it("isAuthError works on thrown values", () => {
-    assert.ok(isAuthError(new Error("AUTH_KEY_INVALID")));
-    assert.equal(isAuthError(new Error("CHAT_NOT_FOUND")), false);
-    assert.equal(isAuthError("FLOOD_WAIT_30"), false);
+  it("isTelegramAuthError trusts only the RPC error token, never message text", () => {
+    const rpc = Object.assign(new Error("401: AUTH_KEY_INVALID"), { errorMessage: "AUTH_KEY_INVALID", code: 401 });
+    assert.ok(isTelegramAuthError(rpc));
+    assert.ok(isTelegramAuthError(new Error("wrapped", { cause: rpc })), "a wrapper keeping the RPC error as cause");
+    // Text from remote URLs, chat titles or our own wrappers must never revoke a session.
+    assert.equal(isTelegramAuthError(new Error("AUTH_KEY_INVALID")), false);
+    assert.equal(isTelegramAuthError(new Error("URL fetch denied: https://[AUTH_KEY_UNREGISTERED")), false);
+    assert.equal(isTelegramAuthError(new Error('Multiple chats match "SESSION_REVOKED".')), false);
+    assert.equal(isTelegramAuthError({ errorMessage: "AUTH_KEY_DUPLICATED" }), false);
+    assert.equal(isTelegramAuthError("FLOOD_WAIT_30"), false);
   });
 });

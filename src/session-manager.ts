@@ -1088,7 +1088,19 @@ export class SessionManager {
    * Pool key for secondary is `secondaryKey(ownerUserId, accountId)`.
    */
   async ensureActiveSession(ownerUserId: string): Promise<TelegramService> {
-    const accountId = this.getActiveAccountId(ownerUserId);
+    return this.connectAccount(ownerUserId, this.getActiveAccountId(ownerUserId), true);
+  }
+
+  /**
+   * Live session for one specific account, active or not. Used by download and upload
+   * links, which stay bound to the account they were created for after a switch.
+   * Throws when the account no longer exists.
+   */
+  async ensureAccountSession(ownerUserId: string, accountId: number): Promise<TelegramService> {
+    return this.connectAccount(ownerUserId, accountId, false);
+  }
+
+  private async connectAccount(ownerUserId: string, accountId: number, isActive: boolean): Promise<TelegramService> {
     if (accountId === 0) return this.getOrCreateSession(ownerUserId);
     const key = secondaryKey(ownerUserId, accountId);
     return this.withLock(key, async () => {
@@ -1116,6 +1128,7 @@ export class SessionManager {
         .prepare("SELECT session_string FROM telegram_accounts WHERE owner_user_id = ? AND account_id = ?")
         .get(ownerUserId, accountId) as { session_string: string } | undefined;
       if (!row?.session_string) {
+        if (!isActive) throw new Error(`Account ${accountId} is no longer attached`);
         // Account disappeared from under us — demote to primary so we don't
         // wedge tool dispatch.
         this.setActiveAccount(ownerUserId, 0);

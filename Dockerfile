@@ -1,5 +1,5 @@
 # Release v1.43.4: immutable source identity shared by build and runtime label.
-ARG MCP_TELEGRAM_COMMIT=e11be3a286150c65db569c9333db6a5d2d5e5297
+ARG MCP_TELEGRAM_COMMIT=920dc3295624e82f6670e7a698de3bfacb3a8f98
 
 # Stage 1: Build mcp-telegram from source (with declarations)
 # Core lib (mcp-telegram) is npm-native but Bun compiles it fine.

@@ -1,11 +1,16 @@
+import type { TelegramService } from "@overpod/mcp-telegram/service";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { config } from "../config.js";
 import { readBrowserSessionToken } from "../cookie-handler.js";
 import type { DestructiveGuard } from "../destructive-guard.js";
-import { DOWNLOAD_CHUNK_BYTES, type DownloadStore } from "../download-store.js";
+import type { DownloadStore } from "../download-store.js";
+import { sanitizeFileName } from "../filename.js";
 import { logger, logUser } from "../logger.js";
+import { accountBinding, markWedged, onAccount, telegramForAccount } from "../media-access.js";
+import { MediaError } from "../media-errors.js";
+import { type Lease, mediaTimeouts, transferQueue } from "../media-queue.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuditPage } from "../pages/AuditPage.js";
 import { SettingsPage } from "../pages/SettingsPage.js";
@@ -15,6 +20,7 @@ import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPag
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
 import { MCP_RESOURCE_METADATA_PATH, rootUrl } from "./oauth.js";
+import { streamTicket, transferError } from "./transfer.js";
 
 export interface MyRoutesDeps {
   destructive: DestructiveGuard;
@@ -93,7 +99,7 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
     c.header("Vary", "Authorization, Cookie");
     await next();
   });
-  app.get("/download/:id", uploadRateLimit, (c) => {
+  app.on(["GET", "HEAD"], "/download/:id", uploadRateLimit, async (c) => {
     const auth = c.req.header("authorization");
     // Invalid/malformed Authorization must not fall through to browser identity.
     const userId =
@@ -122,31 +128,17 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
         },
       );
     if (!deps.downloads) return c.json({ error: "download_unavailable" }, 503);
-    const item = deps.downloads.read(userId, c.req.param("id"));
-    if (!item)
-      return c.json({ error: "download_unavailable", message: "Prepare the original message again via MCP." }, 404);
-    // Never render arbitrary HTML/SVG/documents on the OAuth origin. Even an
-    // adversarial MIME or filename is returned as an attachment, not executed.
-    const name = encodeURIComponent(item.metadata.fileName).replace(
-      /['()*]/g,
-      (ch) => `%${ch.charCodeAt(0).toString(16).toUpperCase()}`,
-    );
-    c.header("Content-Disposition", `attachment; filename="media.bin"; filename*=UTF-8''${name}`);
-    c.header("Content-Type", "application/octet-stream");
-    c.header("Content-Security-Policy", "sandbox; default-src 'none'");
-    c.header("Content-Length", String(item.metadata.size));
-    // HEAD doesn't consume the snapshot. GET is retryable until the fixed TTL;
-    // MCP byte offsets are the resumable path, HTTP Range is not implemented.
-    let offset = 0;
-    const body = new ReadableStream<Uint8Array>({
-      pull(controller) {
-        const end = Math.min(offset + DOWNLOAD_CHUNK_BYTES, item.bytes.length);
-        controller.enqueue(item.bytes.subarray(offset, end));
-        offset = end;
-        if (offset === item.bytes.length) controller.close();
-      },
-    });
-    return new Response(c.req.method === "HEAD" ? null : body, { headers: c.res.headers });
+    const ticket = deps.downloads.get(userId, c.req.param("id"));
+    if (!ticket)
+      return c.json(
+        {
+          error: "DOWNLOAD_NOT_FOUND",
+          message: "Download unknown, expired or not yours. Ask for the file again with file:true.",
+        },
+        404,
+      );
+    // Retryable until the ticket expires; Range requests resume an interrupted download.
+    return streamTicket(c, ticket, deps, "session");
   });
 
   app.get("/uploads", async (c) => {
@@ -235,45 +227,101 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
       if (!(file instanceof File)) {
         return c.json({ error: "bad_request", message: "Missing 'file' field" }, 400);
       }
+      // The body limit includes multipart slack, so the file itself is checked here.
+      if (file.size > config.uploadFileMaxBytes) {
+        return c.json(
+          {
+            error: "file_too_large",
+            message: `File too large (${file.size} bytes). Per-file cap is ${config.uploadFileMaxBytes} bytes; use telegram-create-upload-link for larger files.`,
+          },
+          413,
+        );
+      }
 
       const buf = Buffer.from(await file.arrayBuffer());
-      const denied = uploads.preflight(userId, buf.byteLength);
-      if (denied) {
-        logger.warn(`Upload denied: ${denied.reason}`, {
+      const fileName = sanitizeFileName(file.name) ?? "file";
+      const mime = file.type || "application/octet-stream";
+      const full = uploads.checkCapacity(userId);
+      if (full) {
+        logger.warn("Upload denied: quota_exceeded", {
           component: "uploads",
           userId: logUser(userId),
           event: "uploads.denied",
           source: caller.via,
-          reason: denied.reason,
+          reason: "quota_exceeded",
           size: buf.byteLength,
         });
-        const status = denied.reason === "file_too_large" ? 413 : 429;
-        return c.json({ error: denied.reason, message: denied.message }, status);
+        return c.json({ error: "quota_exceeded", message: full }, 429);
       }
+      if (buf.byteLength === 0) return c.json({ error: "bad_request", message: "The file is empty." }, 400);
 
-      const result = await uploads.put(userId, buf, file.type || "application/octet-stream", file.name || null);
-      if (!result.ok) {
-        // TOCTOU between preflight and put — same envelope, log & return.
-        const status = result.reason === "file_too_large" ? 413 : 429;
-        return c.json({ error: result.reason, message: result.message }, status);
+      // Straight into Telegram with the active account; only the handle stays here.
+      let lease: Lease;
+      try {
+        lease = await transferQueue.lease(userId, { wait: false });
+      } catch (e) {
+        return transferError(c, e);
       }
-
-      logger.info(`Upload stored: ${result.id}`, {
-        component: "uploads",
-        userId: logUser(userId),
-        event: "uploads.stored",
-        source: caller.via,
-        uploadId: result.id,
-        size: buf.byteLength,
-        mime: file.type,
-      });
-
-      return c.json({
-        id: result.id,
-        expiresAt: result.expiresAt.toISOString(),
-        size: buf.byteLength,
-        mime: file.type || "application/octet-stream",
-      });
+      try {
+        const accountId = deps.sessions.getActiveAccountId(userId);
+        const { canRead } = accountBinding(
+          deps.sessions,
+          userId,
+          accountId,
+          deps.sessions.getAccountAttachmentId(userId, accountId) ?? undefined,
+        );
+        // Connect and upload as one bounded step of the slot (see Lease).
+        let client: TelegramService | undefined;
+        const uploaded = await lease.step(
+          async (signal) => {
+            const telegram = await telegramForAccount(
+              deps.sessions,
+              userId,
+              accountId,
+              canRead,
+              config.telegramConnectTimeoutMs,
+            );
+            client = telegram;
+            return onAccount(deps.sessions, userId, telegram, () =>
+              telegram.uploadStream(
+                (async function* () {
+                  yield buf;
+                })(),
+                buf.byteLength,
+                fileName,
+                signal,
+              ),
+            );
+          },
+          mediaTimeouts.toolTransferMs,
+          "UPLOAD_FAILED",
+          () => markWedged(deps.sessions, userId, client),
+        );
+        // The handle is only usable by the account that uploaded it.
+        if (!canRead()) {
+          throw new MediaError("ACCOUNT_UNAVAILABLE", "The Telegram account changed during the upload. Upload again.");
+        }
+        const result = uploads.put(userId, { accountId, canUse: canRead }, uploaded, mime, fileName);
+        logger.info(`Upload stored: ${result.id}`, {
+          component: "uploads",
+          userId: logUser(userId),
+          event: "uploads.stored",
+          source: caller.via,
+          uploadId: result.id,
+          size: buf.byteLength,
+          mime: file.type,
+        });
+        return c.json({
+          id: result.id,
+          expiresAt: result.expiresAt.toISOString(),
+          size: buf.byteLength,
+          mime,
+        });
+      } catch (e) {
+        return transferError(c, e);
+      } finally {
+        lease.end();
+      }
     },
   );
 

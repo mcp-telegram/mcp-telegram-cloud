@@ -2,6 +2,7 @@ import type { Context, MiddlewareHandler } from "hono";
 import { config } from "./config.js";
 import { hashToken } from "./crypto.js";
 import { logger } from "./logger.js";
+import { templatePath } from "./telemetry/route-template.js";
 
 type Bucket = { count: number; resetAt: number };
 
@@ -68,7 +69,8 @@ export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
         component: "rate-limit",
         event: "rate_limit.exceeded",
         scope,
-        path: c.req.path,
+        // Templated: some paths carry capability tokens (/d/<token>, /u/<token>).
+        path: templatePath(c.req.path),
         count: existing.count,
         limit,
       });

@@ -232,6 +232,11 @@ export const config = {
   uploadRateLimit: intOr(process.env.UPLOAD_RATE_LIMIT, 20),
   uploadRateWindowMs: intOr(process.env.UPLOAD_RATE_WINDOW_MS, 60_000),
 
+  /** Per-IP rate-limit on the one-time transfer links `/d/<token>` and `/u/<token>`.
+   * The tokens carry 128 bits, so this bounds load, not guessing. 0 disables. */
+  transferLinkRateLimit: intOr(process.env.TRANSFER_LINK_RATE_LIMIT, 60),
+  transferLinkRateWindowMs: intOr(process.env.TRANSFER_LINK_RATE_WINDOW_MS, 60_000),
+
   /** Review-link rate-limit: very strict since real use is once/twice per review.
    * Default 10 per 15 min per IP — makes brute-force implausible even if entropy drops. */
   reviewRateLimit: intOr(process.env.REVIEW_RATE_LIMIT, 10),

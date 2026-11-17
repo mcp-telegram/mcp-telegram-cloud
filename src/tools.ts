@@ -25,7 +25,7 @@ import { STATS_TOOLS } from "./tools/stats.js";
 import { STORIES_TOOLS } from "./tools/stories.js";
 import { UPLOAD_TOOLS } from "./tools/uploads.js";
 import type { UploadStore } from "./upload-store.js";
-import type { fetchUrlSafely } from "./url-fetcher.js";
+import type { openUrlStream } from "./url-fetcher.js";
 
 export const TOOLS: ToolDefinition[] = [
   ...READ_TOOLS,
@@ -64,8 +64,8 @@ export interface RegisterAllowedToolsExtras {
   /** Phase X: per-user upload store. Required for the 6 FS-bound tools to function. */
   uploads?: UploadStore;
   downloads?: DownloadStore;
-  /** Phase X: SSRF-hardened URL fetcher for the URL variant of upload-backed tools. */
-  fetchUrl?: typeof fetchUrlSafely;
+  /** SSRF-hardened streaming URL fetcher for the URL variant of upload-backed tools. */
+  openUrl?: typeof openUrlStream;
   /** v2.32.0 multi-account: session manager for the accounts-* tools. */
   sessions?: SessionManager;
   /** v2.32.0: public-facing base URL (https://mcp-telegram.com) for accounts-add URLs. */
@@ -99,7 +99,7 @@ export function registerAllAllowedTools(
     ...(extras?.userId !== undefined && { userId: extras.userId }),
     ...(extras?.uploads !== undefined && { uploads: extras.uploads }),
     ...(extras?.downloads !== undefined && { downloads: extras.downloads }),
-    ...(extras?.fetchUrl !== undefined && { fetchUrl: extras.fetchUrl }),
+    ...(extras?.openUrl !== undefined && { openUrl: extras.openUrl }),
     ...(extras?.sessions !== undefined && { sessions: extras.sessions }),
     ...(extras?.baseUrl !== undefined && { baseUrl: extras.baseUrl }),
     ...(extras?.onToolTimeout !== undefined && { onToolTimeout: extras.onToolTimeout }),

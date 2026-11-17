@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { config, SENTINEL_LOG_HASH_SALT } from "./config.js";
 import { DestructiveGuard } from "./destructive-guard.js";
 import { HTTP_IDLE_TIMEOUT_S } from "./http-timeouts.js";
+import { purgeLegacyUploads } from "./legacy-uploads.js";
 import { startDrain } from "./lifecycle.js";
 import { logger, logUser } from "./logger.js";
 import {
@@ -29,10 +30,10 @@ import { createOAuthRoutes, createOAuthWellKnownRoutes } from "./routes/oauth.js
 import { createQrPasswordRoutes } from "./routes/qr-password.js";
 import { createReviewRoutes } from "./routes/review.js";
 import { createStaticRoutes } from "./routes/static.js";
+import { createTransferRoutes, MAX_REQUEST_BODY_BYTES, requestBodyLimit } from "./routes/transfer.js";
 import { SessionManager } from "./session-manager.js";
 import { flushMetrics, registerGauge, startMetricsFlush, stopMetricsFlush } from "./telemetry/metrics.js";
 import { flushTraces, runDetached, stopTraceFlush } from "./telemetry/tracer.js";
-import { purgeUrlFetchOrphans } from "./tools/uploads.js";
 import { UploadStore } from "./upload-store.js";
 import { UsageTracker } from "./usage.js";
 
@@ -63,12 +64,8 @@ const destructive = new DestructiveGuard(
   config.destructiveDailyLimit,
   `${config.issuer}/my/settings`,
 );
-const uploads = new UploadStore(
-  sessions.getDb(),
-  config.uploadFileMaxBytes,
-  config.uploadQuotaBytes,
-  config.uploadTtlSeconds * 1000,
-);
+// Pending uploads live in Telegram; only their handles are kept here, in memory.
+const uploads = new UploadStore(config.uploadTtlSeconds * 1000);
 
 // Periodic cleanup of expired OAuth codes/tokens. Wrapped in `runDetached`
 // for symmetry with the other purge timers — `oauth.cleanup()` is currently
@@ -76,7 +73,7 @@ const uploads = new UploadStore(
 // call wouldn't have to re-discover the trace-pollution gotcha.
 // A live review link keeps directory-app clients from being pruned (review rule 4).
 setInterval(() => runDetached(() => oauth.cleanup({ reviewOpen: sessions.hasLiveReviewToken() })), 3600_000);
-// Fixed expiry is checked on every read; this timer reclaims idle snapshots.
+// Fixed expiry is checked on every read; this timer reclaims idle download tickets.
 setInterval(() => downloads.purgeExpired(), 60_000);
 
 // Periodic purge of old usage_log rows (retention policy).
@@ -142,31 +139,33 @@ setInterval(() => {
   });
 }, 24 * 3600_000);
 
-// Phase X — periodic purge of expired pending uploads (TTL: config.uploadTtlSeconds).
-// Sweep at 1/4 of TTL so any expired row is gone within ~ttl/4 walltime.
+// Periodic purge of expired upload handles and unused upload links.
 const uploadPurgeIntervalMs = Math.max(60_000, (config.uploadTtlSeconds * 1000) / 4);
-// 5 min — long enough that a healthy in-flight URL-fetch (timeout 30s + send to Telegram) finishes
-// before a stale orphan from a SIGKILL'd predecessor would be deleted, short enough to bound disk.
-const URL_FETCH_ORPHAN_MAX_AGE_MS = 5 * 60_000;
 
-// Boot-time wipe: any URL-fetch leftovers from a previous process (SIGKILL between writeFile
-// and cleanup, OOM, etc.) are stale by definition — no in-flight tool call can own them.
-purgeUrlFetchOrphans(0)
-  .then((n) => {
-    if (n > 0) {
-      logger.info(`Boot wipe removed ${n} URL-fetch orphans`, {
-        component: "uploads",
-        event: "uploads.boot_wipe",
-        removed: n,
-      });
-    }
-  })
-  .catch((e) => {
-    logger.warn(`Boot wipe of URL-fetch dir failed: ${(e as Error).message}`, {
-      component: "uploads",
-      event: "uploads.boot_wipe_failed",
-    });
-  });
+// One-shot removal of the disk-backed uploads of earlier versions (rows + temp files).
+// Delayed past the upload TTL plus the old task's drain: during a rolling update the
+// previous task may still hold pending uploads in that table.
+setTimeout(
+  () =>
+    runDetached(async () => {
+      try {
+        const { rows, files, dirs } = await purgeLegacyUploads(sessions.getDb());
+        if (rows + files + dirs > 0) {
+          logger.info(`Removed legacy uploads: ${rows} rows, ${files} files, ${dirs} dirs`, {
+            component: "uploads",
+            event: "uploads.legacy_purge",
+            removed: rows + files,
+          });
+        }
+      } catch (e) {
+        logger.warn(`Legacy upload cleanup failed: ${(e as Error).message}`, {
+          component: "uploads",
+          event: "uploads.legacy_purge_failed",
+        });
+      }
+    }),
+  config.uploadTtlSeconds * 1000 + 120_000,
+).unref?.();
 
 // Deferred one-time backfill: re-encrypt any legacy plaintext session_string rows at rest.
 // Delayed 2 min — safely past the OLD container's 90s drain during a `start-first` rolling
@@ -236,35 +235,16 @@ setTimeout(() => {
 }, 120_000);
 
 setInterval(() => {
-  // Detach so background purge logs don't pollute whatever HTTP trace was
-  // active when the timer fired. `runDetached` returns the inner promise
-  // unchanged, but we don't await it here — the original code didn't either,
-  // and an unhandled rejection inside the inner async lambda is caught below.
-  runDetached(async () => {
-    try {
-      const removedPending = await uploads.purgeExpired();
-      if (removedPending > 0) {
-        logger.info(`Purged ${removedPending} expired pending uploads`, {
-          component: "uploads",
-          event: "uploads.purge",
-          removed: removedPending,
-        });
-      }
-      const removedOrphans = await purgeUrlFetchOrphans(URL_FETCH_ORPHAN_MAX_AGE_MS);
-      if (removedOrphans > 0) {
-        logger.info(`Purged ${removedOrphans} URL-fetch orphans`, {
-          component: "uploads",
-          event: "uploads.urlfetch_purge",
-          removed: removedOrphans,
-        });
-      }
-    } catch (e) {
-      logger.warn(`Upload purge failed: ${(e as Error).message}`, {
+  const removed = uploads.purgeExpired();
+  if (removed > 0) {
+    runDetached(() =>
+      logger.info(`Purged ${removed} expired pending uploads`, {
         component: "uploads",
-        event: "uploads.purge_failed",
-      });
-    }
-  });
+        event: "uploads.purge",
+        removed,
+      }),
+    );
+  }
 }, uploadPurgeIntervalMs);
 
 // strict: false makes Hono treat `/mcp` and `/mcp/` as the same route
@@ -280,6 +260,8 @@ app.use("*", securityHeaders);
 // This host is functional-only (OAuth/login/my/mcp) — keep it out of search
 // indexes. Header form covers redirects and non-HTML responses too.
 app.use("*", noindex);
+// Bun's own body cap is raised for upload links (below); every other route keeps the old 128 MiB.
+app.use("*", requestBodyLimit);
 app.route("/", createStaticRoutes({ sessions }));
 app.route("/", createOAuthWellKnownRoutes(oauth));
 app.route("/oauth", createOAuthRoutes({ oauth, sessions }));
@@ -287,6 +269,8 @@ app.route("/api", createAdminRoutes({ oauth, sessions, usage }));
 registerMcpRoutes(app, { oauth, sessions, usage, destructive, uploads });
 app.route("/login", createLoginRoutes({ sessions, oauth }));
 app.route("/my", createMyRoutes({ destructive, sessions, uploads, downloads, oauth }));
+// One-time download (/d/<token>) and upload (/u/<token>) links for agents without sign-in.
+app.route("/", createTransferRoutes({ sessions, downloads, uploads }));
 app.route("/accounts", createAccountsRoutes({ sessions }));
 // Directory-review access: hands a reviewer the demo session so the OAuth fast
 // path can skip the QR code they have no way to scan.
@@ -336,7 +320,12 @@ logger.info(`${config.brandName} starting on port ${config.port}`, {
 // idleTimeout is explicit on purpose: Bun's 10s default is shorter than the MCP
 // SSE keep-alive, which silently turned every quiet stream into a Traefik 500.
 // See src/http-timeouts.ts for the measurement.
-const httpServer = Bun.serve({ fetch: app.fetch, port: config.port, idleTimeout: HTTP_IDLE_TIMEOUT_S });
+const httpServer = Bun.serve({
+  fetch: app.fetch,
+  port: config.port,
+  idleTimeout: HTTP_IDLE_TIMEOUT_S,
+  maxRequestBodySize: MAX_REQUEST_BODY_BYTES,
+});
 
 for (const sig of ["SIGTERM", "SIGINT"] as const) {
   process.on(sig, async () => {

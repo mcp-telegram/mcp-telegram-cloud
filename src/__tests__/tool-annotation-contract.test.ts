@@ -128,6 +128,7 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-accounts-add",
     "telegram-add-contact",
     "telegram-create-folder",
+    "telegram-create-upload-link",
     "telegram-rate-transcription",
   ],
   OUTBOUND_WRITE: [

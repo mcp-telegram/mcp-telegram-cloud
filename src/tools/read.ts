@@ -1,6 +1,17 @@
-import { formatChatFolder } from "@overpod/mcp-telegram/service";
+import { formatChatFolder, type TelegramService } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
+import { config as appConfig } from "../config.js";
 import { DOWNLOAD_CHUNK_BYTES, DOWNLOAD_LIMITS } from "../download-store.js";
+import {
+  accountBinding,
+  markWedged,
+  onAccount,
+  openTicketMedia,
+  requireMediaCore,
+  telegramForAccount,
+} from "../media-access.js";
+import { MediaError, mediaToolOnError } from "../media-errors.js";
+import { mediaTimeouts, previewQueue } from "../media-queue.js";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   formatMediaSuffix,
@@ -242,20 +253,28 @@ export const READ_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-download-media",
     description:
-      "Download media from a Telegram message. Images default to a thumbnail; full:true shows the full image inline. file:true prepares the original file (up to 8 MiB) for private download. Non-image media also returns a downloadId, authenticated browser URL, size and SHA-256, valid for 15 minutes. To retrieve bytes via MCP, repeat the same chatId/messageId with downloadId and offset (default 0): each response contains up to 64 KiB of base64, nextOffset and eof. Keep chunks out of the conversation context; decode them locally and verify the size and hash. Download IDs and URLs are not public sharing links. Non-inline results keep a private copy on the server for 15 minutes.",
+      "Download media from a Telegram message. Images default to a small inline thumbnail; full:true returns the full image inline (up to ~950 KB). " +
+      "file:true returns a download ticket instead of bytes: downloadId, fileName, mimeType, size, url, oneTimeUrl, expiresAt (15 minutes) and chunkBytes, for files up to 4000 MiB, the largest file Telegram stores. " +
+      "url needs the user's browser sign-in or this connection's OAuth Bearer token; oneTimeUrl works once without sign-in, e.g. curl -o <file> '<oneTimeUrl>'. " +
+      "The server reads the file from Telegram while it is downloaded and keeps no copy, so there is no hash: check the received byte count against size. " +
+      "To pull bytes through MCP instead, repeat the call with the same chatId/messageId plus downloadId and offset (0, then nextOffset; multiples of 65536): each response has up to 64 KiB of base64, nextOffset and eof; keep chunks out of the conversation. " +
+      "Asking again for the same message while its ticket is live returns the same downloadId with a fresh oneTimeUrl. " +
+      "Fetch media one call at a time; extra calls wait in a queue. Errors start with a code, e.g. [DOWNLOAD_BUSY retryable retryAfterMs=3000] or [MEDIA_NOT_DOWNLOADABLE].",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       messageId: z.number().int().positive().describe("Message ID containing media"),
       file: z
         .boolean()
         .optional()
-        .describe("Prepare the ORIGINAL file for private download instead of an inline image/thumbnail. Max 8 MiB."),
+        .describe(
+          "Return a download ticket for the ORIGINAL file (no bytes in the response) instead of an inline image/thumbnail. Up to 4000 MiB.",
+        ),
       downloadId: z
         .string()
         .regex(/^dl_[a-f0-9]{32}$/)
         .optional()
         .describe(
-          "Previously returned private download ID. Reads a chunk of the cached file, not Telegram again. Keep the original chatId/messageId.",
+          "downloadId from an earlier file:true call. Reads one 64 KiB chunk of that file from Telegram. Keep the original chatId/messageId.",
         ),
       offset: z
         .number()
@@ -264,7 +283,7 @@ export const READ_TOOLS: ToolDefinition[] = [
         .max(DOWNLOAD_LIMITS.fileBytes)
         .optional()
         .describe(
-          "Byte offset when reading downloadId. Default 0; continue at nextOffset until eof. Retries at the same offset return identical bytes until expiry.",
+          "Byte offset when reading downloadId: 0, then nextOffset, until eof. Must be a multiple of 65536. Repeating an offset returns the same bytes.",
         ),
       full: z
         .boolean()
@@ -275,86 +294,140 @@ export const READ_TOOLS: ToolDefinition[] = [
     },
     annotations: OUTBOUND_WRITE,
     skipConnectionFor: ({ downloadId }) => downloadId !== undefined,
+    onError: mediaToolOnError("telegram-download-media"),
     handler: async (
       { chatId, messageId, full, file, downloadId, offset },
       { telegram, downloads, userId, sessions, baseUrl, sourceAccountId, sourceAttachmentId },
     ) => {
       if (!downloads || !userId || !sessions || !baseUrl)
-        throw new Error("Private download storage is unavailable on this server");
+        throw new MediaError("SERVER_MISCONFIGURED", "Private downloads are unavailable on this server.");
       if (downloadId !== undefined) {
-        const chunk = downloads.chunk(userId, downloadId, chatId, messageId, offset ?? 0);
-        if (!chunk) throw new Error("Download unavailable, expired or not yours. Prepare the original message again.");
+        const ticket = downloads.get(userId, downloadId);
+        if (!ticket || ticket.metadata.chatId !== chatId || ticket.metadata.messageId !== messageId)
+          throw new MediaError(
+            "DOWNLOAD_NOT_FOUND",
+            "Download unknown, expired (15 min) or not yours. Call again with file:true for a new ticket.",
+          );
+        const at = offset ?? 0;
+        const size = ticket.metadata.size;
+        if (at % DOWNLOAD_CHUNK_BYTES !== 0 || at > size)
+          throw new MediaError(
+            "INVALID_RANGE",
+            `offset must be a multiple of ${DOWNLOAD_CHUNK_BYTES} and at most the file size (${size}).`,
+          );
+        // Lookup and read share one deadline, so a hung Telegram call can't pin the queue slot.
+        let client: TelegramService | undefined;
+        const bytes = await previewQueue.runWithDeadline(
+          userId,
+          async (signal) => {
+            client = await telegramForAccount(
+              sessions,
+              userId,
+              ticket.accountId,
+              ticket.canRead,
+              appConfig.telegramConnectTimeoutMs,
+            );
+            signal.throwIfAborted();
+            const accountClient = client;
+            // The ticket's account may not be the caller's active one: attribute a
+            // revocation to the client that raised it, never to the active session.
+            return onAccount(sessions, userId, accountClient, async () => {
+              const reader = await openTicketMedia(accountClient, ticket);
+              return reader.readRange(at, DOWNLOAD_CHUNK_BYTES, signal);
+            });
+          },
+          mediaTimeouts.stepMs,
+          "DOWNLOAD_FAILED",
+          () => markWedged(sessions, userId, client),
+        );
+        // The account may have been detached or replaced while the chunk was read.
+        if (!ticket.canRead())
+          throw new MediaError(
+            "ACCOUNT_UNAVAILABLE",
+            "Source account is no longer available. Reconnect and try again.",
+          );
+        if (bytes.length !== Math.min(DOWNLOAD_CHUNK_BYTES, size - at))
+          throw new MediaError("DOWNLOAD_FAILED", "Telegram returned a short read. Retry the same offset.", 3000);
+        const end = at + bytes.length;
+        const chunk = { downloadId, offset: at, nextOffset: end, eof: end >= size, base64: bytes.toString("base64") };
         return { content: [{ type: "text", text: JSON.stringify(chunk) }], structuredContent: chunk };
       }
-      if (offset !== undefined) throw new Error("offset requires downloadId");
-      const accountId = sourceAccountId;
-      if (accountId === undefined || !sourceAttachmentId)
-        throw new Error("Source account was not bound to this tool call");
-      const account = sessions.listAccounts(userId).find((a) => a.accountId === accountId);
-      if (!account) throw new Error("Source account is unavailable");
-      const canRead = () =>
-        sessions.getAccountAttachmentId(userId, accountId) === sourceAttachmentId &&
-        sessions
-          .listAccounts(userId)
-          .some(
-            (a) =>
-              a.accountId === accountId && a.telegramUserId === account.telegramUserId && a.addedAt === account.addedAt,
+      if (offset !== undefined) throw new MediaError("INVALID_RANGE", "offset requires downloadId.");
+      const { accountId, canRead } = accountBinding(sessions, userId, sourceAccountId, sourceAttachmentId);
+      requireMediaCore(telegram);
+      // Metadata is a Telegram call too: same queue, same deadline as the byte reads.
+      const info = await previewQueue.runWithDeadline(
+        userId,
+        () => telegram.getMediaInfo(chatId, messageId),
+        mediaTimeouts.stepMs,
+        "DOWNLOAD_FAILED",
+        () => markWedged(sessions, userId, telegram),
+      );
+      const ticketResult = () => {
+        if (info.size > DOWNLOAD_LIMITS.fileBytes)
+          throw new MediaError(
+            "MEDIA_TOO_LARGE",
+            `The file is ${info.size} bytes, above the ${DOWNLOAD_LIMITS.fileBytes}-byte limit for downloads.`,
           );
-      // An explicit capability check is essential: old core versions silently
-      // ignore unknown options, so passing maxBytes to them would NOT be a cap.
-      // SAFETY: this optional API is implemented by the next core release;
-      // the installed old core lacks its declaration. We check for the method
-      // below and fail closed before downloading if that capability is absent.
-      const bounded = (
-        telegram as unknown as {
-          downloadMediaBounded?: (
-            chatId: string,
-            messageId: number,
-            options: { maxBytes: number; thumb?: number; signal: AbortSignal },
-          ) => Promise<{ buffer: Buffer; mimeType: string; isThumb: boolean; fileName?: string }>;
-        }
-      ).downloadMediaBounded;
-      if (typeof bounded !== "function")
-        throw new Error("Private downloads require an updated Telegram core with bounded media support");
-      const signal = AbortSignal.timeout(60_000);
-      let isThumb = false;
-      const metadata = await downloads.prepare(userId, { chatId, messageId, canRead }, async (maxBytes) => {
-        const result = await bounded.call(telegram, chatId, messageId, {
-          maxBytes,
-          signal,
-          ...(!full && !file && { thumb: 0 }),
-        });
-        signal.throwIfAborted(); // never publish late work after the download deadline
-        isThumb = result.isThumb;
-        return result;
-      });
-      const url = `${baseUrl}/my/download/${metadata.downloadId}`;
-      if (!file && metadata.mimeType.startsWith("image/")) {
-        const cached = downloads.read(userId, metadata.downloadId);
-        if (!cached) throw new Error("Download expired during preparation");
-        const { bytes: buffer } = cached;
-        const mimeType = metadata.mimeType;
-        downloads.forget(userId, metadata.downloadId); // previews don't consume the snapshot quota
-        if (buffer.length > MAX_INLINE_MEDIA) {
-          return textResult(
-            `Image too large for inline display (${(buffer.length / 1024).toFixed(0)} KB, limit ~950 KB). The image is a ${mimeType} file. Use file:true to download it privately without inline base64.`,
+        // The account may have been detached or replaced while Telegram answered.
+        if (!canRead())
+          throw new MediaError(
+            "ACCOUNT_UNAVAILABLE",
+            "Source account is no longer available. Reconnect and try again.",
           );
-        }
-        const note = isThumb
-          ? `Thumbnail preview (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}). Pass full:true for the full-resolution image if you need finer detail.`
-          : `Full image (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}).`;
-        return {
-          content: [
-            { type: "image", data: buffer.toString("base64"), mimeType },
-            { type: "text", text: note },
-          ],
+        const { metadata, oneTimeToken } = downloads.issue(userId, { chatId, messageId, accountId, canRead }, info);
+        const result = {
+          ...metadata,
+          url: `${baseUrl}/my/download/${metadata.downloadId}`,
+          oneTimeUrl: `${baseUrl}/d/${oneTimeToken}`,
+          chunkBytes: DOWNLOAD_CHUNK_BYTES,
         };
-      }
+        return { content: [{ type: "text" as const, text: JSON.stringify(result) }], structuredContent: result };
+      };
+      if (file) return ticketResult();
 
-      const result = { ...metadata, url, chunkBytes: DOWNLOAD_CHUNK_BYTES };
+      // Inline previews never hold more than the inline cap and never touch the ticket store.
+      const isImage = info.mimeType.startsWith("image/");
+      let preview: { buffer: Buffer; mimeType: string; isThumb: boolean } | undefined;
+      try {
+        preview = await previewQueue.runWithDeadline(
+          userId,
+          (signal) =>
+            telegram.downloadMediaBounded(chatId, messageId, {
+              maxBytes: MAX_INLINE_MEDIA,
+              signal,
+              ...(!full && { thumb: 0 }),
+            }),
+          mediaTimeouts.stepMs,
+          "DOWNLOAD_FAILED",
+          () => markWedged(sessions, userId, telegram),
+        );
+      } catch (e) {
+        if (!/exceeds \d+ byte limit/.test((e as Error).message ?? "")) throw e;
+        // Even the size note must not come from an account detached meanwhile.
+        if (!canRead())
+          throw new MediaError(
+            "ACCOUNT_UNAVAILABLE",
+            "Source account is no longer available. Reconnect and try again.",
+          );
+        if (isImage)
+          return textResult(
+            `Image too large for inline display (${(info.size / 1024).toFixed(0)} KB ${info.mimeType}, limit ~950 KB). Use file:true to get a download ticket instead of inline base64.`,
+          );
+      }
+      if (!preview?.mimeType.startsWith("image/")) return ticketResult();
+      // The account may have been detached or replaced while the preview was queued or downloading.
+      if (!canRead())
+        throw new MediaError("ACCOUNT_UNAVAILABLE", "Source account is no longer available. Reconnect and try again.");
+      const { buffer, mimeType, isThumb } = preview;
+      const note = isThumb
+        ? `Thumbnail preview (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}). Pass full:true for the full-resolution image if you need finer detail.`
+        : `Full image (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}).`;
       return {
-        content: [{ type: "text", text: JSON.stringify(result) }],
-        structuredContent: result,
+        content: [
+          { type: "image", data: buffer.toString("base64"), mimeType },
+          { type: "text", text: note },
+        ],
       };
     },
   },

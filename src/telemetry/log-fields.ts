@@ -164,6 +164,8 @@ export type LogFields = Partial<{
   seconds: number;
   /** Bytes uploaded / file size. */
   size: number;
+  /** Bytes actually transferred by a media stream (may stop short of `size`). */
+  bytes: number;
   /** Length of a payload (recipients list, message text). */
   length: number;
   /** Number of recipients. */

@@ -130,6 +130,132 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
   // the connection (and up to maxBytes of memory) forever.
   const deadline = AbortSignal.timeout(timeoutMs);
 
+  const opened = await openResponse(url, deadline, timeoutMs);
+  if (!opened.ok) return opened;
+  return streamBody(opened.res, opened.finalUrl, opts.maxBytes, deadline, timeoutMs);
+}
+
+export interface UrlStream {
+  ok: true;
+  /** Response body; iteration throws {@link UrlFetchError} on cap, idle or total timeout. */
+  body: AsyncIterable<Uint8Array>;
+  /** Exact byte count when the server declared one for an unencoded body, else undefined. */
+  size: number | undefined;
+  mime: string;
+  finalUrl: string;
+  /** Abort the transfer and release the connection. */
+  cancel: () => void;
+}
+
+export interface StreamOptions {
+  maxBytes: number;
+  /** Budget for redirects and response headers. */
+  timeoutMs?: number;
+  /** Longest pause between two body chunks. */
+  idleTimeoutMs?: number;
+  /** Hard ceiling for the whole transfer. */
+  totalTimeoutMs?: number;
+}
+
+export class UrlFetchError extends Error {
+  constructor(
+    readonly reason: FetchDenyReason,
+    message: string,
+  ) {
+    super(message);
+    this.name = "UrlFetchError";
+  }
+}
+
+/**
+ * Same SSRF policy as {@link fetchUrlSafely} (https only, every hop re-validated and
+ * IP-pinned, redirect limit, size cap), but hands the body over as a stream so it
+ * can go straight to Telegram without being buffered or written to disk.
+ */
+export async function openUrlStream(url: string, opts: StreamOptions): Promise<UrlStream | FetchDenied> {
+  if (opts.maxBytes <= 0) throw new Error("openUrlStream: maxBytes must be positive");
+  const headerMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const idleMs = opts.idleTimeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const totalMs = opts.totalTimeoutMs ?? 30 * 60_000;
+  const ctrl = new AbortController();
+  let abortReason: UrlFetchError | undefined;
+  const abort = (reason: UrlFetchError) => {
+    abortReason ??= reason;
+    ctrl.abort(reason);
+  };
+  const total = setTimeout(() => abort(new UrlFetchError("timeout", `Fetch exceeded ${totalMs}ms in total`)), totalMs);
+  const headers = setTimeout(
+    () => abort(new UrlFetchError("timeout", `Fetch timed out after ${headerMs}ms`)),
+    headerMs,
+  );
+  const opened = await openResponse(url, ctrl.signal, headerMs);
+  clearTimeout(headers);
+  if (!opened.ok) {
+    clearTimeout(total);
+    return opened;
+  }
+  const res = opened.res;
+  const declared = Number(res.headers.get("content-length") ?? Number.NaN);
+  const encoding = (res.headers.get("content-encoding") ?? "identity").toLowerCase();
+  // fetch decodes compressed bodies, so a declared length only counts for identity encoding.
+  const size = Number.isSafeInteger(declared) && declared >= 0 && encoding === "identity" ? declared : undefined;
+  const mime = res.headers.get("content-type") ?? "application/octet-stream";
+  const cancel = () => {
+    clearTimeout(total);
+    ctrl.abort(new UrlFetchError("fetch_failed", "Transfer cancelled"));
+    res.body?.cancel().catch(() => {});
+  };
+  if (Number.isFinite(declared) && declared > opts.maxBytes) {
+    cancel();
+    return { ok: false, reason: "too_large", message: `Content-Length ${declared} exceeds cap ${opts.maxBytes}` };
+  }
+  const maxBytes = opts.maxBytes;
+  async function* body(): AsyncGenerator<Uint8Array> {
+    if (!res.body) return;
+    const reader = res.body.getReader();
+    let received = 0;
+    try {
+      for (;;) {
+        const idle = setTimeout(
+          () => abort(new UrlFetchError("timeout", `No data from upstream for ${idleMs}ms`)),
+          idleMs,
+        );
+        let chunk: Awaited<ReturnType<typeof reader.read>>;
+        try {
+          chunk = await reader.read();
+        } catch (e) {
+          throw (
+            abortReason ??
+            new UrlFetchError(
+              "fetch_failed",
+              `Upstream aborted the response body: ${truncate((e as Error).message ?? String(e), 120)}`,
+            )
+          );
+        } finally {
+          clearTimeout(idle);
+        }
+        if (chunk.done) return;
+        received += chunk.value.byteLength;
+        if (received > maxBytes) throw new UrlFetchError("too_large", `Body exceeded cap ${maxBytes} bytes mid-stream`);
+        yield chunk.value;
+      }
+    } finally {
+      clearTimeout(total);
+      reader.cancel().catch(() => {});
+    }
+  }
+  return { ok: true, body: body(), size, mime, finalUrl: opened.finalUrl, cancel };
+}
+
+/**
+ * Follow up to {@link MAX_REDIRECTS} redirects with every hop re-validated and
+ * IP-pinned, and return the first 2xx response with its body still unread.
+ */
+async function openResponse(
+  url: string,
+  deadline: AbortSignal,
+  timeoutMs: number,
+): Promise<{ ok: true; res: Response; finalUrl: string } | FetchDenied> {
   let currentUrl = url;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const validated = await validateAndPin(currentUrl);
@@ -188,7 +314,7 @@ export async function fetchUrlSafely(url: string, opts: FetchOptions): Promise<F
       return { ok: false, reason: "non_2xx", message: `Upstream returned HTTP ${res.status}` };
     }
 
-    return streamBody(res, currentUrl, opts.maxBytes, deadline, timeoutMs);
+    return { ok: true, res, finalUrl: currentUrl };
   }
   return { ok: false, reason: "redirect_limit", message: `Too many redirects (>${MAX_REDIRECTS})` };
 }

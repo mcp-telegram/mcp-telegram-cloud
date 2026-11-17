@@ -229,6 +229,17 @@
       "properties": ["chatId", "iconColor", "iconEmojiId", "title"]
     },
     {
+      "name": "telegram-create-upload-link",
+      "title": "Create Upload Link",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "required": ["fileName", "size"],
+      "properties": ["fileName", "size"]
+    },
+    {
       "name": "telegram-delete-business-chat-link",
       "title": "Delete Business Chat Link",
       "annotations": {

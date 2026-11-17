@@ -15,7 +15,7 @@
  * connection", i.e. a live, valid session — deleting it would turn a recoverable collision
  * into a forced re-login.
  */
-export const AUTH_ERROR_PATTERNS = [
+const AUTH_ERROR_PATTERNS = [
   "AUTH_KEY_UNREGISTERED",
   "AUTH_KEY_INVALID",
   "SESSION_REVOKED",
@@ -45,7 +45,19 @@ export function isAuthErrorMessage(message: string | undefined | null): boolean 
   return REVOCATION_PHRASES.some((re) => re.test(message));
 }
 
-/** Same test for a thrown value. */
-export function isAuthError(error: unknown): boolean {
-  return isAuthErrorMessage(error instanceof Error ? error.message : String(error));
+/**
+ * Positive evidence from Telegram itself: a GramJS RPC error (or one kept as `cause` by a
+ * wrapper) whose `errorMessage` is a revocation token. Message TEXT is never parsed here:
+ * it can carry strings from remote URLs, file names, chat titles or our own wrappers, and
+ * a match revokes the user's session. Use this for thrown errors; {@link isAuthErrorMessage}
+ * stays for `lastError`, which only TelegramService itself writes.
+ */
+export function isTelegramAuthError(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < 4 && current && typeof current === "object"; depth++) {
+    const rpc = (current as { errorMessage?: unknown }).errorMessage;
+    if (typeof rpc === "string" && (AUTH_ERROR_PATTERNS as readonly string[]).includes(rpc)) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
 }

@@ -11,8 +11,13 @@ const { READ_TOOLS } = await import("../tools/read.js");
 const found = READ_TOOLS.find((t) => t.name === "telegram-download-media");
 assert.ok(found);
 const tool = found;
-const bytes = Buffer.from("OggSvoice");
-const media = { buffer: bytes, mimeType: "audio/ogg", isThumb: false };
+const info = { kind: "document", fileId: "document:1:2", size: 9, mimeType: "audio/ogg", fileName: "voice.ogg" };
+const telegramWith = (getMediaInfo: () => Promise<typeof info>) => ({
+  getMediaInfo,
+  openMedia: async () => ({ info, readRange: async () => Buffer.from("OggSvoice") }),
+  uploadStream: async () => ({}),
+  isConnected: () => true,
+});
 
 function setup() {
   const sessions = new SessionManager(":memory:");
@@ -36,43 +41,47 @@ function setup() {
     sourceAccountId: 0,
     sourceAttachmentId: attachment,
     baseUrl: "https://download-attachment-test.invalid",
-    telegram: { downloadMediaBounded: async () => media },
+    telegram: telegramWith(async () => info),
   };
   return { sessions, downloads, attachment, recreate, deps };
 }
 
 describe("private download attachment identity", () => {
-  it("removal + same-second primary recreation cannot revive a completed snapshot", async () => {
+  it("removal + same-second primary recreation cannot revive an issued ticket", async () => {
     const f = setup();
     try {
       const prepared = await tool.handler({ chatId: "@chat", messageId: 1, file: true }, f.deps as never);
       const id = String(prepared.structuredContent?.downloadId);
-      assert.ok(f.downloads.read("alice", id));
+      assert.ok(f.downloads.get("alice", id));
       await f.recreate();
-      assert.equal(f.downloads.read("alice", id), null);
+      assert.equal(f.downloads.get("alice", id), null);
       await assert.rejects(
         () => tool.handler({ chatId: "@chat", messageId: 1, downloadId: id }, f.deps as never),
-        /unavailable/,
+        (e: Error & { code?: string }) => e.code === "DOWNLOAD_NOT_FOUND",
       );
     } finally {
       f.sessions.getDb().close();
     }
   });
 
-  it("removal + same-second recreation also denies pending old IO at completion", async () => {
+  it("removal + same-second recreation also denies a ticket whose lookup was still pending", async () => {
     const f = setup();
     let finish!: () => void;
-    const oldIo = new Promise<typeof media>((resolve) => {
-      finish = () => resolve(media);
+    const oldIo = new Promise<typeof info>((resolve) => {
+      finish = () => resolve(info);
     });
     const pending = tool.handler({ chatId: "@chat", messageId: 1, file: true }, {
       ...f.deps,
-      telegram: { downloadMediaBounded: () => oldIo },
+      telegram: telegramWith(() => oldIo),
     } as never);
     try {
       await f.recreate();
       finish();
-      await assert.rejects(() => pending, /no longer available/);
+      await assert.rejects(
+        () => pending,
+        (e: Error & { code?: string }) => e.code === "ACCOUNT_UNAVAILABLE",
+      );
+      assert.equal(f.downloads.purgeExpired(), 0, "nothing was issued");
     } finally {
       finish();
       f.sessions.getDb().close();

@@ -29,10 +29,19 @@ config.uploadRateWindowMs = 60_000;
 // Built AFTER the config override — makeUploadRateLimit() reads it here.
 const app = createMyRoutes({
   destructive: {} as never,
-  sessions: { getSavedUserIds: () => ["cookie_user"] } as never,
+  sessions: {
+    getSavedUserIds: () => ["cookie_user"],
+    getActiveAccountId: () => 0,
+    getAccountAttachmentId: () => "attachment",
+    listAccounts: (owner: string) => [{ accountId: 0, telegramUserId: owner, addedAt: "start" }],
+    ensureAccountSession: async () => ({
+      isConnected: () => true,
+      uploadStream: async (_s: unknown, size: number, fileName: string) => ({ kind: "uploaded-file", size, fileName }),
+    }),
+  } as never,
   uploads: {
-    preflight: () => null,
-    put: () => Promise.resolve({ ok: true as const, id: "upl_x", expiresAt: new Date("2030-01-01T00:00:00.000Z") }),
+    checkCapacity: () => null,
+    put: () => ({ id: "upl_x", expiresAt: new Date("2030-01-01T00:00:00.000Z") }),
     listForUser: () => [],
     pendingBytesForUser: () => 0,
   } as never,

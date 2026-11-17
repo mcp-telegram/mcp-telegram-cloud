@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ShapeOutput, ZodRawShapeCompat } from "@modelcontextprotocol/sdk/server/zod-compat.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
-import { isAuthError } from "./auth-errors.js";
+import { isTelegramAuthError } from "./auth-errors.js";
 // Aliased: `config` is shadowed by a local per-tool registration object below.
 import { config as appConfig } from "./config.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
@@ -14,7 +14,7 @@ import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js"
 import { toolErrorText } from "./tool-error-text.js";
 import { deriveTitle, isGuardedDestructive } from "./tools/helpers.js";
 import type { UploadStore } from "./upload-store.js";
-import type { fetchUrlSafely } from "./url-fetcher.js";
+import type { openUrlStream } from "./url-fetcher.js";
 
 export type RequireConnection = () => Promise<string | null>;
 /** `client` is the instance whose call failed, so only that session is judged dead (cloud#42). */
@@ -55,8 +55,8 @@ export interface ToolDeps {
   /** Account bound to the exact TelegramService captured for this call. */
   readonly sourceAccountId?: number;
   readonly sourceAttachmentId?: string;
-  /** Phase X: SSRF-hardened URL fetcher. Required for the URL variant of the 6 FS-bound tools. */
-  readonly fetchUrl?: typeof fetchUrlSafely;
+  /** SSRF-hardened streaming URL fetcher. Required for the URL variant of the 6 upload-backed tools. */
+  readonly openUrl?: typeof openUrlStream;
   /** v2.32.0 multi-account: session manager handle for the `accounts-*` tools. */
   readonly sessions?: SessionManager;
   /** v2.32.0: public-facing base URL used by `accounts-add` to build the QR-login link. */
@@ -229,7 +229,9 @@ function handleToolError(
   client?: TelegramService,
 ): CallToolResult {
   const msg = (e as Error).message ?? String(e);
-  if (isAuthError(e)) {
+  // Only a real Telegram RPC error counts: text matching let a chat title or a remote URL
+  // inside an error message revoke a healthy session.
+  if (isTelegramAuthError(e)) {
     logger.warn(`Auth error in ${toolName}: ${msg}`, {
       component: "tools",
       event: "tool.auth_error",
@@ -285,8 +287,8 @@ export interface RegisterAllOptions {
   /** Phase X: piped through to {@link ToolDeps.uploads}. */
   uploads?: UploadStore;
   downloads?: DownloadStore;
-  /** Phase X: piped through to {@link ToolDeps.fetchUrl}. */
-  fetchUrl?: typeof fetchUrlSafely;
+  /** Piped through to {@link ToolDeps.openUrl}. */
+  openUrl?: typeof openUrlStream;
   /** v2.32.0: piped through to {@link ToolDeps.sessions} for `accounts-*` tools. */
   sessions?: SessionManager;
   /** v2.32.0: piped through to {@link ToolDeps.baseUrl}. */
@@ -438,7 +440,7 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
               ...(opts.userId !== undefined && { userId: opts.userId }),
               ...(opts.uploads !== undefined && { uploads: opts.uploads }),
               ...(opts.downloads !== undefined && { downloads: opts.downloads }),
-              ...(opts.fetchUrl !== undefined && { fetchUrl: opts.fetchUrl }),
+              ...(opts.openUrl !== undefined && { openUrl: opts.openUrl }),
               ...(opts.sessions !== undefined && { sessions: opts.sessions }),
               ...(opts.baseUrl !== undefined && { baseUrl: opts.baseUrl }),
             };

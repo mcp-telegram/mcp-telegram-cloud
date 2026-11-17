@@ -17,12 +17,12 @@ import { installCallToolInterceptor } from "./tool-call-interceptor.js";
 import { SESSION_REVOKED_MSG } from "./tool-registry.js";
 import { ARG_ALIASES, registerAllAllowedTools } from "./tools.js";
 import type { UploadStore } from "./upload-store.js";
-import { fetchUrlSafely } from "./url-fetcher.js";
+import { openUrlStream } from "./url-fetcher.js";
 import type { UsageTracker } from "./usage.js";
 
 /** Map of MCP session ID → transport (for multi-request sessions) */
 const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
-/** Shared by MCP snapshots and authenticated HTTP downloads; lost on restart. */
+/** Download tickets shared by MCP chunk reads and HTTP downloads; lost on restart. */
 export const downloads = new DownloadStore();
 
 /** Map of MCP session ID → userId (to track which user owns which session) */
@@ -642,7 +642,7 @@ async function handleMcpRequestInner(
       userId,
       uploads,
       downloads,
-      fetchUrl: fetchUrlSafely,
+      openUrl: openUrlStream,
       sessions,
       baseUrl: config.issuer,
       onToolTimeout,

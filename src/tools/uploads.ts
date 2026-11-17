@@ -1,20 +1,25 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import type { TelegramService, UploadedFile } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
+import { config as appConfig } from "../config.js";
+import { UPLOAD_MAX_BYTES } from "../download-store.js";
 import { fileNameFromUrl, sanitizeFileName } from "../filename.js";
+import { accountBinding, markWedged, requireMediaCore } from "../media-access.js";
+import { MediaError, mediaErrorResult, mediaToolOnError } from "../media-errors.js";
+import { CallBudget, StepTimeoutError, transferQueue } from "../media-queue.js";
 import type { ToolDefinition, ToolDeps } from "../tool-registry.js";
-import { CONFIRMED_WRITE_PUBLIC, errorResult, replyTargetFields, safeOpt, sanitize, textResult } from "./helpers.js";
+import { UrlFetchError } from "../url-fetcher.js";
+import { CONFIRMED_WRITE_PUBLIC, LOCAL_WRITE, replyTargetFields, safeOpt, sanitize, textResult } from "./helpers.js";
 
 /**
- * Phase X — FS-bound media tools backed by user-provided uploads or HTTPS URLs.
+ * Media tools backed by uploads or HTTPS URLs.
  *
- * All 6 tools share the same shape: a `source` field that is either
- *   { kind: "upload", uploadId: "upl_..." }   — bytes the user POSTed to /my/upload
- *   { kind: "url",    url: "https://..." }     — HTTPS URL the cloud fetches via SSRF guard
- * The resolver materializes a temp file, hands its absolute path to upstream,
- * then unlinks it — upstream methods take only `filePath: string`.
+ * All 6 send tools share a `source` field:
+ *   { kind: "upload", uploadId: "upl_..." }   — a file already streamed into Telegram
+ *                                               (dashboard, POST /my/upload or an upload link)
+ *   { kind: "url",    url: "https://..." }     — fetched with SSRF protection and streamed
+ *                                               straight into Telegram
+ * Either way the bytes never land on this server's disk; the tools pass Telegram's
+ * uploaded-file handle to core instead of a path.
  */
 
 const sourceSchema = z
@@ -25,10 +30,10 @@ const sourceSchema = z
         .string()
         .min(1)
         .describe(
-          "Opaque upload ID returned by POST /my/upload (e.g. 'upl_a8f3...'). User-scoped, single-use, expires in ~15min. " +
-            "To send a LOCAL file: POST it to /my/upload on this server with the same OAuth Bearer token as this MCP session " +
-            "(curl -X POST <server>/my/upload -H 'authorization: Bearer <token>' -F 'file=@/path/to/file'), then pass the " +
-            "response's `id` here. No Origin/Referer needed on the token path.",
+          "Upload ID (e.g. 'upl_a8f3...'). User-scoped, single-use, expires in ~15min. " +
+            "To send a LOCAL file: call telegram-create-upload-link with its name and exact size, run the returned " +
+            "curl -T <file> '<url>' command, then pass the returned uploadId here. " +
+            "IDs from the dashboard or POST /my/upload (OAuth Bearer token, multipart field 'file') work too.",
         ),
     }),
     z.object({
@@ -37,174 +42,209 @@ const sourceSchema = z
         .string()
         .url()
         .describe(
-          "HTTPS URL the cloud fetches with SSRF protection. Private/loopback addresses are rejected. Max ~50MB.",
+          "HTTPS URL the cloud fetches with SSRF protection and streams into Telegram. Private/loopback addresses are rejected. Up to 2000 MiB when the server sends Content-Length, else ~50MB.",
         ),
     }),
   ])
   .describe(
-    "Where to get the file bytes: an upload ID (bytes POSTed to /my/upload, by the user in the dashboard or by you with your " +
-      "OAuth token) or an https:// URL the cloud fetches. Local filesystem paths are NOT accepted — upload the bytes first.",
+    "Where to get the file bytes: an upload ID (see telegram-create-upload-link) or an https:// URL the cloud fetches. " +
+      "Local filesystem paths are NOT accepted — upload the bytes first.",
   );
 
 type SourceArg = z.infer<typeof sourceSchema>;
 
 interface ResolvedSource {
-  /** Absolute temp file path to hand to the upstream Telegram method. */
-  path: string;
-  /** Cleanup function — call after the upstream method finishes (success or failure). */
-  cleanup: () => Promise<void>;
-  /**
-   * Sanitized name to show the recipient, or null when nothing usable was
-   * supplied. `path` is an opaque `upl_<uuid>` with no extension, so without
-   * this upstream names the document after the temp file and Telegram sniffs
-   * `application/octet-stream` — the recipient gets a nameless blob.
-   * Never used as a filesystem path: it travels to GramJS as an attribute only.
-   */
-  originalName: string | null;
-  /** MIME we believe the bytes carry, or "application/octet-stream" if unknown. */
-  mime: string;
+  /** Telegram's handle for the uploaded bytes; its name decides the MIME type. */
+  file: UploadedFile;
+  /** Call after the send finishes (success or failure). */
+  cleanup: () => void;
 }
 
-/** Subdirectory under `os.tmpdir()` where URL-fetch payloads land. Distinct from
- * UPLOAD_DIR_NAME (those are user-uploaded; these are fetched on the user's behalf
- * and are short-lived — deleted as soon as the tool handler returns). */
-const URL_FETCH_DIR_NAME = "mcp-telegram-cloud-urlfetch";
+const SENT_CHECK = "Confirm delivery with telegram-read-messages if it matters.";
 
-/** Wipe URL-fetch temp files older than `maxAgeMs`. Called at boot + on a timer
- * from server.tsx to mop up orphans (mode failures, SIGKILL between writeFile
- * and cleanup, etc.). Returns count purged. Safe to call when the directory
- * doesn't exist yet. */
-export async function purgeUrlFetchOrphans(maxAgeMs: number): Promise<number> {
-  const dir = join(tmpdir(), URL_FETCH_DIR_NAME);
-  let entries: string[];
-  try {
-    entries = await readdir(dir);
-  } catch {
-    // Directory doesn't exist → no orphans.
-    return 0;
-  }
-  const cutoff = Date.now() - maxAgeMs;
-  let removed = 0;
-  for (const name of entries) {
-    const full = join(dir, name);
-    try {
-      const st = await stat(full);
-      if (st.mtimeMs < cutoff) {
-        await unlink(full);
-        removed++;
+/** Bytes of a URL source pass straight from the HTTP response into Telegram. */
+async function uploadFromUrl(
+  telegram: TelegramService,
+  openUrl: NonNullable<ToolDeps["openUrl"]>,
+  url: string,
+  userId: string,
+  budget: CallBudget,
+  onTimeout: () => void,
+): Promise<UploadedFile> {
+  // Fetch and upload are one bounded step of a transfer slot: the deadline answers the
+  // tool call and the abort closes the HTTP response, so a hung body can't pin the slot.
+  return transferQueue.runWithDeadline(
+    userId,
+    async (signal) => {
+      const opened = await openUrl(url, { maxBytes: UPLOAD_MAX_BYTES });
+      if (!opened.ok)
+        throw new MediaError("URL_FETCH_DENIED", `URL fetch denied (${opened.reason}): ${opened.message}`);
+      const name = fileNameFromUrl(url) ?? "file";
+      const onAbort = () => opened.cancel();
+      signal.addEventListener("abort", onAbort, { once: true });
+      try {
+        signal.throwIfAborted();
+        if (opened.size !== undefined) {
+          if (opened.size === 0) throw new MediaError("URL_FETCH_DENIED", "URL fetch denied: the response is empty.");
+          return await telegram.uploadStream(opened.body, opened.size, name, signal);
+        }
+        // No trustworthy length (chunked or compressed): Telegram needs the size up front,
+        // so buffer in memory up to the dashboard upload cap. Still nothing on disk.
+        const parts: Uint8Array[] = [];
+        let total = 0;
+        for await (const chunk of opened.body) {
+          signal.throwIfAborted();
+          total += chunk.byteLength;
+          if (total > appConfig.uploadFileMaxBytes) {
+            throw new MediaError(
+              "URL_FETCH_DENIED",
+              `URL fetch denied (too_large): the server sent no Content-Length and the body exceeds ${appConfig.uploadFileMaxBytes} bytes.`,
+            );
+          }
+          parts.push(chunk);
+        }
+        if (total === 0) throw new MediaError("URL_FETCH_DENIED", "URL fetch denied: the response is empty.");
+        const bytes = Buffer.concat(parts);
+        return await telegram.uploadStream(
+          (async function* () {
+            yield bytes;
+          })(),
+          total,
+          name,
+          signal,
+        );
+      } catch (e) {
+        if (e instanceof UrlFetchError)
+          throw new MediaError("URL_FETCH_DENIED", `URL fetch denied (${e.reason}): ${e.message}`);
+        throw e;
+      } finally {
+        signal.removeEventListener("abort", onAbort);
+        opened.cancel();
       }
-    } catch {
-      // Race with concurrent purge or external cleanup — treat as already-gone.
-    }
-  }
-  return removed;
+    },
+    budget,
+    "UPLOAD_FAILED",
+    onTimeout,
+  );
 }
-
-const UPLOAD_NOT_AVAILABLE =
-  "Upload tools require server config (uploads + URL fetcher). This is a deploy bug; report it to the operator.";
-
-const USER_NOT_AVAILABLE = "Upload tools require an authenticated user context (cookie or OAuth bearer).";
-
-const UPLOAD_NOT_FOUND =
-  "Upload not found. The ID is wrong, expired (15min TTL), already consumed, or belongs to another account. Re-upload via /my/upload.";
 
 /**
- * Resolve a source argument into a real temp file. Returns either a usable
- * {path, cleanup, ...} or an errorResult to short-circuit the tool.
+ * Send through the shared transfer slot and deadline. The account binding is checked
+ * right before the call, so nothing goes out through a detached or replaced account.
+ * After the call starts its outcome is reported as is: a deadline says the message may
+ * still arrive, so an agent checks the chat instead of sending a duplicate.
+ */
+async function sendBounded<T>(deps: ToolDeps, budget: CallBudget, send: () => Promise<T>): Promise<T> {
+  const userId = deps.userId ?? "";
+  const binding = deps.sessions
+    ? accountBinding(deps.sessions, userId, deps.sourceAccountId, deps.sourceAttachmentId)
+    : undefined;
+  try {
+    return await transferQueue.runWithDeadline(
+      userId,
+      async () => {
+        if (binding && !binding.canRead()) {
+          throw new MediaError(
+            "ACCOUNT_UNAVAILABLE",
+            "The Telegram account changed before sending; nothing was sent. Reconnect and try again.",
+          );
+        }
+        return send();
+      },
+      budget,
+      "UPLOAD_FAILED",
+      () => markWedged(deps.sessions, userId, deps.telegram),
+    );
+  } catch (e) {
+    if (e instanceof StepTimeoutError) {
+      throw new MediaError(
+        "SEND_UNCONFIRMED",
+        "Telegram did not confirm the send in time. It may still arrive: check the chat history (telegram-read-messages) before sending again.",
+      );
+    }
+    throw e;
+  }
+}
+
+/**
+ * Resolve a source into Telegram's uploaded-file handle, or a coded error result.
  *
- * Cleanup contract: every caller invokes `cleanup()` from a `finally` block,
- * so cleanup runs on BOTH success and handler failure. consume() (upload kind)
- * and unlink-and-ignore (url kind) are idempotent — safe to double-call if the
- * caller ever changes the pattern. A handler-side failure does NOT preserve the
- * upload for retry; the user would re-POST to /my/upload.
- *
- * On `kind: "upload"`: cleanup invokes UploadStore.consume() which deletes the
- * row + unlinks the file in one shot.
- *
- * On `kind: "url"`: SSRF-fetch into a fresh temp file, unlink in cleanup.
+ * Uploads are bound to the account that uploaded them (Telegram keeps uploaded parts
+ * per session), so an upload made with another account is refused, not silently lost.
+ * Cleanup consumes the upload id: a failed send does not keep it for a retry.
  */
 async function resolveSource(
   source: SourceArg,
   deps: ToolDeps,
-): Promise<{ ok: true; resolved: ResolvedSource } | { ok: false; error: ReturnType<typeof errorResult> }> {
-  if (!deps.uploads || !deps.fetchUrl) {
-    return { ok: false, error: errorResult(UPLOAD_NOT_AVAILABLE) };
-  }
-  if (!deps.userId) {
-    return { ok: false, error: errorResult(USER_NOT_AVAILABLE) };
-  }
-
-  if (source.kind === "upload") {
-    const row = deps.uploads.resolve(deps.userId, source.uploadId);
-    if (!row) {
-      return { ok: false, error: errorResult(UPLOAD_NOT_FOUND) };
-    }
-    const userId = deps.userId;
-    const uploadId = source.uploadId;
-    const uploads = deps.uploads;
-    return {
-      ok: true,
-      resolved: {
-        path: row.tmp_path,
-        // Hostile input (multipart `file.name`) \u2014 sanitize before it reaches
-        // anyone's client. null \u21d2 fall back to upstream's own naming.
-        originalName: sanitizeFileName(row.original_name),
-        mime: row.mime,
-        cleanup: async () => {
-          // consume() deletes row + unlinks the file. Idempotent.
-          await uploads.consume(userId, uploadId);
-        },
-      },
-    };
-  }
-
-  // kind: "url" — SSRF-validated fetch into a one-shot temp file.
-  // Two caps applied: (a) per-file ceiling (UploadStore.fileMaxBytesCap), and
-  // (b) remaining per-user quota — `quotaBytes - currently-pending`. This keeps a
-  // user from triggering 10× near-cap URL fetches in parallel album items, since
-  // the in-flight bytes still count against the same disk-pressure budget as
-  // user-uploaded `pending_uploads`. Concurrent calls race on the SUM (M6 noted
-  // the same race for `put`); the worst case here is one extra near-cap fetch.
-  const remaining = Math.max(0, deps.uploads.quotaBytesCap - deps.uploads.pendingBytesForUser(deps.userId));
-  const cap = Math.min(deps.uploads.fileMaxBytesCap, remaining);
-  if (cap <= 0) {
+  budget: CallBudget,
+): Promise<{ ok: true; resolved: ResolvedSource } | { ok: false; error: ReturnType<typeof mediaErrorResult> }> {
+  if (!deps.uploads || !deps.openUrl) {
     return {
       ok: false,
-      error: errorResult(
-        `URL fetch denied: per-user upload quota exhausted (${deps.uploads.pendingBytesForUser(deps.userId)} bytes already pending). Wait for TTL purge or consume a pending upload.`,
+      error: mediaErrorResult(
+        "SERVER_MISCONFIGURED",
+        "Upload tools require server config (uploads + URL fetcher). This is a deploy bug; report it to the operator.",
       ),
     };
   }
-  const fetched = await deps.fetchUrl(source.url, { maxBytes: cap });
-  if (!fetched.ok) {
-    return { ok: false, error: errorResult(`URL fetch denied (${fetched.reason}): ${fetched.message}`) };
+  if (!deps.userId) {
+    return {
+      ok: false,
+      error: mediaErrorResult(
+        "SERVER_MISCONFIGURED",
+        "Upload tools require an authenticated user context (cookie or OAuth bearer).",
+      ),
+    };
   }
-  const dir = join(tmpdir(), URL_FETCH_DIR_NAME);
-  // mode 0o700 — directory listable only by the cloud process owner. Files inside
-  // are 0o600. Defense-in-depth against shared `/tmp` in multi-tenant containers.
-  await mkdir(dir, { recursive: true, mode: 0o700 });
-  const path = join(dir, `urlfetch_${randomUUID().replace(/-/g, "")}`);
-  await writeFile(path, fetched.bytes, { mode: 0o600 });
-  return {
-    ok: true,
-    resolved: {
-      path,
-      // Deliberate choice (not an oversight): name the document after the last
-      // URL path segment. The temp file is `urlfetch_<uuid>`, so without this the
-      // recipient sees that UUID. Content-Disposition is not consulted \u2014 the
-      // fetcher does not surface headers, and letting a remote host name a file
-      // shown to a third party is a worse trade than a predictable URL segment.
-      originalName: fileNameFromUrl(source.url),
-      mime: fetched.mime,
-      cleanup: async () => {
-        try {
-          await unlink(path);
-        } catch {
-          // already gone — fine.
-        }
-      },
-    },
-  };
+  requireMediaCore(deps.telegram);
+
+  if (source.kind === "upload") {
+    const uploads = deps.uploads;
+    const userId = deps.userId;
+    const found = uploads.resolve(userId, source.uploadId);
+    if (!found) {
+      const waiting = uploads.isAwaitingLink(userId, source.uploadId);
+      return {
+        ok: false,
+        error: mediaErrorResult(
+          "UPLOAD_NOT_FOUND",
+          waiting
+            ? "The upload link for this ID has not been used yet. Run the curl -T command first, then retry."
+            : "Upload not found. The ID is wrong, expired (15min TTL), already used, or belongs to another account. Upload again.",
+        ),
+      };
+    }
+    if (found.accountId !== deps.sourceAccountId) {
+      return {
+        ok: false,
+        error: mediaErrorResult(
+          "UPLOAD_ACCOUNT_MISMATCH",
+          "This file was uploaded with a different Telegram account than the active one. Switch back to that account or upload again.",
+        ),
+      };
+    }
+    const uploadId = source.uploadId;
+    return { ok: true, resolved: { file: found.file, cleanup: () => void uploads.consume(userId, uploadId) } };
+  }
+
+  const userId = deps.userId;
+  const file = await uploadFromUrl(deps.telegram, deps.openUrl, source.url, userId, budget, () =>
+    markWedged(deps.sessions, userId, deps.telegram),
+  );
+  // The handle only works for the account that uploaded it; it may have been detached meanwhile.
+  if (
+    deps.sessions &&
+    !accountBinding(deps.sessions, deps.userId, deps.sourceAccountId, deps.sourceAttachmentId).canRead()
+  ) {
+    return {
+      ok: false,
+      error: mediaErrorResult(
+        "ACCOUNT_UNAVAILABLE",
+        "The Telegram account changed while the file was uploaded. Reconnect and try again.",
+      ),
+    };
+  }
+  return { ok: true, resolved: { file, cleanup: () => {} } };
 }
 
 const parseModeField = z.enum(["md", "html"]).optional().describe("Caption parse mode: 'md' (Markdown) or 'html'");
@@ -215,26 +255,30 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-file",
     description:
-      "Send a generic file to a chat. Bytes come from a prior /my/upload (uploadId) or an https:// URL the cloud fetches. " +
-      "The recipient sees the original upload filename (or the last URL path segment), which also decides the file type shown. " +
-      "URL fetch is SSRF-protected. Max ~50MB.",
+      "Send a file to a chat as a document. Bytes come from an uploadId (for a local file: telegram-create-upload-link, then curl -T) " +
+      "or an https:// URL the cloud fetches (SSRF-protected). The recipient sees the original upload filename (or the last URL path segment), " +
+      "which also decides the file type shown. Up to Telegram's 2000 MiB limit. After sending, confirm delivery via the chat history " +
+      "(telegram-read-messages). Errors start with a code, e.g. [UPLOAD_NOT_FOUND].",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       source: sourceSchema,
       caption: captionField,
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    onError: mediaToolOnError("telegram-send-file"),
     handler: async ({ chatId, source, caption }, deps) => {
-      const r = await resolveSource(source, deps);
+      // One time budget for the whole call: the upload of a URL source and the send.
+      const budget = new CallBudget();
+      const r = await resolveSource(source, deps, budget);
       if (!r.ok) return r.error;
       try {
-        const fileName = r.resolved.originalName;
-        await deps.telegram.sendFile(chatId, r.resolved.path, safeOpt(caption), fileName ? { fileName } : {});
+        const fileName = r.resolved.file.fileName;
+        await sendBounded(deps, budget, () => deps.telegram.sendFile(chatId, r.resolved.file, safeOpt(caption)));
         // Echo the name back: the only way the caller can tell that the document
         // arrived as `report.md` and not as a nameless octet-stream blob.
-        return textResult(fileName ? `Sent file "${fileName}" to ${chatId}` : `Sent file to ${chatId}`);
+        return textResult(`Sent file "${fileName}" to ${chatId}. ${SENT_CHECK}`);
       } finally {
-        await r.resolved.cleanup();
+        r.resolved.cleanup();
       }
     },
   },
@@ -242,7 +286,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-voice",
     description:
-      "Send a voice message. Only OGG/Opus audio arrives as a voice message; other formats arrive as a regular audio file. Bytes from uploadId or https:// URL.",
+      "Send a voice message. Only OGG/Opus audio arrives as a voice message; other formats arrive as a regular audio file. Bytes from uploadId (local file: telegram-create-upload-link) or https:// URL. Confirm delivery via the chat history.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       source: sourceSchema,
@@ -251,8 +295,11 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       ...replyTargetFields,
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    onError: mediaToolOnError("telegram-send-voice"),
     handler: async ({ chatId, source, caption, parseMode, replyTo, topicId }, deps) => {
-      const r = await resolveSource(source, deps);
+      // One time budget for the whole call: the upload of a URL source and the send.
+      const budget = new CallBudget();
+      const r = await resolveSource(source, deps, budget);
       if (!r.ok) return r.error;
       try {
         const opts: {
@@ -260,19 +307,16 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
           parseMode?: "md" | "html";
           replyTo?: number;
           topicId?: number;
-          fileName?: string;
         } = {};
         if (caption !== undefined) opts.caption = sanitize(caption);
         if (parseMode !== undefined) opts.parseMode = parseMode;
         if (replyTo !== undefined) opts.replyTo = replyTo;
         if (topicId !== undefined) opts.topicId = topicId;
-        // Name drives codec detection upstream (an extension-less temp path
-        // yields octet-stream and no audio attributes).
-        if (r.resolved.originalName) opts.fileName = r.resolved.originalName;
-        const { id } = await deps.telegram.sendVoice(chatId, r.resolved.path, opts);
+        // The upload's name (or sniffed bytes) drives codec detection upstream.
+        const { id } = await sendBounded(deps, budget, () => deps.telegram.sendVoice(chatId, r.resolved.file, opts));
         return textResult(`Sent voice to ${chatId} (msg #${id})`);
       } finally {
-        await r.resolved.cleanup();
+        r.resolved.cleanup();
       }
     },
   },
@@ -280,7 +324,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-video-note",
     description:
-      "Send a round video note (MP4 preferred, square source for best look). Bytes from uploadId or https:// URL.",
+      "Send a round video note (MP4, square source for best look). Bytes from uploadId (local file: telegram-create-upload-link) or https:// URL. Confirm via the chat history that it arrived as a round video.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       source: sourceSchema,
@@ -302,8 +346,11 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       ...replyTargetFields,
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    onError: mediaToolOnError("telegram-send-video-note"),
     handler: async ({ chatId, source, duration, length, replyTo, topicId }, deps) => {
-      const r = await resolveSource(source, deps);
+      // One time budget for the whole call: the upload of a URL source and the send.
+      const budget = new CallBudget();
+      const r = await resolveSource(source, deps, budget);
       if (!r.ok) return r.error;
       try {
         const opts: { duration?: number; length?: number; replyTo?: number; topicId?: number } = {};
@@ -311,10 +358,12 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         if (length !== undefined) opts.length = length;
         if (replyTo !== undefined) opts.replyTo = replyTo;
         if (topicId !== undefined) opts.topicId = topicId;
-        const { id } = await deps.telegram.sendVideoNote(chatId, r.resolved.path, opts);
+        const { id } = await sendBounded(deps, budget, () =>
+          deps.telegram.sendVideoNote(chatId, r.resolved.file, opts),
+        );
         return textResult(`Sent video note to ${chatId} (msg #${id})`);
       } finally {
-        await r.resolved.cleanup();
+        r.resolved.cleanup();
       }
     },
   },
@@ -322,7 +371,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-album",
     description:
-      "Send 2-10 files to a chat as one grouped album message. Each item supplies its own bytes (uploadId or https:// URL) and optional caption. Items arrive as files (documents), not as compressed photos.",
+      "Send 2-10 files to a chat as one grouped album message. Each item supplies its own bytes (uploadId or https:// URL) and optional caption. Items arrive as files (documents), not as compressed photos. Confirm delivery via the chat history.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username"),
       items: z
@@ -342,11 +391,14 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       ...replyTargetFields,
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    onError: mediaToolOnError("telegram-send-album"),
     handler: async ({ chatId, items, caption, parseMode, replyTo, topicId }, deps) => {
+      // One time budget for the whole call: every item's URL upload and the send.
+      const budget = new CallBudget();
       const resolved: ResolvedSource[] = [];
       try {
         for (const item of items) {
-          const r = await resolveSource(item.source, deps);
+          const r = await resolveSource(item.source, deps, budget);
           // Already-resolved items are cleaned up by the `finally` below — no
           // explicit rollback loop needed (cleanup is idempotent either way).
           if (!r.ok) return r.error;
@@ -355,9 +407,8 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         const upstreamItems = resolved.map((res, i) => {
           const itemCaption = items[i]?.caption;
           return {
-            filePath: res.path,
+            filePath: res.file,
             ...(itemCaption !== undefined ? { caption: sanitize(itemCaption) } : {}),
-            ...(res.originalName ? { fileName: res.originalName } : {}),
           };
         });
         const opts: {
@@ -370,10 +421,10 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         if (parseMode !== undefined) opts.parseMode = parseMode;
         if (replyTo !== undefined) opts.replyTo = replyTo;
         if (topicId !== undefined) opts.topicId = topicId;
-        const { ids } = await deps.telegram.sendAlbum(chatId, upstreamItems, opts);
+        const { ids } = await sendBounded(deps, budget, () => deps.telegram.sendAlbum(chatId, upstreamItems, opts));
         return textResult(`Sent album of ${ids.length} to ${chatId} (msgs #${ids.join(",")})`);
       } finally {
-        for (const r of resolved) await r.cleanup();
+        for (const r of resolved) r.cleanup();
       }
     },
   },
@@ -381,7 +432,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-send-story",
     description:
-      "Post a story to your profile or a channel. Bytes from uploadId or https:// URL. Caller picks privacy explicitly.",
+      "Post a story to your profile or a channel. Bytes from uploadId (local file: telegram-create-upload-link) or https:// URL. Caller picks privacy explicitly.",
     inputSchema: {
       chatId: z.string().describe("Chat ID or username (channel) or 'me' for your own profile"),
       source: sourceSchema,
@@ -411,11 +462,12 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       noforwards: z.boolean().optional().describe("Disable forwarding"),
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    onError: mediaToolOnError("telegram-send-story"),
     preValidate: ({ privacy, allowUserIds }) => {
       // Mirror upstream guard (account.js:193-195): privacy='selected' without
       // a non-empty allowUserIds is rejected at the wire; surface it pre-handler.
       if (privacy === "selected" && (!allowUserIds || allowUserIds.length === 0)) {
-        return errorResult("privacy='selected' requires at least one user ID in allowUserIds.");
+        return mediaErrorResult("INVALID_INPUT", "privacy='selected' requires at least one user ID in allowUserIds.");
       }
       return null;
     },
@@ -423,7 +475,9 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       { chatId, source, type, caption, parseMode, privacy, allowUserIds, disallowUserIds, period, pinned, noforwards },
       deps,
     ) => {
-      const r = await resolveSource(source, deps);
+      // One time budget for the whole call: the upload of a URL source and the send.
+      const budget = new CallBudget();
+      const r = await resolveSource(source, deps, budget);
       if (!r.ok) return r.error;
       try {
         const opts: {
@@ -445,10 +499,12 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         if (period !== undefined) opts.period = period;
         if (pinned !== undefined) opts.pinned = pinned;
         if (noforwards !== undefined) opts.noforwards = noforwards;
-        const { id, period: actualPeriod } = await deps.telegram.sendStory(chatId, r.resolved.path, opts);
+        const { id, period: actualPeriod } = await sendBounded(deps, budget, () =>
+          deps.telegram.sendStory(chatId, r.resolved.file, opts),
+        );
         return textResult(`Sent story to ${chatId} (id=${id ?? "?"}, period=${actualPeriod}s)`);
       } finally {
-        await r.resolved.cleanup();
+        r.resolved.cleanup();
       }
     },
   },
@@ -464,21 +520,75 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       fallback: z.boolean().describe("If true, set as the public-fallback photo (shown to non-contacts)"),
     },
     annotations: CONFIRMED_WRITE_PUBLIC,
+    onError: mediaToolOnError("telegram-set-profile-photo"),
     handler: async ({ source, isVideo, videoStartTs, fallback }, deps) => {
-      const r = await resolveSource(source, deps);
+      // One time budget for the whole call: the upload of a URL source and the send.
+      const budget = new CallBudget();
+      const r = await resolveSource(source, deps, budget);
       if (!r.ok) return r.error;
       try {
-        const opts: { filePath: string; isVideo: boolean; videoStartTs?: number; fallback: boolean } = {
-          filePath: r.resolved.path,
+        const opts: { filePath: UploadedFile; isVideo: boolean; videoStartTs?: number; fallback: boolean } = {
+          filePath: r.resolved.file,
           isVideo,
           fallback,
         };
         if (videoStartTs !== undefined) opts.videoStartTs = videoStartTs;
-        const { id } = await deps.telegram.setProfilePhoto(opts);
+        const { id } = await sendBounded(deps, budget, () => deps.telegram.setProfilePhoto(opts));
         return textResult(`Profile photo updated (photo id=${id})`);
       } finally {
-        await r.resolved.cleanup();
+        r.resolved.cleanup();
       }
+    },
+  },
+
+  {
+    name: "telegram-create-upload-link",
+    description:
+      "Get a one-time link for uploading a LOCAL file, for agents that can run a shell command but have no browser sign-in. " +
+      "Pass the file's name and exact size in bytes (up to Telegram's 2000 MiB limit). Then run the returned curl command " +
+      "(curl -T <file> '<url>', i.e. HTTP PUT of the raw bytes; POST with a raw body also works). No token or header is needed: " +
+      "the link itself authorizes one upload for this account and expires in 15 minutes. The server streams the bytes into Telegram " +
+      "and keeps no copy. When curl reports success, pass uploadId as source { kind: 'upload', uploadId } to a send tool. " +
+      "The declared size must match the file exactly, otherwise the upload is refused and you need a new link.",
+    inputSchema: {
+      fileName: z
+        .string()
+        .min(1)
+        .max(255)
+        .describe("File name the recipient will see, with extension (e.g. 'report.pdf'); it decides the file type"),
+      size: z
+        .number()
+        .int()
+        .positive()
+        .max(UPLOAD_MAX_BYTES)
+        .describe("Exact file size in bytes (e.g. from `stat` or `wc -c`)"),
+    },
+    annotations: LOCAL_WRITE,
+    skipRequireConnection: true,
+    onError: mediaToolOnError("telegram-create-upload-link"),
+    handler: async (
+      { fileName, size },
+      { uploads, userId, sessions, baseUrl, sourceAccountId, sourceAttachmentId },
+    ) => {
+      if (!uploads || !userId || !sessions || !baseUrl) {
+        throw new MediaError("SERVER_MISCONFIGURED", "Upload links are unavailable on this server.");
+      }
+      const name = sanitizeFileName(fileName);
+      if (!name) throw new MediaError("INVALID_INPUT", "fileName has no usable characters.");
+      const { accountId, canRead } = accountBinding(sessions, userId, sourceAccountId, sourceAttachmentId);
+      const link = uploads.createLink(userId, { accountId, canUse: canRead }, name, size);
+      if ("error" in link) throw new MediaError("TRANSFER_BUSY", link.error, 60_000);
+      const url = `${baseUrl}/u/${link.token}`;
+      const result = {
+        uploadId: link.uploadId,
+        url,
+        method: "PUT",
+        fileName: name,
+        size,
+        expiresAt: link.expiresAt.toISOString(),
+        curl: `curl -fsS -T '<path to ${name.replace(/'/g, "")}>' '${url}'`,
+      };
+      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
     },
   },
 ];

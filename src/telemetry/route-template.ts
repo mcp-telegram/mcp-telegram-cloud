@@ -56,6 +56,10 @@ export function templatePath(path: string): string {
   if (path.startsWith("/my/upload/")) return "/my/upload/:id";
   if (path.startsWith("/my/uploads/")) return "/my/uploads/:id";
   if (path.startsWith("/my/download/")) return "/my/download/:id";
+  // One-time transfer links: the path segment IS the credential, so it is masked
+  // whatever its shape (base64url tokens need not contain a digit).
+  if (path.startsWith("/d/")) return "/d/:token";
+  if (path.startsWith("/u/")) return "/u/:token";
   // Content-hashed React island bundles — collapse so each hash isn't its own
   // time series.
   if (path.startsWith("/app-assets/")) return "/app-assets/:asset";

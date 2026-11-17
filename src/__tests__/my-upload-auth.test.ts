@@ -26,6 +26,7 @@ process.env.UPLOAD_RATE_LIMIT = "1000";
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
+const { config } = await import("../config.js");
 const { createMyRoutes } = await import("../routes/my.js");
 
 // Browser sessions are opaque tokens resolved server-side (see cookie-handler.ts).
@@ -36,36 +37,57 @@ const getBrowserSessionUser = (t: string | undefined) => (t ? (browserSessions[t
 
 const ISSUER = "https://test.example.com";
 
-/** Every `uploads.put` the route performed, in order. */
+/** Every upload the route registered, in order. */
 let stored: Array<{ userId: string; bytes: number; mime: string; name: string | null }> = [];
+/** Every streaming upload the route sent to Telegram, with the account it used. */
+let sentToTelegram: Array<{ owner: string; accountId: number; size: number; name: string }> = [];
 
-function makeApp() {
-  stored = [];
-  const uploads = {
-    put(userId: string, bytes: Buffer, mime: string, name: string | null) {
-      stored.push({ userId, bytes: bytes.byteLength, mime, name });
-      return Promise.resolve({
-        ok: true as const,
-        id: `upl_${stored.length}`,
-        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
-      });
+/** Sessions double: one primary account per owner whose client records uploads. */
+function fakeSessions() {
+  return {
+    getSavedUserIds: () => ["cookie_user"],
+    getActiveAccountId: () => 0,
+    getAccountAttachmentId: () => "attachment",
+    listAccounts: (owner: string) => [{ accountId: 0, telegramUserId: owner, addedAt: "start" }],
+    ensureAccountSession: async (owner: string, accountId: number) => ({
+      isConnected: () => true,
+      uploadStream: async (source: AsyncIterable<Uint8Array>, size: number, name: string) => {
+        let received = 0;
+        for await (const chunk of source) received += chunk.byteLength;
+        assert.equal(received, size);
+        sentToTelegram.push({ owner, accountId, size, name });
+        return { kind: "uploaded-file", fileName: name, size, inputFile: {} };
+      },
+    }),
+  };
+}
+
+function fakeUploads(capacityError: string | null = null) {
+  return {
+    checkCapacity: () => capacityError,
+    put(userId: string, _binding: unknown, file: { size: number }, mime: string, name: string | null) {
+      stored.push({ userId, bytes: file.size, mime, name });
+      return { id: `upl_${stored.length}`, expiresAt: new Date("2030-01-01T00:00:00.000Z") };
     },
-    preflight: () => null,
     listForUser: () => [],
     pendingBytesForUser: () => 0,
   };
-  const sessions = { getSavedUserIds: () => ["cookie_user"] };
-  const oauth = {
-    // Only this one token is real, and it belongs to `bearer_user`.
-    validateToken: (token: string) => (token === "good-token" ? { userId: "bearer_user", clientName: "pi" } : null),
-    getBrowserSessionUser,
-  };
+}
 
+const oauthDouble = {
+  // Only this one token is real, and it belongs to `bearer_user`.
+  validateToken: (token: string) => (token === "good-token" ? { userId: "bearer_user", clientName: "pi" } : null),
+  getBrowserSessionUser,
+};
+
+function makeApp(uploads = fakeUploads()) {
+  stored = [];
+  sentToTelegram = [];
   return createMyRoutes({
     destructive: {} as never,
-    sessions: sessions as never,
+    sessions: fakeSessions() as never,
     uploads: uploads as never,
-    oauth: oauth as never,
+    oauth: oauthDouble as never,
   });
 }
 
@@ -159,60 +181,133 @@ describe("POST /my/upload — no credentials", () => {
   });
 });
 
-describe("POST /my/upload — quota and size still apply to both paths", () => {
+describe("POST /my/upload — bytes go straight to Telegram", () => {
+  it("streams the file into Telegram with the active account and keeps only the handle", async () => {
+    const res = await upload({ Authorization: "Bearer good-token" });
+    assert.equal(res.status, 200);
+    assert.deepEqual(sentToTelegram, [{ owner: "bearer_user", accountId: 0, size: 4, name: "shot.png" }]);
+    assert.deepEqual(stored, [{ userId: "bearer_user", bytes: 4, mime: "image/png", name: "shot.png" }]);
+  });
+});
+
+describe("POST /my/upload — bounded and bound to the account", () => {
+  function appWithTelegram(uploadStream: (...a: unknown[]) => Promise<unknown>, attachment: () => string) {
+    stored = [];
+    const sessions = {
+      ...fakeSessions(),
+      getAccountAttachmentId: attachment,
+      ensureAccountSession: async () => ({ isConnected: () => true, uploadStream }),
+    };
+    return createMyRoutes({
+      destructive: {} as never,
+      sessions: sessions as never,
+      uploads: fakeUploads() as never,
+      oauth: oauthDouble as never,
+    });
+  }
+
+  it("a hung Telegram upload is answered at the deadline and frees the slot", async () => {
+    const { mediaTimeouts, transferQueue } = await import("../media-queue.js");
+    const saved = { ...mediaTimeouts };
+    Object.assign(mediaTimeouts, { toolTransferMs: 30, backstopMs: 60 });
+    try {
+      const app = appWithTelegram(
+        () => new Promise(() => {}),
+        () => "attachment",
+      );
+      const baseline = transferQueue.stats().total;
+      const res = await app.request("/upload", {
+        method: "POST",
+        headers: { Authorization: "Bearer good-token" },
+        body: body(),
+      });
+      assert.equal(((await res.json()) as { error: string }).error, "UPLOAD_FAILED");
+      await new Promise((r) => setTimeout(r, 120));
+      assert.equal(transferQueue.stats().total, baseline);
+      assert.deepEqual(stored, []);
+    } finally {
+      Object.assign(mediaTimeouts, saved);
+    }
+  });
+
+  it("does not register an upload whose account was replaced meanwhile", async () => {
+    let attachment = "attachment";
+    const app = appWithTelegram(
+      async () => {
+        attachment = "replaced";
+        return { kind: "uploaded-file", fileName: "shot.png", size: 4, inputFile: {} };
+      },
+      () => attachment,
+    );
+    const res = await app.request("/upload", {
+      method: "POST",
+      headers: { Authorization: "Bearer good-token" },
+      body: body(),
+    });
+    assert.equal(((await res.json()) as { error: string }).error, "ACCOUNT_UNAVAILABLE");
+    assert.deepEqual(stored, []);
+  });
+});
+
+describe("POST /my/upload — limits still apply to both paths", () => {
   beforeEach(() => {
     stored = [];
   });
 
-  async function withPreflight(denied: { reason: string; message: string }, headers: Record<string, string>) {
-    const uploads = {
-      preflight: () => denied,
-      put: () => {
-        throw new Error("put must not be reached when preflight denies");
-      },
-      listForUser: () => [],
-      pendingBytesForUser: () => 0,
+  it("429s when the user already holds too many pending uploads", async () => {
+    const app = makeApp(fakeUploads("Too many pending uploads"));
+    const callers: Record<string, string>[] = [
+      { Authorization: "Bearer good-token" },
+      { Cookie: `tg_sid=${SID_COOKIE_USER}`, Origin: ISSUER },
+    ];
+    for (const headers of callers) {
+      const res = await app.request("/upload", { method: "POST", headers, body: body() });
+      assert.equal(res.status, 429);
+    }
+    assert.deepEqual(sentToTelegram, [], "nothing reached Telegram");
+  });
+
+  it("413s a file above the per-file cap even when the body fits the multipart slack", async () => {
+    const app = makeApp();
+    const saved = config.uploadFileMaxBytes;
+    config.uploadFileMaxBytes = 1024;
+    try {
+      const form = new FormData();
+      form.set("file", new File([new Uint8Array(2048)], "two-kib.bin"));
+      const res = await app.request("/upload", {
+        method: "POST",
+        headers: { Authorization: "Bearer good-token" },
+        body: form,
+      });
+      assert.equal(res.status, 413);
+    } finally {
+      config.uploadFileMaxBytes = saved;
+    }
+    assert.deepEqual(sentToTelegram, []);
+  });
+
+  it("413s a body above the per-file cap on both paths", async () => {
+    const saved = config.uploadFileMaxBytes;
+    config.uploadFileMaxBytes = 1; // read when the route is built
+    let app: ReturnType<typeof makeApp>;
+    try {
+      app = makeApp();
+    } finally {
+      config.uploadFileMaxBytes = saved;
+    }
+    const big = () => {
+      const form = new FormData();
+      form.set("file", new File([new Uint8Array(2 * 1024 * 1024)], "big.bin"));
+      return form;
     };
-    const app = createMyRoutes({
-      destructive: {} as never,
-      sessions: { getSavedUserIds: () => ["cookie_user"] } as never,
-      uploads: uploads as never,
-      oauth: {
-        validateToken: (t: string) => (t === "good-token" ? { userId: "bearer_user", clientName: "pi" } : null),
-        getBrowserSessionUser,
-      } as never,
-    });
-    return app.request("/upload", { method: "POST", headers, body: body() });
-  }
-
-  it("413s an oversize file on the Bearer path", async () => {
-    const res = await withPreflight(
-      { reason: "file_too_large", message: "too big" },
-      {
-        Authorization: "Bearer good-token",
-      },
-    );
-    assert.equal(res.status, 413);
-  });
-
-  it("429s a quota-exceeded upload on the Bearer path", async () => {
-    const res = await withPreflight(
-      { reason: "quota_exceeded", message: "no room" },
-      {
-        Authorization: "Bearer good-token",
-      },
-    );
-    assert.equal(res.status, 429);
-  });
-
-  it("413s an oversize file on the cookie path", async () => {
-    const res = await withPreflight(
-      { reason: "file_too_large", message: "too big" },
-      {
-        Cookie: `tg_sid=${SID_COOKIE_USER}`,
-        Origin: ISSUER,
-      },
-    );
-    assert.equal(res.status, 413);
+    const callers: Record<string, string>[] = [
+      { Authorization: "Bearer good-token" },
+      { Cookie: `tg_sid=${SID_COOKIE_USER}`, Origin: ISSUER },
+    ];
+    for (const headers of callers) {
+      const res = await app.request("/upload", { method: "POST", headers, body: big() });
+      assert.equal(res.status, 413);
+    }
+    assert.deepEqual(stored, []);
   });
 });

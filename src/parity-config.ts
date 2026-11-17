@@ -52,6 +52,11 @@ export const CLOUD_ONLY: ExclusionEntry[] = [
     name: "telegram-accounts-remove",
     reason: "v2.32.0 multi-account: detach a secondary identity. Cloud-only — OSS removes by stopping the process.",
   },
+  {
+    name: "telegram-create-upload-link",
+    reason:
+      "One-time HTTP upload link that streams a local file into Telegram for agents without a browser sign-in. Cloud-only — OSS send tools read local paths directly.",
+  },
 ];
 
 export const EXPLICIT_EXCLUDED: ExclusionEntry[] = [
