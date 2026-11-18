@@ -115,6 +115,14 @@ describe("fetchUrlSafely — scheme + URL validation", () => {
     assert.equal(res.reason, "private_address");
   });
 
+  it("a hostname that resolves to a private address is refused without echoing the address", async () => {
+    const res = await fetchUrlSafely("https://localhost/", { maxBytes: 1024 });
+    assert.equal(res.ok, false);
+    if (res.ok) return;
+    assert.equal(res.reason, "private_address");
+    assert.doesNotMatch(res.message, /127\.0\.0\.1|::1|\d+\.\d+\.\d+\.\d+/);
+  });
+
   it("rejects ::1 (IPv6 loopback) literal", async () => {
     const res = await fetchUrlSafely("https://[::1]/", { maxBytes: 1024 });
     assert.equal(res.ok, false);

@@ -5,7 +5,16 @@ import { UPLOAD_MAX_BYTES } from "../download-store.js";
 import { fileNameFromUrl, sanitizeFileName } from "../filename.js";
 import { accountBinding, markWedged, requireMediaCore } from "../media-access.js";
 import { MediaError, mediaErrorResult, mediaToolOnError } from "../media-errors.js";
-import { CallBudget, StepTimeoutError, transferQueue } from "../media-queue.js";
+import {
+  bufferedBodyDeadline,
+  bufferQueue,
+  CallBudget,
+  guardChunks,
+  StepTimeoutError,
+  sendQueue,
+  ThroughputGuard,
+  transferQueue,
+} from "../media-queue.js";
 import type { ToolDefinition, ToolDeps } from "../tool-registry.js";
 import { UrlFetchError } from "../url-fetcher.js";
 import { CONFIRMED_WRITE_PUBLIC, LOCAL_WRITE, replyTargetFields, safeOpt, sanitize, textResult } from "./helpers.js";
@@ -73,63 +82,100 @@ async function uploadFromUrl(
 ): Promise<UploadedFile> {
   // Fetch and upload are one bounded step of a transfer slot: the deadline answers the
   // tool call and the abort closes the HTTP response, so a hung body can't pin the slot.
-  return transferQueue.runWithDeadline(
-    userId,
-    async (signal) => {
-      const opened = await openUrl(url, { maxBytes: UPLOAD_MAX_BYTES });
-      if (!opened.ok)
-        throw new MediaError("URL_FETCH_DENIED", `URL fetch denied (${opened.reason}): ${opened.message}`);
-      const name = fileNameFromUrl(url) ?? "file";
-      const onAbort = () => opened.cancel();
-      signal.addEventListener("abort", onAbort, { once: true });
-      try {
-        signal.throwIfAborted();
-        if (opened.size !== undefined) {
-          if (opened.size === 0) throw new MediaError("URL_FETCH_DENIED", "URL fetch denied: the response is empty.");
-          return await telegram.uploadStream(opened.body, opened.size, name, signal);
-        }
-        // No trustworthy length (chunked or compressed): Telegram needs the size up front,
-        // so buffer in memory up to the dashboard upload cap. Still nothing on disk.
-        const parts: Uint8Array[] = [];
-        let total = 0;
-        for await (const chunk of opened.body) {
+  const lease = await transferQueue.lease(userId);
+  let releaseBuffer: (() => void) | undefined;
+  try {
+    // A call budget is read after the slot is granted: time spent queueing counts too.
+    const timeoutMs = budget.take();
+    return await lease.step(
+      async (signal) => {
+        const opened = await openUrl(url, { maxBytes: UPLOAD_MAX_BYTES });
+        if (!opened.ok)
+          throw new MediaError("URL_FETCH_DENIED", `URL fetch denied (${opened.reason}): ${opened.message}`);
+        const name = fileNameFromUrl(url) ?? "file";
+        // A remote server that trickles its body is cut off like a slow HTTP client: the
+        // lease aborts at once, so the caller hears TRANSFER_TOO_SLOW even while a part
+        // already sent to Telegram is still pending.
+        const guard = new ThroughputGuard((err) => {
+          lease.abort(err);
+          opened.cancel();
+        });
+        const body = guardChunks(opened.body, guard);
+        const onAbort = () => opened.cancel();
+        signal.addEventListener("abort", onAbort, { once: true });
+        try {
           signal.throwIfAborted();
-          total += chunk.byteLength;
-          if (total > appConfig.uploadFileMaxBytes) {
-            throw new MediaError(
-              "URL_FETCH_DENIED",
-              `URL fetch denied (too_large): the server sent no Content-Length and the body exceeds ${appConfig.uploadFileMaxBytes} bytes.`,
-            );
+          if (opened.size !== undefined) {
+            if (opened.size === 0) throw new MediaError("URL_FETCH_DENIED", "URL fetch denied: the response is empty.");
+            return await telegram.uploadStream(body, opened.size, name, signal);
           }
-          parts.push(chunk);
+          // No trustworthy length (chunked or compressed): Telegram needs the size up front,
+          // so buffer in memory up to the dashboard upload cap, in a slot of the small pool
+          // for buffered transfers. Still nothing on disk.
+          const release = await bufferQueue.acquire(userId);
+          releaseBuffer = release;
+          // The call may have been answered while this waited for the slot.
+          if (signal.aborted) {
+            release();
+            throw signal.reason;
+          }
+          const parts: Array<Uint8Array | undefined> = [];
+          let total = 0;
+          // The whole body must arrive within bufferedBodyMs, so buffer slots keep turning over.
+          const bodyArrived = bufferedBodyDeadline(lease);
+          try {
+            for await (const chunk of body) {
+              signal.throwIfAborted();
+              total += chunk.byteLength;
+              if (total > appConfig.uploadFileMaxBytes) {
+                throw new MediaError(
+                  "URL_FETCH_DENIED",
+                  `URL fetch denied (too_large): the server sent no Content-Length and the body exceeds ${appConfig.uploadFileMaxBytes} bytes.`,
+                );
+              }
+              parts.push(chunk);
+            }
+          } finally {
+            bodyArrived();
+          }
+          if (total === 0) throw new MediaError("URL_FETCH_DENIED", "URL fetch denied: the response is empty.");
+          guard.stop();
+          // Hand the parts over one by one and forget each: no joined copy, and memory
+          // shrinks as Telegram takes the file. The parts are ours, so core needn't copy them.
+          return await telegram.uploadStream(drain(parts), total, name, signal, { ownsChunks: true });
+        } catch (e) {
+          if (e instanceof UrlFetchError)
+            throw new MediaError("URL_FETCH_DENIED", `URL fetch denied (${e.reason}): ${e.message}`);
+          throw e;
+        } finally {
+          guard.stop();
+          signal.removeEventListener("abort", onAbort);
+          opened.cancel();
+          // Normal end of the work; lease.end below covers a step that never settles.
+          releaseBuffer?.();
         }
-        if (total === 0) throw new MediaError("URL_FETCH_DENIED", "URL fetch denied: the response is empty.");
-        const bytes = Buffer.concat(parts);
-        return await telegram.uploadStream(
-          (async function* () {
-            yield bytes;
-          })(),
-          total,
-          name,
-          signal,
-        );
-      } catch (e) {
-        if (e instanceof UrlFetchError)
-          throw new MediaError("URL_FETCH_DENIED", `URL fetch denied (${e.reason}): ${e.message}`);
-        throw e;
-      } finally {
-        signal.removeEventListener("abort", onAbort);
-        opened.cancel();
-      }
-    },
-    budget,
-    "UPLOAD_FAILED",
-    onTimeout,
-  );
+      },
+      timeoutMs,
+      "UPLOAD_FAILED",
+      onTimeout,
+    );
+  } finally {
+    // Both slots go when the work settles, or at the backstop if it never does.
+    lease.end(() => releaseBuffer?.());
+  }
+}
+
+/** Yield `parts` in order, dropping each reference as it is handed out. */
+async function* drain(parts: Array<Uint8Array | undefined>): AsyncGenerator<Uint8Array> {
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i] as Uint8Array;
+    parts[i] = undefined;
+    yield part;
+  }
 }
 
 /**
- * Send through the shared transfer slot and deadline. The account binding is checked
+ * Send through a slot of the send pool and the call's deadline. The account binding is checked
  * right before the call, so nothing goes out through a detached or replaced account.
  * After the call starts its outcome is reported as is: a deadline says the message may
  * still arrive, so an agent checks the chat instead of sending a duplicate.
@@ -140,7 +186,7 @@ async function sendBounded<T>(deps: ToolDeps, budget: CallBudget, send: () => Pr
     ? accountBinding(deps.sessions, userId, deps.sourceAccountId, deps.sourceAttachmentId)
     : undefined;
   try {
-    return await transferQueue.runWithDeadline(
+    return await sendQueue.runWithDeadline(
       userId,
       async () => {
         if (binding && !binding.canRead()) {
@@ -547,9 +593,10 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       "Get a one-time link for uploading a LOCAL file, for agents that can run a shell command but have no browser sign-in. " +
       "Pass the file's name and exact size in bytes (up to Telegram's 2000 MiB limit). Then run the returned curl command " +
       "(curl -T <file> '<url>', i.e. HTTP PUT of the raw bytes; POST with a raw body also works). No token or header is needed: " +
-      "the link itself authorizes one upload for this account and expires in 15 minutes. The server streams the bytes into Telegram " +
+      "the link itself authorizes one upload for this account and expires in 5 minutes, so run the command right away. The server streams the bytes into Telegram " +
       "and keeps no copy. When curl reports success, pass uploadId as source { kind: 'upload', uploadId } to a send tool. " +
-      "The declared size must match the file exactly, otherwise the upload is refused and you need a new link.",
+      "The declared size must match the file exactly, otherwise the upload is refused and you need a new link. " +
+      "Optionally pass sha256 (hex, e.g. from sha256sum): then only those exact bytes are accepted, so nobody else who sees the link can use it for other content.",
     inputSchema: {
       fileName: z
         .string()
@@ -562,12 +609,19 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         .positive()
         .max(UPLOAD_MAX_BYTES)
         .describe("Exact file size in bytes (e.g. from `stat` or `wc -c`)"),
+      sha256: z
+        .string()
+        .regex(/^[A-Fa-f0-9]{64}$/, "must be 64 hex characters")
+        .optional()
+        .describe(
+          "Optional SHA-256 of the file in hex (sha256sum <file>). When given, an upload with other bytes is refused and nothing is stored.",
+        ),
     },
     annotations: LOCAL_WRITE,
     skipRequireConnection: true,
     onError: mediaToolOnError("telegram-create-upload-link"),
     handler: async (
-      { fileName, size },
+      { fileName, size, sha256 },
       { uploads, userId, sessions, baseUrl, sourceAccountId, sourceAttachmentId },
     ) => {
       if (!uploads || !userId || !sessions || !baseUrl) {
@@ -576,7 +630,7 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
       const name = sanitizeFileName(fileName);
       if (!name) throw new MediaError("INVALID_INPUT", "fileName has no usable characters.");
       const { accountId, canRead } = accountBinding(sessions, userId, sourceAccountId, sourceAttachmentId);
-      const link = uploads.createLink(userId, { accountId, canUse: canRead }, name, size);
+      const link = uploads.createLink(userId, { accountId, canUse: canRead }, name, size, sha256 ? { sha256 } : {});
       if ("error" in link) throw new MediaError("TRANSFER_BUSY", link.error, 60_000);
       const url = `${baseUrl}/u/${link.token}`;
       const result = {
@@ -585,8 +639,10 @@ export const UPLOAD_TOOLS: ToolDefinition[] = [
         method: "PUT",
         fileName: name,
         size,
+        ...(sha256 && { sha256: sha256.toLowerCase() }),
         expiresAt: link.expiresAt.toISOString(),
-        curl: `curl -fsS -T '<path to ${name.replace(/'/g, "")}>' '${url}'`,
+        // The command never echoes the supplied name: the placeholder stands for the local path.
+        curl: `curl -fsS -T '<path to the local file>' '${url}'`,
       };
       return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
     },

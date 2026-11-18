@@ -1,6 +1,11 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { isTelegramAuthError } from "./auth-errors.js";
 import { logger } from "./logger.js";
+import {
+  type confirmSessionRevoked,
+  UNCONFIRMED_REVOCATION_MESSAGE,
+  UNCONFIRMED_REVOCATION_RETRY_MS,
+} from "./session-confirm.js";
 import { toolErrorText } from "./tool-error-text.js";
 import { loggableToolError } from "./tool-registry.js";
 
@@ -12,6 +17,7 @@ import { loggableToolError } from "./tool-registry.js";
 export type MediaCode =
   | "DOWNLOAD_BUSY"
   | "TRANSFER_BUSY"
+  | "TRANSFER_TOO_SLOW"
   | "MEDIA_TOO_LARGE"
   | "NO_MEDIA"
   | "MESSAGE_NOT_FOUND"
@@ -26,6 +32,7 @@ export type MediaCode =
   | "UPLOAD_NOT_FOUND"
   | "UPLOAD_ACCOUNT_MISMATCH"
   | "UPLOAD_SIZE_MISMATCH"
+  | "UPLOAD_HASH_MISMATCH"
   | "UPLOAD_FAILED"
   | "URL_FETCH_DENIED"
   | "ACCOUNT_UNAVAILABLE"
@@ -92,21 +99,37 @@ export function classifyMediaError(e: unknown): { code: string; message: string;
   return { code: "TELEGRAM_ERROR", message: toolErrorText(message).replace(/^Error: /, "") };
 }
 
+/** The auth error was not confirmed on the main connection: retry, keep the session. */
+export function unconfirmedRevocation(): MediaError {
+  return new MediaError("ACCOUNT_UNAVAILABLE", UNCONFIRMED_REVOCATION_MESSAGE, UNCONFIRMED_REVOCATION_RETRY_MS);
+}
+
 /**
- * `onError` for media tools: every failure gets a code. Genuine Telegram auth errors of
- * the call's own client return null so the registry's session-revoked handling runs.
+ * What of an error text may be logged. A URL fetch denial quotes the user's URL, host or
+ * redirect target (which can carry credentials or signed paths), so only its reason code
+ * is kept; other texts go through {@link loggableToolError}.
+ */
+function loggedDetail(code: string, message: string): string {
+  if (code === "URL_FETCH_DENIED") return /\(([a-z_]+)\)/.exec(message)?.[1] ?? "denied";
+  return loggableToolError(message);
+}
+
+/**
+ * `onError` for media tools: every failure gets a code. A Telegram auth error of the
+ * call's own client returns null: the registry confirms it on the main connection (see
+ * {@link confirmSessionRevoked}) before it revokes anything, as for every tool.
  */
 export function mediaToolOnError(toolName: string): (e: unknown) => CallToolResult | null {
   return (e) => {
-    // A genuine revocation of THIS call's client goes to the registry's revocation path.
     // Errors of other accounts' clients never get here as auth errors (see onAccount).
     if (isTelegramAuthError(e)) return null;
     const { code, message, retryAfterMs } = classifyMediaError(e);
-    logger.warn(`Tool error in ${toolName}: [${code}] ${loggableToolError(message)}`, {
+    const logged = `[${code}] ${loggedDetail(code, message)}`;
+    logger.warn(`Tool error in ${toolName}: ${logged}`, {
       component: "tools",
       event: "tool.error",
       tool: toolName,
-      error: `[${code}] ${loggableToolError(message)}`,
+      error: logged,
     });
     return {
       content: [{ type: "text", text: mediaErrorText(code, message, retryAfterMs) }],

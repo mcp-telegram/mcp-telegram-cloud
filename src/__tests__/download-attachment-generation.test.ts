@@ -105,4 +105,29 @@ describe("private download attachment identity", () => {
       f.sessions.getDb().close();
     }
   });
+
+  it("a filled attachment id is only read, never rewritten (audit L5: runs per stream chunk)", () => {
+    const f = setup();
+    const db = f.sessions.getDb();
+    const original = db.prepare.bind(db);
+    const statements: string[] = [];
+    db.prepare = ((sql: string) => {
+      statements.push(sql);
+      return original(sql);
+    }) as typeof db.prepare;
+    try {
+      for (let i = 0; i < 3; i++) assert.equal(f.sessions.getAccountAttachmentId("alice", 0), f.attachment);
+      assert.deepEqual(
+        statements.filter((sql) => /^\s*UPDATE/i.test(sql)),
+        [],
+      );
+      db.prepare("INSERT INTO user_sessions (user_id, session_string) VALUES (?, ?)").run("legacy", "key");
+      statements.length = 0;
+      assert.match(f.sessions.getAccountAttachmentId("legacy", 0) ?? "", /^[a-f0-9]{32}$/);
+      assert.equal(statements.filter((sql) => /^\s*UPDATE/i.test(sql)).length, 1, "the legacy row is filled once");
+    } finally {
+      db.prepare = original;
+      db.close();
+    }
+  });
 });

@@ -3,6 +3,7 @@ process.env.TELEGRAM_API_ID ??= "1";
 process.env.TELEGRAM_API_HASH ??= "stub";
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { describe, it } from "node:test";
 
 const { DownloadStore } = await import("../download-store.js");
@@ -226,7 +227,7 @@ describe("request body policy", () => {
 });
 
 /** A ticket-backed app whose Telegram stream the test controls. */
-function downloadSetup(telegram: () => Promise<unknown>, canRead: () => boolean = () => true) {
+function downloadSetup(telegram: () => Promise<unknown>, canRead: () => boolean = () => true, size = 1024) {
   const downloads = new DownloadStore();
   const marked: unknown[] = [];
   const sessions = {
@@ -241,7 +242,7 @@ function downloadSetup(telegram: () => Promise<unknown>, canRead: () => boolean 
     downloads.issue(
       "alice",
       { chatId: "@c", messageId: 1, accountId: 0, canRead },
-      { fileId: "document:1:2", size: 1024, mimeType: "application/zip", fileName: "a.zip" },
+      { fileId: "document:1:2", size, mimeType: "application/zip", fileName: "a.zip" },
     ).oneTimeToken;
   return { app, issue, marked };
 }
@@ -646,5 +647,273 @@ describe("MediaQueue", () => {
     release(); // idempotent
     (await q.acquire("a"))();
     assert.deepEqual(q.stats(), { total: 0, waiting: 0 });
+  });
+});
+
+describe("transfer slots under load (audit M1)", () => {
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  async function withTimeouts<T>(over: Partial<typeof transferTimeouts>, fn: () => Promise<T>): Promise<T> {
+    const saved = { ...transferTimeouts };
+    Object.assign(transferTimeouts, over);
+    try {
+      return await fn();
+    } finally {
+      Object.assign(transferTimeouts, saved);
+    }
+  }
+  const fileOf = (size: number, opts: { telegramDelayMs?: number } = {}) =>
+    downloadSetup(
+      async () => ({
+        isConnected: () => true,
+        uploadStream: async () => ({}),
+        openMedia: async () => ({
+          info: { fileId: "document:1:2", size },
+          stream: async function* () {
+            for (let sent = 0; sent < size; sent += 512 * 1024) {
+              if (opts.telegramDelayMs) await sleep(opts.telegramDelayMs);
+              yield new Uint8Array(Math.min(512 * 1024, size - sent));
+            }
+          },
+        }),
+      }),
+      () => true,
+      size,
+    );
+
+  it("a busy server answers 429 without using up the one-time link", async () => {
+    const { transferQueue } = await import("../media-queue.js");
+    const f = fileOf(1024);
+    const token = f.issue();
+    const held = [await transferQueue.acquire("alice"), await transferQueue.acquire("alice")];
+    try {
+      assert.equal((await f.app.request(`/d/${token}`)).status, 429);
+    } finally {
+      for (const release of held) release();
+    }
+    const res = await f.app.request(`/d/${token}`);
+    assert.equal(res.status, 200, "the link still works after the busy answer");
+    assert.equal((await res.arrayBuffer()).byteLength, 1024);
+    assert.equal((await f.app.request(`/d/${token}`)).status, 404, "and only once");
+  });
+
+  it("the server pool holds 16 streams, two per account", async () => {
+    const { transferQueue } = await import("../media-queue.js");
+    assert.equal(transferQueue.limits.total, 16);
+    assert.equal(transferQueue.limits.perUser, 2);
+  });
+
+  it("a client that reads too slowly is cut off and frees its slot", async () => {
+    const { transferQueue } = await import("../media-queue.js");
+    await withTimeouts(
+      { throughputWindowMs: 40, throughputCheckMs: 10, minThroughputBytes: 1024, throughputGraceMs: 0 },
+      async () => {
+        const f = fileOf(4 * 512 * 1024);
+        const baseline = transferQueue.stats().total;
+        const res = await f.app.request(`/d/${f.issue()}`);
+        const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+        await reader.read(); // then stop reading
+        await sleep(120);
+        assert.equal(transferQueue.stats().total, baseline, "slot freed long before the total limit");
+        await assert.rejects(async () => {
+          for (;;) if ((await reader.read()).done) break;
+        }, /was stopped/);
+      },
+    );
+  });
+
+  it("time spent waiting on Telegram does not count against the client", async () => {
+    await withTimeouts(
+      { throughputWindowMs: 40, throughputCheckMs: 10, minThroughputBytes: 1024, throughputGraceMs: 0 },
+      async () => {
+        // Every Telegram chunk takes longer than the whole guard window.
+        const size = 3 * 512 * 1024;
+        const f = fileOf(size, { telegramDelayMs: 80 });
+        const res = await f.app.request(`/d/${f.issue()}`);
+        const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+        let got = 0;
+        let largest = 0;
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          got += value.byteLength;
+          largest = Math.max(largest, value.byteLength);
+        }
+        assert.equal(got, size);
+        assert.ok(largest <= 64 * 1024, `pieces of at most 64 KiB, got ${largest}`);
+      },
+    );
+  });
+
+  it("an upload whose body trickles is answered TRANSFER_TOO_SLOW and frees its slot", async () => {
+    const { transferQueue } = await import("../media-queue.js");
+    await withTimeouts(
+      { throughputWindowMs: 40, throughputCheckMs: 10, minThroughputBytes: 1024, throughputGraceMs: 0 },
+      async () => {
+        const f = setup();
+        const l = f.link(10_000);
+        const baseline = transferQueue.stats().total;
+        const body = new ReadableStream<Uint8Array>({
+          start(c) {
+            c.enqueue(new Uint8Array(10)); // then nothing more
+          },
+        });
+        const started = Date.now();
+        const res = await f.app.request(`/u/${l.token}`, {
+          method: "PUT",
+          body,
+          headers: { "content-length": "10000" },
+          duplex: "half",
+        } as RequestInit);
+        assert.ok(Date.now() - started < 2000, "answered by the guard, not the 1 h limit");
+        assert.equal(res.status, 408);
+        assert.equal(((await res.json()) as { error: string }).error, "TRANSFER_TOO_SLOW");
+        await sleep(50);
+        assert.equal(transferQueue.stats().total, baseline);
+      },
+    );
+  });
+});
+
+describe("link routes answer only under their literal path (audit L1)", () => {
+  it("a percent-encoded /d/ or /u/ prefix is 404 and leaves the link working", async () => {
+    const f = downloadSetup(async () => ({
+      isConnected: () => true,
+      uploadStream: async () => ({}),
+      openMedia: async () => ({
+        info: { fileId: "document:1:2", size: 1024 },
+        stream: async function* () {
+          yield new Uint8Array(1024);
+        },
+      }),
+    }));
+    const token = f.issue();
+    for (const prefix of ["%64", "%44"]) {
+      const res = await f.app.request(`/${prefix}/${token}`);
+      assert.equal(res.status, 404, `/${prefix}/ is not a link route`);
+    }
+    assert.equal((await f.app.request(`/d/${token}`)).status, 200, "the token was not used up");
+
+    const up = setup();
+    const l = up.link(3);
+    for (const prefix of ["%75", "%55"]) {
+      const encoded = await up.app.request(`/${prefix}/${l.token}`, {
+        method: "PUT",
+        body: Buffer.from("abc"),
+        headers: { "content-length": "3" },
+      });
+      assert.equal(encoded.status, 404);
+    }
+    assert.equal((await put(up.app, l.token, Buffer.from("abc"))).status, 200, "the upload link still works");
+  });
+});
+
+describe("transfer limits per network and early disconnects (audit round 4)", () => {
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const small = () =>
+    downloadSetup(async () => ({
+      isConnected: () => true,
+      uploadStream: async () => ({}),
+      openMedia: async () => ({
+        info: { fileId: "document:1:2", size: 1024 },
+        stream: async function* () {
+          yield new Uint8Array(1024);
+        },
+      }),
+    }));
+
+  it("one IP holds at most 8 streams across accounts; a busy answer leaves the link working", async () => {
+    const { ipQueue } = await import("../media-queue.js");
+    const held = await Promise.all(Array.from({ length: 8 }, () => ipQueue.acquire("203.0.113.7")));
+    const f = small();
+    const token = f.issue();
+    try {
+      const busy = await f.app.request(`/d/${token}`, { headers: { "x-real-ip": "203.0.113.7" } });
+      assert.equal(busy.status, 429);
+      assert.match(((await busy.json()) as { message: string }).message, /from this network/);
+      const other = await f.app.request(`/d/${token}`, { headers: { "x-real-ip": "198.51.100.1" } });
+      assert.equal(other.status, 200, "another network is not affected, and the link was not used up");
+      await other.arrayBuffer();
+    } finally {
+      for (const release of held) release();
+    }
+    await sleep(10);
+    assert.deepEqual(ipQueue.stats(), { total: 0, waiting: 0 }, "the stream's IP slot went with its lease");
+  });
+
+  it("a client that is gone before the stream starts frees its slot at once", async () => {
+    const { transferQueue } = await import("../media-queue.js");
+    const f = small();
+    const baseline = transferQueue.stats().total;
+    const gone = new AbortController();
+    gone.abort();
+    const res = await f.app.request(`/d/${f.issue()}`, { signal: gone.signal });
+    assert.notEqual(res.status, 200);
+    await sleep(20);
+    assert.equal(transferQueue.stats().total, baseline, "not held until the 1 h limit");
+  });
+
+  it("a failure between taking the slot and starting the stream releases the slot (L4)", async () => {
+    const { transferQueue } = await import("../media-queue.js");
+    const { streamTicket } = await import("../routes/transfer.js");
+    const baseline = transferQueue.stats().total;
+    const ticket = {
+      owner: "alice",
+      accountId: 0,
+      fileId: "document:1:2",
+      canRead: () => true,
+      metadata: {
+        downloadId: "dl_x",
+        fileName: "a.zip",
+        safeFileName: "tg-1-a.zip",
+        mimeType: "application/zip",
+        size: 10,
+        expiresAt: "",
+        chatId: "@c",
+        messageId: 1,
+      },
+    };
+    const c = {
+      req: {
+        method: "GET",
+        header: () => undefined,
+        raw: {
+          get signal(): AbortSignal {
+            throw new Error("boom");
+          },
+        },
+      },
+      res: { headers: new Headers() },
+      json: (body: unknown, status: number) => new Response(JSON.stringify(body), { status }),
+    };
+    const res = await streamTicket(c as never, ticket, { sessions: {} as never }, "session");
+    assert.equal(res.status, 502);
+    await sleep(10);
+    assert.equal(transferQueue.stats().total, baseline);
+  });
+});
+
+describe("upload links with sha256 (audit round 4, L3)", () => {
+  const sha = (b: Buffer) => createHash("sha256").update(b).digest("hex");
+  it("bytes that match the given sha256 are stored", async () => {
+    const f = setup();
+    const body = Buffer.from("hello world");
+    const l = f.uploads.createLink("alice", { accountId: 3, canUse: () => true }, "a.txt", body.length, {
+      sha256: sha(body),
+    });
+    assert.ok(!("error" in l));
+    assert.equal((await put(f.app, l.token, body)).status, 200);
+    assert.ok(f.uploads.resolve("alice", l.uploadId));
+  });
+
+  it("other bytes of the same size are refused and nothing is stored", async () => {
+    const f = setup();
+    const l = f.uploads.createLink("alice", { accountId: 3, canUse: () => true }, "a.txt", 11, {
+      sha256: sha(Buffer.from("hello world")),
+    });
+    assert.ok(!("error" in l));
+    const res = await put(f.app, l.token, Buffer.from("HELLO WORLD"));
+    assert.equal(res.status, 400);
+    assert.equal(((await res.json()) as { error: string }).error, "UPLOAD_HASH_MISMATCH");
+    assert.equal(f.uploads.resolve("alice", l.uploadId), null);
   });
 });

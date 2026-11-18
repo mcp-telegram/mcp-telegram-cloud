@@ -30,6 +30,12 @@ const MAX_NAME_BYTES = 255;
 const CONTROL_CHARS = /[\u0000-\u001F\u007F-\u009F]/g;
 /** LRM/RLM, LRE..RLO+PDF, and the isolate family — used to spoof extensions. */
 const BIDI_OVERRIDES = /[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g;
+/**
+ * Every other invisible format character (zero-width space/joiners, BOM, Arabic letter
+ * mark, tag characters U+E0020-E007F) and the line/paragraph separators: they hide text
+ * from a human reading the name while an agent still reads it.
+ */
+const INVISIBLE = /[\p{Cf}\p{Zl}\p{Zp}]/gu;
 
 /** Truncate to `maxBytes` UTF-8 bytes, preserving the extension when possible. */
 function capBytes(name: string, maxBytes: number): string {
@@ -65,7 +71,7 @@ export function sanitizeFileName(raw: string | null | undefined): string | null 
   // the uploader may run Windows while we run Linux.
   const leaf = raw.split(/[/\\]/).pop() ?? "";
 
-  const cleaned = leaf.replace(CONTROL_CHARS, "").replace(BIDI_OVERRIDES, "").trim();
+  const cleaned = leaf.replace(CONTROL_CHARS, "").replace(BIDI_OVERRIDES, "").replace(INVISIBLE, "").trim();
 
   if (cleaned.length === 0) return null;
   // `.`, `..`, `...` and friends carry no information and are traversal-adjacent.
@@ -101,4 +107,34 @@ export function fileNameFromUrl(url: string): string | null {
     // Malformed percent-encoding — keep the raw segment, sanitizer still runs.
   }
   return sanitizeFileName(decoded);
+}
+
+const SAFE_EXTENSION = /^[A-Za-z0-9]{1,10}$/;
+const SAFE_STEM = /^[A-Za-z0-9._-]{1,100}$/;
+
+/**
+ * A file name that is safe to put in a shell command or a path: always
+ * `tg-<messageId>-<stem>-tg.<ext>`, or `tg-<messageId>.<ext>` when the original stem is
+ * empty or not in `[A-Za-z0-9._-]`. The fixed `tg-<id>` prefix means the result never
+ * starts with `.` or `-` and can never be a file that a shell, an agent or a build tool
+ * gives meaning to (AGENTS.md, .cursorrules, Makefile, ...). Dots inside the stem become
+ * `_` and the stem ends in `-tg`, so no test-runner pattern (`*_test.go`, `*.test.ts`,
+ * `test_*.py`, `*.spec.js`) matches either. The extension is the original one when it is
+ * 1-10 letters or digits, else `fallbackExtension` (when safe), else none.
+ */
+export function safeFileName(name: string | null | undefined, messageId: number, fallbackExtension?: string): string {
+  const leaf = (name ?? "").split(/[/\\]/).pop() ?? "";
+  const dot = leaf.lastIndexOf(".");
+  const ext = dot > 0 ? leaf.slice(dot + 1) : "";
+  const base = dot > 0 ? leaf.slice(0, dot) : leaf;
+  const safeExt = SAFE_EXTENSION.test(ext)
+    ? ext
+    : fallbackExtension && SAFE_EXTENSION.test(fallbackExtension)
+      ? fallbackExtension
+      : "";
+  // A dotfile's or option's leading `.`/`-` is dropped; the prefix keeps the result safe anyway.
+  const stem = base.replace(/^[.-]+/, "");
+  const prefix = `tg-${Math.trunc(Math.abs(messageId))}`;
+  const middle = SAFE_STEM.test(stem) ? `-${stem.replace(/\./g, "_")}-tg` : "";
+  return `${prefix}${middle}${safeExt ? `.${safeExt}` : ""}`;
 }

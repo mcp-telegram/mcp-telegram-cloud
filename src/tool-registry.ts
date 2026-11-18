@@ -8,6 +8,11 @@ import { config as appConfig } from "./config.js";
 import { isDeadlineError, withDeadline } from "./deadline.js";
 import type { DownloadStore } from "./download-store.js";
 import { logger, logUser } from "./logger.js";
+import {
+  confirmSessionRevoked,
+  UNCONFIRMED_REVOCATION_MESSAGE,
+  UNCONFIRMED_REVOCATION_RETRY_MS,
+} from "./session-confirm.js";
 import type { SessionManager } from "./session-manager.js";
 import { incr, observe, TOOL_CALLS, TOOL_DURATION, TOOL_TIMEOUTS } from "./telemetry/metrics.js";
 import { getActiveSpanContext, SpanKind, withSpan } from "./telemetry/tracer.js";
@@ -91,7 +96,7 @@ export interface ToolDefinition<TShape extends ZodRawShapeCompat = ZodRawShapeCo
   /** Main handler. Errors thrown propagate to handleToolError unless onError handles them. */
   handler: (args: Args<TShape>, deps: ToolDeps) => Promise<CallToolResult>;
   /** Custom error mapper. Return a result to short-circuit, null to fall through to default. */
-  onError?: (e: unknown) => CallToolResult | null;
+  onError?: (e: unknown) => CallToolResult | null | Promise<CallToolResult | null>;
 }
 
 /**
@@ -221,23 +226,39 @@ function callerLogFields(opts: Pick<RegisterAllOptions, "userId" | "clientName">
   };
 }
 
-function handleToolError(
+async function handleToolError(
   e: unknown,
   onRevoked: OnSessionRevoked,
   toolName: string,
   caller: CallerLogFields = {},
   client?: TelegramService,
-): CallToolResult {
+): Promise<CallToolResult> {
   const msg = (e as Error).message ?? String(e);
   // Only a real Telegram RPC error counts: text matching let a chat title or a remote URL
   // inside an error message revoke a healthy session.
   if (isTelegramAuthError(e)) {
+    // Many calls (profile photos, media, stickers) fetch bytes through a file DC's exported
+    // authorization, which Telegram can drop while the account is fine: revoke only once
+    // the main connection confirms it.
+    const confirmed = client ? await confirmSessionRevoked(client) : true;
     logger.warn(`Auth error in ${toolName}: ${msg}`, {
       component: "tools",
       event: "tool.auth_error",
       tool: toolName,
+      outcome: confirmed ? "revoked" : "unconfirmed",
       ...caller,
     });
+    if (!confirmed) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `[ACCOUNT_UNAVAILABLE retryable retryAfterMs=${UNCONFIRMED_REVOCATION_RETRY_MS}] ${UNCONFIRMED_REVOCATION_MESSAGE}`,
+          },
+        ],
+        isError: true,
+      };
+    }
     onRevoked(client).catch(() => {});
     return { content: [{ type: "text", text: SESSION_REVOKED_MSG }], isError: true };
   }
@@ -493,9 +514,9 @@ export function registerAllTools(server: McpServer, tools: readonly ToolDefiniti
                 isError: true,
               };
             }
-            const custom = tool.onError?.(e);
+            const custom = await tool.onError?.(e);
             if (custom) return custom;
-            return handleToolError(e, onRevoked, tool.name, caller, handlerClient);
+            return await handleToolError(e, onRevoked, tool.name, caller, handlerClient);
           }
         },
       );

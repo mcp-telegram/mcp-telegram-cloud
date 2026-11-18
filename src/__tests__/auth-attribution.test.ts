@@ -81,11 +81,37 @@ describe("registry: only genuine Telegram auth errors revoke", () => {
     assert.deepEqual(f.revoked, []);
   });
 
-  it("a genuine RPC auth error revokes the call's own client", async () => {
-    const primary = { id: "primary" };
+  it("a genuine RPC auth error revokes the call's own client once getMe confirms it", async () => {
+    const primary = {
+      id: "primary",
+      getMe: async () => {
+        throw rpcAuthError();
+      },
+    };
     const f = await connect([throwing(rpcAuthError)], { telegram: primary });
     await f.client.callTool({ name: "test-throw", arguments: {} });
     assert.deepEqual(f.revoked, [primary]);
+  });
+
+  it("any tool: an auth error the main connection does not confirm revokes nothing", async () => {
+    const { config } = await import("../config.js");
+    const saved = config.telegramConnectTimeoutMs;
+    config.telegramConnectTimeoutMs = 30;
+    try {
+      // e.g. telegram-get-profile-photo: the photo comes from a file DC's exported sender.
+      for (const getMe of [async () => ({ id: "1" }), () => new Promise(() => {})]) {
+        const primary = { id: "primary", getMe };
+        const f = await connect([throwing(rpcAuthError)], { telegram: primary });
+        const started = Date.now();
+        const res = await f.client.callTool({ name: "test-throw", arguments: {} });
+        assert.ok(Date.now() - started < 2000, "a hung getMe is cut at its deadline");
+        assert.equal(res.isError, true);
+        assert.match(text(res as never), /\[ACCOUNT_UNAVAILABLE retryable retryAfterMs=3000\]/);
+        assert.deepEqual(f.revoked, []);
+      }
+    } finally {
+      config.telegramConnectTimeoutMs = saved;
+    }
   });
 });
 
@@ -111,12 +137,22 @@ describe("media paths", () => {
     assert.deepEqual(f.revoked, [], "the healthy session is untouched");
   });
 
-  /** Owner alice: active primary account 0; a download ticket bound to secondary account 9. */
-  function twoAccounts() {
+  /**
+   * Owner alice: active primary account 0; a download ticket bound to secondary account 9.
+   * `revoked`: the secondary's main connection fails getMe too (a real revocation); else
+   * only its file connection lost the exported authorization.
+   */
+  function twoAccounts(opts: { revoked?: boolean; getMe?: "hangs" } = {}) {
+    const revoked = opts.revoked ?? true;
     const primary = { id: "primary", openMedia: async () => ({}), uploadStream: async () => ({}) };
     const secondary = {
       id: "secondary",
       isConnected: () => true,
+      getMe: async () => {
+        if (opts.getMe === "hangs") return new Promise(() => {});
+        if (revoked) throw rpcAuthError();
+        return { id: "2" };
+      },
       uploadStream: async () => {
         throw rpcAuthError();
       },
@@ -190,5 +226,124 @@ describe("media paths", () => {
       a.reported.map((r) => r.client),
       [a.secondary, a.secondary],
     );
+  });
+
+  it("a file connection's auth error is not reported when the main connection is fine", async () => {
+    const download = TOOLS.find((t) => t.name === "telegram-download-media");
+    assert.ok(download);
+    const a = twoAccounts({ revoked: false });
+    const f = await connect([download], {
+      telegram: a.primary,
+      sessions: a.sessions as never,
+      downloads: a.downloads,
+      baseUrl: "https://auth-attribution-test.invalid",
+    });
+    const res = await f.client.callTool({
+      name: "telegram-download-media",
+      arguments: { chatId: "@c", messageId: 1, downloadId: a.issued.metadata.downloadId, offset: 0 },
+    });
+    assert.match(text(res as never), /\[ACCOUNT_UNAVAILABLE retryable retryAfterMs=3000\]/);
+    const uploads = new UploadStore(60_000);
+    const app = new Hono();
+    app.route("/", createTransferRoutes({ sessions: a.sessions as never, downloads: a.downloads, uploads }));
+    const stream = await app.request(
+      `/d/${a.downloads.issue("alice", { chatId: "@c", messageId: 1, accountId: 9, canRead: () => true }, { fileId: "document:1:2", size: 100, mimeType: "application/zip" }).oneTimeToken}`,
+    );
+    await assert.rejects(() => stream.arrayBuffer(), /still signed in/);
+    const link = uploads.createLink("alice", { accountId: 9, canUse: () => true }, "a.bin", 3);
+    assert.ok(!("error" in link));
+    const put = await app.request(`/u/${link.token}`, {
+      method: "PUT",
+      body: "abc",
+      headers: { "content-length": "3" },
+    });
+    assert.equal(((await put.json()) as { error: string }).error, "ACCOUNT_UNAVAILABLE");
+    assert.equal(put.headers.get("retry-after"), "3");
+    assert.deepEqual(a.reported, [], "no session was reported dead");
+    assert.deepEqual(f.revoked, []);
+  });
+
+  it("the call's own client is revoked only after getMe confirms it", async () => {
+    const download = TOOLS.find((t) => t.name === "telegram-download-media");
+    assert.ok(download);
+    const { config } = await import("../config.js");
+    const savedConnect = config.telegramConnectTimeoutMs;
+    config.telegramConnectTimeoutMs = 30;
+    try {
+      for (const main of ["ok", "revoked", "hangs"] as const) {
+        const mainRevoked = main === "revoked";
+        const primary = {
+          id: "primary",
+          openMedia: async () => ({}),
+          uploadStream: async () => ({}),
+          getMediaInfo: async () => {
+            throw rpcAuthError();
+          },
+          getMe: async () => {
+            if (main === "hangs") return new Promise(() => {}); // a getMe that never answers
+            if (mainRevoked) throw rpcAuthError();
+            return { id: "1" };
+          },
+        };
+        const a = twoAccounts();
+        const f = await connect([download], {
+          telegram: primary,
+          sessions: a.sessions as never,
+          downloads: a.downloads,
+          baseUrl: "https://auth-attribution-test.invalid",
+        });
+        const res = await f.client.callTool({
+          name: "telegram-download-media",
+          arguments: { chatId: "@c", messageId: 1, file: true },
+        });
+        if (mainRevoked) {
+          assert.deepEqual(f.revoked, [primary], "confirmed: the registry revokes the call's client");
+        } else {
+          assert.deepEqual(f.revoked, [], `getMe ${main}: the session stays`);
+          assert.match(text(res as never), /\[ACCOUNT_UNAVAILABLE retryable retryAfterMs=3000\]/);
+        }
+      }
+    } finally {
+      config.telegramConnectTimeoutMs = savedConnect;
+    }
+  });
+
+  it("a getMe that never answers does not revoke a ticket's or link's account", async () => {
+    const { config } = await import("../config.js");
+    const savedConnect = config.telegramConnectTimeoutMs;
+    config.telegramConnectTimeoutMs = 30;
+    try {
+      const download = TOOLS.find((t) => t.name === "telegram-download-media");
+      assert.ok(download);
+      const a = twoAccounts({ getMe: "hangs" });
+      const f = await connect([download], {
+        telegram: a.primary,
+        sessions: a.sessions as never,
+        downloads: a.downloads,
+        baseUrl: "https://auth-attribution-test.invalid",
+      });
+      const started = Date.now();
+      const res = await f.client.callTool({
+        name: "telegram-download-media",
+        arguments: { chatId: "@c", messageId: 1, downloadId: a.issued.metadata.downloadId, offset: 0 },
+      });
+      assert.ok(Date.now() - started < 2000, "answered at the confirmation deadline");
+      assert.match(text(res as never), /\[ACCOUNT_UNAVAILABLE retryable retryAfterMs=3000\]/);
+      const uploads = new UploadStore(60_000);
+      const app = new Hono();
+      app.route("/", createTransferRoutes({ sessions: a.sessions as never, downloads: a.downloads, uploads }));
+      const link = uploads.createLink("alice", { accountId: 9, canUse: () => true }, "a.bin", 3);
+      assert.ok(!("error" in link));
+      const put = await app.request(`/u/${link.token}`, {
+        method: "PUT",
+        body: "abc",
+        headers: { "content-length": "3" },
+      });
+      assert.equal(((await put.json()) as { error: string }).error, "ACCOUNT_UNAVAILABLE");
+      assert.deepEqual(a.reported, [], "no session was reported dead");
+      assert.deepEqual(f.revoked, []);
+    } finally {
+      config.telegramConnectTimeoutMs = savedConnect;
+    }
   });
 });

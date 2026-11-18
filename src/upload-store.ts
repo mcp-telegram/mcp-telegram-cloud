@@ -43,6 +43,8 @@ export interface ClaimedLink {
   canUse: () => boolean;
   fileName: string;
   size: number;
+  /** Lower-case hex SHA-256 the uploaded bytes must match, when the creator gave one. */
+  sha256?: string;
 }
 
 interface ReadyEntry extends ReadyUpload {
@@ -55,6 +57,11 @@ interface LinkEntry extends ClaimedLink {
 }
 
 export const MAX_PENDING_UPLOADS_PER_USER = 20;
+/**
+ * An unused upload link expires sooner than an uploaded file: its URL and exact size sit
+ * in the conversation, so a reader could otherwise race the owner to it for longer.
+ */
+const UPLOAD_LINK_TTL_MS = 5 * 60_000;
 
 const hashLinkToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
@@ -96,12 +103,13 @@ export class UploadStore {
     binding: UploadBinding,
     fileName: string,
     size: number,
+    opts: { sha256?: string } = {},
   ): { uploadId: string; token: string; expiresAt: Date } | { error: string } {
     const full = this.checkCapacity(owner);
     if (full) return { error: full };
     const uploadId = `upl_${randomBytes(16).toString("hex")}`;
     const token = randomBytes(16).toString("base64url");
-    const expires = this.now() + this.ttlMs;
+    const expires = this.now() + Math.min(this.ttlMs, UPLOAD_LINK_TTL_MS);
     const tokenHash = hashLinkToken(token);
     this.links.set(tokenHash, {
       uploadId,
@@ -110,6 +118,7 @@ export class UploadStore {
       canUse: binding.canUse,
       fileName,
       size,
+      ...(opts.sha256 && { sha256: opts.sha256.toLowerCase() }),
       expires,
       tokenHash,
     });

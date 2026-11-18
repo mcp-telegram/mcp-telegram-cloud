@@ -2,7 +2,8 @@ import type { TelegramService } from "@overpod/mcp-telegram/service";
 import { isTelegramAuthError } from "./auth-errors.js";
 import { withDeadline } from "./deadline.js";
 import type { Ticket } from "./download-store.js";
-import { MediaError } from "./media-errors.js";
+import { MediaError, unconfirmedRevocation } from "./media-errors.js";
+import { confirmSessionRevoked } from "./session-confirm.js";
 import type { SessionManager } from "./session-manager.js";
 
 type Sessions = Pick<SessionManager, "listAccounts" | "getAccountAttachmentId" | "ensureAccountSession">;
@@ -96,9 +97,10 @@ export function markWedged(
 
 /**
  * Run `fn` against `client`, an account other than (or not known to be) the caller's own.
- * A Telegram revocation raised there is reported for THAT client only — the session
- * manager acts on it only when it is the owner's pooled primary — and surfaces as a coded
- * error without the RPC error inside, so no caller can revoke a different, healthy session.
+ * A Telegram revocation raised there, once confirmed on the main connection (see
+ * {@link confirmSessionRevoked}), is reported for THAT client only (the session manager
+ * acts on it only when it is the owner's pooled primary) and surfaces as a coded error
+ * without the RPC error inside, so no caller can revoke a different, healthy session.
  */
 export async function onAccount<T>(
   sessions: { reportDeadSession?: SessionManager["reportDeadSession"] } | undefined,
@@ -110,6 +112,7 @@ export async function onAccount<T>(
     return await fn();
   } catch (e) {
     if (!isTelegramAuthError(e)) throw e;
+    if (!(await confirmSessionRevoked(client))) throw unconfirmedRevocation();
     sessions?.reportDeadSession?.(owner, client);
     throw new MediaError(
       "ACCOUNT_UNAVAILABLE",

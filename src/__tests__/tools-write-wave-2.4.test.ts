@@ -99,15 +99,15 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
 
   describe("PREMIUM error mapping", () => {
     for (const name of PREMIUM_TOOLS) {
-      it(`${name} maps PREMIUM_ACCOUNT_REQUIRED to a friendly error`, () => {
+      it(`${name} maps PREMIUM_ACCOUNT_REQUIRED to a friendly error`, async () => {
         const tool = TOOLS.find((t) => t.name === name);
         assert.ok(tool?.onError, `${name} should have onError`);
         if (!tool?.onError) return;
-        const result = tool.onError(new Error("PREMIUM_ACCOUNT_REQUIRED"));
+        const result = await tool.onError(new Error("PREMIUM_ACCOUNT_REQUIRED"));
         assert.ok(result, `${name} onError should match PREMIUM_ACCOUNT_REQUIRED`);
         assert.equal(result.isError, true);
         // Unrelated errors fall through (return null) so registry's default handler runs.
-        const fallthrough = tool.onError(new Error("UNRELATED_ERROR"));
+        const fallthrough = await tool.onError(new Error("UNRELATED_ERROR"));
         assert.equal(fallthrough, null, `${name} onError should return null for unrelated errors`);
       });
     }
@@ -115,11 +115,11 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
 
   describe("BUSINESS error mapping", () => {
     for (const name of BUSINESS_TOOLS) {
-      it(`${name} maps BUSINESS_ACCOUNT_REQUIRED to a friendly error`, () => {
+      it(`${name} maps BUSINESS_ACCOUNT_REQUIRED to a friendly error`, async () => {
         const tool = TOOLS.find((t) => t.name === name);
         assert.ok(tool?.onError, `${name} should have onError`);
         if (!tool?.onError) return;
-        const result = tool.onError(new Error("BUSINESS_ACCOUNT_REQUIRED"));
+        const result = await tool.onError(new Error("BUSINESS_ACCOUNT_REQUIRED"));
         assert.ok(result, `${name} onError should match BUSINESS_ACCOUNT_REQUIRED`);
         assert.equal(result.isError, true);
         // Match upstream's "Requires Telegram Business subscription." docstring intent.

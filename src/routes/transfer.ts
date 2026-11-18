@@ -1,3 +1,4 @@
+import { createHash, type Hash } from "node:crypto";
 import type { TelegramService } from "@overpod/mcp-telegram/service";
 import type { Context, MiddlewareHandler } from "hono";
 import { Hono } from "hono";
@@ -7,8 +8,8 @@ import type { DownloadStore, Ticket } from "../download-store.js";
 import { logger, logUser } from "../logger.js";
 import { markWedged, onAccount, openTicketMedia, telegramForAccount } from "../media-access.js";
 import { classifyMediaError, MediaError } from "../media-errors.js";
-import { type Lease, mediaTimeouts, transferQueue } from "../media-queue.js";
-import { rateLimit } from "../rate-limit.js";
+import { guardChunks, type Lease, leaseTransfer, mediaTimeouts, ThroughputGuard } from "../media-queue.js";
+import { getClientIp, rateLimit } from "../rate-limit.js";
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
 
@@ -57,8 +58,10 @@ const STATUS: Record<string, number> = {
   FILE_REFERENCE_EXPIRED: 410,
   MEDIA_NOT_DOWNLOADABLE: 422,
   TRANSFER_BUSY: 429,
+  TRANSFER_TOO_SLOW: 408,
   RATE_LIMITED: 429,
   UPLOAD_SIZE_MISMATCH: 400,
+  UPLOAD_HASH_MISMATCH: 400,
   INVALID_RANGE: 400,
   INVALID_INPUT: 400,
   MEDIA_TOO_LARGE: 413,
@@ -126,23 +129,29 @@ function respond(
   return new Response(body, { status, headers });
 }
 
+/** Largest piece handed to the HTTP client at once, so the throughput guard sees steady progress. */
+const RESPONSE_SLICE_BYTES = 64 * 1024;
+
 /**
  * Stream a ticket's file from Telegram to the HTTP client. File headers go out only
  * with the streaming response, after Telegram confirmed the file; error responses
  * carry their own JSON headers. Every Telegram call runs as a step of one queue lease
- * (see {@link Lease}): a client disconnect, a stalled call or the total time limit
- * answers the client and frees the slot once the call settles. Each chunk re-checks
- * the account binding before it is sent.
+ * (see {@link Lease}): a client disconnect, a stalled call, a client that reads too
+ * slowly (see {@link ThroughputGuard}) or the total time limit answers the client and
+ * frees the slot once the call settles. Each piece re-checks the account binding
+ * before it is sent. `held` is a slot the caller already took; it is used and ended here.
  */
 export async function streamTicket(
   c: Context,
   ticket: Ticket,
   deps: { sessions: Sessions },
   via: "session" | "link",
+  held?: Lease,
 ): Promise<Response> {
   const size = ticket.metadata.size;
   const range = parseRange(c.req.header("range"), size);
   if (range === "unsatisfiable") {
+    held?.end();
     return respond(c, null, 416, { "Content-Range": `bytes */${size}`, "Cache-Control": "private, no-store" });
   }
   const start = range?.start ?? 0;
@@ -153,14 +162,40 @@ export async function streamTicket(
     "Content-Length": String(end - start + 1),
     ...(range && { "Content-Range": `bytes ${start}-${end}/${size}` }),
   };
-  if (c.req.method === "HEAD") return respond(c, null, status, fileHeaders);
+  if (c.req.method === "HEAD") {
+    held?.end();
+    return respond(c, null, status, fileHeaders);
+  }
 
   let lease: Lease;
   try {
-    lease = await transferQueue.lease(ticket.owner, { wait: false });
+    lease = held ?? (await leaseTransfer(ticket.owner, getClientIp(c), { wait: false }));
   } catch (e) {
     return transferError(c, e);
   }
+  try {
+    return await streamWithLease(c, ticket, deps, via, lease, { start, end, status, fileHeaders });
+  } catch (e) {
+    // Nothing may hold the slot when the stream never started (ended is idempotent).
+    lease.end();
+    return transferError(c, e);
+  }
+}
+
+async function streamWithLease(
+  c: Context,
+  ticket: Ticket,
+  deps: { sessions: Sessions },
+  via: "session" | "link",
+  lease: Lease,
+  {
+    start,
+    end,
+    status,
+    fileHeaders,
+  }: { start: number; end: number; status: number; fileHeaders: Record<string, string> },
+): Promise<Response> {
+  const size = ticket.metadata.size;
   const clientSignal = c.req.raw.signal;
   const startedAt = Date.now();
   let sent = 0;
@@ -184,10 +219,14 @@ export async function streamTicket(
     () => stop(new MediaError("DOWNLOAD_FAILED", "Transfer time limit reached."), "timeout"),
     mediaTimeouts.totalMs,
   );
+  const guard = new ThroughputGuard((err) => stop(err, "too-slow"));
+  // A client that left before the listener was attached never fires it.
+  if (clientSignal?.aborted) onClientAbort();
   function finish(outcome: string): void {
     if (finished) return;
     finished = true;
     clearTimeout(total);
+    guard.stop();
     clientSignal?.removeEventListener("abort", onClientAbort);
     lease.end(() => {
       iterator?.return?.(undefined).catch(() => {});
@@ -242,28 +281,37 @@ export async function streamTicket(
   const want = end - start + 1;
   const it = reader.stream(start, lease.signal)[Symbol.asyncIterator]();
   iterator = it;
+  /** Rest of the last Telegram chunk, handed out in {@link RESPONSE_SLICE_BYTES} pieces. */
+  let pending: Uint8Array | undefined;
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
       streamController = controller;
     },
     async pull(controller) {
       try {
-        const next = await lease.step(
-          () => (client ? onAccount(deps.sessions, ticket.owner, client, () => it.next()) : it.next()),
-          mediaTimeouts.chunkMs,
-          "DOWNLOAD_FAILED",
-          wedged,
-        );
-        if (next.done) {
-          if (sent < want) throw new MediaError("DOWNLOAD_FAILED", "Telegram ended the file early.", 3000);
-          finish("ok");
-          controller.close();
-          return;
+        if (!pending) {
+          guard.clientTurn(false);
+          const next = await lease.step(
+            () => (client ? onAccount(deps.sessions, ticket.owner, client, () => it.next()) : it.next()),
+            mediaTimeouts.chunkMs,
+            "DOWNLOAD_FAILED",
+            wedged,
+          );
+          if (next.done) {
+            if (sent < want) throw new MediaError("DOWNLOAD_FAILED", "Telegram ended the file early.", 3000);
+            finish("ok");
+            controller.close();
+            return;
+          }
+          pending = sent + next.value.length > want ? next.value.subarray(0, want - sent) : next.value;
         }
         assertBound();
-        const chunk = sent + next.value.length > want ? next.value.subarray(0, want - sent) : next.value;
+        const chunk = pending.subarray(0, RESPONSE_SLICE_BYTES);
+        pending = pending.length > chunk.length ? pending.subarray(chunk.length) : undefined;
         sent += chunk.length;
+        guard.count(chunk.length);
         controller.enqueue(chunk);
+        guard.clientTurn(true);
         if (sent >= want) {
           finish("ok");
           controller.close();
@@ -281,8 +329,19 @@ export async function streamTicket(
   return respond(c, body, status, fileHeaders);
 }
 
-async function* readChunks(body: ReadableStream<Uint8Array>): AsyncGenerator<Uint8Array> {
+/** Pass `source` through, feeding every chunk to `hash` when there is one. */
+async function* hashing(source: AsyncIterable<Uint8Array>, hash: Hash | undefined): AsyncGenerator<Uint8Array> {
+  for await (const chunk of source) {
+    hash?.update(chunk);
+    yield chunk;
+  }
+}
+
+async function* readChunks(body: ReadableStream<Uint8Array>, signal: AbortSignal): AsyncGenerator<Uint8Array> {
   const reader = body.getReader();
+  // A trickling client may never finish a read: an abort cancels it instead of waiting.
+  const onAbort = () => reader.cancel(signal.reason).catch(() => {});
+  signal.addEventListener("abort", onAbort, { once: true });
   try {
     for (;;) {
       const { done, value } = await reader.read();
@@ -290,6 +349,7 @@ async function* readChunks(body: ReadableStream<Uint8Array>): AsyncGenerator<Uin
       if (value) yield value;
     }
   } finally {
+    signal.removeEventListener("abort", onAbort);
     reader.releaseLock();
   }
 }
@@ -302,8 +362,8 @@ export interface TransferRoutesDeps {
 
 /**
  * Capability links for agents without a browser sign-in. The 128-bit token in the
- * path is the only credential: single use, 15 minutes, bound to the owner and
- * account it was made for. Tokens are stored hashed, so they never reach logs or
+ * path is the only credential: single use, 5 minutes for a download link and 15 for an
+ * upload link, bound to the owner and account it was made for. Tokens are stored hashed, so they never reach logs or
  * SQLite; the access log records paths, so keep tokens out of anything but the URL.
  */
 export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
@@ -314,8 +374,16 @@ export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
     scope: "transfer_link",
   });
 
-  app.use("/d/*", linkRateLimit);
-  app.use("/u/*", linkRateLimit);
+  // Hono matches routes on the DECODED path, so `/%64/<token>` reaches `/d/:token` while
+  // log masks keyed on the raw path miss it. Serve link routes only under their literal
+  // prefix; any other spelling is not a link.
+  const literalPrefix: MiddlewareHandler = async (c, next) => {
+    const raw = new URL(c.req.url).pathname;
+    if (!/^\/[du]\//.test(raw)) return c.json({ error: "not_found" }, 404, { "Cache-Control": "no-store" });
+    return next();
+  };
+  app.use("/d/*", literalPrefix, linkRateLimit);
+  app.use("/u/*", literalPrefix, linkRateLimit);
 
   // HEAD is refused: it must neither reveal the file without using the link up
   // nor let a link preview burn it. Agents use GET directly.
@@ -323,17 +391,35 @@ export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
     // Hono serves HEAD through GET handlers, so refuse it here, before the token is touched.
     if (c.req.method === "HEAD") return c.body(null, 405, { Allow: "GET", "Cache-Control": "no-store" });
     const token = c.req.param("token");
-    const ticket = deps.downloads.redeem(token);
-    if (!ticket) {
-      return transferError(
+    const notFound = () =>
+      transferError(
         c,
         new MediaError(
           "DOWNLOAD_NOT_FOUND",
-          "This download link is unknown, already used or expired. Ask for the file again with file:true.",
+          "This download link is unknown, already used or expired (links work once, for 5 minutes). Ask the assistant for the file again to get a new link.",
         ),
       );
+    const owner = deps.downloads.peek(token);
+    if (!owner) return notFound();
+    // Slot first, then use the link up: "server busy" must leave the link working.
+    let lease: Lease;
+    try {
+      lease = await leaseTransfer(owner, getClientIp(c), { wait: false });
+    } catch (e) {
+      return transferError(c, e);
     }
-    return streamTicket(c, ticket, deps, "link");
+    let ticket: Ticket | null;
+    try {
+      ticket = deps.downloads.redeem(token);
+    } catch (e) {
+      lease.end();
+      throw e;
+    }
+    if (!ticket) {
+      lease.end();
+      return notFound();
+    }
+    return streamTicket(c, ticket, deps, "link", lease);
   });
 
   app.on(["PUT", "POST"], "/u/:token", async (c) => {
@@ -373,14 +459,16 @@ export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
     }
     let lease: Lease;
     try {
-      lease = await transferQueue.lease(link.owner, { wait: false });
+      lease = await leaseTransfer(link.owner, getClientIp(c), { wait: false });
     } catch (e) {
       return transferError(c, e);
     }
     const clientSignal = c.req.raw.signal;
     const onClientAbort = () => lease.abort(new MediaError("UPLOAD_FAILED", "Client closed the connection."));
     clientSignal?.addEventListener("abort", onClientAbort, { once: true });
+    if (clientSignal?.aborted) onClientAbort();
     const startedAt = Date.now();
+    const guard = new ThroughputGuard((err) => lease.abort(err));
     try {
       // Claim only after a slot was granted, so "server busy" doesn't burn the link.
       const claimed = deps.uploads.claimLink(token);
@@ -390,6 +478,7 @@ export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
           "This upload link was already used or expired. Create a new one with telegram-create-upload-link.",
         );
       }
+      const hash = claimed.sha256 ? createHash("sha256") : undefined;
       // Connect and upload as one bounded step: the deadline answers the request even
       // when a body read or Telegram call never notices the abort.
       let client: TelegramService | undefined;
@@ -405,14 +494,22 @@ export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
           client = telegram;
           const body = c.req.raw.body;
           if (!body) throw new MediaError("UPLOAD_SIZE_MISMATCH", "The request has no body.");
+          const chunks = guardChunks(hashing(readChunks(body, signal), hash), guard);
           return onAccount(deps.sessions, claimed.owner, telegram, () =>
-            telegram.uploadStream(readChunks(body), claimed.size, claimed.fileName, signal),
+            telegram.uploadStream(chunks, claimed.size, claimed.fileName, signal),
           );
         },
         mediaTimeouts.totalMs,
         "UPLOAD_FAILED",
         () => markWedged(deps.sessions, claimed.owner, client),
       );
+      // The bytes must be the ones the link was made for; otherwise nothing is stored.
+      if (hash && hash.digest("hex") !== claimed.sha256) {
+        throw new MediaError(
+          "UPLOAD_HASH_MISMATCH",
+          "The uploaded bytes do not match the sha256 given for this link, so nothing was stored. Create a new link.",
+        );
+      }
       // The handle is only usable by the account that uploaded it.
       if (!claimed.canUse()) {
         throw new MediaError("ACCOUNT_UNAVAILABLE", "The Telegram account of this upload link is no longer attached.");
@@ -452,6 +549,7 @@ export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
       });
       return transferError(c, e);
     } finally {
+      guard.stop();
       clientSignal?.removeEventListener("abort", onClientAbort);
       lease.end();
     }

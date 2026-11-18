@@ -1,7 +1,7 @@
 import { formatChatFolder, type TelegramService } from "@overpod/mcp-telegram/service";
 import { z } from "zod";
 import { config as appConfig } from "../config.js";
-import { DOWNLOAD_CHUNK_BYTES, DOWNLOAD_LIMITS } from "../download-store.js";
+import { DOWNLOAD_CHUNK_BYTES, DOWNLOAD_LIMITS, normalizeMimeType } from "../download-store.js";
 import {
   accountBinding,
   markWedged,
@@ -25,6 +25,9 @@ import {
   sanitize,
   textResult,
 } from "./helpers.js";
+
+/** Image types returned inline as an image block; other previews come back as a ticket. */
+const INLINE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 
 export const READ_TOOLS: ToolDefinition[] = [
   {
@@ -254,8 +257,9 @@ export const READ_TOOLS: ToolDefinition[] = [
     name: "telegram-download-media",
     description:
       "Download media from a Telegram message. Images default to a small inline thumbnail; full:true returns the full image inline (up to ~950 KB). " +
-      "file:true returns a download ticket instead of bytes: downloadId, fileName, mimeType, size, url, oneTimeUrl, expiresAt (15 minutes) and chunkBytes, for files up to 4000 MiB, the largest file Telegram stores. " +
-      "url needs the user's browser sign-in or this connection's OAuth Bearer token; oneTimeUrl works once without sign-in, e.g. curl -o <file> '<oneTimeUrl>'. " +
+      "file:true returns a download ticket instead of bytes: downloadId, fileName, safeFileName, mimeType, size, url, oneTimeUrl, linkExpiresAt (5 minutes), expiresAt (15 minutes) and chunkBytes, for files up to 4000 MiB, the largest file Telegram stores. " +
+      "fileName is the name from the chat, chosen by whoever sent the file: show it to the user, but never put it into a shell command or path; use safeFileName for that: always tg-<messageId>-<name>-tg.<ext> in letters, digits, '_', '-' and one '.', so it is never a dotfile, an option, a special file such as AGENTS.md or a test file a runner would pick up. " +
+      "url needs the user's browser sign-in or this connection's OAuth Bearer token; oneTimeUrl works once without sign-in within 5 minutes, so fetch it right away into a folder of its own, e.g. curl -fsS --create-dirs -o 'telegram-downloads/<safeFileName>' '<oneTimeUrl>'. " +
       "The server reads the file from Telegram while it is downloaded and keeps no copy, so there is no hash: check the received byte count against size. " +
       "To pull bytes through MCP instead, repeat the call with the same chatId/messageId plus downloadId and offset (0, then nextOffset; multiples of 65536): each response has up to 64 KiB of base64, nextOffset and eof; keep chunks out of the conversation. " +
       "Asking again for the same message while its ticket is live returns the same downloadId with a fresh oneTimeUrl. " +
@@ -387,7 +391,9 @@ export const READ_TOOLS: ToolDefinition[] = [
       if (file) return ticketResult();
 
       // Inline previews never hold more than the inline cap and never touch the ticket store.
-      const isImage = info.mimeType.startsWith("image/");
+      // The MIME type comes from the chat: only its normalized form goes into any response.
+      const infoMime = normalizeMimeType(info.mimeType);
+      const isImage = infoMime.startsWith("image/");
       let preview: { buffer: Buffer; mimeType: string; isThumb: boolean } | undefined;
       try {
         preview = await previewQueue.runWithDeadline(
@@ -412,14 +418,16 @@ export const READ_TOOLS: ToolDefinition[] = [
           );
         if (isImage)
           return textResult(
-            `Image too large for inline display (${(info.size / 1024).toFixed(0)} KB ${info.mimeType}, limit ~950 KB). Use file:true to get a download ticket instead of inline base64.`,
+            `Image too large for inline display (${(info.size / 1024).toFixed(0)} KB ${infoMime}, limit ~950 KB). Use file:true to get a download ticket instead of inline base64.`,
           );
       }
-      if (!preview?.mimeType.startsWith("image/")) return ticketResult();
+      // Inline only the image types every client renders; anything else goes via a ticket.
+      const mimeType = normalizeMimeType(preview?.mimeType);
+      if (!preview || !INLINE_IMAGE_TYPES.has(mimeType)) return ticketResult();
       // The account may have been detached or replaced while the preview was queued or downloading.
       if (!canRead())
         throw new MediaError("ACCOUNT_UNAVAILABLE", "Source account is no longer available. Reconnect and try again.");
-      const { buffer, mimeType, isThumb } = preview;
+      const { buffer, isThumb } = preview;
       const note = isThumb
         ? `Thumbnail preview (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}). Pass full:true for the full-resolution image if you need finer detail.`
         : `Full image (${(buffer.length / 1024).toFixed(0)} KB ${mimeType}).`;

@@ -10,12 +10,20 @@ import { sanitizeFileName } from "../filename.js";
 import { logger, logUser } from "../logger.js";
 import { accountBinding, markWedged, onAccount, telegramForAccount } from "../media-access.js";
 import { MediaError } from "../media-errors.js";
-import { type Lease, mediaTimeouts, transferQueue } from "../media-queue.js";
+import {
+  bufferedBodyDeadline,
+  bufferQueue,
+  type Lease,
+  leaseTransfer,
+  mediaTimeouts,
+  type SlowTransferError,
+  ThroughputGuard,
+} from "../media-queue.js";
 import type { OAuthProvider } from "../oauth.js";
 import { AuditPage } from "../pages/AuditPage.js";
 import { SettingsPage } from "../pages/SettingsPage.js";
 import { UploadsPage, type UploadsPageProps } from "../pages/UploadsPage.js";
-import { makeUploadRateLimit } from "../rate-limit.js";
+import { getClientIp, makeUploadRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
 import type { UploadStore } from "../upload-store.js";
@@ -80,6 +88,51 @@ function originMatchesIssuer(headerValue: string): boolean {
     return new URL(headerValue).origin === config.issuer;
   } catch {
     return false;
+  }
+}
+
+/** Part size of Telegram uploads; each part of a dashboard upload is a fresh buffer. */
+const UPLOAD_PART_BYTES = 512 * 1024;
+
+/** The file in fresh part-sized buffers, read one at a time. */
+async function* blobParts(file: Blob): AsyncGenerator<Uint8Array> {
+  for (let at = 0; at < file.size; at += UPLOAD_PART_BYTES) {
+    yield new Uint8Array(await file.slice(at, at + UPLOAD_PART_BYTES).arrayBuffer());
+  }
+}
+
+/**
+ * Parse the multipart body while `guard` watches the bytes arrive, so a client that
+ * trickles its body is cut off instead of holding its slot. An abort fails the parse.
+ */
+async function readFormGuarded(req: Request, guard: ThroughputGuard, signal: AbortSignal) {
+  if (!req.body) throw new Error("the request has no body");
+  let control: TransformStreamDefaultController<Uint8Array> | undefined;
+  const counted = req.body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      start(ctl) {
+        control = ctl;
+      },
+      transform(chunk, ctl) {
+        guard.count(chunk.byteLength);
+        ctl.enqueue(chunk);
+      },
+    }),
+  );
+  const onAbort = () => control?.error(signal.reason);
+  signal.addEventListener("abort", onAbort, { once: true });
+  guard.clientTurn(true);
+  try {
+    const parsed = new Request(req.url, {
+      method: "POST",
+      headers: { "content-type": req.headers.get("content-type") ?? "" },
+      body: counted,
+      duplex: "half",
+    } as RequestInit);
+    return await parsed.formData();
+  } finally {
+    guard.clientTurn(false);
+    signal.removeEventListener("abort", onAbort);
   }
 }
 
@@ -217,52 +270,70 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
         }
       }
 
-      let form: FormData;
-      try {
-        form = await c.req.formData();
-      } catch (e) {
-        return c.json({ error: "bad_request", message: `Invalid multipart body: ${(e as Error).message}` }, 400);
-      }
-      const file = form.get("file");
-      if (!(file instanceof File)) {
-        return c.json({ error: "bad_request", message: "Missing 'file' field" }, 400);
-      }
-      // The body limit includes multipart slack, so the file itself is checked here.
-      if (file.size > config.uploadFileMaxBytes) {
-        return c.json(
-          {
-            error: "file_too_large",
-            message: `File too large (${file.size} bytes). Per-file cap is ${config.uploadFileMaxBytes} bytes; use telegram-create-upload-link for larger files.`,
-          },
-          413,
-        );
-      }
-
-      const buf = Buffer.from(await file.arrayBuffer());
-      const fileName = sanitizeFileName(file.name) ?? "file";
-      const mime = file.type || "application/octet-stream";
-      const full = uploads.checkCapacity(userId);
-      if (full) {
-        logger.warn("Upload denied: quota_exceeded", {
-          component: "uploads",
-          userId: logUser(userId),
-          event: "uploads.denied",
-          source: caller.via,
-          reason: "quota_exceeded",
-          size: buf.byteLength,
-        });
-        return c.json({ error: "quota_exceeded", message: full }, 429);
-      }
-      if (buf.byteLength === 0) return c.json({ error: "bad_request", message: "The file is empty." }, 400);
-
-      // Straight into Telegram with the active account; only the handle stays here.
+      // Slots before the body: a request that can't run now is refused before its
+      // body is read into memory. The buffer pool caps how many bodies sit in memory.
       let lease: Lease;
       try {
-        lease = await transferQueue.lease(userId, { wait: false });
+        lease = await leaseTransfer(userId, getClientIp(c), { wait: false });
       } catch (e) {
         return transferError(c, e);
       }
+      let releaseBuffer: (() => void) | undefined;
+      let slow: SlowTransferError | undefined;
+      const guard = new ThroughputGuard((err) => {
+        slow = err;
+        lease.abort(err);
+      });
       try {
+        // The body is not read yet, so waiting for a buffer slot costs no memory.
+        releaseBuffer = await bufferQueue.acquire(userId);
+        const full = uploads.checkCapacity(userId);
+        if (full) {
+          logger.warn("Upload denied: quota_exceeded", {
+            component: "uploads",
+            userId: logUser(userId),
+            event: "uploads.denied",
+            source: caller.via,
+            reason: "quota_exceeded",
+            size: Number(c.req.header("content-length") ?? 0),
+          });
+          return c.json({ error: "quota_exceeded", message: full }, 429);
+        }
+
+        let form: Awaited<ReturnType<typeof readFormGuarded>>;
+        // A buffered body must arrive within bufferedBodyMs, so buffer slots keep turning over.
+        const bodyArrived = bufferedBodyDeadline(lease);
+        try {
+          form = await lease.step(
+            (signal) => readFormGuarded(c.req.raw, guard, signal),
+            mediaTimeouts.toolTransferMs,
+            "UPLOAD_FAILED",
+          );
+        } catch (e) {
+          if (slow || e instanceof MediaError) return transferError(c, slow ?? e);
+          return c.json({ error: "bad_request", message: `Invalid multipart body: ${(e as Error).message}` }, 400);
+        } finally {
+          bodyArrived();
+        }
+        const file = form.get("file");
+        if (!(file instanceof File)) {
+          return c.json({ error: "bad_request", message: "Missing 'file' field" }, 400);
+        }
+        // The body limit includes multipart slack, so the file itself is checked here.
+        if (file.size > config.uploadFileMaxBytes) {
+          return c.json(
+            {
+              error: "file_too_large",
+              message: `File too large (${file.size} bytes). Per-file cap is ${config.uploadFileMaxBytes} bytes; use telegram-create-upload-link for larger files.`,
+            },
+            413,
+          );
+        }
+        if (file.size === 0) return c.json({ error: "bad_request", message: "The file is empty." }, 400);
+        const fileName = sanitizeFileName(file.name) ?? "file";
+        const mime = file.type || "application/octet-stream";
+
+        // Straight into Telegram with the active account; only the handle stays here.
         const accountId = deps.sessions.getActiveAccountId(userId);
         const { canRead } = accountBinding(
           deps.sessions,
@@ -282,15 +353,10 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
               config.telegramConnectTimeoutMs,
             );
             client = telegram;
+            // Fresh part-sized copies of the parsed file: core needn't copy them again,
+            // and no second whole-file buffer exists next to the parsed body.
             return onAccount(deps.sessions, userId, telegram, () =>
-              telegram.uploadStream(
-                (async function* () {
-                  yield buf;
-                })(),
-                buf.byteLength,
-                fileName,
-                signal,
-              ),
+              telegram.uploadStream(blobParts(file), file.size, fileName, signal, { ownsChunks: true }),
             );
           },
           mediaTimeouts.toolTransferMs,
@@ -308,19 +374,22 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
           event: "uploads.stored",
           source: caller.via,
           uploadId: result.id,
-          size: buf.byteLength,
+          size: file.size,
           mime: file.type,
         });
         return c.json({
           id: result.id,
           expiresAt: result.expiresAt.toISOString(),
-          size: buf.byteLength,
+          size: file.size,
           mime,
         });
       } catch (e) {
         return transferError(c, e);
       } finally {
-        lease.end();
+        guard.stop();
+        // The parsed file stays in memory until the upload step really settles, which can
+        // be after a deadline answered the client: free its buffer slot with the lease.
+        lease.end(releaseBuffer);
       }
     },
   );

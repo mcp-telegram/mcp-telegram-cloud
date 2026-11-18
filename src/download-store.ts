@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { sanitizeFileName } from "./filename.js";
+import { safeFileName, sanitizeFileName } from "./filename.js";
 
 /** MCP chunk size; chunk offsets must be multiples of it. */
 export const DOWNLOAD_CHUNK_BYTES = 64 * 1024;
@@ -14,14 +14,22 @@ export const DOWNLOAD_LIMITS = {
   userTickets: 32,
   totalTickets: 10_000,
   ttlMs: 15 * 60_000,
+  /** The unauthenticated one-time link lives shorter than the ticket: agents fetch it at once,
+   * and a link left in a chat transcript should go stale quickly. Asking again mints a new one. */
+  linkTtlMs: 5 * 60_000,
 } as const;
 
 export interface DownloadMetadata {
   downloadId: string;
+  /** Name from the chat, chosen by its sender: for display only, never for a shell command. */
   fileName: string;
+  /** `tg-<messageId>-<stem>.<ext>` in `[A-Za-z0-9._-]`: safe as a shell argument or path. */
+  safeFileName: string;
   mimeType: string;
   size: number;
   expiresAt: string;
+  /** When the current one-time link stops working (never later than expiresAt). */
+  linkExpiresAt?: string;
   chatId: string;
   messageId: number;
 }
@@ -46,6 +54,7 @@ export interface Ticket {
 interface Entry extends Ticket {
   expires: number;
   tokenHash: string | undefined;
+  tokenExpires: number;
 }
 
 const EXTENSIONS: Record<string, string> = {
@@ -60,6 +69,17 @@ const EXTENSIONS: Record<string, string> = {
   "image/gif": "gif",
   "application/pdf": "pdf",
 };
+
+/**
+ * A MIME type as a bare `type/subtype` token, lower-case; anything else (parameters, line
+ * breaks, text the sender put in the field) becomes `application/octet-stream`. The value
+ * comes from the chat, so only this form may reach a response.
+ */
+export function normalizeMimeType(raw: string | undefined): string {
+  return typeof raw === "string" && /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(raw)
+    ? raw.toLowerCase()
+    : "application/octet-stream";
+}
 
 const hashLinkToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
@@ -85,10 +105,16 @@ export class DownloadStore {
     return entry.expires > this.now() && entry.canRead();
   }
 
+  /**
+   * Drop expired tickets. Only the clock is checked: the account binding costs database
+   * reads, and every lookup ({@link get}, {@link redeem}, reuse in {@link issue}) checks it
+   * for the one ticket it touches anyway.
+   */
   purgeExpired(): number {
     let removed = 0;
+    const now = this.now();
     for (const [id, entry] of this.entries) {
-      if (!this.live(entry)) {
+      if (entry.expires <= now) {
         this.drop(id);
         removed++;
       }
@@ -115,6 +141,11 @@ export class DownloadStore {
         e.fileId === info.fileId &&
         e.metadata.size === info.size,
     );
+    // A ticket of a detached or replaced account can't be served: start a new one.
+    if (entry && !entry.canRead()) {
+      this.drop(entry.metadata.downloadId);
+      entry = undefined;
+    }
     const reused = entry !== undefined;
     if (!entry) {
       const mine = [...this.entries.values()].filter((e) => e.owner === owner).sort((a, b) => a.expires - b.expires);
@@ -124,10 +155,10 @@ export class DownloadStore {
         const oldest = [...this.entries.values()].sort((a, b) => a.expires - b.expires)[0];
         if (oldest) this.drop(oldest.metadata.downloadId);
       }
-      const mimeType = /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(info.mimeType)
-        ? info.mimeType.toLowerCase()
-        : "application/octet-stream";
-      const fileName = sanitizeFileName(info.fileName) ?? `media-${source.messageId}.${EXTENSIONS[mimeType] ?? "bin"}`;
+      const mimeType = normalizeMimeType(info.mimeType);
+      const extension = EXTENSIONS[mimeType] ?? "bin";
+      const sentName = sanitizeFileName(info.fileName);
+      const fileName = sentName ?? `media-${source.messageId}.${extension}`;
       const downloadId = `dl_${randomBytes(16).toString("hex")}`;
       const expires = this.now() + DOWNLOAD_LIMITS.ttlMs;
       entry = {
@@ -137,9 +168,11 @@ export class DownloadStore {
         canRead: source.canRead,
         expires,
         tokenHash: undefined,
+        tokenExpires: 0,
         metadata: {
           downloadId,
           fileName,
+          safeFileName: safeFileName(sentName, source.messageId, extension),
           mimeType,
           size: info.size,
           expiresAt: new Date(expires).toISOString(),
@@ -152,8 +185,10 @@ export class DownloadStore {
     if (entry.tokenHash) this.tokens.delete(entry.tokenHash);
     const oneTimeToken = randomBytes(16).toString("base64url");
     entry.tokenHash = hashLinkToken(oneTimeToken);
+    entry.tokenExpires = Math.min(entry.expires, this.now() + DOWNLOAD_LIMITS.linkTtlMs);
     this.tokens.set(entry.tokenHash, entry.metadata.downloadId);
-    return { metadata: { ...entry.metadata }, oneTimeToken, reused };
+    const linkExpiresAt = new Date(entry.tokenExpires).toISOString();
+    return { metadata: { ...entry.metadata, linkExpiresAt }, oneTimeToken, reused };
   }
 
   /** The owner's live ticket, or null when unknown, expired, foreign or no longer readable. */
@@ -173,6 +208,17 @@ export class DownloadStore {
     };
   }
 
+  /**
+   * Owner of a live one-time token, without using it up: lets a caller take a transfer slot
+   * first, so a busy server never burns a link. {@link redeem} still decides.
+   */
+  peek(token: string): string | null {
+    const id = this.tokens.get(hashLinkToken(token));
+    const entry = id ? this.entries.get(id) : undefined;
+    if (!entry || entry.tokenExpires <= this.now() || entry.expires <= this.now()) return null;
+    return entry.owner;
+  }
+
   /** Use up a one-time token. Returns the ticket on the first call only. */
   redeem(token: string): Ticket | null {
     const hash = hashLinkToken(token);
@@ -182,6 +228,7 @@ export class DownloadStore {
     const entry = this.entries.get(id);
     if (!entry) return null;
     entry.tokenHash = undefined;
+    if (entry.tokenExpires <= this.now()) return null;
     return this.get(entry.owner, id);
   }
 

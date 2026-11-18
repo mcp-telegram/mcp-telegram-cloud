@@ -909,17 +909,20 @@ export class SessionManager {
    * Secondary IDs are AUTOINCREMENT; binding to the primary attachment also
    * invalidates them if the owner is removed and later reconnects. */
   getAccountAttachmentId(ownerUserId: string, accountId: number): string | null {
-    // Old tasks in a start-first rolling update can still insert rows with the
-    // empty default after our startup migration. Lazily fill only those rows;
-    // compare-and-set keeps the generation stable across concurrent readers.
-    this.db
-      .prepare(
-        "UPDATE user_sessions SET attachment_id = lower(hex(randomblob(16))) WHERE user_id = ? AND attachment_id = ''",
-      )
-      .run(ownerUserId);
-    const primary = this.db.prepare("SELECT attachment_id FROM user_sessions WHERE user_id = ?").get(ownerUserId) as
-      | { attachment_id: string }
-      | undefined;
+    // Runs on every chunk of a stream and every ticket check: a plain read in the usual case.
+    const select = this.db.prepare("SELECT attachment_id FROM user_sessions WHERE user_id = ?");
+    let primary = select.get(ownerUserId) as { attachment_id: string } | undefined;
+    if (primary && !primary.attachment_id) {
+      // Old tasks in a start-first rolling update can still insert rows with the
+      // empty default after our startup migration. Lazily fill only those rows;
+      // compare-and-set keeps the generation stable across concurrent readers.
+      this.db
+        .prepare(
+          "UPDATE user_sessions SET attachment_id = lower(hex(randomblob(16))) WHERE user_id = ? AND attachment_id = ''",
+        )
+        .run(ownerUserId);
+      primary = select.get(ownerUserId) as { attachment_id: string } | undefined;
+    }
     if (!primary?.attachment_id) return null;
     if (accountId === 0) return primary.attachment_id;
     const attached = this.db

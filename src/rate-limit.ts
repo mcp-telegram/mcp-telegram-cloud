@@ -8,7 +8,7 @@ type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
 
-function getClientIp(c: Context): string {
+export function getClientIp(c: Context): string {
   // Prefer X-Real-IP: Traefik sets it to the actual remote address and does
   // not forward attacker-supplied values. X-Forwarded-For is appended-to,
   // so its *first* entry is attacker-controlled if a client sends a spoofed

@@ -383,10 +383,11 @@ async function validateAndPin(rawUrl: string): Promise<ValidatedUrl | FetchDenie
   }
 
   if (isPrivateAddress(resolved.address)) {
+    // The address stays out of the answer: echoing it would let a caller map internal DNS.
     return {
       ok: false,
       reason: "private_address",
-      message: `Hostname ${hostname} resolves to ${resolved.address} (private/loopback/link-local/multicast)`,
+      message: `Hostname ${hostname} resolves to a blocked address (private/loopback/link-local/multicast)`,
     };
   }
 
