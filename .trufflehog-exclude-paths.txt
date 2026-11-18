@@ -5,7 +5,7 @@
 # scanner. Gitleaks (the sibling job in security-scan.yml) still scans these
 # same files, so nothing listed here is left completely unscanned.
 #
-# Why these three:
+# Why these:
 # Commit 02fe627 ("fix(oauth): serve protected-resource metadata at the spec
 # paths") added URL fixtures carrying userinfo, which exist precisely to prove
 # that userinfo is REJECTED (config.ts) and STRIPPED (the two tests). They are
@@ -22,3 +22,6 @@
 ^src/config\.ts$
 ^src/__tests__/config-issuer-url\.test\.ts$
 ^src/__tests__/oauth-resource-discovery\.test\.ts$
+# Commit d8defc1 (v2.67.1) added URL fixtures with userinfo that prove a
+# denied URL fetch never reaches the log (audit round 4, L5). Fixtures only.
+^src/__tests__/tools-uploads-filename\.test\.ts$
