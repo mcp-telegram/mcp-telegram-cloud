@@ -194,9 +194,6 @@ export const config = {
 
   /** Phase X — per-file cap for `/my/upload` (bytes). Default 50 MB. */
   uploadFileMaxBytes: intOr(process.env.UPLOAD_FILE_MAX_BYTES, 50 * 1024 * 1024),
-  /** Phase X — per-user pending uploads quota (bytes). Sum of currently-pending,
-   * unexpired rows. Default 100 MB (room for 2 max-size files in flight). */
-  uploadQuotaBytes: intOr(process.env.UPLOAD_QUOTA_BYTES, 100 * 1024 * 1024),
   /** Phase X — TTL on a pending upload before TTL purge eats it. Default 15 min. */
   uploadTtlSeconds: intOr(process.env.UPLOAD_TTL_SECONDS, 15 * 60),
 
@@ -224,9 +221,9 @@ export const config = {
   /**
    * Rate-limit on `POST /my/upload`, keyed by Bearer token when present and by
    * IP otherwise. Far stricter than /mcp: every request may carry up to
-   * `uploadFileMaxBytes` and costs a disk write, while `uploadQuotaBytes` only
-   * bounds *pending* bytes — an upload/consume/upload loop stays under quota
-   * forever. Browsers never hit this (a human picks files one at a time);
+   * `uploadFileMaxBytes` streamed into Telegram, while the pending limit
+   * (MAX_PENDING_UPLOADS_PER_USER) only counts uploads not yet sent, so an
+   * upload/consume/upload loop never trips it. Browsers never hit this (a human picks files one at a time);
    * it exists because the Bearer path made the route scriptable. 0 disables.
    */
   uploadRateLimit: intOr(process.env.UPLOAD_RATE_LIMIT, 20),

@@ -70,7 +70,7 @@ function fakeUploads(capacityError: string | null = null) {
       return { id: `upl_${stored.length}`, expiresAt: new Date("2030-01-01T00:00:00.000Z") };
     },
     listForUser: () => [],
-    pendingBytesForUser: () => 0,
+    pendingCountForUser: () => 0,
   };
 }
 

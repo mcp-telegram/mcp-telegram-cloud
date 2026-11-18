@@ -4,9 +4,9 @@ import { render, type UploadRow } from "../pages/uploads.js";
 const base = {
   username: "overpod",
   fileMaxBytes: 52_428_800,
-  quotaBytes: 104_857_600,
   ttlSeconds: 3600,
-  pendingBytes: 2048,
+  pendingCount: 3,
+  pendingLimit: 20,
 };
 
 const row: UploadRow = {
@@ -22,6 +22,12 @@ describe("uploads page render (SSR)", () => {
     const html = render({ ...base, locale: "en", rows: [] });
     expect(html.startsWith("<!DOCTYPE html>")).toBe(true);
     expect(html).toContain('content="noindex, nofollow"');
+  });
+
+  it("shows pending uploads against the per-account limit, not a byte quota", () => {
+    const html = render({ ...base, locale: "ru", rows: [] });
+    expect(html).toContain("Квота: 3 / 20 в ожидании");
+    expect(html).toContain('style="width:15%"');
   });
 
   it("renders the empty state with no rows", () => {

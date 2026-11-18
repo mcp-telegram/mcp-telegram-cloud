@@ -41,7 +41,7 @@ describe("UploadStore — uploaded handles (memory only)", () => {
     assert.equal(store.purgeExpired(), 0, "resolve already dropped both");
   });
 
-  it("lists the user's uploads for the dashboard and counts their bytes", () => {
+  it("lists the user's uploads for the dashboard and counts them", () => {
     const store = new UploadStore(TTL);
     store.put("alice", binding(), file("a.pdf", 10), "application/pdf", "a.pdf");
     store.put("alice", binding(), file("b.pdf", 20), "application/pdf", "b.pdf");
@@ -50,7 +50,7 @@ describe("UploadStore — uploaded handles (memory only)", () => {
     assert.equal(rows.length, 2);
     assert.ok(rows.every((r) => r.user_id === "alice"));
     assert.match(rows[0]?.expires_at ?? "", /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/);
-    assert.equal(store.pendingBytesForUser("alice"), 30);
+    assert.equal(store.pendingCountForUser("alice"), 2);
     assert.equal(store.pendingBytesTotal(), 70);
   });
 });

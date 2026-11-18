@@ -51,7 +51,7 @@ function makeApp(appOpts: { uploadGate?: Promise<void> } = {}) {
     checkCapacity: () => null,
     put: () => ({ id: "upl_1", expiresAt: new Date("2030-01-01T00:00:00.000Z") }),
     listForUser: () => [],
-    pendingBytesForUser: () => 0,
+    pendingCountForUser: () => 0,
   };
   const app = createMyRoutes({
     destructive: {} as never,

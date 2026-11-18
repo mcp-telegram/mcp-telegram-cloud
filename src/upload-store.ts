@@ -209,10 +209,10 @@ export class UploadStore {
       .map((e) => ({ ...e.row }));
   }
 
-  pendingBytesForUser(owner: string): number {
-    let total = 0;
-    for (const e of this.ready.values()) if (e.row.user_id === owner && e.expires > this.now()) total += e.row.size;
-    return total;
+  /** Uploads and unused upload links the owner holds now; parallel uploads can push it past MAX_PENDING_UPLOADS_PER_USER. */
+  pendingCountForUser(owner: string): number {
+    this.purgeExpired();
+    return this.pendingCount(owner);
   }
 
   /** Bytes uploaded to Telegram and not yet sent. They live in Telegram, not here. */

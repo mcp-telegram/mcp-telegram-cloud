@@ -17,9 +17,10 @@ export type UploadsProps = {
   username: string;
   rows: UploadRow[];
   fileMaxBytes: number;
-  quotaBytes: number;
   ttlSeconds: number;
-  pendingBytes: number;
+  /** Uploads waiting to be sent, against the per-account limit. */
+  pendingCount: number;
+  pendingLimit: number;
   flash?: string;
   scripts?: readonly string[];
 };
@@ -41,9 +42,9 @@ const uploadsCss = `
 `;
 
 function UploadsPage(props: UploadsProps) {
-  const { locale, username, rows, fileMaxBytes, quotaBytes, pendingBytes, flash } = props;
+  const { locale, username, rows, fileMaxBytes, pendingCount, pendingLimit, flash } = props;
   const t = createTranslator(getMessages(locale));
-  const pct = quotaBytes > 0 ? Math.min(100, Math.round((pendingBytes / quotaBytes) * 100)) : 0;
+  const pct = pendingLimit > 0 ? Math.min(100, Math.round((pendingCount / pendingLimit) * 100)) : 0;
 
   return (
     <Layout
@@ -80,9 +81,7 @@ function UploadsPage(props: UploadsProps) {
         <div id="upload-status" className="muted" style={{ minHeight: 20, marginTop: 8 }} />
 
         <div className="muted" style={{ marginTop: 12 }}>
-          {t("uploads.quota")}: {formatBytes(pendingBytes)} / {formatBytes(quotaBytes)} {t("uploads.quotaPending")} (
-          {pct}
-          %)
+          {`${t("uploads.quota")}: ${pendingCount} / ${pendingLimit} ${t("uploads.quotaPending")}`}
           <div className="quota-bar">
             <div className="quota-fill" style={{ width: `${pct}%` }} />
           </div>

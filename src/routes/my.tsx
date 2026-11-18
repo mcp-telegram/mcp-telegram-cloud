@@ -26,7 +26,7 @@ import { UploadsPage, type UploadsPageProps } from "../pages/UploadsPage.js";
 import { getClientIp, makeUploadRateLimit } from "../rate-limit.js";
 import { detectRequestLocale, islandScripts, reactPagesAvailable, renderReactPage } from "../react-pages.js";
 import type { SessionManager } from "../session-manager.js";
-import type { UploadStore } from "../upload-store.js";
+import { MAX_PENDING_UPLOADS_PER_USER, type UploadStore } from "../upload-store.js";
 import { MCP_RESOURCE_METADATA_PATH, rootUrl } from "./oauth.js";
 import { streamTicket, transferError } from "./transfer.js";
 
@@ -204,9 +204,9 @@ export function createMyRoutes(deps: MyRoutesDeps): Hono {
       username: userId,
       rows,
       fileMaxBytes: config.uploadFileMaxBytes,
-      quotaBytes: config.uploadQuotaBytes,
       ttlSeconds: config.uploadTtlSeconds,
-      pendingBytes: uploads.pendingBytesForUser(userId),
+      pendingCount: uploads.pendingCountForUser(userId),
+      pendingLimit: MAX_PENDING_UPLOADS_PER_USER,
     };
     if (flash !== undefined) props.flash = flash;
 

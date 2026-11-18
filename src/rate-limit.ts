@@ -130,10 +130,10 @@ export function makeMcpRateLimit(isIssued: (token: string) => boolean): Middlewa
 
 /**
  * Limiter for `POST /my/upload`. Keyed by Bearer token when the caller is an
- * agent and by IP for the browser dashboard. Needed because the byte quota
- * (`uploadQuotaBytes`) only counts *pending* uploads: consuming an uploadId
- * frees the quota immediately, so a script can write `uploadFileMaxBytes` to
- * disk in a loop without ever tripping it. This caps request rate instead.
+ * agent and by IP for the browser dashboard. Needed because the pending limit
+ * (MAX_PENDING_UPLOADS_PER_USER) only counts uploads not yet sent: consuming an
+ * uploadId frees its slot immediately, so a script can stream
+ * `uploadFileMaxBytes` into Telegram in a loop without ever tripping it. This caps request rate instead.
  *
  * A factory rather than a module-level const (unlike the limiters above) so
  * the limits are read when the route is built, not when this module is first

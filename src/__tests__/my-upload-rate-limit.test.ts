@@ -1,10 +1,10 @@
 /**
  * Rate limit on `POST /my/upload`.
  *
- * Why this exists: `uploadQuotaBytes` bounds only *pending* bytes, and
- * `consume()` frees them the moment a tool uses the uploadId. So a scripted
- * caller can write `uploadFileMaxBytes` to disk in a loop and never trip the
- * quota. That was acceptable while the route was cookie-only (a human picks
+ * Why this exists: the pending limit counts only uploads not yet sent, and
+ * `consume()` frees a slot the moment a tool uses the uploadId. So a scripted
+ * caller can stream `uploadFileMaxBytes` into Telegram in a loop and never
+ * trip it. That was acceptable while the route was cookie-only (a human picks
  * files by hand); the Bearer path made the route programmatically callable,
  * so request rate has to be capped too.
  *
@@ -43,7 +43,7 @@ const app = createMyRoutes({
     checkCapacity: () => null,
     put: () => ({ id: "upl_x", expiresAt: new Date("2030-01-01T00:00:00.000Z") }),
     listForUser: () => [],
-    pendingBytesForUser: () => 0,
+    pendingCountForUser: () => 0,
   } as never,
   oauth: {
     validateToken: (t: string) => (t.startsWith("tok-") ? { userId: `u_${t}`, clientName: "pi" } : null),

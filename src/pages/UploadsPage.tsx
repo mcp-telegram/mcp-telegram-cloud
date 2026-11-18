@@ -9,9 +9,10 @@ export interface UploadsPageProps {
   username: string;
   rows: UploadRow[];
   fileMaxBytes: number;
-  quotaBytes: number;
   ttlSeconds: number;
-  pendingBytes: number;
+  /** Uploads waiting to be sent, against the per-account limit. */
+  pendingCount: number;
+  pendingLimit: number;
   flash?: string;
 }
 
@@ -233,12 +234,12 @@ export const UploadsPage: FC<UploadsPageProps> = ({
   username,
   rows,
   fileMaxBytes,
-  quotaBytes,
   ttlSeconds,
-  pendingBytes,
+  pendingCount,
+  pendingLimit,
   flash,
 }) => {
-  const pct = Math.min(100, Math.round((pendingBytes / quotaBytes) * 100));
+  const pct = pendingLimit > 0 ? Math.min(100, Math.round((pendingCount / pendingLimit) * 100)) : 0;
   const isErr = flash?.startsWith("Error:") || flash?.startsWith("Upload");
 
   return (
@@ -263,7 +264,7 @@ export const UploadsPage: FC<UploadsPageProps> = ({
         </div>
 
         <div class={limits}>
-          Quota: {formatBytes(pendingBytes)} / {formatBytes(quotaBytes)} pending ({pct}%)
+          Pending: {pendingCount} / {pendingLimit} uploads
           <div class={quotaBar}>
             <div class={quotaFill} style={`width: ${pct}%`} />
           </div>

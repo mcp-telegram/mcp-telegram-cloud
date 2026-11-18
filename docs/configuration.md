@@ -45,7 +45,6 @@ permissions), see [`docs/self-hosting.md`](./self-hosting.md).
 | `TRANSFER_LINK_RATE_LIMIT` | | `60` | Requests per IP per window on the one-time `/d/<token>` and `/u/<token>` links. `0` disables |
 | `TRANSFER_LINK_RATE_WINDOW_MS` | | `60000` | Window duration in milliseconds |
 | `UPLOAD_FILE_MAX_BYTES` | | `52428800` | Per-file cap for `/my/upload` (50 MB) |
-| `UPLOAD_QUOTA_BYTES` | | `104857600` | Shown on the uploads page only; since v2.67.0 the pending limit is 20 uploads per account |
 | `UPLOAD_TTL_SECONDS` | | `900` | Lifetime of an unused `uploadId` |
 
 ## Required core
@@ -296,7 +295,7 @@ immediately, so without a rate limit a scripted client could stream
 reaches this limit (a person picks files one at a time); it exists because
 the endpoint also accepts OAuth tokens from MCP clients.
 
-### `UPLOAD_FILE_MAX_BYTES` / `UPLOAD_QUOTA_BYTES` / `UPLOAD_TTL_SECONDS`
+### `UPLOAD_FILE_MAX_BYTES` / `UPLOAD_TTL_SECONDS`
 
 Per-file cap for `/my/upload` (default 50 MB) and how long an unused
 `uploadId` survives (default 900 s). Apply identically to browser and token
@@ -304,12 +303,14 @@ uploads. Since v2.67.0 the bytes stream into Telegram and are not written to
 disk. When 20 uploads (including unused upload links) are already pending
 for an account, `/my/upload` returns `429` and new upload links are refused.
 The check runs when an upload starts, so parallel uploads can exceed it;
-the extra uploads stay pending until they are used or expire. `UPLOAD_QUOTA_BYTES` is only displayed on the uploads page and is
-not enforced.
+the extra uploads stay pending until they are used or expire. The uploads
+page shows this count. `UPLOAD_QUOTA_BYTES` was removed: with nothing stored
+on the server, a byte quota protected nothing.
 
 A body larger than `UPLOAD_FILE_MAX_BYTES` plus 1 MiB of multipart slack is
 rejected with `413` before the multipart parser runs; a file within that slack
-but over the cap is rejected with `413` after parsing. One-time upload links from `telegram-create-upload-link` are not
+but over the cap is rejected with `413` after parsing. One-time upload links
+from `telegram-create-upload-link` are not
 bound by `UPLOAD_FILE_MAX_BYTES`: they accept up to 2000 MiB, Telegram's
 upload limit for a regular account.
 
