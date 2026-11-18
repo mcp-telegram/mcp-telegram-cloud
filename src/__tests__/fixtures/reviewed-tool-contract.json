@@ -1,7 +1,7 @@
 {
   "$comment": "Tool contract under directory review. Changing a reviewed tool's name, title, annotations, required arguments or removing an argument breaks the reviewer's test cases. Update this file only when a new version is submitted for review, and in the same PR as that submission. See issue #52 (review freeze) and #51.",
-  "review": "Chatroost hosted catalog after the 2026-11-17 rejection, not yet resubmitted",
-  "capturedAt": "2026-11-17",
+  "review": "OpenAI resubmission 1.0.3 (2026-11-18): every Telegram-calling tool is openWorldHint=true",
+  "capturedAt": "2026-11-18",
   "source": "tools/list of the hosted image: real registry, Dockerfile MCP_TELEGRAM_ENABLE_* flags, in-memory transport (scripts/capture-reviewed-contract.ts)",
   "servedButNotReviewed": [],
   "tools": [
@@ -11,7 +11,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["label"]
@@ -55,7 +55,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["identifier"],
       "properties": ["identifier"]
@@ -66,7 +66,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["future", "past"]
@@ -88,7 +88,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["archive", "chatId"],
       "properties": ["archive", "chatId"]
@@ -121,7 +121,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["chatId", "confirmAllChats"]
@@ -132,7 +132,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -165,7 +165,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["title"],
       "properties": [
@@ -234,10 +234,10 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["fileName", "size"],
-      "properties": ["fileName", "size"]
+      "properties": ["fileName", "sha256", "size"]
     },
     {
       "name": "telegram-delete-business-chat-link",
@@ -256,7 +256,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["userIds"],
       "properties": ["userIds"]
@@ -278,7 +278,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["id"],
       "properties": ["id"]
@@ -311,7 +311,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "messageIds"],
       "properties": ["chatId", "messageIds"]
@@ -377,7 +377,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["id"],
       "properties": [
@@ -471,7 +471,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "limit", "q"]
@@ -482,7 +482,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["hidden", "next", "state"]
@@ -493,7 +493,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "gifts", "limit", "offset"]
@@ -515,7 +515,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "dark", "includeGraphs"]
@@ -526,7 +526,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -548,7 +548,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["folderId"]
@@ -581,7 +581,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["limit"]
@@ -592,7 +592,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["limit"]
@@ -614,7 +614,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -636,7 +636,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -669,7 +669,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -680,7 +680,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -691,7 +691,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "limit"]
@@ -702,7 +702,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "dark", "includeGraphs"]
@@ -735,7 +735,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "messageId"],
       "properties": ["chatId", "messageId"]
@@ -746,7 +746,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -768,7 +768,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "messageId"],
       "properties": ["chatId", "messageId"]
@@ -779,7 +779,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -845,7 +845,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["hash"]
@@ -856,7 +856,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["shortcutId"],
       "properties": ["hash", "ids", "shortcutId"]
@@ -878,7 +878,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["limit"]
@@ -889,7 +889,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -911,7 +911,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["limit"]
@@ -933,7 +933,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId"]
@@ -944,7 +944,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -955,7 +955,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -999,7 +999,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "storyId"],
       "properties": ["chatId", "forwardsFirst", "justContacts", "limit", "offset", "q", "reactionsFirst", "storyId"]
@@ -1010,7 +1010,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -1021,7 +1021,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["limit"]
@@ -1043,7 +1043,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["limit"]
@@ -1054,7 +1054,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "limit"]
@@ -1065,7 +1065,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId"],
       "properties": ["chatId", "limit"]
@@ -1076,7 +1076,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["date", "pts", "qts"],
       "properties": ["date", "pts", "ptsLimit", "ptsTotalLimit", "qts"]
@@ -1164,7 +1164,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["filterType", "limit", "offsetDate"]
@@ -1175,7 +1175,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": ["kind", "limit"]
@@ -1208,7 +1208,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "unread"],
       "properties": ["chatId", "unread"]
@@ -1219,7 +1219,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "muted"],
       "properties": ["chatId", "duration", "muted"]
@@ -1230,7 +1230,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "pin"],
       "properties": ["chatId", "pin"]
@@ -1263,7 +1263,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "good", "messageId", "transcriptionId"],
       "properties": ["chatId", "good", "messageId", "transcriptionId"]
@@ -1329,7 +1329,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["firstName", "userId"],
       "properties": ["firstName", "lastName", "userId"]
@@ -1340,7 +1340,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["order"],
       "properties": ["order"]
@@ -1395,7 +1395,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["chatId", "text"],
       "properties": ["chatId", "replyTo", "text"]
@@ -1693,7 +1693,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["emoji"],
       "properties": ["emoji"]
@@ -1715,7 +1715,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": [
@@ -1743,7 +1743,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["rule", "setting"],
       "properties": ["allowUsers", "disallowUsers", "rule", "setting"]
@@ -1787,7 +1787,7 @@
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": [],
       "properties": []
@@ -1820,7 +1820,7 @@
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "required": ["enabled"],
       "properties": ["enabled"]

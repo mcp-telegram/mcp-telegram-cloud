@@ -278,25 +278,28 @@ Every tool carries MCP hints that clients use to decide what needs a user
 confirmation, so they are classified from behaviour rather than from how risky
 they feel, following the OpenAI plugin guidelines. `destructiveHint` is false
 only for additive writes; being able to undo a change does not make it false.
-`openWorldHint` is true when the tool reaches public or open-ended entities:
+`openWorldHint` is true when the tool interacts with anything outside this
+server, and Telegram counts: it is an independently controlled service and
+account (OpenAI review, 2026-11-16). Only the `SERVER_*` classes, which never
+call Telegram and touch only this server's list of linked accounts, are false.
+Tools that hand out a link (add an account, upload a file) are open world too:
+the link is a public URL and its use reaches Telegram. The `LOCAL` /
+`PUBLIC` / `OPEN` part of a class name says who sees the effect.
+
 | Class | `readOnly` | `destructive` | `openWorld` | Examples |
 | --- | --- | --- | --- | --- |
-| `READ_ONLY` | ✔ | ✘ | ✘ | own dialogs and contacts, stats of administered chats |
+| `READ_ONLY` | ✔ | ✘ | ✔ | own dialogs and contacts, stats of administered chats |
 | `READ_OPEN` | ✔ | ✘ | ✔ | read or search any public chat, public profiles, translate a message |
-| `LOCAL_WRITE` | ✘ | ✘ | ✘ | create a folder, link an account |
-| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | join a chat, create an invite link, query an inline bot, start a transcription, private media copy |
-| `CONFIRMED_WRITE_LOCAL` | ✘ | ✔ | ✘ | drafts, privacy, replace a folder's chats, mute/archive/pin a dialog, switch account |
+| `LOCAL_WRITE` | ✘ | ✘ | ✔ | create a folder, link an account, upload link |
+| `OUTBOUND_WRITE` | ✘ | ✘ | ✔ | join a chat, create an invite link, query an inline bot, start a transcription, one-time media link |
+| `CONFIRMED_WRITE_LOCAL` | ✘ | ✔ | ✔ | drafts, privacy, replace a folder's chats, mute/archive/pin a dialog, rename a contact, switch account (connects to Telegram) |
 | `CONFIRMED_WRITE_PUBLIC` | ✘ | ✔ | ✔ | send/forward, reactions, edit a sent message, group info, unban, profile, inline bot result |
-| `DESTRUCTIVE_LOCAL` | ✘ | ✔ | ✘ | clear drafts, delete folder, detach account |
+| `DESTRUCTIVE_LOCAL` | ✘ | ✔ | ✔ | clear drafts, delete a folder or a contact |
 | `DESTRUCTIVE_PUBLIC` | ✘ | ✔ | ✔ | delete message, ban, kick, revoke link, report |
+| `SERVER_READ` | ✔ | ✘ | ✘ | list linked accounts, show the active one |
+| `SERVER_DESTRUCTIVE` | ✘ | ✔ | ✘ | detach a linked account |
 
-"Open world" is not "calls an external API" — everything here goes through
-Telegram, so that reading would mark all tools false and say nothing. It is
-whether the tool stays within this account. A read that takes any chat by
-username reaches public chats and is open world, unless Telegram only answers
-it for an admin of that chat.
-
-The `DESTRUCTIVE_*` tools (deletions, bans, reports) are gated by
+The `DESTRUCTIVE_*` and `SERVER_DESTRUCTIVE` tools (deletions, bans, reports, detaching an account) are gated by
 `DestructiveGuard`: off by default, per-user opt-in at `/my/settings`, its own
 daily quota, and an audit row for each attempt readable at `/my/audit`.
 `CONFIRMED_WRITE_*` tools also carry `destructiveHint: true`, because the old

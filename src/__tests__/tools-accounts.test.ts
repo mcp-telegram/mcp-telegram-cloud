@@ -84,7 +84,7 @@ describe("v2.32.0 accounts tools — registration", () => {
     }
   });
 
-  it("list + current are READ_ONLY; switch, add, remove are non-destructive WRITE", () => {
+  it("list + current are read-only; switch, add, remove are writes", () => {
     const ro = ["telegram-accounts-list", "telegram-accounts-current"];
     const write = ["telegram-accounts-switch", "telegram-accounts-add", "telegram-accounts-remove"];
     for (const name of ro) {

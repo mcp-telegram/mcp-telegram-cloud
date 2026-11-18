@@ -2,10 +2,10 @@ import { z } from "zod";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   CONFIRMED_WRITE_LOCAL,
-  DESTRUCTIVE_LOCAL,
   errorResult,
   LOCAL_WRITE,
-  READ_ONLY,
+  SERVER_DESTRUCTIVE,
+  SERVER_READ,
   textResult,
 } from "./helpers.js";
 
@@ -48,7 +48,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
     description:
       "List all Telegram accounts attached to your connector — the primary OAuth-bound account plus any secondaries added via telegram-accounts-add. The active one (used for every other tool call) is marked with ⭐. telegram-accounts-switch changes it.",
     inputSchema: {},
-    annotations: READ_ONLY,
+    annotations: SERVER_READ,
     skipRequireConnection: true,
     handler: async (_args, { userId, sessions }) => {
       if (!userId || !sessions) return errorResult("Accounts tools require an authenticated MCP session.");
@@ -71,7 +71,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
     description:
       "Show which Telegram account is currently active — i.e. which account every other telegram-* tool is talking to.",
     inputSchema: {},
-    annotations: READ_ONLY,
+    annotations: SERVER_READ,
     skipRequireConnection: true,
     handler: async (_args, { userId, sessions }) => {
       if (!userId || !sessions) return errorResult("Accounts tools require an authenticated MCP session.");
@@ -155,7 +155,7 @@ export const ACCOUNTS_TOOLS: ToolDefinition[] = [
     inputSchema: {
       identifier: z.string().describe("Label, @username, or account_id of the secondary to remove"),
     },
-    annotations: DESTRUCTIVE_LOCAL,
+    annotations: SERVER_DESTRUCTIVE,
     skipRequireConnection: true,
     handler: async ({ identifier }, { userId, sessions }) => {
       if (!userId || !sessions) return errorResult("Accounts tools require an authenticated MCP session.");

@@ -10,8 +10,8 @@
  *
  * Class meanings live in `src/tools/helpers.ts`, following the OpenAI plugin
  * guidelines: destructiveHint is "deletes, overwrites, revokes or sends
- * irreversibly", openWorldHint is "reaches beyond the account's own chats,
- * contacts and settings".
+ * irreversibly", openWorldHint is "interacts with anything outside this
+ * server", Telegram included.
  */
 process.env.ISSUER ??= "https://tool-annotation-contract-test.invalid";
 process.env.TELEGRAM_API_ID ??= "1";
@@ -30,6 +30,8 @@ const {
   CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
+  SERVER_READ,
+  SERVER_DESTRUCTIVE,
   isGuardedDestructive,
 } = await import("../tools/helpers.js");
 
@@ -42,12 +44,12 @@ const CLASSES = {
   CONFIRMED_WRITE_PUBLIC,
   DESTRUCTIVE_LOCAL,
   DESTRUCTIVE_PUBLIC,
+  SERVER_READ,
+  SERVER_DESTRUCTIVE,
 } as const;
 
 const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
   READ_ONLY: [
-    "telegram-accounts-current",
-    "telegram-accounts-list",
     "telegram-get-admin-log",
     "telegram-get-all-stories",
     "telegram-get-available-star-gifts",
@@ -217,7 +219,6 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-vote-poll",
   ],
   DESTRUCTIVE_LOCAL: [
-    "telegram-accounts-remove",
     "telegram-clear-drafts",
     "telegram-clear-recent-emoji-statuses",
     "telegram-delete-contact",
@@ -248,6 +249,8 @@ const EXPECTED: Record<keyof typeof CLASSES, readonly string[]> = {
     "telegram-set-chat-reactions",
     "telegram-toggle-forum-mode",
   ],
+  SERVER_READ: ["telegram-accounts-current", "telegram-accounts-list"],
+  SERVER_DESTRUCTIVE: ["telegram-accounts-remove"],
 };
 
 describe("tool annotation contract", () => {
@@ -283,7 +286,11 @@ describe("tool annotation contract", () => {
   });
 
   it("only deletions go through the destructive opt-in, CONFIRMED_WRITE tools do not", () => {
-    for (const name of [...EXPECTED.DESTRUCTIVE_LOCAL, ...EXPECTED.DESTRUCTIVE_PUBLIC]) {
+    for (const name of [
+      ...EXPECTED.DESTRUCTIVE_LOCAL,
+      ...EXPECTED.DESTRUCTIVE_PUBLIC,
+      ...EXPECTED.SERVER_DESTRUCTIVE,
+    ]) {
       const tool = TOOLS.find((t) => t.name === name);
       assert.ok(tool && isGuardedDestructive(tool.annotations), `${name} must be gated by DestructiveGuard`);
     }
@@ -302,6 +309,14 @@ describe("tool annotation contract", () => {
       contradictory.map((t) => t.name),
       [],
     );
+  });
+
+  it("only tools that never call Telegram are openWorldHint=false", () => {
+    // OpenAI review 2026-11-16: Telegram is an external service, so a tool that
+    // calls it is open-world even when it reads the account's own chats.
+    const serverOnly = new Set([...EXPECTED.SERVER_READ, ...EXPECTED.SERVER_DESTRUCTIVE]);
+    const closed = TOOLS.filter((t) => !t.annotations.openWorldHint).map((t) => t.name);
+    assert.deepEqual(closed.sort(), [...serverOnly].sort());
   });
 
   it("every tool that reaches other people is marked openWorldHint", () => {

@@ -42,12 +42,14 @@ export const replyTargetFields = {
 //   destructiveHint — true for deletion, overwriting, cancellation, access
 //                     revocation and irreversible sends. false only for
 //                     additive writes; "the user can undo it" is not a reason.
-//   openWorldHint   — true when the tool reaches public or open-ended entities
-//                     or arbitrary destinations (other people, public search,
-//                     URLs, third-party bots, any public chat by username).
-//                     false when it stays inside the account's own chats,
-//                     contacts and settings, or needs the account to be an
-//                     admin of the chat, even though Telegram is external.
+//   openWorldHint   — true when the tool interacts with anything outside this
+//                     server, which includes Telegram itself: an independently
+//                     controlled service and account (OpenAI review, 2026-11-16).
+//                     false only for the SERVER_* classes, which never call
+//                     Telegram and touch only this server's linked accounts.
+//
+// The *_LOCAL / *_PUBLIC / *_OPEN suffixes describe who sees the effect (only
+// the account, or other people too); they no longer differ in openWorldHint.
 //
 // Every class is matched by identity, so copying an object changes behavior;
 // see {@link isGuardedDestructive}.
@@ -57,7 +59,7 @@ export const replyTargetFields = {
 export const READ_ONLY = {
   readOnlyHint: true,
   destructiveHint: false,
-  openWorldHint: false,
+  openWorldHint: true,
 } as const;
 
 /** Reads only, but reaches beyond the account: public search, any public chat
@@ -76,13 +78,13 @@ export const READ_OPEN = {
 export const LOCAL_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
-  openWorldHint: false,
+  openWorldHint: true,
 } as const;
 
 /** Additive, reaches beyond the account, nothing irreversible: typing
  * indicator, joining a chat, creating an invite link, a forum topic or a
  * business chat link, sending a query to a third-party inline bot, starting a
- * transcription, keeping a private copy of media for download. */
+ * transcription, issuing a one-time download link for media. */
 export const OUTBOUND_WRITE = {
   readOnlyHint: false,
   destructiveHint: false,
@@ -98,7 +100,7 @@ export const OUTBOUND_WRITE = {
 export const CONFIRMED_WRITE_LOCAL = {
   readOnlyHint: false,
   destructiveHint: true,
-  openWorldHint: false,
+  openWorldHint: true,
 } as const;
 
 /** Irreversible sends and overwrites other people see: sending, forwarding or
@@ -112,6 +114,13 @@ export const CONFIRMED_WRITE_PUBLIC = {
   openWorldHint: true,
 } as const;
 
+/** Reads only this server's list of linked accounts; Telegram is not called. */
+export const SERVER_READ = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  openWorldHint: false,
+} as const;
+
 const CONFIRMED_WRITES: ReadonlySet<object> = new Set([CONFIRMED_WRITE_LOCAL, CONFIRMED_WRITE_PUBLIC]);
 
 /** Whether a tool goes through `DestructiveGuard` (opt-in, quota, audit). Only
@@ -123,10 +132,18 @@ export function isGuardedDestructive(annotations: { readonly destructiveHint: bo
 }
 
 /** Irreversible, but confined to this account: clearing drafts, deleting a
- * folder or a not-yet-sent scheduled message, detaching a linked account.
+ * folder, a contact or a not-yet-sent scheduled message.
  * Gated server-side by `DestructiveGuard` (per-user opt-in + daily quota +
  * audit log). */
 export const DESTRUCTIVE_LOCAL = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  openWorldHint: true,
+} as const;
+
+/** Detaches a linked account from this server; the Telegram account itself is
+ * not logged out. Gated by `DestructiveGuard` like {@link DESTRUCTIVE_LOCAL}. */
+export const SERVER_DESTRUCTIVE = {
   readOnlyHint: false,
   destructiveHint: true,
   openWorldHint: false,
