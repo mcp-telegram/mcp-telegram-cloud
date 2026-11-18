@@ -98,16 +98,19 @@ Single Node.js process. Inside it:
 There is no horizontal scaling story today — see
 [Known limitations](./self-hosting.md#known-limitations).
 
-## Private media snapshots
+## Media transfers
 
-`telegram-download-media` prepares bounded, owner-private snapshots in
-`DownloadStore` (process RAM only). Agents read retryable 64 KiB chunks through
-MCP; people download attachments from `/my/download/:id` using the authenticated
-browser session. The URL is not an authorization capability. Every read checks
-ownership, source-account attachment and a fixed 15-minute expiry. Snapshots are
-not written to SQLite or disk, and restart/rolling replacement invalidates them.
-See [downloads.md](./downloads.md) for the complete flow, limits, threat model,
-recovery and core-before-cloud release dependency.
+Files pass through the server without being stored. `telegram-download-media`
+with `file: true` issues an owner-private ticket in `DownloadStore` (process RAM,
+metadata only, 15 minutes); `/my/download/:id`, the one-time `/d/<token>` link
+(up to 5 minutes, single use) and 64 KiB MCP chunk reads all stream the file from
+Telegram at request time. Uploads (`/my/upload`, one-time `/u/<token>` links from
+`telegram-create-upload-link`, URL sources) stream into Telegram through core
+`uploadStream`; `UploadStore` keeps only the resulting Telegram file handle.
+Every read checks ownership and the source account's attachment. Nothing is
+written to SQLite or disk, and a restart invalidates tickets and pending uploads.
+See [downloads.md](./downloads.md) for the flow, limits, threat model and
+recovery.
 
 ## Request lifecycles
 

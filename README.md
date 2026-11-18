@@ -87,12 +87,13 @@ OAuth/QR session model: `telegram-login`, `telegram-logout` and
 ## Downloading a voice note or file
 
 Call `telegram-download-media` with `chatId`, `messageId`, and `file: true`.
-The result includes a private `downloadId`, size, SHA-256, expiry, and an
-owner-authenticated browser download link. Agents can retrieve the bytes
-through the same MCP tool using `downloadId` and byte `offset`, without
-extracting an OAuth token or printing the file's base64 into the conversation.
-Snapshots last 15 minutes, are limited to 8 MiB, and disappear on restart.
-See [the full flow, recovery cases, security model and release dependency](docs/downloads.md).
+The result is a ticket, not the bytes: `downloadId`, names, size, an
+owner-authenticated `url`, and a `oneTimeUrl` that works once without sign-in
+for up to 5 minutes (the ticket itself lives 15 minutes). The server reads the file
+from Telegram while it is being downloaded and keeps no copy, so files up to
+Telegram's own limit work. Agents can also pull 64 KiB chunks through the same
+MCP tool with `downloadId` and `offset`, without extracting an OAuth token.
+See [the full flow, recovery cases and security model](docs/downloads.md).
 
 ## Sending a local file
 
@@ -103,9 +104,14 @@ somewhere else, and MCP has no way to carry bytes in a tool call that would
 not first drag them through the model's context. They take a `source` that is
 either an `uploadId` or a public `https://` URL.
 
-Bytes therefore travel over plain HTTP, outside the MCP transport, to
-`POST /my/upload` — which accepts **the same OAuth access token your client
-uses for `/mcp`**:
+The simplest path for an agent is `telegram-create-upload-link`: give it the
+file name and exact size (optionally its SHA-256), and it returns an `uploadId`
+and a one-time URL. `curl -T ./file '<url>'` within 5 minutes, then pass the
+`uploadId` to a send tool. No token is needed, files can be up to 2000 MiB,
+and the server streams the bytes into Telegram without storing them.
+
+Bytes can also travel over plain HTTP to `POST /my/upload`, which accepts
+**the same OAuth access token your client uses for `/mcp`**:
 
 ```sh
 # 1. upload the bytes -> uploadId (valid ~15 min, single use, bound to you)
@@ -136,8 +142,10 @@ Notes:
   stripped, 255-byte cap); if nothing usable survives, the document is sent
   unnamed rather than under a guessed name. For the `https://` URL source the
   name comes from the last path segment of the URL.
-- Per-file cap 50 MB, per-account pending quota 100 MB, and the endpoint is
-  rate-limited per token — see [configuration](docs/configuration.md).
+- `/my/upload` caps a file at 50 MB by default, refuses a new upload when 20
+  are already pending for the account, and is rate-limited per token (see
+  [configuration](docs/configuration.md)). Larger files go through the upload
+  link. Neither path writes the file to the server's disk.
 - Clients that cannot make arbitrary HTTP requests (no shell, no fetch tool)
   cannot use this path. For them the only option is a public `https://` URL,
   which the server fetches behind an SSRF guard.

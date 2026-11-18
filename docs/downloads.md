@@ -1,140 +1,126 @@
 # Private media downloads
 
-`telegram-download-media` can prepare voice notes, audio, videos, documents and
-original images for download. It never creates a public sharing link. The same
-MCP tool handles preparation and chunk retrieval, so a host does not need to
-extract an OAuth token from its credential store or put it in the model context.
+`telegram-download-media` with `file: true` returns a download ticket for the
+original file: voice notes, audio, video, documents and full-size images. The
+server never stores the file. Every download reads it from Telegram while the
+bytes go to the client, so the size limit is Telegram's own (up to 4000 MiB).
+There is no permanent public link: `url` needs the owner's sign-in, and
+`oneTimeUrl` is a short-lived bearer link (see below).
+
+Without `file`, images come back as a small inline thumbnail (`full: true`
+returns the full image inline, up to about 950 KB).
 
 ## Flow for an assistant / MCP host
 
 1. Call `telegram-download-media` with the original `chatId`, `messageId` and
-   `file: true`. This bypasses thumbnails. Without `file`, image previews retain
-   their old inline behaviour; non-image results also prepare a private snapshot.
-2. Read the result's `structuredContent` (or parse its text JSON):
+   `file: true`. The result (`structuredContent`, or the text JSON) is a ticket:
 
    ```json
    {
      "downloadId": "dl_<32 hex characters>",
-     "fileName": "media-123.ogg",
-     "mimeType": "audio/ogg",
+     "fileName": "report.final.pdf",
+     "safeFileName": "tg-123-report_final-tg.pdf",
+     "mimeType": "application/pdf",
      "size": 79872,
-     "sha256": "<SHA-256 hex>",
-     "expiresAt": "<ISO-8601 UTC>",
+     "url": "https://<issuer>/my/download/dl_<32 hex characters>",
+     "oneTimeUrl": "https://<issuer>/d/<token>",
+     "linkExpiresAt": "<ISO-8601 UTC, 5 minutes>",
+     "expiresAt": "<ISO-8601 UTC, 15 minutes>",
      "chatId": "<original chat>",
      "messageId": 123,
-     "url": "https://<issuer>/my/download/dl_<32 hex characters>",
      "chunkBytes": 65536
    }
    ```
 
-3. To save locally, repeat **the same tool**, `chatId` and `messageId`, adding
-   `downloadId` and `offset: 0`. This returns up to 64 KiB of file bytes as base64:
+2. Fetch `oneTimeUrl` right away, into a folder of its own, under
+   `safeFileName`:
 
-   ```json
-   {
-     "downloadId": "dl_<32 hex characters>",
-     "offset": 0,
-     "nextOffset": 65536,
-     "eof": false,
-     "base64": "<base64 bytes>"
-   }
+   ```sh
+   curl -fsS --create-dirs -o 'telegram-downloads/<safeFileName>' '<oneTimeUrl>'
    ```
 
-4. In host code, decode and write the bytes at `offset`, then continue at
-   `nextOffset` until `eof`. **Do not print the base64 or pass all chunks back
-   through the model conversation.** A scripting/tool orchestration host can
-   receive the results, write them, and expose only progress and the final path.
-5. Verify the final size and SHA-256 against the preparation result. Only then
-   rename a partial file to its final destination or hand it to an audio decoder.
-   Select a safe local destination yourself: `fileName` is sanitized but still
-   remote-controlled. Do not overwrite existing files or execute downloaded data.
+   The link needs no sign-in: anyone who has it can use it, once, until
+   `linkExpiresAt` (5 minutes, but never past the ticket's `expiresAt`).
+   Asking again for the same message from the same account while the ticket
+   is live and the file is unchanged returns the same `downloadId` with a
+   fresh `oneTimeUrl`; the previous link stops working.
+3. Check the received byte count against `size`. There is no hash: the server
+   does not hold the file, so it cannot hash it in advance.
+4. `fileName` is the name from the chat, chosen by whoever sent the file. Show
+   it to the user, but never put it into a shell command or path.
+   `safeFileName` is `tg-<messageId>-<name>-tg.<ext>` (or `tg-<messageId>.<ext>`
+   when the name has other characters) in letters, digits, `_`, `-` and one
+   `.`, so it is never a dotfile, an option or a file a tool would pick up by
+   name.
 
-Chunk reads never call Telegram again and do not require an active MTProto
-connection. Retrying the same offset returns the same bytes while the snapshot
-is valid: write at the offset, not append blindly. Switching active Telegram
-accounts does not relabel the snapshot or download the same message ID from the
-new account. Removing the source account invalidates the snapshot.
+### Pulling chunks through MCP
 
-The original required arguments, tool name, title and annotations remain
-unchanged; `file`, `downloadId` and `offset` are optional additions. No new tool
-is introduced while the connector catalogue is under directory review.
+A host without HTTP access can repeat **the same tool** with the same `chatId`
+and `messageId`, adding `downloadId` and `offset` (0, then `nextOffset`;
+multiples of 65536). Each response holds up to 64 KiB as base64 plus
+`nextOffset` and `eof`. Each chunk is read from Telegram at that moment.
+Write at the offset rather than appending blindly, and **keep the base64 out
+of the model conversation**.
 
 ### Recovery
 
-- `download_unavailable` / MCP error: the snapshot expired, was removed, belonged
-  to someone else, or was lost during a restart/rolling update. Prepare the
-  original message again, reset the offset, and verify the **new** hash and size.
-  Do not mix bytes from two snapshots; a Telegram message may have been edited.
-- Busy/quota error: no new file is fetched. Wait for the current download or
-  expiry; do not retry in a tight loop.
-- A download over 8 MiB is rejected. This first version targets voice notes and
-  small files, not arbitrary-size video archives.
-- A host without scripting/binary storage can show the authenticated browser
-  link. It cannot promise to save a local file itself.
+Errors start with a code, for example `[DOWNLOAD_BUSY retryable retryAfterMs=3000]`
+or `[MEDIA_NOT_DOWNLOADABLE]`. HTTP routes return the same code as JSON with
+`Retry-After` when it is retryable, as long as the error happens before the
+file starts streaming. Once bytes are flowing (status 200 or 206), a failure
+can only cut the response short, so check each response against its
+`Content-Length` and the finished file against `size`.
+
+- `DOWNLOAD_NOT_FOUND` (404): the ticket or link is unknown, already used,
+  expired, belongs to someone else, or was lost in a restart. Ask for the file
+  again and start from offset 0.
+- `MESSAGE_NOT_FOUND`, `NO_MEDIA`, `MEDIA_CHANGED`, `FILE_REFERENCE_EXPIRED`
+  (410): the message or its file changed. Ask again; do not mix bytes from two
+  tickets.
+- `TRANSFER_BUSY` (HTTP 429) / `DOWNLOAD_BUSY` (MCP), retryable: too many
+  transfers at once. Wait for `Retry-After` / `retryAfterMs`; do not retry in
+  a tight loop. Extra MCP calls wait in a per-user queue, so fetch media one
+  call at a time.
+- `TRANSFER_TOO_SLOW`: the client read too slowly (see limits below). Before
+  streaming starts this is a 408; during streaming the response is cut short.
+- `MEDIA_NOT_DOWNLOADABLE` (422): Telegram has no file to download for this
+  media type (for example a contact card or a web document).
 
 ## Flow for a person
 
 The assistant shows `url`. Open it in a browser signed into **the same owner
-account** on this server (`tg_sid` session). The browser downloads an attachment.
-If not signed in, a browser request gets a sign-in link; sign in and reopen the
-original URL before it expires. The link does not silently authorize a new MCP
-client and does not transfer authority to anyone it is forwarded to.
+account** on this server (`tg_sid` session). If not signed in, the browser gets
+a sign-in link; sign in and reopen the URL before the ticket expires. The link
+does not authorize a new MCP client and does not transfer access to anyone it
+is forwarded to.
 
-Programmatic HTTP clients may use a valid OAuth Bearer in the **Authorization
-header**, never in a URL. Invalid or malformed Authorization is a hard 401 even
-if a valid browser cookie is also present. Revoked/expired tokens cannot read the
-file. An authenticated stranger, missing file and expired file all receive 404.
+Programmatic clients may call `url` with a valid OAuth Bearer in the
+**Authorization header**, never in a URL. An invalid Authorization header is a
+hard 401 even if a valid browser cookie is also present. `url` supports `HEAD`
+and single HTTP ranges (`206`, or `416` past the end), so an interrupted
+download can resume while the ticket lives.
 
-`HEAD` checks metadata without consuming the snapshot. `GET` can be retried until
-expiry; HTTP Range is not implemented (GET returns the complete attachment).
-Offset-based MCP reads are the resumable path. Authentication/expiry are checked
-when a request starts; a response already accepted may finish after the deadline.
+`oneTimeUrl` answers only `GET`; `HEAD` gets `405`, so a link preview cannot
+use it up.
 
 ## Security and resource limits
 
-- Download IDs and URLs are opaque **selectors, not credentials**. Both paths
-  check the authenticated owner, fixed expiry, and continuing ownership of the
-  source Telegram identity on every read. A random `user_sessions.attachment_id`
-  distinguishes primary removal/reconnection even within the same second; secondary
-  snapshots also bind to that primary attachment and their AUTOINCREMENT account ID.
-  Routine session-string saves keep the attachment stable. The MCP transport also checks that a
-  reused `mcp-session-id` belongs to the currently authenticated owner.
-- Snapshot bytes live **only in process memory**, not SQLite, backups or `/tmp`.
-  They are purged on access and every minute. A restart deliberately invalidates
-  all snapshots. RAM is not secure erasure or protection against host compromise,
-  swap or crash dumps: the usual self-hosting threat model still applies.
-- Fixed TTL: 15 minutes after successful preparation; reads never extend it.
-- Max file: 8 MiB; per owner: 32 MiB / 8 snapshots; process: 128 MiB / 128
-  snapshots. Reservations conservatively account for a whole 8 MiB file before
-  network IO. At most one preparation per owner and four per process are pending.
-- The bounded core API rejects oversized document metadata before fetching the
-  original, checks progress during native download, and checks the final buffer
-  for cached thumbnails. GramJS reports progress after each native chunk, so
-  transient allocation can overshoot the file cap by one chunk (up to 512 KiB),
-  plus buffering overhead. These are storage caps, not exact process RSS caps.
-- Cancellation is cooperative (60-second signal): it cannot immediately cancel
-  a hung native MTProto request. The outer tool deadline still bounds the wait.
-  A pending reservation stays held until actual work settles, preventing orphan
-  IO from escaping the concurrency cap; permanently hung slots may require a
-  process restart. Late/aborted work never publishes a snapshot.
-- No public storage/CDN, secret URL token, or OAuth token in tool results. Audio
-  bytes and filenames are not logged. The download route has a stable metric
-  template and uses the existing upload HTTP rate limiter; MCP reads use the
-  existing MCP request/usage limits.
-- HTTP sends `application/octet-stream`, attachment disposition, `nosniff`,
-  `private, no-store`, `no-referrer`, and a sandbox CSP, including through global
-  middleware. File names lose paths, controls and bidi overrides and are encoded
-  for Content-Disposition. Arbitrary HTML/SVG never renders on the OAuth origin.
+- `downloadId` and `url` are selectors, not credentials: every read checks the
+  authenticated owner, the fixed expiry, and that the Telegram account the
+  ticket was made for is still attached with the same session. `oneTimeUrl`
+  carries a 128-bit token that is the only credential: single use, 5 minutes,
+  bound to the owner and account. Tokens are stored hashed; the log pipeline
+  masks `/d/` and `/u/` paths.
+- Nothing is written to disk, SQLite or backups. Tickets live in process
+  memory, so a restart invalidates them.
+- Ticket limits: 15 minutes, 32 per user, 10,000 per process.
+- Transfers are bounded per user, per client IP and per server. A client
+  that takes less than 384 KiB per 30 seconds of its own reading time (time
+  spent waiting for Telegram does not count; checked from the 30th second) is
+  cut off, and no transfer runs longer than 60 minutes.
+- Responses use `application/octet-stream`, attachment disposition, `nosniff`
+  and `private, no-store`. File names lose paths, controls and bidi overrides.
   Cross-origin credentialed CORS is not enabled.
 
-## Deployment dependency
-
-Release the core implementing `TelegramService.downloadMediaBounded` **first**,
-then update the cloud dependency and deploy cloud. An older core fails closed
-before the media fetch rather than silently ignoring an unknown `maxBytes`
-option. Until that release train runs, this feature is not live.
-
-Snapshots are process-local, matching the current single-process deployment.
-Horizontal replication without a shared authenticated snapshot store or routing
-affinity is not supported. During rolling replacement a stale link can return
-404: the recovery flow above is intentional, not a durable-file guarantee.
+Tickets are process-local, matching the single-process deployment. During a
+rolling update a live link can return 404; the recovery flow above applies.

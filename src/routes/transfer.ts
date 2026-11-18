@@ -362,8 +362,8 @@ export interface TransferRoutesDeps {
 
 /**
  * Capability links for agents without a browser sign-in. The 128-bit token in the
- * path is the only credential: single use, 5 minutes for a download link and 15 for an
- * upload link, bound to the owner and account it was made for. Tokens are stored hashed, so they never reach logs or
+ * path is the only credential: single use, 5 minutes for both download and upload
+ * links, bound to the owner and account it was made for. Tokens are stored hashed, so they never reach logs or
  * SQLite; the access log records paths, so keep tokens out of anything but the URL.
  */
 export function createTransferRoutes(deps: TransferRoutesDeps): Hono {
