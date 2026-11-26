@@ -77,14 +77,13 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
     });
   }
 
-  it("only the Wave 2.4 tools that take personal data require an opt-in env flag", () => {
+  it("only the Wave 2.4 tools that take personal data (and add-contact) require an opt-in env flag", () => {
     // Precise location, phone numbers and birth dates are off on the hosted
     // service (OpenAI plugin guidelines); every other tool is on by default.
     const personal = new Set([
       "telegram-send-location",
       "telegram-send-venue",
       "telegram-send-contact",
-      "telegram-add-contact",
       "telegram-set-birthday",
       "telegram-set-business-location",
     ]);
@@ -92,7 +91,12 @@ describe("Wave 2.4 — profile / folders / business writes (non-destructive)", (
       const tool = TOOLS.find((t) => t.name === name);
       assert.ok(tool, `${name} missing`);
       if (!tool) continue;
-      const expected = personal.has(name) ? "MCP_TELEGRAM_ENABLE_PERSONAL_DATA" : undefined;
+      // add-contact без номера - за флагом правки контактов, как rename/delete-contact
+      const expected = personal.has(name)
+        ? "MCP_TELEGRAM_ENABLE_PERSONAL_DATA"
+        : name === "telegram-add-contact"
+          ? "MCP_TELEGRAM_ENABLE_CONTACT_EDITS"
+          : undefined;
       assert.equal(tool.requiresEnv, expected, `${name} gated by ${tool.requiresEnv}`);
     }
   });

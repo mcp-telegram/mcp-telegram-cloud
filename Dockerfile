@@ -5,7 +5,7 @@ ARG MCP_TELEGRAM_COMMIT=cdb0ef9a5ceac72be577ef5e1d4e76459002a199
 # Core lib (mcp-telegram) is npm-native but Bun compiles it fine.
 # `python3 make g++` no longer needed: --ignore-scripts skips native addon build
 # for utf-8-validate/bufferutil; the JS fallback is identical.
-FROM oven/bun:1.4.4-alpine AS telegram-lib
+FROM oven/bun:1.4.5-alpine AS telegram-lib
 ARG MCP_TELEGRAM_COMMIT
 RUN apk add --no-cache git
 RUN git init /telegram \
@@ -24,7 +24,7 @@ RUN bun run build
 # keeps the backend tree at ~48MB and --frozen-lockfile still holds.
 # `--ignore-scripts` skips native compilation for `utf-8-validate` and
 # `bufferutil` (optional speedups for `ws`); the JS fallback is identical.
-FROM oven/bun:1.4.4-alpine AS builder
+FROM oven/bun:1.4.5-alpine AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --production --ignore-scripts
@@ -36,7 +36,7 @@ COPY --from=telegram-lib /telegram /app/node_modules/@overpod/mcp-telegram
 # the runtime, keeping it lean (React lives only inside the SSR bundles, never
 # in the backend's deps). If this stage's output were ever absent the server
 # falls back to the legacy hono pages (reactPagesAvailable() === false).
-FROM oven/bun:1.4.4-alpine AS app-builder
+FROM oven/bun:1.4.5-alpine AS app-builder
 # Build the app workspace only: `--filter` installs just its dependencies (no
 # Next.js/web graph) and `--frozen-lockfile` takes them from the committed root
 # bun.lock, so the SSR bundles that run inside the backend are built from the
@@ -58,7 +58,7 @@ WORKDIR /build/app
 RUN bun run build
 
 # Stage 3: Production runtime — Bun runs .ts directly, no build step
-FROM oven/bun:1.4.4-alpine
+FROM oven/bun:1.4.5-alpine
 ARG MCP_TELEGRAM_COMMIT
 LABEL io.mcp-telegram.core.revision="${MCP_TELEGRAM_COMMIT}"
 WORKDIR /app
@@ -86,7 +86,7 @@ ENV NODE_ENV=production
 # are pre-enabled in the cloud image. Self-hosters can override these per-feature.
 #  - MCP_TELEGRAM_ENABLE_GROUP_CALLS=1 : voice-chat metadata + participant listing
 #  - MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1 : quick-reply shortcut catalog + messages
-#  - MCP_TELEGRAM_ENABLE_CONTACT_EDITS=1 : rename a contact locally, remove contacts (delete goes through the destructive opt-in)
+#  - MCP_TELEGRAM_ENABLE_CONTACT_EDITS=1 : add a contact by username/ID (no phone number), rename a contact locally, remove contacts (delete goes through the destructive opt-in)
 # Telegram Stars (paid ecosystem) is intentionally NOT enabled — see parity-config.ts.
 ENV MCP_TELEGRAM_ENABLE_GROUP_CALLS=1
 ENV MCP_TELEGRAM_ENABLE_QUICK_REPLIES=1

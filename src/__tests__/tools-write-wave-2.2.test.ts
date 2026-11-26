@@ -46,7 +46,6 @@ describe("Wave 2.2 — write tools (messaging core)", () => {
       "telegram-send-location",
       "telegram-send-venue",
       "telegram-send-contact",
-      "telegram-add-contact",
       "telegram-set-birthday",
       "telegram-set-business-location",
     ]);

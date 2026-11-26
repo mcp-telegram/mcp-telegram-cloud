@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { config as appConfig } from "../config.js";
+import { withDeadline } from "../deadline.js";
 import type { ToolDefinition } from "../tool-registry.js";
 import {
   businessOnlyOnError,
@@ -17,25 +19,131 @@ import {
   textResult,
 } from "./helpers.js";
 
+// add-contact: проверка и запись в одной очереди на аккаунт. Ключ - пользователь и аккаунт,
+// а не объект клиента: после таймаута реестр пересоздаёт клиент, а защита должна остаться.
+const addContactQueues = new Map<unknown, Promise<unknown>>();
+// Пользователи, чей AddContact ушёл и ещё не завершился (в том числе после таймаута), со сроком
+// отметки: повторное добавление ждёт результата, иначе поздняя запись переименует контакт
+const addContactInFlight = new Map<unknown, Map<string, number>>();
+/** Сроки add-contact; тесты уменьшают их. `callBudgetMs` - бюджет, которым реестр ограничивает
+ * обработчик (add-contact не из медленных инструментов): ни один шаг не выходит за его конец. */
+export const ADD_CONTACT_DEADLINES = {
+  lookupMs: 30_000,
+  writeMs: 60_000,
+  callBudgetMs: appConfig.toolTimeoutMs,
+  inFlightMs: 10 * 60_000,
+};
+/** Запас до конца бюджета вызова: шаг, который начнётся позже, уже не успеет ответить. */
+const CALL_BUDGET_MARGIN_MS = 1_000;
+
+/** Срок шага: свой или остаток бюджета вызова, если он меньше; null - времени не осталось. */
+function stepBudget(stepMs: number, deadlineAt: number): number | null {
+  const left = deadlineAt - Date.now();
+  if (left <= 0) return null;
+  return Math.min(stepMs, left);
+}
+
+/** Для тестов: сколько отметок «запись в процессе» хранится у аккаунта. */
+export function addContactPendingCount(userId: string, sourceAccountId: number): number {
+  return addContactInFlight.get(`${userId}:${sourceAccountId}`)?.size ?? 0;
+}
+
+function accountKey(deps: { telegram: object; userId?: string; sourceAccountId?: number }): unknown {
+  return deps.userId !== undefined && deps.sourceAccountId !== undefined
+    ? `${deps.userId}:${deps.sourceAccountId}`
+    : deps.telegram;
+}
+
+function serializePerAccount<T>(key: unknown, task: () => Promise<T>): Promise<T> {
+  const previous = addContactQueues.get(key) ?? Promise.resolve();
+  const run = previous.catch(() => undefined).then(task);
+  const tail = run.catch(() => undefined);
+  addContactQueues.set(key, tail);
+  // Очередь не копит записи по аккаунтам: последний в очереди убирает её за собой
+  tail.then(() => {
+    if (addContactQueues.get(key) === tail) addContactQueues.delete(key);
+  });
+  return run;
+}
+
 export const PROFILE_TOOLS: ToolDefinition[] = [
   {
     name: "telegram-add-contact",
-    description: "Add a user to your Telegram contacts. Use this to accept contact requests from non-contacts.",
+    description:
+      "Add a user to your contacts (address book) by username or user ID, under the name you choose. No phone number is needed or sent. If your phone number privacy is set to My Contacts, the new contact will be able to see your number. Refuses users who are already contacts: use telegram-rename-contact to change their name.",
     inputSchema: {
       userId: z.string().describe("User ID or username to add"),
-      firstName: z.string().describe("First name for the contact"),
+      firstName: z.string().min(1).describe("First name to show for the contact"),
       lastName: z.string().optional().describe("Last name for the contact"),
-      phone: z.string().optional().describe("Phone number for the contact"),
     },
     annotations: LOCAL_WRITE,
-    // Precise location, phone numbers or a birth date: off on the hosted service
-    // (OpenAI plugin guidelines on restricted and sensitive data). Self-hosters opt in.
-    requiresEnv: "MCP_TELEGRAM_ENABLE_PERSONAL_DATA",
-    handler: async ({ userId, firstName, lastName, phone }, { telegram }) => {
-      const sanFirst = sanitize(firstName);
-      const sanLast = safeOpt(lastName);
-      await telegram.addContact(userId, sanFirst, sanLast, phone);
-      return textResult(sanitize(`Contact added: ${sanFirst}${sanLast ? ` ${sanLast}` : ""} (${userId})`));
+    // Без номера телефона: по username/ID, как переименование и удаление контактов.
+    // Существующий контакт Telegram молча переименовал бы - отказываем, инструмент только добавляет.
+    requiresEnv: "MCP_TELEGRAM_ENABLE_CONTACT_EDITS",
+    handler: async ({ userId, firstName, lastName }, deps) => {
+      const { telegram } = deps;
+      const key = accountKey(deps);
+      // Абсолютный конец вызова: реестр считает бюджет от начала обработчика
+      const budget = ADD_CONTACT_DEADLINES.callBudgetMs;
+      const deadlineAt = budget > 0 ? Date.now() + budget - CALL_BUDGET_MARGIN_MS : Number.POSITIVE_INFINITY;
+      const outOfTime = () =>
+        errorResult("Ran out of time before adding the contact; nothing was changed. Try again in a minute");
+      // Проверка и запись в одной очереди на аккаунт: два параллельных вызова
+      // иначе оба пройдут проверку, и второй переименует только что добавленный контакт
+      return serializePerAccount(key, async () => {
+        // Вызов, чей бюджет кончился в очереди, уже снят по таймауту: в сеть не идём
+        const lookupBudget = stepBudget(ADD_CONTACT_DEADLINES.lookupMs, deadlineAt);
+        if (lookupBudget === null) return outOfTime();
+        // getChatInfo кеширует пользователя до переподключения: тип, бот и ID неизменны,
+        // а признак «в контактах» берём из свежего списка контактов
+        const info = await withDeadline("add-contact lookup", lookupBudget, () => telegram.getChatInfo(userId));
+        if (info.type !== "private") return errorResult(sanitize(`${userId} is not a user`));
+        if (info.isBot) return errorResult(sanitize(`${userId} is a bot; bots cannot be added to contacts`));
+        const inFlight = addContactInFlight.get(key) ?? new Map<string, number>();
+        const pendingUntil = inFlight.get(info.id);
+        if (pendingUntil !== undefined && pendingUntil > Date.now()) {
+          return errorResult(
+            sanitize(
+              `A previous add of ${userId} has not finished yet and may still complete; check telegram-get-contacts before retrying`,
+            ),
+          );
+        }
+        const listBudget = stepBudget(ADD_CONTACT_DEADLINES.lookupMs, deadlineAt);
+        if (listBudget === null) return outOfTime();
+        const contacts = await withDeadline("add-contact contact list", listBudget, () =>
+          telegram.getContacts(Number.MAX_SAFE_INTEGER),
+        );
+        if (contacts.some((c) => c.id === info.id)) {
+          return errorResult(
+            sanitize(`${userId} is already in your contacts; use telegram-rename-contact to change the name`),
+          );
+        }
+        // Повторная проверка времени прямо перед записью: после конца бюджета не пишем
+        const writeBudget = stepBudget(ADD_CONTACT_DEADLINES.writeMs, deadlineAt);
+        if (writeBudget === null) return outOfTime();
+        const sanFirst = sanitize(firstName);
+        const sanLast = safeOpt(lastName);
+        const mark = Date.now() + ADD_CONTACT_DEADLINES.inFlightMs;
+        inFlight.set(info.id, mark);
+        addContactInFlight.set(key, inFlight);
+        // Пишем по проверенному ID, а не по исходной строке: username мог сменить владельца,
+        // и кеш GramJS иначе отдал бы прежнего (проверили одного - переименовали другого)
+        const write = telegram.addContact(info.id, sanFirst, sanLast);
+        // Отметку снимаем, когда запрос действительно завершился, а не по таймауту;
+        // запись, которая не завершится никогда, снимает таймер срока отметки
+        const clear = () => {
+          clearTimeout(expiry);
+          if (inFlight.get(info.id) === mark) inFlight.delete(info.id);
+          if (inFlight.size === 0 && addContactInFlight.get(key) === inFlight) addContactInFlight.delete(key);
+        };
+        const expiry = setTimeout(clear, ADD_CONTACT_DEADLINES.inFlightMs);
+        expiry.unref?.();
+        write.then(clear, clear);
+        // Таймаут записи - в реестр как есть: он пометит клиент нездоровым и скажет,
+        // что операция могла завершиться
+        await withDeadline("add-contact write", writeBudget, () => write);
+        return textResult(sanitize(`Contact added: ${sanFirst}${sanLast ? ` ${sanLast}` : ""} (${info.id})`));
+      });
     },
   },
 

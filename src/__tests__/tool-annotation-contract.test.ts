@@ -396,7 +396,6 @@ describe("tool annotation contract", () => {
       "telegram-send-venue",
       "telegram-set-business-location",
       "telegram-send-contact",
-      "telegram-add-contact",
       "telegram-set-birthday",
     ];
     for (const name of personal) {

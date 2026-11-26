@@ -1,6 +1,6 @@
 {
   "name": "mcp-telegram-cloud",
-  "version": "2.67.2",
+  "version": "2.68.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -40,15 +40,15 @@
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@overpod/mcp-telegram": "^1.47.1",
     "dotenv": "^18.0.10",
-    "hono": "^4.13.19",
+    "hono": "^4.13.22",
     "qrcode": "^1.5.4",
     "telegram": "^2.26.22",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.8",
-    "@types/bun": "^1.4.4",
-    "@types/node": "^26.6.6",
+    "@biomejs/biome": "^2.6.9",
+    "@types/bun": "^1.4.5",
+    "@types/node": "^26.6.11",
     "@types/qrcode": "^1.5.6",
     "husky": "^9.1.7",
     "typescript": "^7.0.2"
