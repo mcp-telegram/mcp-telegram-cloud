@@ -90,19 +90,24 @@ describe("contact edits", () => {
 });
 
 describe("add-contact (by username or ID, no phone number)", () => {
-  const chatInfo = (over: Record<string, unknown>) => async () => ({
-    id: "42",
-    name: "Bob",
-    type: "private",
-    isBot: false,
-    isContact: false,
-    ...over,
-  });
-  // Свежий список контактов из Telegram (getChatInfo может отдавать устаревший isContact)
-  const contactsOf =
-    (...ids: string[]) =>
-    async () =>
-      ids.map((id) => ({ id, name: `User ${id}` }));
+  // Точечная свежая проверка одного пользователя (users.GetUsers в ядре)
+  const statusOf =
+    (over: Record<string, unknown> = {}) =>
+    async () => ({
+      id: "42",
+      kind: "user",
+      isContact: false,
+      ...over,
+    });
+  // Полный список контактов и кешированный getChatInfo больше не нужны: вызов - ошибка теста
+  const forbidden = {
+    getContacts: async () => {
+      throw new Error("add-contact must not download the whole contact list");
+    },
+    getChatInfo: async () => {
+      throw new Error("add-contact must not use the cached getChatInfo");
+    },
+  };
 
   it("is on with the contact edits, takes no phone and is not a guarded destructive tool", async () => {
     const t = tool("telegram-add-contact");
@@ -113,11 +118,16 @@ describe("add-contact (by username or ID, no phone number)", () => {
     assert.equal(isGuardedDestructive(t.annotations), false);
   });
 
-  it("adds a non-contact without passing a phone number", async () => {
+  it("adds a non-contact with one status check and no phone number", async () => {
     let args: unknown[] = [];
+    let checks = 0;
     const telegram = {
-      getChatInfo: chatInfo({}),
-      getContacts: contactsOf("7"),
+      ...forbidden,
+      getContactStatus: async (...a: unknown[]) => {
+        checks++;
+        assert.deepEqual(a, ["@bob"]);
+        return statusOf()();
+      },
       addContact: async (...a: unknown[]) => {
         args = a;
       },
@@ -125,6 +135,7 @@ describe("add-contact (by username or ID, no phone number)", () => {
     const r = await tool("telegram-add-contact").handler({ userId: "@bob", firstName: "Bob", lastName: "Partner" }, {
       telegram,
     } as never);
+    assert.equal(checks, 1);
     // Запись по проверенному ID, а не по исходной строке
     assert.deepEqual(args, ["42", "Bob", "Partner"]);
     assert.equal(text(r), "Contact added: Bob Partner (42)");
@@ -134,12 +145,12 @@ describe("add-contact (by username or ID, no phone number)", () => {
     const book: string[] = [];
     const calls: unknown[][] = [];
     const telegram = {
-      getChatInfo: chatInfo({}),
-      // Снимок на момент запроса, ответ с задержкой: без очереди оба вызова увидят пустой список
-      getContacts: async () => {
-        const snapshot = book.map((id) => ({ id, name: `User ${id}` }));
+      ...forbidden,
+      // Состояние на момент запроса, ответ с задержкой: без очереди оба вызова увидят «не контакт»
+      getContactStatus: async () => {
+        const isContact = book.includes("42");
         await new Promise((r) => setTimeout(r, 5));
-        return snapshot;
+        return { id: "42", kind: "user", isContact };
       },
       addContact: async (...a: unknown[]) => {
         calls.push(a);
@@ -179,8 +190,8 @@ describe("add-contact (by username or ID, no phone number)", () => {
       const state = { writes: 0, finish: () => {} };
       const make = () =>
         ({
-          getChatInfo: chatInfo({}),
-          getContacts: async () => book.map((id) => ({ id, name: `User ${id}` })),
+          ...forbidden,
+          getContactStatus: async () => ({ id: "42", kind: "user", isContact: book.includes("42") }),
           addContact: () => {
             state.writes++;
             return new Promise<void>((resolve) => {
@@ -198,8 +209,8 @@ describe("add-contact (by username or ID, no phone number)", () => {
       let hang = true;
       let added = 0;
       const telegram = {
-        getChatInfo: () => (hang ? new Promise(() => {}) : chatInfo({})()),
-        getContacts: contactsOf(),
+        ...forbidden,
+        getContactStatus: () => (hang ? new Promise(() => {}) : statusOf()()),
         addContact: async () => {
           added++;
         },
@@ -258,15 +269,15 @@ describe("add-contact (by username or ID, no phone number)", () => {
 
     it("a call whose budget ran out in the queue never reaches Telegram", async () => {
       const { ADD_CONTACT_DEADLINES } = await import("../tools/profile.js");
-      // Бюджет вызова 15 мс (плюс секунда запаса): первый поиск висит до него, второму времени не остаётся
+      // Бюджет вызова 15 мс (плюс секунда запаса): первая проверка висит до него, второй времени не остаётся
       ADD_CONTACT_DEADLINES.callBudgetMs = 1_015;
       let lookups = 0;
       const telegram = {
-        getChatInfo: () => {
+        ...forbidden,
+        getContactStatus: () => {
           lookups++;
           return new Promise(() => {});
         },
-        getContacts: contactsOf(),
         addContact: async () => {},
       } as unknown as TelegramService;
       const first = call(telegram, "Bob");
@@ -276,17 +287,17 @@ describe("add-contact (by username or ID, no phone number)", () => {
       assert.equal(lookups, 1);
     });
 
-    it("no write starts once the call budget is spent, even if the lookups returned", async () => {
+    it("no write starts once the call budget is spent, even if the check returned", async () => {
       const { ADD_CONTACT_DEADLINES } = await import("../tools/profile.js");
       ADD_CONTACT_DEADLINES.callBudgetMs = 60_000;
       const realNow = Date.now;
       let writes = 0;
       const telegram = {
-        getChatInfo: chatInfo({}),
-        // Список вернулся, но часы уже за концом бюджета вызова
-        getContacts: async () => {
+        ...forbidden,
+        // Проверка вернулась, но часы уже за концом бюджета вызова
+        getContactStatus: async () => {
           Date.now = () => realNow() + 120_000;
-          return [];
+          return { id: "42", kind: "user", isContact: false };
         },
         addContact: async () => {
           writes++;
@@ -301,38 +312,34 @@ describe("add-contact (by username or ID, no phone number)", () => {
     });
   });
 
-  it("adds a user that a stale cache still shows as a contact after removal", async () => {
-    let called = false;
+  it("refuses a phone number before any Telegram request", async () => {
+    let checks = 0;
     const telegram = {
-      getChatInfo: chatInfo({ isContact: true }),
-      getContacts: contactsOf("7"),
-      addContact: async () => {
-        called = true;
+      ...forbidden,
+      getContactStatus: async () => {
+        checks++;
+        return statusOf()();
       },
+      addContact: async () => {},
     } as unknown as TelegramService;
-    const r = await tool("telegram-add-contact").handler({ userId: "@bob", firstName: "Bob" }, {
+    const r = (await tool("telegram-add-contact").handler({ userId: " +79990001122", firstName: "X" }, {
       telegram,
-    } as never);
-    assert.equal(called, true);
-    assert.equal(text(r), "Contact added: Bob (42)");
+    } as never)) as { isError?: boolean; content: Array<{ type: string; text?: string }> };
+    assert.equal(r.isError, true);
+    assert.match(text(r), /Phone numbers are not supported/);
+    assert.equal(checks, 0);
   });
 
-  for (const [label, over, contactIds, expected] of [
-    ["an existing contact", { isContact: true }, ["42"], /already in your contacts; use telegram-rename-contact/],
-    [
-      "a contact that a stale cache still shows as a non-contact",
-      { isContact: false },
-      ["42"],
-      /already in your contacts; use telegram-rename-contact/,
-    ],
-    ["a bot", { isBot: true }, [], /is a bot/],
-    ["a group or channel", { type: "group" }, [], /is not a user/],
+  for (const [label, over, expected] of [
+    ["an existing contact", { isContact: true }, /already in your contacts; use telegram-rename-contact/],
+    ["a bot", { kind: "bot" }, /is a bot/],
+    ["a group or channel", { kind: "other" }, /is not a user/],
   ] as const) {
     it(`refuses ${label} and never calls addContact`, async () => {
       let called = false;
       const telegram = {
-        getChatInfo: chatInfo(over),
-        getContacts: contactsOf(...contactIds),
+        ...forbidden,
+        getContactStatus: statusOf(over),
         addContact: async () => {
           called = true;
         },

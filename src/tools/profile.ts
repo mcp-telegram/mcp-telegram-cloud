@@ -81,6 +81,11 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
     // Существующий контакт Telegram молча переименовал бы - отказываем, инструмент только добавляет.
     requiresEnv: "MCP_TELEGRAM_ENABLE_CONTACT_EDITS",
     handler: async ({ userId, firstName, lastName }, deps) => {
+      // Номер телефона GramJS ищет через полный список контактов, а поиск по номеру
+      // облако не делает: только username или числовой ID
+      if (/^\+/.test(userId.trim())) {
+        return errorResult("Phone numbers are not supported here; pass the user's username or numeric user ID");
+      }
       const { telegram } = deps;
       const key = accountKey(deps);
       // Абсолютный конец вызова: реестр считает бюджет от начала обработчика
@@ -94,13 +99,13 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         // Вызов, чей бюджет кончился в очереди, уже снят по таймауту: в сеть не идём
         const lookupBudget = stepBudget(ADD_CONTACT_DEADLINES.lookupMs, deadlineAt);
         if (lookupBudget === null) return outOfTime();
-        // getChatInfo кеширует пользователя до переподключения: тип, бот и ID неизменны,
-        // а признак «в контактах» берём из свежего списка контактов
-        const info = await withDeadline("add-contact lookup", lookupBudget, () => telegram.getChatInfo(userId));
-        if (info.type !== "private") return errorResult(sanitize(`${userId} is not a user`));
-        if (info.isBot) return errorResult(sanitize(`${userId} is a bot; bots cannot be added to contacts`));
+        // Одна точечная свежая проверка пользователя (users.GetUsers в ядре): кеш getChatInfo
+        // устаревает, а полный список контактов на каждое добавление ловит FLOOD_WAIT
+        const status = await withDeadline("add-contact lookup", lookupBudget, () => telegram.getContactStatus(userId));
+        if (status.kind === "other") return errorResult(sanitize(`${userId} is not a user`));
+        if (status.kind === "bot") return errorResult(sanitize(`${userId} is a bot; bots cannot be added to contacts`));
         const inFlight = addContactInFlight.get(key) ?? new Map<string, number>();
-        const pendingUntil = inFlight.get(info.id);
+        const pendingUntil = inFlight.get(status.id);
         if (pendingUntil !== undefined && pendingUntil > Date.now()) {
           return errorResult(
             sanitize(
@@ -108,12 +113,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
             ),
           );
         }
-        const listBudget = stepBudget(ADD_CONTACT_DEADLINES.lookupMs, deadlineAt);
-        if (listBudget === null) return outOfTime();
-        const contacts = await withDeadline("add-contact contact list", listBudget, () =>
-          telegram.getContacts(Number.MAX_SAFE_INTEGER),
-        );
-        if (contacts.some((c) => c.id === info.id)) {
+        if (status.isContact) {
           return errorResult(
             sanitize(`${userId} is already in your contacts; use telegram-rename-contact to change the name`),
           );
@@ -124,16 +124,16 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         const sanFirst = sanitize(firstName);
         const sanLast = safeOpt(lastName);
         const mark = Date.now() + ADD_CONTACT_DEADLINES.inFlightMs;
-        inFlight.set(info.id, mark);
+        inFlight.set(status.id, mark);
         addContactInFlight.set(key, inFlight);
         // Пишем по проверенному ID, а не по исходной строке: username мог сменить владельца,
         // и кеш GramJS иначе отдал бы прежнего (проверили одного - переименовали другого)
-        const write = telegram.addContact(info.id, sanFirst, sanLast);
+        const write = telegram.addContact(status.id, sanFirst, sanLast);
         // Отметку снимаем, когда запрос действительно завершился, а не по таймауту;
         // запись, которая не завершится никогда, снимает таймер срока отметки
         const clear = () => {
           clearTimeout(expiry);
-          if (inFlight.get(info.id) === mark) inFlight.delete(info.id);
+          if (inFlight.get(status.id) === mark) inFlight.delete(status.id);
           if (inFlight.size === 0 && addContactInFlight.get(key) === inFlight) addContactInFlight.delete(key);
         };
         const expiry = setTimeout(clear, ADD_CONTACT_DEADLINES.inFlightMs);
@@ -142,7 +142,7 @@ export const PROFILE_TOOLS: ToolDefinition[] = [
         // Таймаут записи - в реестр как есть: он пометит клиент нездоровым и скажет,
         // что операция могла завершиться
         await withDeadline("add-contact write", writeBudget, () => write);
-        return textResult(sanitize(`Contact added: ${sanFirst}${sanLast ? ` ${sanLast}` : ""} (${info.id})`));
+        return textResult(sanitize(`Contact added: ${sanFirst}${sanLast ? ` ${sanLast}` : ""} (${status.id})`));
       });
     },
   },
